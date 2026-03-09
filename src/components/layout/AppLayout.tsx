@@ -10,11 +10,11 @@ export function AppLayout() {
   return (
     <div className="h-screen w-screen overflow-hidden">
       <ResizablePanelGroup orientation="horizontal">
-        <ResizablePanel defaultSize={22} minSize={15} maxSize={40}>
+        <ResizablePanel defaultSize="30%" minSize="20%" maxSize="30%">
           <Sidebar />
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={78}>
+        <ResizablePanel defaultSize="70%" minSize="30%">
           <MainPanel />
         </ResizablePanel>
       </ResizablePanelGroup>
