@@ -32,15 +32,15 @@ export function HistoryList() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="flex items-center justify-between px-3 h-8 border-b border-sidebar-border shrink-0">
+        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
           History
         </span>
         {entries.length > 0 && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            className="h-5 w-5 text-muted-foreground hover:text-destructive"
             onClick={clearAll}
           >
             <Trash2 className="h-3 w-3" />
@@ -48,9 +48,9 @@ export function HistoryList() {
         )}
       </div>
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-0.5 p-1">
+        <div className="flex flex-col gap-px p-1">
           {entries.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-6">
+            <p className="text-xs text-muted-foreground text-center py-8">
               No history yet
             </p>
           )}

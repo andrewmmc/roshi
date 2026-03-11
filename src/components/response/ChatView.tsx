@@ -15,13 +15,13 @@ export function ChatView() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-2 p-4">
         {systemPrompt && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-16 pt-1 text-xs font-medium text-muted-foreground text-right">
-              system
+            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+              sys
             </div>
-            <div className="flex-1 rounded-lg bg-muted/50 px-3 py-2 text-sm italic text-muted-foreground">
+            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] italic text-muted-foreground">
               {systemPrompt}
             </div>
           </div>
@@ -31,16 +31,16 @@ export function ChatView() {
           .filter((m) => m.content.trim())
           .map((msg, i) => (
             <div key={i} className="flex gap-3">
-              <div className="shrink-0 w-16 pt-1 text-xs font-medium text-muted-foreground text-right">
-                {msg.role}
+              <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+                {msg.role === 'user' ? 'you' : msg.role === 'assistant' ? 'ai' : 'sys'}
               </div>
               <div
-                className={`flex-1 rounded-lg px-3 py-2 text-sm ${
+                className={`flex-1 rounded-md px-3 py-2 text-[13px] ${
                   msg.role === 'user'
-                    ? 'bg-primary/10'
+                    ? 'bg-foreground/[0.04]'
                     : msg.role === 'assistant'
-                      ? 'bg-muted/50'
-                      : 'bg-muted/30 italic'
+                      ? 'bg-muted/40'
+                      : 'bg-muted/30 italic text-muted-foreground'
                 }`}
               >
                 {msg.content}
@@ -50,10 +50,10 @@ export function ChatView() {
 
         {displayContent && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-16 pt-1 text-xs font-medium text-muted-foreground text-right">
-              assistant
+            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+              ai
             </div>
-            <div className="flex-1 rounded-lg bg-muted/50 px-3 py-2 text-sm prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background [&_pre]:border [&_pre]:rounded-md [&_pre]:p-3 [&_code]:text-xs">
+            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] prose prose-sm max-w-none prose-pre:bg-foreground/[0.03] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs">
               <Markdown>{displayContent}</Markdown>
               {isStreaming && <StreamingIndicator />}
             </div>
@@ -62,10 +62,10 @@ export function ChatView() {
 
         {error && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-16 pt-1 text-xs font-medium text-destructive text-right">
-              error
+            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-destructive text-right uppercase tracking-wide">
+              err
             </div>
-            <div className="flex-1 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive font-mono break-all">
+            <div className="flex-1 rounded-md bg-destructive/5 border border-destructive/15 px-3 py-2 text-[13px] text-destructive font-mono break-all">
               {error}
             </div>
           </div>
