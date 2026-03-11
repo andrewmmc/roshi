@@ -35,23 +35,21 @@ export function MessageEditor() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* System prompt */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          System Prompt
+        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+          System
         </label>
         <Textarea
           value={systemPrompt}
           onChange={(e) => setSystemPrompt(e.target.value)}
-          placeholder="Enter system prompt (optional)"
-          className="min-h-[60px] resize-y text-sm font-mono"
+          placeholder="System prompt (optional)"
+          className="min-h-[52px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
           rows={2}
         />
       </div>
 
-      {/* Messages */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
           Messages
         </label>
         {messages.map((msg, index) => (
@@ -60,7 +58,7 @@ export function MessageEditor() {
               value={msg.role}
               onValueChange={(val) => handleRoleChange(index, val as NormalizedMessage['role'])}
             >
-              <SelectTrigger className="w-[110px] shrink-0">
+              <SelectTrigger className="w-[100px] h-7 text-xs shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -72,26 +70,26 @@ export function MessageEditor() {
             <Textarea
               value={msg.content}
               onChange={(e) => handleContentChange(index, e.target.value)}
-              placeholder={`Enter ${msg.role} message...`}
-              className="min-h-[60px] resize-y text-sm font-mono flex-1"
+              placeholder={`${msg.role} message...`}
+              className="min-h-[52px] resize-y text-[13px] font-mono flex-1 bg-muted/30 border-border/60"
               rows={2}
             />
             {messages.length > 1 && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 text-muted-foreground hover:text-destructive"
+                className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
                 onClick={() => removeMessage(index)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
         ))}
       </div>
 
-      <Button variant="outline" size="sm" className="self-start" onClick={handleAddMessage}>
-        <Plus className="h-3.5 w-3.5 mr-1.5" />
+      <Button variant="outline" size="sm" className="self-start h-7 text-xs" onClick={handleAddMessage}>
+        <Plus className="h-3 w-3 mr-1.5" />
         Add Message
       </Button>
     </div>

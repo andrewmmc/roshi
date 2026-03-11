@@ -8,12 +8,20 @@ export function Sidebar() {
   const reset = useRequestStore((s) => s.reset);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b">
-        <span className="text-sm font-semibold tracking-tight">LLM Tester</span>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={reset} title="New request">
-            <FilePlus2 className="h-4 w-4" />
+    <div className="flex flex-col h-full bg-sidebar">
+      <div className="flex items-center justify-between px-3 h-11 border-b border-sidebar-border shrink-0">
+        <span className="text-[13px] font-semibold text-foreground/80 tracking-tight select-none">
+          LLM Tester
+        </span>
+        <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={reset}
+            title="New request"
+          >
+            <FilePlus2 className="h-3.5 w-3.5" />
           </Button>
           <ProviderManager />
         </div>

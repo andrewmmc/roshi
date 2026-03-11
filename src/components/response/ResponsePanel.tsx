@@ -1,5 +1,4 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { ChatView } from './ChatView';
 import { RawJsonView } from './RawJsonView';
 import { useRequestStore } from '@/stores/request-store';
@@ -15,26 +14,22 @@ export function ResponsePanel() {
 
   return (
     <Tabs defaultValue="chat" className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <TabsList>
-          <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="raw">Raw JSON</TabsTrigger>
+      <div className="flex items-center justify-between px-4 h-11 border-b shrink-0">
+        <TabsList className="h-7">
+          <TabsTrigger value="chat" className="text-xs h-6 px-2.5">Chat</TabsTrigger>
+          <TabsTrigger value="raw" className="text-xs h-6 px-2.5">Raw</TabsTrigger>
         </TabsList>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {isLoading && (
-            <Badge variant="secondary" className="text-xs animate-pulse">
+            <span className="animate-pulse">
               {isStreaming ? 'Streaming...' : 'Sending...'}
-            </Badge>
+            </span>
           )}
           {durationMs !== null && !isLoading && (
-            <Badge variant="outline" className="text-xs font-mono">
-              {durationMs}ms
-            </Badge>
+            <span className="font-mono">{durationMs}ms</span>
           )}
           {response?.usage && (
-            <Badge variant="outline" className="text-xs font-mono">
-              {response.usage.totalTokens} tokens
-            </Badge>
+            <span className="font-mono">{response.usage.totalTokens} tok</span>
           )}
         </div>
       </div>
@@ -43,7 +38,7 @@ export function ResponsePanel() {
         {hasContent ? (
           <ChatView />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+          <div className="flex items-center justify-center h-full text-muted-foreground text-[13px]">
             Send a request to see the response
           </div>
         )}
@@ -53,7 +48,7 @@ export function ResponsePanel() {
         {hasContent ? (
           <RawJsonView />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+          <div className="flex items-center justify-center h-full text-muted-foreground text-[13px]">
             Send a request to see raw JSON
           </div>
         )}

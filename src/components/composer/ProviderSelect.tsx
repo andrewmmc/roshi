@@ -16,8 +16,8 @@ export function ProviderSelect() {
   return (
     <div className="flex gap-2">
       <Select value={selectedProviderId || ''} onValueChange={selectProvider}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select provider" />
+        <SelectTrigger className="w-[160px] h-7 text-xs">
+          <SelectValue placeholder="Provider" />
         </SelectTrigger>
         <SelectContent>
           {providers.map((p) => (
@@ -29,8 +29,8 @@ export function ProviderSelect() {
       </Select>
 
       <Select value={selectedModelId || ''} onValueChange={selectModel}>
-        <SelectTrigger className="w-[220px]">
-          <SelectValue placeholder="Select model" />
+        <SelectTrigger className="w-[200px] h-7 text-xs">
+          <SelectValue placeholder="Model" />
         </SelectTrigger>
         <SelectContent>
           {selectedProvider?.models.map((m) => (

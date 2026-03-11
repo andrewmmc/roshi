@@ -36,11 +36,11 @@ export function HeaderEditor() {
   return (
     <div>
       <button
-        className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-        Custom Headers {entries.length > 0 && `(${entries.length})`}
+        Headers {entries.length > 0 && `(${entries.length})`}
       </button>
 
       {expanded && (
@@ -51,26 +51,26 @@ export function HeaderEditor() {
                 value={key}
                 onChange={(e) => updateKey(key, e.target.value)}
                 placeholder="Header name"
-                className="h-8 text-sm font-mono flex-1"
+                className="h-7 text-xs font-mono flex-1"
               />
               <Input
                 value={value}
                 onChange={(e) => updateValue(key, e.target.value)}
                 placeholder="Header value"
-                className="h-8 text-sm font-mono flex-1"
+                className="h-7 text-xs font-mono flex-1"
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
                 onClick={() => removeHeader(key)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
-          <Button variant="outline" size="sm" className="self-start" onClick={addHeader}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button variant="outline" size="sm" className="self-start h-7 text-xs" onClick={addHeader}>
+            <Plus className="h-3 w-3 mr-1.5" />
             Add Header
           </Button>
         </div>

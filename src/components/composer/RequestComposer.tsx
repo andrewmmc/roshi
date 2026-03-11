@@ -23,18 +23,18 @@ export function RequestComposer() {
 
   return (
     <div className="flex flex-col h-full" onKeyDown={handleKeyDown}>
-      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b">
+      <div className="flex items-center justify-between gap-3 px-4 h-11 border-b shrink-0">
         <ProviderSelect />
         {isLoading ? (
-          <Button variant="destructive" size="sm" onClick={cancel}>
-            <Square className="h-3.5 w-3.5 mr-1.5" />
+          <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={cancel}>
+            <Square className="h-3 w-3 mr-1.5" />
             Stop
           </Button>
         ) : (
-          <Button size="sm" onClick={send} disabled={!hasProvider}>
-            <Send className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" className="h-7 text-xs" onClick={send} disabled={!hasProvider}>
+            <Send className="h-3 w-3 mr-1.5" />
             Send
-            <kbd className="ml-2 text-[10px] opacity-60 hidden sm:inline">⌘↵</kbd>
+            <kbd className="ml-1.5 text-[10px] opacity-50 hidden sm:inline">⌘↵</kbd>
           </Button>
         )}
       </div>

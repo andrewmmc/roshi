@@ -8,14 +8,16 @@ import { ResponsePanel } from '@/components/response/ResponsePanel';
 
 export function MainPanel() {
   return (
-    <ResizablePanelGroup orientation="vertical">
-      <ResizablePanel defaultSize="45%" minSize="20%">
-        <RequestComposer />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize="55%" minSize="20%">
-        <ResponsePanel />
-      </ResizablePanel>
-    </ResizablePanelGroup>
+    <div className="h-full bg-background">
+      <ResizablePanelGroup orientation="vertical">
+        <ResizablePanel defaultSize="40%" minSize="20%">
+          <RequestComposer />
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize="60%" minSize="20%">
+          <ResponsePanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
   );
 }
