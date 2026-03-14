@@ -7,46 +7,38 @@ export function HeaderEditor() {
   const customHeaders = useRequestStore((s) => s.customHeaders);
   const setCustomHeaders = useRequestStore((s) => s.setCustomHeaders);
 
-  const entries = Object.entries(customHeaders);
-
   const addHeader = () => {
-    setCustomHeaders({ ...customHeaders, '': '' });
+    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
   };
 
-  const updateKey = (oldKey: string, newKey: string) => {
-    const newHeaders = { ...customHeaders };
-    const value = newHeaders[oldKey];
-    delete newHeaders[oldKey];
-    newHeaders[newKey] = value;
-    setCustomHeaders(newHeaders);
+  const updateKey = (index: number, key: string) => {
+    setCustomHeaders(customHeaders.map((h, i) => (i === index ? { ...h, key } : h)));
   };
 
-  const updateValue = (key: string, value: string) => {
-    setCustomHeaders({ ...customHeaders, [key]: value });
+  const updateValue = (index: number, value: string) => {
+    setCustomHeaders(customHeaders.map((h, i) => (i === index ? { ...h, value } : h)));
   };
 
-  const removeHeader = (key: string) => {
-    const newHeaders = { ...customHeaders };
-    delete newHeaders[key];
-    setCustomHeaders(newHeaders);
+  const removeHeader = (index: number) => {
+    setCustomHeaders(customHeaders.filter((_, i) => i !== index));
   };
 
   return (
     <div className="flex flex-col gap-2">
-      {entries.length === 0 && (
+      {customHeaders.length === 0 && (
         <p className="text-xs text-muted-foreground">No custom headers.</p>
       )}
-      {entries.map(([key, value], index) => (
+      {customHeaders.map((header, index) => (
         <div key={index} className="flex gap-2 items-center">
           <Input
-            value={key}
-            onChange={(e) => updateKey(key, e.target.value)}
+            value={header.key}
+            onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
             className="h-7 text-xs font-mono flex-1"
           />
           <Input
-            value={value}
-            onChange={(e) => updateValue(key, e.target.value)}
+            value={header.value}
+            onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
             className="h-7 text-xs font-mono flex-1"
           />
@@ -54,7 +46,7 @@ export function HeaderEditor() {
             variant="ghost"
             size="icon"
             className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
-            onClick={() => removeHeader(key)}
+            onClick={() => removeHeader(index)}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

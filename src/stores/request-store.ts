@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import type { NormalizedMessage, NormalizedResponse } from '@/types/normalized';
 
+export interface HeaderEntry {
+  key: string;
+  value: string;
+}
+
 interface RequestStore {
   messages: NormalizedMessage[];
   systemPrompt: string;
   temperature: number;
   maxTokens: number;
   stream: boolean;
-  customHeaders: Record<string, string>;
+  customHeaders: HeaderEntry[];
 
   // Response state
   isLoading: boolean;
@@ -28,7 +33,7 @@ interface RequestStore {
   setTemperature: (temp: number) => void;
   setMaxTokens: (tokens: number) => void;
   setStream: (stream: boolean) => void;
-  setCustomHeaders: (headers: Record<string, string>) => void;
+  setCustomHeaders: (headers: HeaderEntry[]) => void;
 
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
@@ -60,7 +65,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   temperature: 1,
   maxTokens: 4096,
   stream: true,
-  customHeaders: {},
+  customHeaders: [],
 
   isLoading: false,
   isStreaming: false,
@@ -98,7 +103,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       temperature: 1,
       maxTokens: 4096,
       stream: true,
-      customHeaders: {},
+      customHeaders: [],
       isLoading: false,
       isStreaming: false,
       streamingContent: '',

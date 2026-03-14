@@ -47,7 +47,9 @@ export function useSendRequest() {
           stream: store.stream && model.supportsStreaming,
           systemPrompt: store.systemPrompt || undefined,
         },
-        customHeaders: Object.keys(store.customHeaders).length > 0 ? store.customHeaders : undefined,
+        customHeaders: store.customHeaders.length > 0
+          ? Object.fromEntries(store.customHeaders.filter((h) => h.key).map((h) => [h.key, h.value]))
+          : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
           if (!useRequestStore.getState().isStreaming) {

@@ -40,32 +40,30 @@ export function MessageEditor() {
               value={msg.role}
               onValueChange={(val) => handleRoleChange(index, val as NormalizedMessage['role'])}
             >
-              <SelectTrigger className="w-[100px] h-7 text-xs shrink-0">
+              <SelectTrigger className="w-[100px] h-7 text-xs shrink-0 capitalize">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">user</SelectItem>
-                <SelectItem value="assistant">assistant</SelectItem>
-                <SelectItem value="system">system</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="assistant">Assistant</SelectItem>
               </SelectContent>
             </Select>
             <Textarea
               value={msg.content}
               onChange={(e) => handleContentChange(index, e.target.value)}
-              placeholder={`${msg.role} message...`}
+              placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
               className="min-h-[52px] resize-y text-[13px] font-mono flex-1 bg-muted/30 border-border/60"
               rows={2}
             />
-            {messages.length > 1 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
-                onClick={() => removeMessage(index)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => removeMessage(index)}
+              disabled={messages.length <= 1}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
         ))}
       </div>
