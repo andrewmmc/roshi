@@ -13,11 +13,9 @@ import type { NormalizedMessage } from '@/types/normalized';
 
 export function MessageEditor() {
   const messages = useRequestStore((s) => s.messages);
-  const systemPrompt = useRequestStore((s) => s.systemPrompt);
   const updateMessage = useRequestStore((s) => s.updateMessage);
   const removeMessage = useRequestStore((s) => s.removeMessage);
   const addMessage = useRequestStore((s) => s.addMessage);
-  const setSystemPrompt = useRequestStore((s) => s.setSystemPrompt);
 
   const handleRoleChange = (index: number, role: NormalizedMessage['role']) => {
     updateMessage(index, { ...messages[index], role });
@@ -35,23 +33,7 @@ export function MessageEditor() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-          System
-        </label>
-        <Textarea
-          value={systemPrompt}
-          onChange={(e) => setSystemPrompt(e.target.value)}
-          placeholder="System prompt (optional)"
-          className="min-h-[52px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
-          rows={2}
-        />
-      </div>
-
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-          Messages
-        </label>
         {messages.map((msg, index) => (
           <div key={index} className="flex gap-2 items-start">
             <Select
