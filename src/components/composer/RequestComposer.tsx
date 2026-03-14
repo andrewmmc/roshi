@@ -40,7 +40,6 @@ export function RequestComposer() {
               rows={3}
             />
           </div>
-          </div>
         </ScrollArea>
       </TabsContent>
 
