@@ -30,6 +30,14 @@ export function useSendRequest() {
     store.setRawResponse(null);
     store.setDurationMs(null);
     store.setStatusCode(null);
+    store.setSentRequest({
+      messages: nonEmptyMessages,
+      model: model.id,
+      temperature: store.temperature,
+      maxTokens: store.maxTokens,
+      stream: store.stream && model.supportsStreaming,
+      systemPrompt: store.systemPrompt || undefined,
+    });
     store.setLoading(true);
     store.setStreaming(false);
     useRequestStore.setState({ streamingContent: '' });

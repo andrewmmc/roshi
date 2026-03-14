@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { NormalizedMessage, NormalizedResponse } from '@/types/normalized';
+import type { NormalizedMessage, NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 
 export interface HeaderEntry {
   key: string;
@@ -24,6 +24,7 @@ interface RequestStore {
   error: string | null;
   durationMs: number | null;
   statusCode: number | null;
+  sentRequest: NormalizedRequest | null;
 
   // Actions
   setMessages: (messages: NormalizedMessage[]) => void;
@@ -45,6 +46,7 @@ interface RequestStore {
   setError: (error: string | null) => void;
   setDurationMs: (ms: number | null) => void;
   setStatusCode: (code: number | null) => void;
+  setSentRequest: (request: NormalizedRequest | null) => void;
 
   reset: () => void;
   loadFromHistory: (data: {
@@ -79,6 +81,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   error: null,
   durationMs: null,
   statusCode: null,
+  sentRequest: null,
 
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
@@ -100,6 +103,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setError: (error) => set({ error }),
   setDurationMs: (durationMs) => set({ durationMs }),
   setStatusCode: (statusCode) => set({ statusCode }),
+  setSentRequest: (sentRequest) => set({ sentRequest }),
 
   reset: () =>
     set({
@@ -118,12 +122,21 @@ export const useRequestStore = create<RequestStore>((set) => ({
       error: null,
       durationMs: null,
       statusCode: null,
+      sentRequest: null,
     }),
 
   loadFromHistory: (data) =>
     set({
       messages: data.messages,
       systemPrompt: data.systemPrompt,
+      sentRequest: {
+        messages: data.messages,
+        model: '',
+        stream: data.stream,
+        systemPrompt: data.systemPrompt,
+        temperature: data.temperature,
+        maxTokens: data.maxTokens,
+      },
       temperature: data.temperature,
       maxTokens: data.maxTokens,
       stream: data.stream,

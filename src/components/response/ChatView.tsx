@@ -5,8 +5,9 @@ import { StreamingIndicator } from './StreamingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function ChatView() {
-  const messages = useRequestStore((s) => s.messages);
-  const systemPrompt = useRequestStore((s) => s.systemPrompt);
+  const sentRequest = useRequestStore((s) => s.sentRequest);
+  const messages = sentRequest?.messages ?? [];
+  const systemPrompt = sentRequest?.systemPrompt ?? '';
   const response = useRequestStore((s) => s.response);
   const isLoading = useRequestStore((s) => s.isLoading);
   const isStreaming = useRequestStore((s) => s.isStreaming);
