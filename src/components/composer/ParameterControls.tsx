@@ -13,9 +13,6 @@ export function ParameterControls() {
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-        Parameters
-      </label>
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5 min-w-[160px]">
           <Label className="text-xs text-muted-foreground">

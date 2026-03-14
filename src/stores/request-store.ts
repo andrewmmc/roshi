@@ -65,7 +65,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   temperature: 1,
   maxTokens: 4096,
   stream: true,
-  customHeaders: [],
+  customHeaders: [{ key: '', value: '' }],
 
   isLoading: false,
   isStreaming: false,
@@ -103,7 +103,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       temperature: 1,
       maxTokens: 4096,
       stream: true,
-      customHeaders: [],
+      customHeaders: [{ key: '', value: '' }],
       isLoading: false,
       isStreaming: false,
       streamingContent: '',

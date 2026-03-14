@@ -25,10 +25,7 @@ export function HeaderEditor() {
 
   return (
     <div className="flex flex-col gap-2">
-      {customHeaders.length === 0 && (
-        <p className="text-xs text-muted-foreground">No custom headers.</p>
-      )}
-      {customHeaders.map((header, index) => (
+{customHeaders.map((header, index) => (
         <div key={index} className="flex gap-2 items-center">
           <Input
             value={header.key}
@@ -47,6 +44,7 @@ export function HeaderEditor() {
             size="icon"
             className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
             onClick={() => removeHeader(index)}
+            disabled={customHeaders.length <= 1}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

@@ -32,18 +32,14 @@ export function RequestComposer() {
       <TabsContent value="system" className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                System Prompt
-              </label>
-              <Textarea
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                placeholder="System prompt (optional)"
-                className="min-h-[80px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
-                rows={3}
-              />
-            </div>
+            <Textarea
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
+              placeholder="System prompt (optional)"
+              className="min-h-[80px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
+              rows={3}
+            />
+          </div>
           </div>
         </ScrollArea>
       </TabsContent>
