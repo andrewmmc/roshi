@@ -1,4 +1,5 @@
 import Markdown from 'react-markdown';
+import { Loader2 } from 'lucide-react';
 import { useRequestStore } from '@/stores/request-store';
 import { StreamingIndicator } from './StreamingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,11 +8,13 @@ export function ChatView() {
   const messages = useRequestStore((s) => s.messages);
   const systemPrompt = useRequestStore((s) => s.systemPrompt);
   const response = useRequestStore((s) => s.response);
+  const isLoading = useRequestStore((s) => s.isLoading);
   const isStreaming = useRequestStore((s) => s.isStreaming);
   const streamingContent = useRequestStore((s) => s.streamingContent);
   const error = useRequestStore((s) => s.error);
 
   const displayContent = isStreaming ? streamingContent : response?.content;
+  const showLoading = isLoading && !displayContent;
 
   return (
     <ScrollArea className="h-full">
@@ -47,6 +50,17 @@ export function ChatView() {
               </div>
             </div>
           ))}
+
+        {showLoading && (
+          <div className="flex gap-3">
+            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+              ai
+            </div>
+            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px]">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          </div>
+        )}
 
         {displayContent && (
           <div className="flex gap-3">

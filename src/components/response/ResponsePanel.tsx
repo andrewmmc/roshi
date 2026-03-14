@@ -10,7 +10,7 @@ export function ResponsePanel() {
   const error = useRequestStore((s) => s.error);
   const durationMs = useRequestStore((s) => s.durationMs);
 
-  const hasContent = response || error || isStreaming;
+  const hasContent = response || error || isStreaming || isLoading;
 
   return (
     <Tabs defaultValue="chat" className="h-full flex flex-col">

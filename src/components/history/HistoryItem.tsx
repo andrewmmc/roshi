@@ -14,11 +14,11 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
   const hasError = !!entry.error;
 
   return (
-    <button
-      className="w-full text-left px-2.5 py-1.5 rounded hover:bg-sidebar-accent group transition-colors"
-      onClick={() => onSelect(entry)}
-    >
-      <div className="flex items-start justify-between gap-1.5">
+    <div className="relative group">
+      <button
+        className="w-full text-left px-2.5 py-1.5 rounded hover:bg-sidebar-accent transition-colors pr-9"
+        onClick={() => onSelect(entry)}
+      >
         <div className="flex-1 min-w-0">
           <div className="text-[11px] text-muted-foreground flex items-center gap-1">
             <span className="truncate">{entry.providerName}</span>
@@ -33,18 +33,18 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
             {entry.durationMs !== null && ` · ${entry.durationMs}ms`}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(entry.id);
-          }}
-        >
-          <Trash2 className="h-2.5 w-2.5" />
-        </Button>
-      </div>
-    </button>
+      </button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-0.5 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(entry.id);
+        }}
+      >
+        <Trash2 className="h-2.5 w-2.5" />
+      </Button>
+    </div>
   );
 }
