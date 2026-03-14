@@ -12,7 +12,7 @@ export function RequestComposer() {
 
   return (
     <Tabs defaultValue="messages" className="h-full flex flex-col gap-0">
-      <div className="flex items-center px-4 h-10 border-b shrink-0">
+      <div className="flex items-center px-3 h-10 border-b shrink-0">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="messages" className="text-xs px-3">Messages</TabsTrigger>
           <TabsTrigger value="system" className="text-xs px-3">System Prompt</TabsTrigger>

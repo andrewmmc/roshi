@@ -32,7 +32,7 @@ export function HistoryList() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 h-8 border-b border-sidebar-border shrink-0">
+      <div className="flex items-center justify-between px-3 h-10 border-b border-sidebar-border shrink-0">
         <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
           History
         </span>
