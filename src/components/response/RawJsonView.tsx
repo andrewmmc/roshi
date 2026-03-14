@@ -6,14 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
 
 function JsonBlock({ data, label }: { data: unknown; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const json = JSON.stringify(data, null, 2);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const json = data ? JSON.stringify(data, null, 2) : '';
 
   if (!data) {
     return (
@@ -22,19 +15,33 @@ function JsonBlock({ data, label }: { data: unknown; label: string }) {
   }
 
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 h-6 w-6 z-10 text-muted-foreground hover:text-foreground"
-        onClick={handleCopy}
-      >
-        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-      </Button>
-      <pre className="p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all text-foreground/80">
-        {json}
-      </pre>
-    </div>
+    <pre className="p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all text-foreground/80">
+      {json}
+    </pre>
+  );
+}
+
+function CopyButton({ data }: { data: unknown }) {
+  const [copied, setCopied] = useState(false);
+  const json = data ? JSON.stringify(data, null, 2) : '';
+
+  const handleCopy = async () => {
+    if (!data) return;
+    await navigator.clipboard.writeText(json);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="absolute top-2 right-3 h-6 w-6 z-10 text-muted-foreground hover:text-foreground"
+      onClick={handleCopy}
+      disabled={!data}
+    >
+      {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+    </Button>
   );
 }
 
@@ -48,12 +55,14 @@ export function RawJsonView() {
         <TabsTrigger value="response" className="text-xs h-6 px-2.5">Response</TabsTrigger>
         <TabsTrigger value="request" className="text-xs h-6 px-2.5">Request</TabsTrigger>
       </TabsList>
-      <TabsContent value="response" className="flex-1 mt-0">
+      <TabsContent value="response" className="relative flex-1 min-h-0 mt-0">
+        <CopyButton data={rawResponse} />
         <ScrollArea className="h-full">
           <JsonBlock data={rawResponse} label="response" />
         </ScrollArea>
       </TabsContent>
-      <TabsContent value="request" className="flex-1 mt-0">
+      <TabsContent value="request" className="relative flex-1 min-h-0 mt-0">
+        <CopyButton data={rawRequest} />
         <ScrollArea className="h-full">
           <JsonBlock data={rawRequest} label="request" />
         </ScrollArea>

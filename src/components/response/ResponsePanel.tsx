@@ -34,7 +34,7 @@ export function ResponsePanel() {
         </div>
       </div>
 
-      <TabsContent value="chat" className="flex-1 mt-0 overflow-hidden">
+      <TabsContent value="chat" className="flex-1 min-h-0 mt-0 overflow-hidden">
         {hasContent ? (
           <ChatView />
         ) : (
@@ -44,7 +44,7 @@ export function ResponsePanel() {
         )}
       </TabsContent>
 
-      <TabsContent value="raw" className="flex-1 mt-0 overflow-hidden">
+      <TabsContent value="raw" className="flex-1 min-h-0 mt-0 overflow-hidden">
         {hasContent ? (
           <RawJsonView />
         ) : (

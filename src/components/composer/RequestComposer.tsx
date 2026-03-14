@@ -21,7 +21,7 @@ export function RequestComposer() {
         </TabsList>
       </div>
 
-      <TabsContent value="messages" className="flex-1 overflow-hidden">
+      <TabsContent value="messages" className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <MessageEditor />
@@ -29,7 +29,7 @@ export function RequestComposer() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="system" className="flex-1 overflow-hidden">
+      <TabsContent value="system" className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <Textarea
@@ -43,7 +43,7 @@ export function RequestComposer() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="headers" className="flex-1 overflow-hidden">
+      <TabsContent value="headers" className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <HeaderEditor />
@@ -51,7 +51,7 @@ export function RequestComposer() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="parameters" className="flex-1 overflow-hidden">
+      <TabsContent value="parameters" className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <ParameterControls />
