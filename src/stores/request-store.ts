@@ -23,6 +23,7 @@ interface RequestStore {
   rawResponse: Record<string, unknown> | null;
   error: string | null;
   durationMs: number | null;
+  statusCode: number | null;
 
   // Actions
   setMessages: (messages: NormalizedMessage[]) => void;
@@ -43,6 +44,7 @@ interface RequestStore {
   setRawResponse: (raw: Record<string, unknown> | null) => void;
   setError: (error: string | null) => void;
   setDurationMs: (ms: number | null) => void;
+  setStatusCode: (code: number | null) => void;
 
   reset: () => void;
   loadFromHistory: (data: {
@@ -56,6 +58,7 @@ interface RequestStore {
     rawResponse: Record<string, unknown> | null;
     error: string | null;
     durationMs: number | null;
+    statusCode: number | null;
   }) => void;
 }
 
@@ -75,6 +78,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   rawResponse: null,
   error: null,
   durationMs: null,
+  statusCode: null,
 
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
@@ -95,6 +99,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setRawResponse: (rawResponse) => set({ rawResponse }),
   setError: (error) => set({ error }),
   setDurationMs: (durationMs) => set({ durationMs }),
+  setStatusCode: (statusCode) => set({ statusCode }),
 
   reset: () =>
     set({
@@ -112,6 +117,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       rawResponse: null,
       error: null,
       durationMs: null,
+      statusCode: null,
     }),
 
   loadFromHistory: (data) =>
@@ -129,5 +135,6 @@ export const useRequestStore = create<RequestStore>((set) => ({
       rawResponse: data.rawResponse,
       error: data.error,
       durationMs: data.durationMs,
+      statusCode: data.statusCode ?? null,
     }),
 }));

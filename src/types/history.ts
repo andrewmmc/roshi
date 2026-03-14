@@ -12,6 +12,7 @@ export interface HistoryEntry {
   rawResponse: Record<string, unknown> | null;
   error: string | null;
   durationMs: number | null;
+  statusCode: number | null;
   createdAt: Date;
 }
 

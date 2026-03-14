@@ -16,6 +16,7 @@ export interface SendRequestResult {
   rawRequest: Record<string, unknown>;
   rawResponse: Record<string, unknown>;
   durationMs: number;
+  statusCode: number;
 }
 
 export async function sendRequest(options: SendRequestOptions): Promise<SendRequestResult> {
@@ -61,7 +62,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const durationMs = Math.round(performance.now() - startTime);
   const response = adapter.parseResponse(rawResponse);
 
-  return { response, rawRequest: body, rawResponse, durationMs };
+  return { response, rawRequest: body, rawResponse, durationMs, statusCode: fetchResponse.status };
 }
 
 async function handleStream(
@@ -80,6 +81,7 @@ async function handleStream(
   let lastId = '';
   let lastModel = '';
   let finishReason: string | null = null;
+  let usage: NormalizedResponse['usage'] = null;
   const allChunks: unknown[] = [];
 
   while (true) {
@@ -103,6 +105,7 @@ async function handleStream(
       if (chunk.id) lastId = chunk.id;
       if (chunk.model) lastModel = chunk.model;
       if (chunk.finishReason) finishReason = chunk.finishReason;
+      if (chunk.usage) usage = chunk.usage;
       onStreamChunk?.(chunk);
     }
   }
@@ -115,12 +118,12 @@ async function handleStream(
     content: fullContent,
     role: 'assistant',
     finishReason,
-    usage: null,
+    usage,
   };
 
   const rawResponse = { chunks: allChunks, reconstructed: { id: lastId, model: lastModel, content: fullContent } };
 
-  return { response, rawRequest, rawResponse, durationMs };
+  return { response, rawRequest, rawResponse, durationMs, statusCode: fetchResponse.status };
 }
 
 export class RequestError extends Error {

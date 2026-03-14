@@ -94,6 +94,13 @@ export const openaiAdapter: ProviderAdapter = {
         finishReason: choice?.finish_reason || null,
         model: parsed.model,
         id: parsed.id,
+        usage: parsed.usage
+          ? {
+              promptTokens: parsed.usage.prompt_tokens,
+              completionTokens: parsed.usage.completion_tokens,
+              totalTokens: parsed.usage.total_tokens,
+            }
+          : undefined,
       };
     } catch {
       return null;

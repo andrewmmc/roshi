@@ -30,4 +30,9 @@ export interface NormalizedStreamChunk {
   finishReason: string | null;
   model?: string;
   id?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  } | null;
 }

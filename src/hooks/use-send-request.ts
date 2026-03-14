@@ -29,6 +29,7 @@ export function useSendRequest() {
     store.setRawRequest(null);
     store.setRawResponse(null);
     store.setDurationMs(null);
+    store.setStatusCode(null);
     store.setLoading(true);
     store.setStreaming(false);
     useRequestStore.setState({ streamingContent: '' });
@@ -65,6 +66,7 @@ export function useSendRequest() {
       store.setRawRequest(result.rawRequest);
       store.setRawResponse(result.rawResponse);
       store.setDurationMs(result.durationMs);
+      store.setStatusCode(result.statusCode);
 
       // Save to history
       useHistoryStore.getState().addEntry({
@@ -84,6 +86,7 @@ export function useSendRequest() {
         rawResponse: result.rawResponse,
         error: null,
         durationMs: result.durationMs,
+        statusCode: result.statusCode,
       });
     } catch (err) {
       if (err instanceof RequestError) {
@@ -91,6 +94,7 @@ export function useSendRequest() {
         store.setRawRequest(err.rawRequest);
         store.setRawResponse(err.rawResponse);
         store.setDurationMs(err.durationMs);
+        store.setStatusCode(err.status);
 
         useHistoryStore.getState().addEntry({
           providerId: provider.id,
@@ -109,6 +113,7 @@ export function useSendRequest() {
           rawResponse: err.rawResponse,
           error: err.message,
           durationMs: err.durationMs,
+          statusCode: err.status,
         });
       } else if (err instanceof DOMException && err.name === 'AbortError') {
         store.setError('Request cancelled');

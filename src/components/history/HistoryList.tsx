@@ -1,6 +1,15 @@
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { HistoryItem } from './HistoryItem';
 import { useHistory } from '@/hooks/use-history';
 import { useRequestStore } from '@/stores/request-store';
@@ -12,6 +21,7 @@ export function HistoryList() {
   const loadFromHistory = useRequestStore((s) => s.loadFromHistory);
   const selectProvider = useProviderStore((s) => s.selectProvider);
   const selectModel = useProviderStore((s) => s.selectModel);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSelect = (entry: HistoryEntry) => {
     selectProvider(entry.providerId);
@@ -27,6 +37,7 @@ export function HistoryList() {
       rawResponse: entry.rawResponse,
       error: entry.error,
       durationMs: entry.durationMs,
+      statusCode: entry.statusCode,
     });
   };
 
@@ -41,7 +52,7 @@ export function HistoryList() {
             variant="ghost"
             size="icon"
             className="h-5 w-5 text-muted-foreground hover:text-destructive"
-            onClick={clearAll}
+            onClick={() => setShowConfirm(true)}
           >
             <Trash2 className="h-3 w-3" />
           </Button>
@@ -64,6 +75,31 @@ export function HistoryList() {
           ))}
         </div>
       </ScrollArea>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete all history?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove all {entries.length} history entries. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                clearAll();
+                setShowConfirm(false);
+              }}
+            >
+              Delete all
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
