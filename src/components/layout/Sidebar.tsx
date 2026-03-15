@@ -1,11 +1,14 @@
-import { FilePlus2 } from 'lucide-react';
+import { FilePlus2, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProviderManager } from '@/components/providers/ProviderManager';
 import { HistoryList } from '@/components/history/HistoryList';
 import { useRequestStore } from '@/stores/request-store';
+import { useThemeStore } from '@/stores/theme-store';
 
 export function Sidebar() {
   const reset = useRequestStore((s) => s.reset);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggle);
 
   return (
     <div className="flex flex-col h-full bg-sidebar">
@@ -14,6 +17,19 @@ export function Sidebar() {
           LLM Tester
         </span>
         <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? (
+              <Moon className="h-3.5 w-3.5" />
+            ) : (
+              <Sun className="h-3.5 w-3.5" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
