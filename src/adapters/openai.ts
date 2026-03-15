@@ -3,7 +3,7 @@ import type { ProviderConfig } from '@/types/provider';
 import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } from '@/types/normalized';
 
 export const openaiAdapter: ProviderAdapter = {
-  buildRequestBody(request: NormalizedRequest, _provider: ProviderConfig): Record<string, unknown> {
+  buildRequestBody(request: NormalizedRequest): Record<string, unknown> {
     const messages = request.systemPrompt
       ? [{ role: 'system' as const, content: request.systemPrompt }, ...request.messages]
       : request.messages;
@@ -43,7 +43,7 @@ export const openaiAdapter: ProviderAdapter = {
     return headers;
   },
 
-  buildRequestUrl(provider: ProviderConfig, _model: string): string {
+  buildRequestUrl(provider: ProviderConfig): string {
     const base = provider.baseUrl.replace(/\/$/, '');
     const endpoint = provider.endpoints.chat;
     return `${base}${endpoint}`;

@@ -54,6 +54,11 @@ export function CodeView() {
     () => (provider ? getCodeGenerators(provider) : []),
     [provider],
   );
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const activeTab =
+    selectedTab && generators.some((gen) => gen.label === selectedTab)
+      ? selectedTab
+      : (generators[0]?.label ?? '');
 
   const codeMap = useMemo(() => {
     if (!provider || !model) return {} as Record<string, string>;
@@ -98,10 +103,8 @@ export function CodeView() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState(generators[0].label);
-
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+    <Tabs value={activeTab} onValueChange={setSelectedTab} className="h-full flex flex-col">
       <div className="flex items-center justify-between px-4 mt-2">
         <div className="flex items-center gap-2">
           <TabsList className="h-7">

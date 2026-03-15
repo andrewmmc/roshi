@@ -3,12 +3,13 @@ import { useProviderStore } from '@/stores/provider-store';
 
 export function useProviders() {
   const store = useProviderStore();
+  const { loaded, load } = store;
 
   useEffect(() => {
-    if (!store.loaded) {
-      store.load();
+    if (!loaded) {
+      load();
     }
-  }, [store.loaded, store.load]);
+  }, [loaded, load]);
 
   return store;
 }
