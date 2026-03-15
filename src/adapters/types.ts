@@ -4,7 +4,7 @@ import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } fro
 export interface ProviderAdapter {
   buildRequestBody(request: NormalizedRequest, provider: ProviderConfig): Record<string, unknown>;
   buildRequestHeaders(provider: ProviderConfig, customHeaders?: Record<string, string>): Record<string, string>;
-  buildRequestUrl(provider: ProviderConfig, model: string): string;
+  buildRequestUrl(provider: ProviderConfig, model: string, request: NormalizedRequest): string;
   parseResponse(raw: Record<string, unknown>): NormalizedResponse;
-  parseStreamChunk(data: string): NormalizedStreamChunk | null;
+  parseStreamChunk(data: string, event?: string): NormalizedStreamChunk | null;
 }

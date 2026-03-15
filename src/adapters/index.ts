@@ -1,6 +1,8 @@
 import type { ProviderAdapter } from './types';
 import type { ProviderConfig } from '@/types/provider';
 import { openaiAdapter } from './openai';
+import { anthropicAdapter } from './anthropic';
+import { geminiAdapter } from './gemini';
 
 export function getAdapter(provider: ProviderConfig): ProviderAdapter {
   switch (provider.type) {
@@ -8,9 +10,9 @@ export function getAdapter(provider: ProviderConfig): ProviderAdapter {
     case 'custom':
       return openaiAdapter;
     case 'anthropic':
+      return anthropicAdapter;
     case 'google-gemini':
-      // Future adapters — fall back to OpenAI-compatible for now
-      return openaiAdapter;
+      return geminiAdapter;
     default:
       return openaiAdapter;
   }

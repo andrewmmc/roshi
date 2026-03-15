@@ -37,7 +37,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     type: 'google-gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     auth: { type: 'query-param' },
-    endpoints: { chat: '/chat/completions' },
+    endpoints: { chat: '/models/{model}:generateContent' },
     models: [
       { id: 'gemini-2.5-pro', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', supportsStreaming: true },
       { id: 'gemini-2.5-flash', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', supportsStreaming: true },

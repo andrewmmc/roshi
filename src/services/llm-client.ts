@@ -23,7 +23,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const { provider, request, customHeaders, onStreamChunk, signal } = options;
   const adapter = getAdapter(provider);
 
-  const url = adapter.buildRequestUrl(provider, request.model);
+  const url = adapter.buildRequestUrl(provider, request.model, request);
   const headers = adapter.buildRequestHeaders(provider, customHeaders);
   const body = adapter.buildRequestBody(request, provider);
 
@@ -97,15 +97,15 @@ async function handleStream(
     } catch {
       // skip unparseable
     }
-    if (parsed) allChunks.push(parsed);
+    if (parsed) allChunks.push({ event: value.event, data: parsed });
 
-    const chunk = adapter.parseStreamChunk(data);
+    const chunk = adapter.parseStreamChunk(data, value.event);
     if (chunk) {
       fullContent += chunk.content;
       if (chunk.id) lastId = chunk.id;
       if (chunk.model) lastModel = chunk.model;
       if (chunk.finishReason) finishReason = chunk.finishReason;
-      if (chunk.usage) usage = chunk.usage;
+      if (chunk.usage) usage = mergeUsage(usage, chunk.usage);
       onStreamChunk?.(chunk);
     }
   }
@@ -124,6 +124,19 @@ async function handleStream(
   const rawResponse = { chunks: allChunks, reconstructed: { id: lastId, model: lastModel, content: fullContent } };
 
   return { response, rawRequest, rawResponse, durationMs, statusCode: fetchResponse.status };
+}
+
+function mergeUsage(
+  current: NormalizedResponse['usage'],
+  next: NonNullable<NormalizedStreamChunk['usage']>,
+): NormalizedResponse['usage'] {
+  if (!current) return next;
+
+  const promptTokens = next.promptTokens > 0 ? next.promptTokens : current.promptTokens;
+  const completionTokens = next.completionTokens > 0 ? next.completionTokens : current.completionTokens;
+  const totalTokens = next.totalTokens > 0 ? next.totalTokens : promptTokens + completionTokens;
+
+  return { promptTokens, completionTokens, totalTokens };
 }
 
 export class RequestError extends Error {
