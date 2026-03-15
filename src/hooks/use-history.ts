@@ -3,12 +3,13 @@ import { useHistoryStore } from '@/stores/history-store';
 
 export function useHistory() {
   const store = useHistoryStore();
+  const { loaded, load } = store;
 
   useEffect(() => {
-    if (!store.loaded) {
-      store.load();
+    if (!loaded) {
+      load();
     }
-  }, [store.loaded, store.load]);
+  }, [loaded, load]);
 
   return store;
 }
