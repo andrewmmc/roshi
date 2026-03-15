@@ -6,6 +6,27 @@ export interface HeaderEntry {
   value: string;
 }
 
+export interface RequestRunMeta {
+  providerId: string;
+  providerName: string;
+  modelId: string;
+  modelDisplayName: string;
+}
+
+export interface ComparisonState {
+  isLoading: boolean;
+  isStreaming: boolean;
+  streamingContent: string;
+  response: NormalizedResponse | null;
+  rawRequest: Record<string, unknown> | null;
+  rawResponse: Record<string, unknown> | null;
+  error: string | null;
+  durationMs: number | null;
+  statusCode: number | null;
+  sentRequest: NormalizedRequest | null;
+  runMeta: RequestRunMeta | null;
+}
+
 interface RequestStore {
   messages: NormalizedMessage[];
   systemPrompt: string;
@@ -25,6 +46,10 @@ interface RequestStore {
   durationMs: number | null;
   statusCode: number | null;
   sentRequest: NormalizedRequest | null;
+  primaryRunMeta: RequestRunMeta | null;
+  compareTargetProviderId: string | null;
+  compareTargetModelId: string | null;
+  comparison: ComparisonState;
 
   // Actions
   setMessages: (messages: NormalizedMessage[]) => void;
@@ -47,6 +72,11 @@ interface RequestStore {
   setDurationMs: (ms: number | null) => void;
   setStatusCode: (code: number | null) => void;
   setSentRequest: (request: NormalizedRequest | null) => void;
+  setPrimaryRunMeta: (meta: RequestRunMeta | null) => void;
+  setCompareTargetProviderId: (providerId: string | null) => void;
+  setCompareTargetModelId: (modelId: string | null) => void;
+  setComparison: (updates: Partial<ComparisonState>) => void;
+  resetComparison: () => void;
 
   reset: () => void;
   loadFromHistory: (data: {
@@ -63,6 +93,20 @@ interface RequestStore {
     statusCode: number | null;
   }) => void;
 }
+
+const getInitialComparisonState = (): ComparisonState => ({
+  isLoading: false,
+  isStreaming: false,
+  streamingContent: '',
+  response: null,
+  rawRequest: null,
+  rawResponse: null,
+  error: null,
+  durationMs: null,
+  statusCode: null,
+  sentRequest: null,
+  runMeta: null,
+});
 
 export const useRequestStore = create<RequestStore>((set) => ({
   messages: [{ role: 'user', content: '' }],
@@ -82,6 +126,10 @@ export const useRequestStore = create<RequestStore>((set) => ({
   durationMs: null,
   statusCode: null,
   sentRequest: null,
+  primaryRunMeta: null,
+  compareTargetProviderId: null,
+  compareTargetModelId: null,
+  comparison: getInitialComparisonState(),
 
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
@@ -104,6 +152,17 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setDurationMs: (durationMs) => set({ durationMs }),
   setStatusCode: (statusCode) => set({ statusCode }),
   setSentRequest: (sentRequest) => set({ sentRequest }),
+  setPrimaryRunMeta: (primaryRunMeta) => set({ primaryRunMeta }),
+  setCompareTargetProviderId: (compareTargetProviderId) => set({ compareTargetProviderId }),
+  setCompareTargetModelId: (compareTargetModelId) => set({ compareTargetModelId }),
+  setComparison: (updates) =>
+    set((s) => ({
+      comparison: {
+        ...s.comparison,
+        ...updates,
+      },
+    })),
+  resetComparison: () => set({ comparison: getInitialComparisonState() }),
 
   reset: () =>
     set({
@@ -123,6 +182,10 @@ export const useRequestStore = create<RequestStore>((set) => ({
       durationMs: null,
       statusCode: null,
       sentRequest: null,
+      primaryRunMeta: null,
+      compareTargetProviderId: null,
+      compareTargetModelId: null,
+      comparison: getInitialComparisonState(),
     }),
 
   loadFromHistory: (data) =>
@@ -149,5 +212,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       error: data.error,
       durationMs: data.durationMs,
       statusCode: data.statusCode ?? null,
+      primaryRunMeta: null,
+      comparison: getInitialComparisonState(),
     }),
 }));

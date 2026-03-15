@@ -43,9 +43,16 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export function RawJsonView() {
-  const rawRequest = useRequestStore((s) => s.rawRequest);
-  const rawResponse = useRequestStore((s) => s.rawResponse);
+interface RawJsonViewProps {
+  rawRequest?: Record<string, unknown> | null;
+  rawResponse?: Record<string, unknown> | null;
+}
+
+export function RawJsonView(props: RawJsonViewProps) {
+  const storeRawRequest = useRequestStore((s) => s.rawRequest);
+  const storeRawResponse = useRequestStore((s) => s.rawResponse);
+  const rawRequest = props.rawRequest !== undefined ? props.rawRequest : storeRawRequest;
+  const rawResponse = props.rawResponse !== undefined ? props.rawResponse : storeRawResponse;
 
   const [activeTab, setActiveTab] = useState('response');
   const activeData = activeTab === 'response' ? rawResponse : rawRequest;

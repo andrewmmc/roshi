@@ -3,16 +3,34 @@ import { Loader2 } from 'lucide-react';
 import { useRequestStore } from '@/stores/request-store';
 import { StreamingIndicator } from './StreamingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 
-export function ChatView() {
-  const sentRequest = useRequestStore((s) => s.sentRequest);
+interface ChatViewProps {
+  sentRequest?: NormalizedRequest | null;
+  response?: NormalizedResponse | null;
+  isLoading?: boolean;
+  isStreaming?: boolean;
+  streamingContent?: string;
+  error?: string | null;
+}
+
+export function ChatView(props: ChatViewProps) {
+  const storeSentRequest = useRequestStore((s) => s.sentRequest);
+  const storeResponse = useRequestStore((s) => s.response);
+  const storeIsLoading = useRequestStore((s) => s.isLoading);
+  const storeIsStreaming = useRequestStore((s) => s.isStreaming);
+  const storeStreamingContent = useRequestStore((s) => s.streamingContent);
+  const storeError = useRequestStore((s) => s.error);
+
+  const sentRequest = props.sentRequest !== undefined ? props.sentRequest : storeSentRequest;
+  const response = props.response !== undefined ? props.response : storeResponse;
+  const isLoading = props.isLoading !== undefined ? props.isLoading : storeIsLoading;
+  const isStreaming = props.isStreaming !== undefined ? props.isStreaming : storeIsStreaming;
+  const streamingContent =
+    props.streamingContent !== undefined ? props.streamingContent : storeStreamingContent;
+  const error = props.error !== undefined ? props.error : storeError;
   const messages = sentRequest?.messages ?? [];
   const systemPrompt = sentRequest?.systemPrompt ?? '';
-  const response = useRequestStore((s) => s.response);
-  const isLoading = useRequestStore((s) => s.isLoading);
-  const isStreaming = useRequestStore((s) => s.isStreaming);
-  const streamingContent = useRequestStore((s) => s.streamingContent);
-  const error = useRequestStore((s) => s.error);
 
   const displayContent = isStreaming ? streamingContent : response?.content;
   const showLoading = isLoading && !displayContent;
