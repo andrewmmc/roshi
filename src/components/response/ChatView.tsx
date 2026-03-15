@@ -68,7 +68,7 @@ export function ChatView() {
             <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
               ai
             </div>
-            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] prose prose-sm max-w-none prose-pre:bg-foreground/[0.03] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs">
+            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] prose prose-sm dark:prose-invert max-w-none prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs">
               <Markdown>{displayContent}</Markdown>
               {isStreaming && <StreamingIndicator />}
             </div>
