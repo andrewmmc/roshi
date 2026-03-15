@@ -1,14 +1,16 @@
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { HistoryEntry } from '@/types/history';
+import { formatUsd } from '@/lib/token-pricing';
 
 interface HistoryItemProps {
   entry: HistoryEntry;
+  costUsd: number | null;
   onSelect: (entry: HistoryEntry) => void;
   onDelete: (id: string) => void;
 }
 
-export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
+export function HistoryItem({ entry, costUsd, onSelect, onDelete }: HistoryItemProps) {
   const firstUserMessage = entry.request.messages.find((m) => m.role === 'user');
   const preview = firstUserMessage?.content.slice(0, 80) || 'No message';
   const hasError = !!entry.error;
@@ -32,6 +34,12 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
             {new Date(entry.createdAt).toLocaleString()}
             {entry.durationMs !== null && ` · ${entry.durationMs}ms`}
           </div>
+          {entry.response?.usage && (
+            <div className="text-[10px] text-muted-foreground/70 mt-0.5 font-mono">
+              {entry.response.usage.totalTokens} tok
+              {costUsd !== null ? ` · ${formatUsd(costUsd)}` : ' · price n/a'}
+            </div>
+          )}
         </div>
       </button>
       <Button

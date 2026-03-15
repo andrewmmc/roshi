@@ -1,9 +1,11 @@
 import type { NormalizedRequest, NormalizedResponse } from './normalized';
+import type { ProviderConfig } from './provider';
 
 export interface HistoryEntry {
   id: string;
   providerId: string;
   providerName: string;
+  providerType?: ProviderConfig['type'];
   modelId: string;
   collectionId?: string;
   request: NormalizedRequest;

@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChatView } from './ChatView';
 import { RawJsonView } from './RawJsonView';
 import { CodeView } from './CodeView';
 import { useRequestStore } from '@/stores/request-store';
 import { useProviderStore } from '@/stores/provider-store';
+import { usePricing } from '@/hooks/use-pricing';
+import { formatUsd } from '@/lib/token-pricing';
 
 export function ResponsePanel() {
   const isLoading = useRequestStore((s) => s.isLoading);
@@ -12,6 +15,9 @@ export function ResponsePanel() {
   const error = useRequestStore((s) => s.error);
   const durationMs = useRequestStore((s) => s.durationMs);
   const statusCode = useRequestStore((s) => s.statusCode);
+  const sentModelId = useRequestStore((s) => s.sentRequest?.model ?? null);
+  const { estimateUsageCostUsd } = usePricing();
+  const selectedModelId = useProviderStore((s) => s.selectedModelId);
 
   const selectedProvider = useProviderStore((s) => {
     const id = s.selectedProviderId;
@@ -22,6 +28,16 @@ export function ResponsePanel() {
     : false;
 
   const hasContent = response || error || isStreaming || isLoading;
+  const usageCostUsd = useMemo(() => {
+    if (!response?.usage || !selectedProvider) {
+      return null;
+    }
+    const modelId = response.model || sentModelId || selectedModelId;
+    if (!modelId) {
+      return null;
+    }
+    return estimateUsageCostUsd(selectedProvider, modelId, response.usage);
+  }, [estimateUsageCostUsd, response, selectedModelId, selectedProvider, sentModelId]);
 
   return (
     <Tabs defaultValue="chat" className="h-full flex flex-col">
@@ -40,7 +56,10 @@ export function ResponsePanel() {
             </span>
           )}
           {response?.usage && (
-            <span className="font-mono">{response.usage.totalTokens} tok</span>
+            <span className="font-mono">
+              {response.usage.totalTokens} tok
+              {usageCostUsd !== null ? ` · ${formatUsd(usageCostUsd)}` : ' · price n/a'}
+            </span>
           )}
           {statusCode !== null && !isLoading && (
             <span

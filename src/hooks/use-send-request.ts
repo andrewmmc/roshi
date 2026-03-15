@@ -80,6 +80,7 @@ export function useSendRequest() {
       useHistoryStore.getState().addEntry({
         providerId: provider.id,
         providerName: provider.name,
+        providerType: provider.type,
         modelId: model.id,
         request: {
           messages: nonEmptyMessages,
@@ -107,6 +108,7 @@ export function useSendRequest() {
         useHistoryStore.getState().addEntry({
           providerId: provider.id,
           providerName: provider.name,
+          providerType: provider.type,
           modelId: model.id,
           request: {
             messages: nonEmptyMessages,
