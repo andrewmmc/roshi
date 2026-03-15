@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
@@ -54,18 +54,11 @@ export function CodeView() {
     () => (provider ? getCodeGenerators(provider) : []),
     [provider],
   );
-  const [activeTab, setActiveTab] = useState('');
-
-  useEffect(() => {
-    if (generators.length === 0) {
-      if (activeTab !== '') setActiveTab('');
-      return;
-    }
-
-    if (!generators.some((gen) => gen.label === activeTab)) {
-      setActiveTab(generators[0].label);
-    }
-  }, [generators, activeTab]);
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const activeTab =
+    selectedTab && generators.some((gen) => gen.label === selectedTab)
+      ? selectedTab
+      : (generators[0]?.label ?? '');
 
   const codeMap = useMemo(() => {
     if (!provider || !model) return {} as Record<string, string>;
@@ -111,7 +104,7 @@ export function CodeView() {
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+    <Tabs value={activeTab} onValueChange={setSelectedTab} className="h-full flex flex-col">
       <div className="flex items-center justify-between px-4 mt-2">
         <div className="flex items-center gap-2">
           <TabsList className="h-7">
