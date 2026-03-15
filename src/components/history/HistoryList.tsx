@@ -27,7 +27,7 @@ export function HistoryList() {
   const selectModel = useProviderStore((s) => s.selectModel);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const entryCosts = useMemo(() => {
+  const entryCosts = useMemo<Record<string, number | null>>(() => {
     return Object.fromEntries(
       entries.map((entry) => {
         const usage = entry.response?.usage;
@@ -54,7 +54,7 @@ export function HistoryList() {
   }, [entries, estimateUsageCostUsd, providers]);
 
   const runningTotalUsd = useMemo(() => {
-    return Object.values(entryCosts).reduce((sum, cost) => {
+    return Object.values(entryCosts).reduce<number>((sum, cost) => {
       if (typeof cost !== 'number') {
         return sum;
       }
