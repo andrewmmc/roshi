@@ -4,6 +4,7 @@ import { RawJsonView } from './RawJsonView';
 import { CodeView } from './CodeView';
 import { useRequestStore } from '@/stores/request-store';
 import { useProviderStore } from '@/stores/provider-store';
+import { getCodeGenerators } from '@/services/codegen';
 
 export function ResponsePanel() {
   const isLoading = useRequestStore((s) => s.isLoading);
@@ -18,7 +19,7 @@ export function ResponsePanel() {
     return id ? s.providers.find((p) => p.id === id) || null : null;
   });
   const isCodeTabEnabled = selectedProvider
-    ? selectedProvider.type === 'openai-compatible' || selectedProvider.type === 'custom'
+    ? getCodeGenerators(selectedProvider).length > 0
     : false;
 
   const hasContent = response || error || isStreaming || isLoading;
