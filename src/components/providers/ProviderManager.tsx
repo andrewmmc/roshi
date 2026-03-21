@@ -33,9 +33,9 @@ export function ProviderManager() {
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) setView('list'); }}>
       <DialogTrigger
-        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
+        render={<Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" />}
       >
-        <Settings className="h-4 w-4" />
+        <Settings className="h-3.5 w-3.5" />
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={false}>
         <DialogHeader>
