@@ -12,6 +12,7 @@ export function ProviderSelect() {
     useProviders();
 
   const selectedProvider = getSelectedProvider();
+  const hasProviders = providers.length > 0;
 
   return (
     <div className="flex gap-2">
@@ -20,11 +21,19 @@ export function ProviderSelect() {
           <SelectValue placeholder="Provider" />
         </SelectTrigger>
         <SelectContent>
-          {providers.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              {p.name}
-            </SelectItem>
-          ))}
+          {hasProviders ? (
+            providers.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+              No providers configured.
+              <br />
+              Add one in Settings.
+            </div>
+          )}
         </SelectContent>
       </Select>
 
@@ -33,11 +42,17 @@ export function ProviderSelect() {
           <SelectValue placeholder="Model" />
         </SelectTrigger>
         <SelectContent>
-          {selectedProvider?.models.map((m) => (
-            <SelectItem key={m.id} value={m.id}>
-              {m.displayName}
-            </SelectItem>
-          ))}
+          {selectedProvider?.models.length ? (
+            selectedProvider.models.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.displayName}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+              {hasProviders ? 'No models available.' : 'Configure a provider first.'}
+            </div>
+          )}
         </SelectContent>
       </Select>
     </div>
