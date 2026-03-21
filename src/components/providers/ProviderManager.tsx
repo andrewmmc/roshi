@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
+import { useProviderStore } from '@/stores/provider-store';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit';
@@ -19,7 +20,7 @@ export function ProviderManager() {
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
 
-  const { providers, updateProvider } = useProviders();
+  const { providers, updateProvider, resetProviderModels } = useProviders();
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
@@ -98,6 +99,12 @@ export function ProviderManager() {
               onCancel={() => { setEditingProvider(null); setView('list'); }}
               submitLabel="Update"
               isBuiltIn={editingProvider.isBuiltIn}
+              onResetModels={async () => {
+                await resetProviderModels(editingProvider.id);
+                // Read fresh state from store after reset
+                const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
+                if (updated) setEditingProvider(updated);
+              }}
             />
           </div>
         )}

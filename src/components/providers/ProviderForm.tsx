@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, RotateCcw } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
@@ -20,6 +20,7 @@ interface ProviderFormProps {
   onCancel: () => void;
   submitLabel?: string;
   isBuiltIn?: boolean;
+  onResetModels?: () => Promise<void>;
 }
 
 const defaultFormData: ProviderFormData = {
@@ -34,8 +35,9 @@ const defaultFormData: ProviderFormData = {
   isBuiltIn: false,
 };
 
-export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false }: ProviderFormProps) {
+export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false, onResetModels }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
+  const [resetting, setResetting] = useState(false);
 
   const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -168,7 +170,29 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-xs">Models</Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Models</Label>
+          {isBuiltIn && onResetModels && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs text-muted-foreground"
+              disabled={resetting}
+              onClick={async () => {
+                setResetting(true);
+                try {
+                  await onResetModels();
+                } finally {
+                  setResetting(false);
+                }
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              {resetting ? 'Resetting...' : 'Reset to default'}
+            </Button>
+          )}
+        </div>
         {form.models.map((model, i) => (
           <div key={i} className="flex gap-2 items-center">
             <Input

@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import type { ProviderConfig } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
+import { fetchModelsForProvider } from '@/services/models-api';
 
 interface ProviderStore {
   providers: ProviderConfig[];
@@ -16,6 +17,7 @@ interface ProviderStore {
   deleteProvider: (id: string) => Promise<void>;
   selectProvider: (id: string | null) => void;
   selectModel: (id: string | null) => void;
+  resetProviderModels: (id: string) => Promise<void>;
 
   getSelectedProvider: () => ProviderConfig | null;
   getSelectedModel: () => ProviderConfig['models'][0] | null;
@@ -32,13 +34,28 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     // Set loaded early to prevent concurrent calls from duplicating seeds
     set({ loaded: true });
 
-    let providers = await db.providers.toArray();
+    const providers = await db.providers.toArray();
 
-    // Seed missing built-in providers
-    for (const template of builtinProviders) {
-      const exists = providers.some((p) => p.name === template.name && p.isBuiltIn);
-      if (!exists) {
-        const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '' };
+    // Seed missing built-in providers with models fetched from API
+    const needsSeed = builtinProviders.filter(
+      (template) => !providers.some((p) => p.name === template.name && p.isBuiltIn),
+    );
+
+    if (needsSeed.length > 0) {
+      let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] = [];
+      try {
+        fetchedModels = await Promise.all(
+          needsSeed.map((t) => fetchModelsForProvider(t.name)),
+        );
+      } catch {
+        // Graceful degradation: seed with empty models if API fails
+        fetchedModels = needsSeed.map(() => []);
+      }
+
+      for (let i = 0; i < needsSeed.length; i++) {
+        const template = needsSeed[i];
+        const models = fetchedModels[i];
+        const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '', models };
         await db.providers.add(newProvider);
         providers.push(newProvider);
       }
@@ -100,6 +117,17 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   },
 
   selectModel: (id) => set({ selectedModelId: id }),
+
+  resetProviderModels: async (id) => {
+    const provider = get().providers.find((p) => p.id === id);
+    if (!provider?.isBuiltIn) return;
+
+    const models = await fetchModelsForProvider(provider.name);
+    await db.providers.update(id, { models });
+    set((state) => ({
+      providers: state.providers.map((p) => (p.id === id ? { ...p, models } : p)),
+    }));
+  },
 
   getSelectedProvider: () => {
     const { providers, selectedProviderId } = get();
