@@ -33,20 +33,6 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     isBuiltIn: true,
   },
   {
-    name: 'Google Gemini',
-    type: 'google-gemini',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    auth: { type: 'query-param' },
-    endpoints: { chat: '/chat/completions' },
-    models: [
-      { id: 'gemini-2.5-pro', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', supportsStreaming: true },
-      { id: 'gemini-2.5-flash', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', supportsStreaming: true },
-      { id: 'gemini-2.0-flash', name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', supportsStreaming: true },
-    ],
-    defaults: { temperature: 1, maxTokens: 4096 },
-    isBuiltIn: true,
-  },
-  {
     name: 'OpenRouter',
     type: 'openai-compatible',
     baseUrl: 'https://openrouter.ai/api/v1',

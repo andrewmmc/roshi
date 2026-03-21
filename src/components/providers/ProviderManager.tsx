@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Plus, Trash2, Pencil, Download } from 'lucide-react';
+import { Settings, Plus, Trash2, Pencil, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -54,7 +54,7 @@ export function ProviderManager() {
       >
         <Settings className="h-4 w-4" />
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>
             {view === 'list' && 'Providers'}
@@ -62,6 +62,23 @@ export function ProviderManager() {
             {view === 'edit' && 'Edit Provider'}
             {view === 'import' && 'Import Provider'}
           </DialogTitle>
+          {/* Custom close button: navigates back to list on sub-views, closes dialog on list */}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-2 right-2"
+            onClick={() => {
+              if (view === 'list') {
+                setOpen(false);
+              } else {
+                setEditingProvider(null);
+                setView('list');
+              }
+            }}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
         </DialogHeader>
 
         {view === 'list' && (
@@ -122,20 +139,20 @@ export function ProviderManager() {
         )}
 
         {view === 'add' && (
-          <ScrollArea className="max-h-[60vh]">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <ProviderForm onSubmit={handleAdd} onCancel={() => setView('list')} submitLabel="Add" />
-          </ScrollArea>
+          </div>
         )}
 
         {view === 'edit' && editingProvider && (
-          <ScrollArea className="max-h-[60vh]">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <ProviderForm
               initialData={editingProvider}
               onSubmit={handleEdit}
               onCancel={() => { setEditingProvider(null); setView('list'); }}
               submitLabel="Update"
             />
-          </ScrollArea>
+          </div>
         )}
 
         {view === 'import' && (
