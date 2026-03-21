@@ -19,6 +19,7 @@ interface ProviderFormProps {
   onSubmit: (data: ProviderFormData) => void;
   onCancel: () => void;
   submitLabel?: string;
+  isBuiltIn?: boolean;
 }
 
 const defaultFormData: ProviderFormData = {
@@ -33,7 +34,7 @@ const defaultFormData: ProviderFormData = {
   isBuiltIn: false,
 };
 
-export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save' }: ProviderFormProps) {
+export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
 
   const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
@@ -81,6 +82,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
             onChange={(e) => updateField('name', e.target.value)}
             placeholder="My Provider"
             required
+            disabled={isBuiltIn}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -88,6 +90,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
           <Select
             value={form.type}
             onValueChange={(val) => updateField('type', val as ProviderConfig['type'])}
+            disabled={isBuiltIn}
           >
             <SelectTrigger>
               <SelectValue />
@@ -109,6 +112,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
           onChange={(e) => updateField('baseUrl', e.target.value)}
           placeholder="https://api.openai.com/v1"
           required
+          disabled={isBuiltIn}
         />
       </div>
 
@@ -118,6 +122,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
           <Select
             value={form.auth.type}
             onValueChange={(val) => updateField('auth', { ...form.auth, type: val as ProviderConfig['auth']['type'] })}
+            disabled={isBuiltIn}
           >
             <SelectTrigger>
               <SelectValue />
@@ -158,6 +163,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
           value={form.endpoints.chat}
           onChange={(e) => updateField('endpoints', { chat: e.target.value })}
           placeholder="/chat/completions"
+          disabled={isBuiltIn}
         />
       </div>
 

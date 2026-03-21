@@ -16,7 +16,6 @@ interface ProviderStore {
   deleteProvider: (id: string) => Promise<void>;
   selectProvider: (id: string | null) => void;
   selectModel: (id: string | null) => void;
-  importBuiltin: (index: number, apiKey: string) => Promise<ProviderConfig>;
 
   getSelectedProvider: () => ProviderConfig | null;
   getSelectedModel: () => ProviderConfig['models'][0] | null;
@@ -29,11 +28,26 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   loaded: false,
 
   load: async () => {
-    const providers = await db.providers.toArray();
+    if (get().loaded) return;
+    // Set loaded early to prevent concurrent calls from duplicating seeds
+    set({ loaded: true });
+
+    let providers = await db.providers.toArray();
+
+    // Seed missing built-in providers
+    for (const template of builtinProviders) {
+      const exists = providers.some((p) => p.name === template.name && p.isBuiltIn);
+      if (!exists) {
+        const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '' };
+        await db.providers.add(newProvider);
+        providers.push(newProvider);
+      }
+    }
+
     const selectedProviderId = providers.length > 0 ? providers[0].id : null;
     const selectedModelId =
       selectedProviderId && providers[0].models.length > 0 ? providers[0].models[0].id : null;
-    set({ providers, selectedProviderId, selectedModelId, loaded: true });
+    set({ providers, selectedProviderId, selectedModelId });
   },
 
   addProvider: async (provider) => {
@@ -61,6 +75,9 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   },
 
   deleteProvider: async (id) => {
+    const provider = get().providers.find((p) => p.id === id);
+    if (provider?.isBuiltIn) return;
+
     await db.providers.delete(id);
     set((state) => {
       const providers = state.providers.filter((p) => p.id !== id);
@@ -83,12 +100,6 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   },
 
   selectModel: (id) => set({ selectedModelId: id }),
-
-  importBuiltin: async (index, apiKey) => {
-    const template = builtinProviders[index];
-    if (!template) throw new Error('Invalid builtin provider index');
-    return get().addProvider({ ...template, apiKey });
-  },
 
   getSelectedProvider: () => {
     const { providers, selectedProviderId } = get();
