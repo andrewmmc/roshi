@@ -5,6 +5,7 @@ const MODELS_API_URL = 'https://models.dev/api.json';
 interface ApiModel {
   id: string;
   name: string;
+  release_date?: string;
   modalities?: {
     input?: string[];
     output?: string[];
@@ -45,46 +46,37 @@ export interface FetchedModels {
   openrouter: ProviderModel[];
 }
 
+function collectModels(
+  models: Record<string, ApiModel>,
+  filter: (id: string, model: ApiModel) => boolean,
+): [string, ApiModel][] {
+  return Object.entries(models).filter(([id, model]) => filter(id, model));
+}
+
+function sortByReleaseDate(models: [string, ApiModel][]): ProviderModel[] {
+  return models
+    .sort(([, a], [, b]) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
+    .map(([id, model]) => toProviderModel(id, model));
+}
+
 export async function fetchModelsFromApi(): Promise<FetchedModels> {
   const res = await fetch(MODELS_API_URL);
   if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
   const data: ModelsApiResponse = await res.json();
 
-  const openaiModels: ProviderModel[] = [];
-  const anthropicModels: ProviderModel[] = [];
-  const openrouterModels: ProviderModel[] = [];
-
-  // OpenAI models
-  if (data.openai?.models) {
-    for (const [id, model] of Object.entries(data.openai.models)) {
-      if (isTextChatModel(model)) {
-        openaiModels.push(toProviderModel(id, model));
-      }
-    }
-  }
-
-  // Anthropic models
-  if (data.anthropic?.models) {
-    for (const [id, model] of Object.entries(data.anthropic.models)) {
-      if (isTextChatModel(model)) {
-        anthropicModels.push(toProviderModel(id, model));
-      }
-    }
-  }
-
-  // OpenRouter models — only openai/* and anthropic/* prefixed
-  if (data.openrouter?.models) {
-    for (const [id, model] of Object.entries(data.openrouter.models)) {
-      if ((id.startsWith('openai/') || id.startsWith('anthropic/')) && isTextChatModel(model)) {
-        openrouterModels.push(toProviderModel(id, model));
-      }
-    }
-  }
-
   return {
-    openai: openaiModels,
-    anthropic: anthropicModels,
-    openrouter: openrouterModels,
+    openai: data.openai?.models
+      ? sortByReleaseDate(collectModels(data.openai.models, (_id, m) => isTextChatModel(m)))
+      : [],
+    anthropic: data.anthropic?.models
+      ? sortByReleaseDate(collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)))
+      : [],
+    openrouter: data.openrouter?.models
+      ? sortByReleaseDate(collectModels(
+          data.openrouter.models,
+          (id, m) => (id.startsWith('openai/') || id.startsWith('anthropic/')) && isTextChatModel(m),
+        ))
+      : [],
   };
 }
 

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Trash2, Plus, RotateCcw } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
+import { builtinProviders } from '@/providers/builtins';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 
@@ -20,7 +21,7 @@ interface ProviderFormProps {
   onCancel: () => void;
   submitLabel?: string;
   isBuiltIn?: boolean;
-  onResetModels?: () => Promise<void>;
+  onResetModels?: () => Promise<ProviderModel[]>;
 }
 
 const defaultFormData: ProviderFormData = {
@@ -38,6 +39,7 @@ const defaultFormData: ProviderFormData = {
 export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false, onResetModels }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
   const [resetting, setResetting] = useState(false);
+  const builtinDefaults = isBuiltIn ? builtinProviders.find((b) => b.name === form.name) : null;
 
   const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -108,13 +110,26 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs">Base URL</Label>
+        <div className="flex items-center justify-between min-h-6">
+          <Label className="text-xs">Base URL</Label>
+          {builtinDefaults && form.baseUrl !== builtinDefaults.baseUrl && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs text-muted-foreground"
+              onClick={() => updateField('baseUrl', builtinDefaults.baseUrl)}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset
+            </Button>
+          )}
+        </div>
         <Input
           value={form.baseUrl}
           onChange={(e) => updateField('baseUrl', e.target.value)}
           placeholder="https://api.openai.com/v1"
           required
-          disabled={isBuiltIn}
         />
       </div>
 
@@ -170,7 +185,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-h-6">
           <Label className="text-xs">Models</Label>
           {isBuiltIn && onResetModels && (
             <Button
@@ -182,14 +197,15 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
               onClick={async () => {
                 setResetting(true);
                 try {
-                  await onResetModels();
+                  const models = await onResetModels();
+                  updateField('models', models);
                 } finally {
                   setResetting(false);
                 }
               }}
             >
               <RotateCcw className="h-3 w-3 mr-1" />
-              {resetting ? 'Resetting...' : 'Reset to default'}
+              {resetting ? 'Resetting...' : 'Reset'}
             </Button>
           )}
         </div>

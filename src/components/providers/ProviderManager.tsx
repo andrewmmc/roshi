@@ -101,9 +101,8 @@ export function ProviderManager() {
               isBuiltIn={editingProvider.isBuiltIn}
               onResetModels={async () => {
                 await resetProviderModels(editingProvider.id);
-                // Read fresh state from store after reset
                 const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
-                if (updated) setEditingProvider(updated);
+                return updated?.models ?? [];
               }}
             />
           </div>
