@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/select';
 import { Trash2, Plus, RotateCcw } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
-import { builtinProviders } from '@/providers/builtins';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 
@@ -21,7 +20,7 @@ interface ProviderFormProps {
   onCancel: () => void;
   submitLabel?: string;
   isBuiltIn?: boolean;
-  onResetModels?: () => Promise<ProviderModel[]>;
+  onReset?: () => Promise<ProviderFormData | null>;
 }
 
 const defaultFormData: ProviderFormData = {
@@ -36,10 +35,9 @@ const defaultFormData: ProviderFormData = {
   isBuiltIn: false,
 };
 
-export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false, onResetModels }: ProviderFormProps) {
+export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false, onReset }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
   const [resetting, setResetting] = useState(false);
-  const builtinDefaults = isBuiltIn ? builtinProviders.find((b) => b.name === form.name) : null;
 
   const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -110,21 +108,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between min-h-6">
-          <Label className="text-xs">Base URL</Label>
-          {builtinDefaults && form.baseUrl !== builtinDefaults.baseUrl && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs text-muted-foreground"
-              onClick={() => updateField('baseUrl', builtinDefaults.baseUrl)}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
-            </Button>
-          )}
-        </div>
+        <Label className="text-xs">Base URL</Label>
         <Input
           value={form.baseUrl}
           onChange={(e) => updateField('baseUrl', e.target.value)}
@@ -185,30 +169,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between min-h-6">
-          <Label className="text-xs">Models</Label>
-          {isBuiltIn && onResetModels && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs text-muted-foreground"
-              disabled={resetting}
-              onClick={async () => {
-                setResetting(true);
-                try {
-                  const models = await onResetModels();
-                  updateField('models', models);
-                } finally {
-                  setResetting(false);
-                }
-              }}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              {resetting ? 'Resetting...' : 'Reset'}
-            </Button>
-          )}
-        </div>
+        <Label className="text-xs">Models</Label>
         {form.models.map((model, i) => (
           <div key={i} className="flex gap-2 items-center">
             <Input
@@ -236,11 +197,36 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
         </Button>
       </div>
 
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit">{submitLabel}</Button>
+      <div className="flex items-center justify-between pt-2">
+        <div>
+          {isBuiltIn && onReset && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs text-destructive hover:text-destructive"
+              disabled={resetting}
+              onClick={async () => {
+                setResetting(true);
+                try {
+                  const data = await onReset();
+                  if (data) setForm(data);
+                } finally {
+                  setResetting(false);
+                }
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              {resetting ? 'Resetting...' : 'Reset to default'}
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">{submitLabel}</Button>
+        </div>
       </div>
     </form>
   );

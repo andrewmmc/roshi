@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Pencil, X } from 'lucide-react';
+import { Settings, Pencil, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,8 +19,9 @@ export function ProviderManager() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
+  const [resettingAll, setResettingAll] = useState(false);
 
-  const { providers, updateProvider, resetProviderModels } = useProviders();
+  const { providers, updateProvider, resetProvider, resetAllProviders } = useProviders();
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
@@ -63,31 +64,50 @@ export function ProviderManager() {
         </DialogHeader>
 
         {view === 'list' && (
-          <div className="flex flex-col gap-1">
-            {providers.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted/50 group"
-              >
-                <div>
-                  <div className="text-sm font-medium">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {p.apiKey ? 'API key configured' : 'No API key'}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => {
-                    setEditingProvider(p);
-                    setView('edit');
-                  }}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              {providers.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted/50 group"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
+                  <div>
+                    <div className="text-sm font-medium">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {p.apiKey ? 'API key configured' : 'No API key'}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      setEditingProvider(p);
+                      setView('edit');
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start text-xs text-destructive hover:text-destructive"
+              disabled={resettingAll}
+              onClick={async () => {
+                setResettingAll(true);
+                try {
+                  await resetAllProviders();
+                } finally {
+                  setResettingAll(false);
+                }
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              {resettingAll ? 'Resetting...' : 'Reset all to default'}
+            </Button>
           </div>
         )}
 
@@ -99,10 +119,13 @@ export function ProviderManager() {
               onCancel={() => { setEditingProvider(null); setView('list'); }}
               submitLabel="Update"
               isBuiltIn={editingProvider.isBuiltIn}
-              onResetModels={async () => {
-                await resetProviderModels(editingProvider.id);
+              onReset={async () => {
+                await resetProvider(editingProvider.id);
                 const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
-                return updated?.models ?? [];
+                if (!updated) return null;
+                setEditingProvider(updated);
+                const { id: _id, ...data } = updated;
+                return data;
               }}
             />
           </div>

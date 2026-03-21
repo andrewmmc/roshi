@@ -72,10 +72,16 @@ export async function fetchModelsFromApi(): Promise<FetchedModels> {
       ? sortByReleaseDate(collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)))
       : [],
     openrouter: data.openrouter?.models
-      ? sortByReleaseDate(collectModels(
-          data.openrouter.models,
-          (id, m) => (id.startsWith('openai/') || id.startsWith('anthropic/')) && isTextChatModel(m),
-        ))
+      ? [
+          ...sortByReleaseDate(collectModels(
+            data.openrouter.models,
+            (id, m) => id.startsWith('openai/') && isTextChatModel(m),
+          )),
+          ...sortByReleaseDate(collectModels(
+            data.openrouter.models,
+            (id, m) => id.startsWith('anthropic/') && isTextChatModel(m),
+          )),
+        ]
       : [],
   };
 }

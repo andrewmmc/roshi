@@ -17,7 +17,8 @@ interface ProviderStore {
   deleteProvider: (id: string) => Promise<void>;
   selectProvider: (id: string | null) => void;
   selectModel: (id: string | null) => void;
-  resetProviderModels: (id: string) => Promise<void>;
+  resetProvider: (id: string) => Promise<void>;
+  resetAllProviders: () => Promise<void>;
 
   getSelectedProvider: () => ProviderConfig | null;
   getSelectedModel: () => ProviderConfig['models'][0] | null;
@@ -118,15 +119,62 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
   selectModel: (id) => set({ selectedModelId: id }),
 
-  resetProviderModels: async (id) => {
+  resetProvider: async (id) => {
     const provider = get().providers.find((p) => p.id === id);
     if (!provider?.isBuiltIn) return;
 
-    const models = await fetchModelsForProvider(provider.name);
-    await db.providers.update(id, { models });
+    const template = builtinProviders.find((b) => b.name === provider.name);
+    if (!template) return;
+
+    let models = template.models;
+    try {
+      models = await fetchModelsForProvider(template.name);
+    } catch {
+      // Keep empty models on fetch failure
+    }
+
+    const reset: ProviderConfig = { ...template, id: provider.id, apiKey: '', models };
+    await db.providers.put(reset);
     set((state) => ({
-      providers: state.providers.map((p) => (p.id === id ? { ...p, models } : p)),
+      providers: state.providers.map((p) => (p.id === id ? reset : p)),
     }));
+  },
+
+  resetAllProviders: async () => {
+    // Delete all built-in providers from DB
+    const currentProviders = get().providers;
+    for (const p of currentProviders) {
+      if (p.isBuiltIn) {
+        await db.providers.delete(p.id);
+      }
+    }
+
+    // Re-seed from builtin templates with fresh models from API
+    const newProviders: ProviderConfig[] = [];
+    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] = [];
+    try {
+      fetchedModels = await Promise.all(
+        builtinProviders.map((t) => fetchModelsForProvider(t.name)),
+      );
+    } catch {
+      fetchedModels = builtinProviders.map(() => []);
+    }
+
+    for (let i = 0; i < builtinProviders.length; i++) {
+      const template = builtinProviders[i];
+      const models = fetchedModels[i];
+      const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '', models };
+      await db.providers.add(newProvider);
+      newProviders.push(newProvider);
+    }
+
+    // Keep non-built-in providers, replace built-ins
+    const nonBuiltIn = currentProviders.filter((p) => !p.isBuiltIn);
+    const providers = [...newProviders, ...nonBuiltIn];
+    const selectedProviderId = providers.length > 0 ? providers[0].id : null;
+    const selectedModelId =
+      selectedProviderId && providers[0].models.length > 0 ? providers[0].models[0].id : null;
+    set({ providers, selectedProviderId, selectedModelId });
   },
 
   getSelectedProvider: () => {
