@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -22,13 +22,17 @@ function JsonBlock({ data, label }: { data: unknown; label: string }) {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleCopy = async () => {
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const handleCopy = useCallback(async () => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
+  }, [text]);
 
   return (
     <Button

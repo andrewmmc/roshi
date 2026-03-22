@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ export function HeaderEditor() {
   const setCustomHeaders = useRequestStore((s) => s.setCustomHeaders);
 
   const addHeader = () => {
-    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
+    setCustomHeaders([...customHeaders, { id: nanoid(), key: '', value: '' }]);
   };
 
   const updateKey = (index: number, key: string) => {
@@ -26,7 +27,7 @@ export function HeaderEditor() {
   return (
     <div className="flex flex-col gap-2">
 {customHeaders.map((header, index) => (
-        <div key={index} className="flex gap-2 items-center">
+        <div key={header.id} className="flex gap-2 items-center">
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { useRequestStore } from '@/stores/request-store';
-import { useProviderStore } from '@/stores/provider-store';
+import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,16 @@ import { Copy, Check } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleCopy = async () => {
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
+  }, [text]);
 
   return (
     <Button
@@ -28,17 +32,8 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function CodeView() {
-  const provider = useProviderStore((s) => {
-    const id = s.selectedProviderId;
-    return id ? s.providers.find((p) => p.id === id) || null : null;
-  });
-  const model = useProviderStore((s) => {
-    const p = s.selectedProviderId
-      ? s.providers.find((p) => p.id === s.selectedProviderId)
-      : null;
-    const modelId = s.selectedModelId;
-    return p?.models.find((m) => m.id === modelId) || null;
-  });
+  const provider = useSelectedProvider();
+  const model = useSelectedModel();
 
   const messages = useRequestStore((s) => s.messages);
   const systemPrompt = useRequestStore((s) => s.systemPrompt);

@@ -35,7 +35,7 @@ export function MessageEditor() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
         {messages.map((msg, index) => (
-          <div key={index} className="flex gap-2 items-start">
+          <div key={msg.id || index} className="flex gap-2 items-start">
             <Select
               value={msg.role}
               onValueChange={(val) => handleRoleChange(index, val as NormalizedMessage['role'])}

@@ -218,3 +218,17 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     return provider?.models.find((m) => m.id === selectedModelId) || null;
   },
 }));
+
+export const useSelectedProvider = () =>
+  useProviderStore((s) => {
+    const id = s.selectedProviderId;
+    return id ? s.providers.find((p) => p.id === id) || null : null;
+  });
+
+export const useSelectedModel = () =>
+  useProviderStore((s) => {
+    const provider = s.selectedProviderId
+      ? s.providers.find((p) => p.id === s.selectedProviderId)
+      : null;
+    return provider?.models.find((m) => m.id === s.selectedModelId) || null;
+  });

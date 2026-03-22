@@ -3,7 +3,7 @@ import { ChatView } from './ChatView';
 import { RawJsonView } from './RawJsonView';
 import { CodeView } from './CodeView';
 import { useRequestStore } from '@/stores/request-store';
-import { useProviderStore } from '@/stores/provider-store';
+import { useSelectedProvider } from '@/stores/provider-store';
 
 export function ResponsePanel() {
   const isLoading = useRequestStore((s) => s.isLoading);
@@ -13,10 +13,7 @@ export function ResponsePanel() {
   const durationMs = useRequestStore((s) => s.durationMs);
   const statusCode = useRequestStore((s) => s.statusCode);
 
-  const selectedProvider = useProviderStore((s) => {
-    const id = s.selectedProviderId;
-    return id ? s.providers.find((p) => p.id === id) || null : null;
-  });
+  const selectedProvider = useSelectedProvider();
   const isCodeTabEnabled = selectedProvider
     ? selectedProvider.type === 'openai-compatible' || selectedProvider.type === 'custom'
     : false;

@@ -23,7 +23,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const { provider, request, customHeaders, onStreamChunk, signal } = options;
   const adapter = getAdapter(provider);
 
-  const url = adapter.buildRequestUrl(provider, request.model);
+  const url = adapter.buildRequestUrl(provider);
   const headers = adapter.buildRequestHeaders(provider, customHeaders);
   const body = adapter.buildRequestBody(request, provider);
 
@@ -55,7 +55,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   }
 
   if (request.stream && fetchResponse.body) {
-    return handleStream(fetchResponse, adapter, body, startTime, onStreamChunk);
+    return handleStream(fetchResponse.body, adapter, body, startTime, fetchResponse.status, onStreamChunk);
   }
 
   const rawResponse = await fetchResponse.json();
@@ -66,13 +66,14 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
 }
 
 async function handleStream(
-  fetchResponse: Response,
+  body: ReadableStream<Uint8Array>,
   adapter: ReturnType<typeof getAdapter>,
   rawRequest: Record<string, unknown>,
   startTime: number,
+  statusCode: number,
   onStreamChunk?: (chunk: NormalizedStreamChunk) => void,
 ): Promise<SendRequestResult> {
-  const stream = fetchResponse.body!
+  const stream = body
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(new EventSourceParserStream());
 
@@ -123,7 +124,7 @@ async function handleStream(
 
   const rawResponse = { chunks: allChunks, reconstructed: { id: lastId, model: lastModel, content: fullContent } };
 
-  return { response, rawRequest, rawResponse, durationMs, statusCode: fetchResponse.status };
+  return { response, rawRequest, rawResponse, durationMs, statusCode };
 }
 
 export class RequestError extends Error {

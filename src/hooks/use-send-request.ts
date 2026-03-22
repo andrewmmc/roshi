@@ -45,6 +45,20 @@ export function useSendRequest() {
     const abortController = new AbortController();
     abortRef.current = abortController;
 
+    const baseHistoryEntry = {
+      providerId: provider.id,
+      providerName: provider.name,
+      modelId: model.id,
+      request: {
+        messages: nonEmptyMessages,
+        model: model.id,
+        temperature: store.temperature,
+        maxTokens: store.maxTokens,
+        stream: store.stream,
+        systemPrompt: store.systemPrompt || undefined,
+      },
+    };
+
     try {
       const result = await sendRequest({
         provider,
@@ -76,19 +90,8 @@ export function useSendRequest() {
       store.setDurationMs(result.durationMs);
       store.setStatusCode(result.statusCode);
 
-      // Save to history
       useHistoryStore.getState().addEntry({
-        providerId: provider.id,
-        providerName: provider.name,
-        modelId: model.id,
-        request: {
-          messages: nonEmptyMessages,
-          model: model.id,
-          temperature: store.temperature,
-          maxTokens: store.maxTokens,
-          stream: store.stream,
-          systemPrompt: store.systemPrompt || undefined,
-        },
+        ...baseHistoryEntry,
         rawRequest: result.rawRequest,
         response: result.response,
         rawResponse: result.rawResponse,
@@ -105,17 +108,7 @@ export function useSendRequest() {
         store.setStatusCode(err.status);
 
         useHistoryStore.getState().addEntry({
-          providerId: provider.id,
-          providerName: provider.name,
-          modelId: model.id,
-          request: {
-            messages: nonEmptyMessages,
-            model: model.id,
-            temperature: store.temperature,
-            maxTokens: store.maxTokens,
-            stream: store.stream,
-            systemPrompt: store.systemPrompt || undefined,
-          },
+          ...baseHistoryEntry,
           rawRequest: err.rawRequest,
           response: null,
           rawResponse: err.rawResponse,

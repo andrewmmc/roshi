@@ -34,6 +34,8 @@ export const openaiAdapter: ProviderAdapter = {
     } else if (provider.auth.type === 'api-key-header') {
       const headerName = provider.auth.headerName || 'x-api-key';
       headers[headerName] = provider.apiKey;
+    } else if (provider.auth.type === 'none') {
+      // No auth needed
     }
 
     if (customHeaders) {
@@ -46,7 +48,12 @@ export const openaiAdapter: ProviderAdapter = {
   buildRequestUrl(provider: ProviderConfig): string {
     const base = provider.baseUrl.replace(/\/$/, '');
     const endpoint = provider.endpoints.chat;
-    return `${base}${endpoint}`;
+    const url = `${base}${endpoint}`;
+    if (provider.auth.type === 'query-param' && provider.apiKey) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}key=${encodeURIComponent(provider.apiKey)}`;
+    }
+    return url;
   },
 
   parseResponse(raw: Record<string, unknown>): NormalizedResponse {

@@ -1,4 +1,5 @@
 export interface NormalizedMessage {
+  id?: string;
   role: 'system' | 'user' | 'assistant';
   content: string;
 }

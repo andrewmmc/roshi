@@ -1,7 +1,9 @@
 import { create } from 'zustand';
+import { nanoid } from 'nanoid';
 import type { NormalizedMessage, NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 
 export interface HeaderEntry {
+  id: string;
   key: string;
   value: string;
 }
@@ -65,12 +67,12 @@ interface RequestStore {
 }
 
 export const useRequestStore = create<RequestStore>((set) => ({
-  messages: [{ role: 'user', content: '' }],
+  messages: [{ id: nanoid(), role: 'user', content: '' }],
   systemPrompt: '',
   temperature: 1,
   maxTokens: 4096,
   stream: true,
-  customHeaders: [{ key: '', value: '' }],
+  customHeaders: [{ id: nanoid(), key: '', value: '' }],
 
   isLoading: false,
   isStreaming: false,
@@ -84,7 +86,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   sentRequest: null,
 
   setMessages: (messages) => set({ messages }),
-  addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
+  addMessage: (message) => set((s) => ({ messages: [...s.messages, { ...message, id: message.id || nanoid() }] })),
   updateMessage: (index, message) =>
     set((s) => ({ messages: s.messages.map((m, i) => (i === index ? message : m)) })),
   removeMessage: (index) => set((s) => ({ messages: s.messages.filter((_, i) => i !== index) })),
@@ -107,12 +109,12 @@ export const useRequestStore = create<RequestStore>((set) => ({
 
   reset: () =>
     set({
-      messages: [{ role: 'user', content: '' }],
+      messages: [{ id: nanoid(), role: 'user', content: '' }],
       systemPrompt: '',
       temperature: 1,
       maxTokens: 4096,
       stream: true,
-      customHeaders: [{ key: '', value: '' }],
+      customHeaders: [{ id: nanoid(), key: '', value: '' }],
       isLoading: false,
       isStreaming: false,
       streamingContent: '',
@@ -127,7 +129,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
 
   loadFromHistory: (data) =>
     set({
-      messages: data.messages,
+      messages: data.messages.map((m) => ({ ...m, id: m.id || nanoid() })),
       systemPrompt: data.systemPrompt,
       sentRequest: {
         messages: data.messages,
