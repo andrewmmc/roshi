@@ -5,7 +5,6 @@ export interface HistoryEntry {
   providerId: string;
   providerName: string;
   modelId: string;
-  collectionId?: string;
   request: NormalizedRequest;
   rawRequest: Record<string, unknown>;
   response: NormalizedResponse | null;
@@ -13,13 +12,5 @@ export interface HistoryEntry {
   error: string | null;
   durationMs: number | null;
   statusCode: number | null;
-  createdAt: Date;
-}
-
-export interface Collection {
-  id: string;
-  name: string;
-  parentId?: string;
-  sortOrder: number;
   createdAt: Date;
 }

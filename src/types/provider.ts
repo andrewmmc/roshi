@@ -14,7 +14,6 @@ export interface ProviderConfig {
   auth: {
     type: 'bearer' | 'api-key-header' | 'query-param' | 'none';
     headerName?: string;
-    valuePrefix?: string;
   };
   apiKey: string;
   endpoints: { chat: string };

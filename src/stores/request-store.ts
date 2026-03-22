@@ -41,6 +41,7 @@ interface RequestStore {
 
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
+  setStreamContent: (content: string) => void;
   appendStreamContent: (content: string) => void;
   setResponse: (response: NormalizedResponse | null) => void;
   setRawRequest: (raw: Record<string, unknown> | null) => void;
@@ -98,6 +99,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
   setStreaming: (isStreaming) => set({ isStreaming }),
+  setStreamContent: (streamingContent) => set({ streamingContent }),
   appendStreamContent: (content) => set((s) => ({ streamingContent: s.streamingContent + content })),
   setResponse: (response) => set({ response }),
   setRawRequest: (rawRequest) => set({ rawRequest }),

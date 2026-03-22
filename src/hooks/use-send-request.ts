@@ -40,7 +40,7 @@ export function useSendRequest() {
     });
     store.setLoading(true);
     store.setStreaming(false);
-    useRequestStore.setState({ streamingContent: '' });
+    store.setStreamContent('');
 
     const abortController = new AbortController();
     abortRef.current = abortController;
