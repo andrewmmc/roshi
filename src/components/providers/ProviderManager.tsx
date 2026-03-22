@@ -124,7 +124,8 @@ export function ProviderManager() {
                 const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
                 if (!updated) return null;
                 setEditingProvider(updated);
-                const { id: _id, ...data } = updated;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { id, ...data } = updated;
                 return data;
               }}
             />
