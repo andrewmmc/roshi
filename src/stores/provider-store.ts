@@ -5,6 +5,20 @@ import type { ProviderConfig } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { fetchModelsForProvider } from '@/services/models-api';
 
+const SELECTION_KEY = 'llm-tester-selection';
+
+function saveSelection(providerId: string | null, modelId: string | null) {
+  localStorage.setItem(SELECTION_KEY, JSON.stringify({ providerId, modelId }));
+}
+
+function loadSelection(): { providerId: string | null; modelId: string | null } {
+  try {
+    const raw = localStorage.getItem(SELECTION_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { providerId: null, modelId: null };
+}
+
 interface ProviderStore {
   providers: ProviderConfig[];
   selectedProviderId: string | null;
@@ -62,9 +76,22 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       }
     }
 
-    const selectedProviderId = providers.length > 0 ? providers[0].id : null;
-    const selectedModelId =
-      selectedProviderId && providers[0].models.length > 0 ? providers[0].models[0].id : null;
+    const saved = loadSelection();
+    const savedProviderValid = saved.providerId && providers.some((p) => p.id === saved.providerId);
+    const savedProviderObj = savedProviderValid ? providers.find((p) => p.id === saved.providerId) : null;
+    const savedModelValid = savedProviderObj && saved.modelId && savedProviderObj.models.some((m) => m.id === saved.modelId);
+
+    if (!savedProviderValid || !savedModelValid) {
+      localStorage.removeItem(SELECTION_KEY);
+    }
+
+    const selectedProviderId = savedProviderValid
+      ? saved.providerId
+      : providers.length > 0 ? providers[0].id : null;
+    const fallbackProvider = providers.find((p) => p.id === selectedProviderId);
+    const selectedModelId = savedModelValid
+      ? saved.modelId
+      : fallbackProvider?.models?.[0]?.id || null;
     set({ providers, selectedProviderId, selectedModelId });
   },
 
@@ -104,6 +131,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
         updates.selectedProviderId = providers.length > 0 ? providers[0].id : null;
         updates.selectedModelId =
           providers.length > 0 && providers[0].models.length > 0 ? providers[0].models[0].id : null;
+        localStorage.removeItem(SELECTION_KEY);
       }
       return updates;
     });
@@ -111,13 +139,15 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
   selectProvider: (id) => {
     const provider = get().providers.find((p) => p.id === id);
-    set({
-      selectedProviderId: id,
-      selectedModelId: provider?.models?.[0]?.id || null,
-    });
+    const modelId = provider?.models?.[0]?.id || null;
+    set({ selectedProviderId: id, selectedModelId: modelId });
+    saveSelection(id, modelId);
   },
 
-  selectModel: (id) => set({ selectedModelId: id }),
+  selectModel: (id) => {
+    set({ selectedModelId: id });
+    saveSelection(get().selectedProviderId, id);
+  },
 
   resetProvider: async (id) => {
     const provider = get().providers.find((p) => p.id === id);
