@@ -8,7 +8,7 @@ import { Copy, Check } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 

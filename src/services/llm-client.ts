@@ -73,9 +73,9 @@ async function handleStream(
   statusCode: number,
   onStreamChunk?: (chunk: NormalizedStreamChunk) => void,
 ): Promise<SendRequestResult> {
-  const stream = body
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new EventSourceParserStream());
+  const textStream = new TextDecoderStream();
+  body.pipeTo(textStream.writable as WritableStream<Uint8Array>);
+  const stream = textStream.readable.pipeThrough(new EventSourceParserStream());
 
   const reader = stream.getReader();
   let fullContent = '';
