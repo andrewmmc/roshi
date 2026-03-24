@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,17 @@ import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
 
 SyntaxHighlighter.registerLanguage('json', json);
 
-function JsonBlock({ data, label }: { data: unknown; label: string }) {
-  const jsonStr = data ? JSON.stringify(data, null, 2) : '';
+const highlighterStyle = {
+  margin: 0,
+  padding: '1rem',
+  fontSize: '0.75rem',
+  lineHeight: '1.625',
+  background: 'transparent',
+  borderRadius: 0,
+} as const;
+
+const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; label: string }) {
+  const jsonStr = useMemo(() => (data ? JSON.stringify(data, null, 2) : ''), [data]);
 
   if (!data) {
     return (
@@ -22,30 +31,31 @@ function JsonBlock({ data, label }: { data: unknown; label: string }) {
     <SyntaxHighlighter
       language="json"
       style={oneLight}
-      customStyle={{
-        margin: 0,
-        padding: '1rem',
-        fontSize: '0.75rem',
-        lineHeight: '1.625',
-        background: 'transparent',
-        borderRadius: 0,
-      }}
+      customStyle={highlighterStyle}
       wrapLongLines
     >
       {jsonStr}
     </SyntaxHighlighter>
   );
-}
+});
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const mountedRef = useRef(true);
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
+    if (!mountedRef.current) return;
     setCopied(true);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 2000);

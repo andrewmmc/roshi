@@ -13,14 +13,31 @@ import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javasc
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('javascript', javascript);
 
+const highlighterStyle = {
+  margin: 0,
+  padding: '1rem',
+  fontSize: '0.75rem',
+  lineHeight: '1.625',
+  background: 'transparent',
+  borderRadius: 0,
+} as const;
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const mountedRef = useRef(true);
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(text);
+    if (!mountedRef.current) return;
     setCopied(true);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 2000);
@@ -136,14 +153,7 @@ export function CodeView() {
           <SyntaxHighlighter
             language={gen.language}
             style={oneLight}
-            customStyle={{
-              margin: 0,
-              padding: '1rem',
-              fontSize: '0.75rem',
-              lineHeight: '1.625',
-              background: 'transparent',
-              borderRadius: 0,
-            }}
+            customStyle={highlighterStyle}
             wrapLongLines
           >
             {codeMap[gen.label] ?? ''}
