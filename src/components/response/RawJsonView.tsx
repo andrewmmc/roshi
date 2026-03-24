@@ -3,9 +3,14 @@ import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
+
+SyntaxHighlighter.registerLanguage('json', json);
 
 function JsonBlock({ data, label }: { data: unknown; label: string }) {
-  const json = data ? JSON.stringify(data, null, 2) : '';
+  const jsonStr = data ? JSON.stringify(data, null, 2) : '';
 
   if (!data) {
     return (
@@ -14,9 +19,21 @@ function JsonBlock({ data, label }: { data: unknown; label: string }) {
   }
 
   return (
-    <pre className="p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all text-foreground/80">
-      {json}
-    </pre>
+    <SyntaxHighlighter
+      language="json"
+      style={oneLight}
+      customStyle={{
+        margin: 0,
+        padding: '1rem',
+        fontSize: '0.75rem',
+        lineHeight: '1.625',
+        background: 'transparent',
+        borderRadius: 0,
+      }}
+      wrapLongLines
+    >
+      {jsonStr}
+    </SyntaxHighlighter>
   );
 }
 

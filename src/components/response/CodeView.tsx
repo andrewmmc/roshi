@@ -5,6 +5,13 @@ import { getCodeGenerators } from '@/services/codegen';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
+
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -126,9 +133,21 @@ export function CodeView() {
       </div>
       {generators.map((gen) => (
         <TabsContent key={gen.label} value={gen.label} className="relative flex-1 min-h-0 mt-0 overflow-y-auto">
-          <pre className="p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all text-foreground/80">
-            {codeMap[gen.label]}
-          </pre>
+          <SyntaxHighlighter
+            language={gen.language}
+            style={oneLight}
+            customStyle={{
+              margin: 0,
+              padding: '1rem',
+              fontSize: '0.75rem',
+              lineHeight: '1.625',
+              background: 'transparent',
+              borderRadius: 0,
+            }}
+            wrapLongLines
+          >
+            {codeMap[gen.label] ?? ''}
+          </SyntaxHighlighter>
         </TabsContent>
       ))}
     </Tabs>
