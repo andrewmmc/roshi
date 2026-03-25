@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Plus, Trash2, Paperclip, Link, X, FileText } from 'lucide-react';
+import { Plus, Trash2, Paperclip, Link } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { useRequestStore } from '@/stores/request-store';
 import type { NormalizedMessage } from '@/types/normalized';
 
@@ -23,20 +24,11 @@ function AttachmentChips({ messageIndex }: { messageIndex: number }) {
   return (
     <div className="flex flex-wrap gap-1.5 mt-1.5">
       {attachments.map((att) => (
-        <span
+        <AttachmentChip
           key={att.id}
-          className="inline-flex items-center gap-1 rounded-md bg-muted/60 border border-border/50 px-2 py-0.5 text-[11px] text-muted-foreground font-mono max-w-[200px]"
-        >
-          <FileText className="h-3 w-3 shrink-0" />
-          <span className="truncate">{att.filename}</span>
-          <button
-            type="button"
-            className="shrink-0 hover:text-destructive transition-colors"
-            onClick={() => removeAttachment(messageIndex, att.id)}
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
+          attachment={att}
+          onRemove={() => removeAttachment(messageIndex, att.id)}
+        />
       ))}
     </div>
   );

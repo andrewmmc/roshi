@@ -2,6 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { useRequestStore } from '@/stores/request-store';
+import { TEMPERATURE_MIN, TEMPERATURE_MAX } from '@/constants/defaults';
 
 export function ParameterControls() {
   const temperature = useRequestStore((s) => s.temperature);
@@ -24,8 +25,8 @@ export function ParameterControls() {
               const v = Array.isArray(val) ? val[0] : val;
               setTemperature(v);
             }}
-            min={0}
-            max={2}
+            min={TEMPERATURE_MIN}
+            max={TEMPERATURE_MAX}
             step={0.01}
             className="w-full"
           />
@@ -36,7 +37,7 @@ export function ParameterControls() {
           <Input
             type="number"
             value={maxTokens}
-            onChange={(e) => setMaxTokens(parseInt(e.target.value) || 0)}
+            onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
             className="w-[100px] h-7 text-xs font-mono"
             min={1}
             max={1000000}

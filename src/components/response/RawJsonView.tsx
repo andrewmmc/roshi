@@ -1,22 +1,13 @@
-import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Copy, Check } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
+import { highlighterStyle } from '@/constants/syntax-highlighter';
 
 SyntaxHighlighter.registerLanguage('json', json);
-
-const highlighterStyle = {
-  margin: 0,
-  padding: '1rem',
-  fontSize: '0.75rem',
-  lineHeight: '1.625',
-  background: 'transparent',
-  borderRadius: 0,
-} as const;
 
 const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; label: string }) {
   const jsonStr = useMemo(() => (data ? JSON.stringify(data, null, 2) : ''), [data]);
@@ -39,48 +30,16 @@ const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; labe
   );
 });
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const handleCopy = useCallback(async () => {
-    if (!text) return;
-    await navigator.clipboard.writeText(text);
-    if (!mountedRef.current) return;
-    setCopied(true);
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
-  }, [text]);
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-      onClick={handleCopy}
-      disabled={!text}
-    >
-      {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-    </Button>
-  );
-}
-
 export function RawJsonView() {
   const rawRequest = useRequestStore((s) => s.rawRequest);
   const rawResponse = useRequestStore((s) => s.rawResponse);
 
   const [activeTab, setActiveTab] = useState('response');
   const activeData = activeTab === 'response' ? rawResponse : rawRequest;
-  const activeJson = activeData ? JSON.stringify(activeData, null, 2) : '';
+  const activeJson = useMemo(
+    () => (activeData ? JSON.stringify(activeData, null, 2) : ''),
+    [activeData],
+  );
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">

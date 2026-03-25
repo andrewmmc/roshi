@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { useThemeStore } from '@/stores/theme-store';
@@ -18,7 +19,11 @@ function App() {
     loadHistory();
   }, [loadProviders, loadHistory]);
 
-  return <AppLayout />;
+  return (
+    <ErrorBoundary>
+      <AppLayout />
+    </ErrorBoundary>
+  );
 }
 
 export default App;

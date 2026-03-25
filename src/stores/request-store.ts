@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { NormalizedMessage, NormalizedRequest, NormalizedResponse, MessageAttachment } from '@/types/normalized';
+import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 
 export interface HeaderEntry {
   id: string;
@@ -72,8 +73,8 @@ interface RequestStore {
 export const useRequestStore = create<RequestStore>((set) => ({
   messages: [{ id: nanoid(), role: 'user', content: '' }],
   systemPrompt: '',
-  temperature: 1,
-  maxTokens: 4096,
+  temperature: DEFAULT_TEMPERATURE,
+  maxTokens: DEFAULT_MAX_TOKENS,
   stream: true,
   customHeaders: [{ id: nanoid(), key: '', value: '' }],
 
@@ -127,8 +128,8 @@ export const useRequestStore = create<RequestStore>((set) => ({
     set({
       messages: [{ id: nanoid(), role: 'user', content: '' }],
       systemPrompt: '',
-      temperature: 1,
-      maxTokens: 4096,
+      temperature: DEFAULT_TEMPERATURE,
+      maxTokens: DEFAULT_MAX_TOKENS,
       stream: true,
       customHeaders: [{ id: nanoid(), key: '', value: '' }],
       isLoading: false,

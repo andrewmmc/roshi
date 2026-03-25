@@ -1,4 +1,5 @@
 import type { ProviderConfig } from '@/types/provider';
+import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 
 export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
   {
@@ -8,7 +9,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     auth: { type: 'bearer' },
     endpoints: { chat: '/chat/completions' },
     models: [],
-    defaults: { temperature: 1, maxTokens: 4096 },
+    defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
     isBuiltIn: true,
   },
   // TODO: Re-enable Anthropic provider once adapter is implemented
@@ -29,7 +30,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     auth: { type: 'bearer' },
     endpoints: { chat: '/chat/completions' },
     models: [],
-    defaults: { temperature: 1, maxTokens: 4096 },
+    defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
     isBuiltIn: true,
   },
 ];

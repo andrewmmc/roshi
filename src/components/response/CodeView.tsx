@@ -1,59 +1,18 @@
-import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Copy, Check } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
 import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
+import { highlighterStyle } from '@/constants/syntax-highlighter';
+import { cn } from '@/lib/utils';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('javascript', javascript);
-
-const highlighterStyle = {
-  margin: 0,
-  padding: '1rem',
-  fontSize: '0.75rem',
-  lineHeight: '1.625',
-  background: 'transparent',
-  borderRadius: 0,
-} as const;
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(text);
-    if (!mountedRef.current) return;
-    setCopied(true);
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
-  }, [text]);
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-      onClick={handleCopy}
-    >
-      {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-    </Button>
-  );
-}
 
 export function CodeView() {
   const provider = useSelectedProvider();
@@ -136,12 +95,12 @@ export function CodeView() {
           <button
             type="button"
             onClick={toggleStream}
-            className="h-6 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer"
-            style={{
-              background: stream ? 'hsl(var(--accent))' : 'transparent',
-              color: stream ? 'hsl(var(--accent-foreground))' : 'hsl(var(--muted-foreground))',
-              border: '1px solid hsl(var(--border))',
-            }}
+            className={cn(
+              'h-6 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer border border-border',
+              stream
+                ? 'bg-accent text-accent-foreground'
+                : 'bg-transparent text-muted-foreground',
+            )}
           >
             {stream ? 'stream' : 'sync'}
           </button>

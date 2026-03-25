@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Trash2, Plus, RotateCcw } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
+import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 
@@ -31,7 +32,7 @@ const defaultFormData: ProviderFormData = {
   apiKey: '',
   endpoints: { chat: '/chat/completions' },
   models: [{ id: '', name: '', displayName: '', supportsStreaming: true }],
-  defaults: { temperature: 1, maxTokens: 4096 },
+  defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
   isBuiltIn: false,
 };
 
@@ -171,7 +172,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       <div className="flex flex-col gap-2">
         <Label className="text-xs">Models</Label>
         {form.models.map((model, i) => (
-          <div key={i} className="flex gap-2 items-center">
+          <div key={model.id || i} className="flex gap-2 items-center">
             <Input
               value={model.id}
               onChange={(e) => updateModel(i, { id: e.target.value })}
