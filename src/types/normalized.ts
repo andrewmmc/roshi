@@ -1,7 +1,16 @@
+export interface MessageAttachment {
+  id: string;
+  filename: string;
+  mimeType: string;
+  /** Full data URI, e.g. "data:application/pdf;base64,..." */
+  data: string;
+}
+
 export interface NormalizedMessage {
   id?: string;
   role: 'system' | 'user' | 'assistant';
   content: string;
+  attachments?: MessageAttachment[];
 }
 
 export interface NormalizedRequest {

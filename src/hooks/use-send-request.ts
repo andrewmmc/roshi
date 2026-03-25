@@ -17,7 +17,9 @@ export function useSendRequest() {
       return;
     }
 
-    const nonEmptyMessages = store.messages.filter((m) => m.content.trim());
+    const nonEmptyMessages = store.messages.filter(
+      (m) => m.content.trim() || (m.attachments && m.attachments.length > 0),
+    );
     if (nonEmptyMessages.length === 0) {
       store.setError('Please enter at least one message');
       return;

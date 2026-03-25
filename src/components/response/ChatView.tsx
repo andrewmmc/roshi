@@ -1,5 +1,5 @@
 import Markdown from 'react-markdown';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText } from 'lucide-react';
 import { useRequestStore } from '@/stores/request-store';
 import { StreamingIndicator } from './StreamingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,7 +32,7 @@ export function ChatView() {
         )}
 
         {messages
-          .filter((m) => m.content.trim())
+          .filter((m) => m.content.trim() || (m.attachments && m.attachments.length > 0))
           .map((msg, i) => (
             <div key={i} className="flex gap-3">
               <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
@@ -48,6 +48,19 @@ export function ChatView() {
                 }`}
               >
                 {msg.content}
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {msg.attachments.map((att) => (
+                      <span
+                        key={att.id}
+                        className="inline-flex items-center gap-1 rounded-md bg-muted/60 border border-border/50 px-2 py-0.5 text-[11px] text-muted-foreground font-mono"
+                      >
+                        <FileText className="h-3 w-3 shrink-0" />
+                        {att.filename}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

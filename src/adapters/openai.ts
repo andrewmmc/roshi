@@ -10,7 +10,22 @@ export const openaiAdapter: ProviderAdapter = {
 
     const body: Record<string, unknown> = {
       model: request.model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: messages.map((m) => {
+        if (m.attachments && m.attachments.length > 0) {
+          const content: Record<string, unknown>[] = [];
+          if (m.content) {
+            content.push({ type: 'text', text: m.content });
+          }
+          for (const att of m.attachments) {
+            content.push({
+              type: 'file',
+              file: { filename: att.filename, file_data: att.data },
+            });
+          }
+          return { role: m.role, content };
+        }
+        return { role: m.role, content: m.content };
+      }),
       stream: request.stream,
     };
 

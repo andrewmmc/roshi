@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { NormalizedMessage, NormalizedRequest, NormalizedResponse } from '@/types/normalized';
+import type { NormalizedMessage, NormalizedRequest, NormalizedResponse, MessageAttachment } from '@/types/normalized';
 
 export interface HeaderEntry {
   id: string;
@@ -37,6 +37,8 @@ interface RequestStore {
   setTemperature: (temp: number) => void;
   setMaxTokens: (tokens: number) => void;
   setStream: (stream: boolean) => void;
+  addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
+  removeAttachment: (messageIndex: number, attachmentId: string) => void;
   setCustomHeaders: (headers: HeaderEntry[]) => void;
 
   setLoading: (loading: boolean) => void;
@@ -95,6 +97,18 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setTemperature: (temperature) => set({ temperature }),
   setMaxTokens: (maxTokens) => set({ maxTokens }),
   setStream: (stream) => set({ stream }),
+  addAttachment: (messageIndex, attachment) =>
+    set((s) => ({
+      messages: s.messages.map((m, i) =>
+        i === messageIndex ? { ...m, attachments: [...(m.attachments || []), attachment] } : m,
+      ),
+    })),
+  removeAttachment: (messageIndex, attachmentId) =>
+    set((s) => ({
+      messages: s.messages.map((m, i) =>
+        i === messageIndex ? { ...m, attachments: (m.attachments || []).filter((a) => a.id !== attachmentId) } : m,
+      ),
+    })),
   setCustomHeaders: (customHeaders) => set({ customHeaders }),
 
   setLoading: (isLoading) => set({ isLoading }),
