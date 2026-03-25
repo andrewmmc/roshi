@@ -200,9 +200,37 @@ llm-tester/
 - Dark mode
 - Request timing + token usage display
 
-### Phase 5: Desktop via Tauri (future)
-- Wrap with Tauri, replace fetch with Tauri HTTP plugin (no more CORS)
-- Native menu bar, window controls
+### Phase 5: Desktop via Tauri — DONE
+- Tauri v2 wraps the web app as a native macOS desktop app
+- CORS is bypassed natively in the desktop webview — no proxy needed
+- Browser `fetch()` works as-is in Tauri's WebKit webview
+- CSP configured with permissive `connect-src` for arbitrary LLM API endpoints
+- Builds `.app` bundle and `.dmg` installer for macOS
+
+#### Building the macOS Desktop App
+
+**Prerequisites:**
+- [Rust toolchain](https://rustup.rs/): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- Xcode Command Line Tools: `xcode-select --install`
+
+**Development:**
+```bash
+npm run tauri:dev
+```
+Launches the desktop app with hot-reload. The Vite dev server runs in the background.
+
+**Production build:**
+```bash
+npm run tauri:build
+```
+Produces:
+- `src-tauri/target/release/bundle/macos/LLM Tester.app`
+- `src-tauri/target/release/bundle/dmg/LLM Tester_0.1.0_aarch64.dmg`
+
+**Web-only development** (no Tauri, as before):
+```bash
+npm run dev
+```
 
 ## Verification
 
@@ -210,5 +238,6 @@ After each phase:
 1. **Phase 1:** Type a message, send to an OpenAI-compatible endpoint via Vite proxy, see raw JSON response
 2. **Phase 2:** Compose multi-message request, stream response, toggle between chat and raw view
 3. **Phase 3:** Create a custom provider, send request through it, see it in history, reload from history
+4. **Phase 5:** `npm run tauri:dev` launches the desktop app, API requests work without CORS errors
 
-Run `npm run dev` and test manually against a real LLM API (or a mock endpoint).
+Run `npm run dev` for web or `npm run tauri:dev` for desktop and test against a real LLM API.

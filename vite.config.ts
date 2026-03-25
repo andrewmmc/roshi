@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
+const host = process.env.TAURI_DEV_HOST
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -10,19 +12,27 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  clearScreen: false,
   server: {
-    proxy: {
-      '/api/proxy': {
-        target: 'http://localhost:5173',
-        changeOrigin: true,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (_proxyReq, req) => {
-            // The actual proxying is handled by the client-side code
-            // This is a placeholder for future CORS proxy support
-            console.log('Proxy request:', req.url)
-          })
-        },
-      },
+    port: 5173,
+    strictPort: true,
+    host: host || false,
+    hmr: host
+      ? {
+          protocol: 'ws',
+          host,
+          port: 1421,
+        }
+      : undefined,
+    watch: {
+      ignored: ['**/src-tauri/**'],
     },
+  },
+  envPrefix: ['VITE_', 'TAURI_ENV_*'],
+  build: {
+    target:
+      process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
+    minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
+    sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },
 })
