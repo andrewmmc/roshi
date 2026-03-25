@@ -1,5 +1,5 @@
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
-import type { NormalizedMessage, NormalizedRequest, NormalizedResponse } from '@/types/normalized';
+import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
 import type { HistoryEntry } from '@/types/history';
 import type { CodeGenParams } from '@/services/codegen/types';
 

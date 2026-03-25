@@ -54,7 +54,6 @@ vi.mock('@/services/models-api', () => ({ fetchModelsForProvider: vi.fn().mockRe
 
 describe('useSendRequest', () => {
   const provider = makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] });
-  const model = makeModel({ id: 'm1' });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -307,11 +306,9 @@ describe('useSendRequest', () => {
 
   describe('cancel', () => {
     it('aborts the request', async () => {
-      let resolveRequest: (val: unknown) => void;
       mockSendRequest.mockImplementation(
         (options: { signal: AbortSignal }) =>
-          new Promise((resolve, reject) => {
-            resolveRequest = resolve;
+          new Promise((_resolve, reject) => {
             options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
           }),
       );
