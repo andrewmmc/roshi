@@ -13,10 +13,11 @@ A web-based tool for testing and comparing LLM API responses. Send requests to a
 
 ## Tech Stack
 
-- React 19, TypeScript, Vite 7
-- shadcn/ui v4 (Base UI) + Tailwind CSS v4
-- Zustand (state) + Dexie.js (IndexedDB storage)
-- eventsource-parser (SSE streaming)
+- **Frontend:** React 19, TypeScript, Vite 7
+- **UI:** shadcn/ui v4 (Base UI) + Tailwind CSS v4
+- **State:** Zustand + Dexie.js (IndexedDB storage)
+- **Streaming:** eventsource-parser (SSE)
+- **Testing:** Vitest (183 tests, 97.46% coverage)
 
 ## Getting Started
 
@@ -29,6 +30,22 @@ npm run dev
 
 # Build for production
 npm run build
+```
+
+## Development
+
+```bash
+# Run tests (Vitest, 183 tests, 97.46% coverage)
+npm test
+
+# Watch mode
+npm test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Lint code
+npm run lint
 ```
 
 ## License
