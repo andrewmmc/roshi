@@ -3,9 +3,8 @@ import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
-import { highlighterStyle } from '@/constants/syntax-highlighter';
+import { highlighterStyle, highlighterTheme } from '@/constants/syntax-highlighter';
 
 SyntaxHighlighter.registerLanguage('json', json);
 
@@ -21,7 +20,7 @@ const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; labe
   return (
     <SyntaxHighlighter
       language="json"
-      style={oneLight}
+      style={highlighterTheme}
       customStyle={highlighterStyle}
       wrapLongLines
     >

@@ -5,10 +5,9 @@ import { getCodeGenerators } from '@/services/codegen';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
 import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
-import { highlighterStyle } from '@/constants/syntax-highlighter';
+import { highlighterStyle, highlighterTheme } from '@/constants/syntax-highlighter';
 import { cn } from '@/lib/utils';
 
 SyntaxHighlighter.registerLanguage('python', python);
@@ -111,7 +110,7 @@ export function CodeView() {
         <TabsContent key={gen.label} value={gen.label} className="relative flex-1 min-h-0 mt-0 overflow-y-auto">
           <SyntaxHighlighter
             language={gen.language}
-            style={oneLight}
+            style={highlighterTheme}
             customStyle={highlighterStyle}
             wrapLongLines
           >
