@@ -23,7 +23,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const { provider, request, customHeaders, onStreamChunk, signal } = options;
   const adapter = getAdapter(provider);
 
-  const url = adapter.buildRequestUrl(provider);
+  const url = getRequestUrl(adapter.buildRequestUrl(provider));
   const headers = adapter.buildRequestHeaders(provider, customHeaders);
   const body = adapter.buildRequestBody(request, provider);
 
@@ -63,6 +63,23 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const response = adapter.parseResponse(rawResponse);
 
   return { response, rawRequest: body, rawResponse, durationMs, statusCode: fetchResponse.status };
+}
+
+function getRequestUrl(targetUrl: string): string {
+  if (!import.meta.env.DEV) {
+    return targetUrl;
+  }
+
+  try {
+    const parsedUrl = new URL(targetUrl);
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return targetUrl;
+    }
+  } catch {
+    return targetUrl;
+  }
+
+  return `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
 }
 
 async function handleStream(
