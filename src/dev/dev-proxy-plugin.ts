@@ -47,16 +47,17 @@ export function devProxyPlugin() {
         }
 
         try {
-          let requestBody: Buffer | undefined;
+          let requestBody: Uint8Array | undefined;
           if (req.method !== 'GET' && req.method !== 'HEAD') {
-            requestBody = await collectBody(req);
+            const buf = await collectBody(req);
+            requestBody = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
             upstreamHeaders.set('content-length', String(requestBody.length));
           }
 
           const upstreamResponse = await fetch(target, {
             method: req.method,
             headers: upstreamHeaders,
-            body: requestBody,
+            body: requestBody as NonNullable<RequestInit['body']> | undefined,
             signal: abortController.signal,
           });
 
