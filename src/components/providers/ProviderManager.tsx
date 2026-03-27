@@ -32,7 +32,7 @@ export function ProviderManager() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) setView('list'); }}>
+    <Dialog modal={false} open={open} onOpenChange={(val) => { setOpen(val); if (!val) setView('list'); }}>
       <DialogTrigger
         render={<Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" />}
       >
