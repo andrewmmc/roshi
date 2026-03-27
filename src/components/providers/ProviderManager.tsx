@@ -38,7 +38,7 @@ export function ProviderManager() {
       >
         <Settings className="h-3.5 w-3.5" />
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={false}>
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={false} showOverlay={false}>
         <DialogHeader>
           <DialogTitle>
             {view === 'list' && 'Providers'}

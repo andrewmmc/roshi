@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -151,8 +152,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
 
       <div className="flex flex-col gap-1.5">
         <Label className="text-xs">API Key</Label>
-        <Input
-          type="password"
+        <PasswordInput
           value={form.apiKey}
           onChange={(e) => updateField('apiKey', e.target.value)}
           placeholder="sk-..."
@@ -172,7 +172,7 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
       <div className="flex flex-col gap-2">
         <Label className="text-xs">Models</Label>
         {form.models.map((model, i) => (
-          <div key={model.id || i} className="flex gap-2 items-center">
+          <div key={i} className="flex gap-2 items-center">
             <Input
               value={model.id}
               onChange={(e) => updateModel(i, { id: e.target.value })}

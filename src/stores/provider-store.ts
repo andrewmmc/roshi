@@ -171,13 +171,8 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   },
 
   resetAllProviders: async () => {
-    // Delete all built-in providers from DB
-    const currentProviders = get().providers;
-    for (const p of currentProviders) {
-      if (p.isBuiltIn) {
-        await db.providers.delete(p.id);
-      }
-    }
+    // Delete all providers from DB (both built-in and custom)
+    await db.providers.clear();
 
     // Re-seed from builtin templates with fresh models from API
     const newProviders: ProviderConfig[] = [];
@@ -198,13 +193,11 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       newProviders.push(newProvider);
     }
 
-    // Keep non-built-in providers, replace built-ins
-    const nonBuiltIn = currentProviders.filter((p) => !p.isBuiltIn);
-    const providers = [...newProviders, ...nonBuiltIn];
-    const selectedProviderId = providers.length > 0 ? providers[0].id : null;
+    const selectedProviderId = newProviders.length > 0 ? newProviders[0].id : null;
     const selectedModelId =
-      selectedProviderId && providers[0].models.length > 0 ? providers[0].models[0].id : null;
-    set({ providers, selectedProviderId, selectedModelId });
+      selectedProviderId && newProviders[0].models.length > 0 ? newProviders[0].models[0].id : null;
+    saveSelection(selectedProviderId, selectedModelId);
+    set({ providers: newProviders, selectedProviderId, selectedModelId });
   },
 
   getSelectedProvider: () => {

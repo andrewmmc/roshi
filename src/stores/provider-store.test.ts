@@ -9,6 +9,7 @@ const { mockDb, mockFetchModels, nanoidCount } = vi.hoisted(() => {
       update: vi.fn().mockResolvedValue(undefined),
       put: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
     },
   };
   const mockFetchModels = vi.fn().mockResolvedValue([]);
@@ -315,29 +316,26 @@ describe('provider-store', () => {
   });
 
   describe('resetAllProviders', () => {
-    it('re-seeds all builtins and keeps custom providers', async () => {
+    it('removes all providers and re-seeds only builtins', async () => {
       const freshModels = [makeModel({ id: 'new-model' })];
       mockFetchModels.mockResolvedValue(freshModels);
 
-      const customProvider = makeProvider({ id: 'custom', name: 'Custom', isBuiltIn: false });
       useProviderStore.setState({
         loaded: true,
         providers: [
           makeProvider({ id: 'old-openai', name: 'OpenAI', isBuiltIn: true }),
           makeProvider({ id: 'old-router', name: 'OpenRouter', isBuiltIn: true }),
-          customProvider,
+          makeProvider({ id: 'custom', name: 'Custom', isBuiltIn: false }),
         ],
       });
 
       await getState().resetAllProviders();
 
-      expect(mockDb.providers.delete).toHaveBeenCalledWith('old-openai');
-      expect(mockDb.providers.delete).toHaveBeenCalledWith('old-router');
+      expect(mockDb.providers.clear).toHaveBeenCalled();
       expect(mockDb.providers.add).toHaveBeenCalledTimes(2);
-      expect(getState().providers.some((p) => p.id === 'custom')).toBe(true);
-      const builtins = getState().providers.filter((p) => p.isBuiltIn);
-      expect(builtins).toHaveLength(2);
-      expect(builtins[0].models).toEqual(freshModels);
+      expect(getState().providers.some((p) => p.id === 'custom')).toBe(false);
+      expect(getState().providers).toHaveLength(2);
+      expect(getState().providers[0].models).toEqual(freshModels);
     });
   });
 
