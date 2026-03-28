@@ -11,9 +11,25 @@ import {
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
+import { builtinProviders } from '@/providers/builtins';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit';
+
+function getProviderDetails(provider: ProviderConfig): string {
+  const builtin = builtinProviders.find((b) => b.name === provider.name);
+  const hasApiKey = Boolean(provider.apiKey);
+  const hasCustomHeaders = Object.keys(provider.customHeaders ?? {}).length > 0;
+  const hasCustomEndpoint = builtin && provider.endpoints.chat !== builtin.endpoints.chat;
+  const hasCustomBaseUrl = builtin && provider.baseUrl !== builtin.baseUrl;
+
+  return [
+    hasApiKey ? 'API key configured' : 'No API key',
+    hasCustomHeaders && 'Custom headers',
+    hasCustomEndpoint && 'Custom endpoint',
+    hasCustomBaseUrl && 'Custom base URL',
+  ].filter(Boolean).join(' · ');
+}
 
 export function ProviderManager() {
   const [open, setOpen] = useState(false);
@@ -86,12 +102,12 @@ export function ProviderManager() {
               {providers.map((p) => (
                 <div
                   key={p.id}
-                  className="group flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-4 py-3 shadow-sm transition-colors hover:border-foreground/15 hover:bg-muted/30"
+                  className="group flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-4 py-3 transition-colors hover:border-foreground/15 hover:bg-muted/30"
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium tracking-tight">{p.name}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                      {p.apiKey ? 'API key configured' : 'No API key'}
+                      {getProviderDetails(p)}
                     </div>
                   </div>
                   <Button
