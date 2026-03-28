@@ -2,11 +2,6 @@ import { useState, useMemo, memo } from 'react';
 import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
-import { highlighterStyle, highlighterTheme } from '@/constants/syntax-highlighter';
-
-SyntaxHighlighter.registerLanguage('json', json);
 
 const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; label: string }) {
   const jsonStr = useMemo(() => (data ? JSON.stringify(data, null, 2) : ''), [data]);
@@ -18,14 +13,9 @@ const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; labe
   }
 
   return (
-    <SyntaxHighlighter
-      language="json"
-      style={highlighterTheme}
-      customStyle={highlighterStyle}
-      wrapLongLines
-    >
+    <pre className="p-4 text-[13px] font-mono whitespace-pre-wrap break-words">
       {jsonStr}
-    </SyntaxHighlighter>
+    </pre>
   );
 });
 

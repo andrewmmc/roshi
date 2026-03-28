@@ -22,12 +22,7 @@ function extractProviderErrorDetail(rawResponse: Record<string, unknown>): strin
     return message;
   }
 
-  try {
-    const fallback = JSON.stringify(rawResponse);
-    return fallback && fallback !== '{}' ? fallback : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 function isLikelyNetworkFailure(message: string): boolean {

@@ -15,6 +15,7 @@ export function ChatView() {
   const streamingContent = useRequestStore((s) => s.streamingContent);
   const error = useRequestStore((s) => s.error);
   const errorDetail = useRequestStore((s) => s.errorDetail);
+  const rawResponse = useRequestStore((s) => s.rawResponse);
 
   const displayContent = isStreaming ? streamingContent : response?.content;
   const showLoading = isLoading && !displayContent;
@@ -95,6 +96,11 @@ export function ChatView() {
                 <div className="mt-1 whitespace-pre-wrap break-words font-mono text-[12px] text-destructive/90">
                   {errorDetail}
                 </div>
+              )}
+              {rawResponse && (
+                <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-destructive/80 bg-destructive/5 rounded p-2 overflow-auto max-h-48">
+                  {JSON.stringify(rawResponse, null, 2)}
+                </pre>
               )}
             </div>
           </div>
