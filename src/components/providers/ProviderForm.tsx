@@ -47,16 +47,11 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
   // This prevents ID regeneration on every render which causes input focus loss
   const [headerEntries, setHeaderEntries] = useState<HeaderEntry[]>(() => {
     const record = initialData?.customHeaders ?? {};
-    const entries = Object.entries(record).map(([key, value]) => ({
+    return Object.entries(record).map(([key, value]) => ({
       id: nanoid(),
       key,
       value,
     }));
-    // Always include at least one empty entry
-    if (entries.length === 0) {
-      entries.push({ id: nanoid(), key: '', value: '' });
-    }
-    return entries;
   });
 
   // Sync form and header entries when initialData changes (e.g. after reset)
@@ -69,9 +64,6 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
         key,
         value,
       }));
-      if (entries.length === 0) {
-        entries.push({ id: nanoid(), key: '', value: '' });
-      }
       setHeaderEntries(entries);
     }
   }, [initialData]);

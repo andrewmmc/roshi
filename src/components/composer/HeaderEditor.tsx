@@ -51,8 +51,8 @@ export function HeaderEditor() {
           </Button>
         </div>
       ))}
-      <Button variant="outline" size="sm" className="self-start h-7 text-xs" onClick={addHeader}>
-        <Plus className="h-3 w-3 mr-1.5" />
+      <Button variant="outline" size="sm" className="self-start" onClick={addHeader}>
+        <Plus className="h-3.5 w-3.5 mr-1.5" />
         Add Header
       </Button>
     </div>
