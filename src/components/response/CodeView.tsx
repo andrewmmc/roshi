@@ -4,14 +4,7 @@ import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
-import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
-import { highlighterStyle, highlighterTheme } from '@/constants/syntax-highlighter';
 import { cn } from '@/lib/utils';
-
-SyntaxHighlighter.registerLanguage('python', python);
-SyntaxHighlighter.registerLanguage('javascript', javascript);
 
 export function CodeView() {
   const provider = useSelectedProvider();
@@ -108,14 +101,9 @@ export function CodeView() {
       </div>
       {generators.map((gen) => (
         <TabsContent key={gen.label} value={gen.label} className="relative flex-1 min-h-0 mt-0 overflow-y-auto">
-          <SyntaxHighlighter
-            language={gen.language}
-            style={highlighterTheme}
-            customStyle={highlighterStyle}
-            wrapLongLines
-          >
-            {codeMap[gen.label] ?? ''}
-          </SyntaxHighlighter>
+          <pre className="h-full p-4 m-0 text-[13px] leading-relaxed overflow-x-auto">
+            <code className="text-xs font-mono">{codeMap[gen.label] ?? ''}</code>
+          </pre>
         </TabsContent>
       ))}
     </Tabs>

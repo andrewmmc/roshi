@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -10,9 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { HeaderListEditor, type HeaderEntry } from '@/components/ui/header-list-editor';
+import { headersToRecord } from '@/components/ui/header-utils';
 import { Trash2, Plus, RotateCcw } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
+import { nanoid } from 'nanoid';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 
@@ -35,11 +38,48 @@ const defaultFormData: ProviderFormData = {
   models: [{ id: '', name: '', displayName: '', supportsStreaming: true }],
   defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
   isBuiltIn: false,
+  customHeaders: {},
 };
 
 export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'Save', isBuiltIn = false, onReset }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
   const [resetting, setResetting] = useState(false);
+
+  // Initialize header entries from initialData once, then track as separate state
+  // This prevents ID regeneration on every render which causes input focus loss
+  const [headerEntries, setHeaderEntries] = useState<HeaderEntry[]>(() => {
+    const record = initialData?.customHeaders ?? {};
+    const entries = Object.entries(record).map(([key, value]) => ({
+      id: nanoid(),
+      key,
+      value,
+    }));
+    // Always include at least one empty entry
+    if (entries.length === 0) {
+      entries.push({ id: nanoid(), key: '', value: '' });
+    }
+    return entries;
+  });
+
+  // Update header entries when provider is reset
+  useEffect(() => {
+    if (resetting) {
+      const record = form.customHeaders ?? {};
+      const entries = Object.entries(record).map(([key, value]) => ({
+        id: nanoid(),
+        key,
+        value,
+      }));
+      if (entries.length === 0) {
+        entries.push({ id: nanoid(), key: '', value: '' });
+      }
+      setHeaderEntries(entries);
+    }
+  }, [resetting, form.customHeaders]);
+
+  const updateHeaderEntries = (entries: HeaderEntry[]) => {
+    setHeaderEntries(entries);
+  };
 
   const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -73,7 +113,9 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
         name: m.name || m.id,
         displayName: m.displayName || m.id,
       }));
-    onSubmit({ ...form, models: cleanedModels });
+    // Convert header entries to record for submission
+    const customHeaders = headersToRecord(headerEntries);
+    onSubmit({ ...form, models: cleanedModels, customHeaders });
   };
 
   return (
@@ -156,6 +198,16 @@ export function ProviderForm({ initialData, onSubmit, onCancel, submitLabel = 'S
           value={form.apiKey}
           onChange={(e) => updateField('apiKey', e.target.value)}
           placeholder="sk-..."
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <HeaderListEditor
+          headers={headerEntries}
+          onChange={updateHeaderEntries}
+          label="Custom Headers"
+          placeholderKey="x-custom-header"
+          placeholderValue="header-value"
         />
       </div>
 

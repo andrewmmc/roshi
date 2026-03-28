@@ -25,7 +25,15 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   const adapter = getAdapter(provider);
 
   const url = getRequestUrl(adapter.buildRequestUrl(provider));
-  const headers = adapter.buildRequestHeaders(provider, customHeaders);
+
+  // Merge provider-level headers with request-level headers
+  // Request-level headers take precedence over provider-level headers
+  const mergedHeaders = {
+    ...provider.customHeaders,
+    ...customHeaders,
+  };
+
+  const headers = adapter.buildRequestHeaders(provider, mergedHeaders);
   const body = adapter.buildRequestBody(request, provider);
 
   const startTime = performance.now();
