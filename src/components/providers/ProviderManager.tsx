@@ -37,6 +37,7 @@ export function ProviderManager() {
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
   const [resettingAll, setResettingAll] = useState(false);
   const [resettingProvider, setResettingProvider] = useState(false);
+  const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
   const { providers, updateProvider, resetProvider, resetAllProviders } = useProviders();
@@ -128,7 +129,7 @@ export function ProviderManager() {
 
           {view === 'edit' && editingProvider && (
             <ProviderForm
-              key={editingProvider.id}
+              key={`${editingProvider.id}-${formVersion}`}
               ref={formRef}
               initialData={editingProvider}
               onSubmit={handleEdit}
@@ -188,7 +189,10 @@ export function ProviderManager() {
                       try {
                         await resetProvider(editingProvider.id);
                         const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
-                        if (updated) setEditingProvider(updated);
+                        if (updated) {
+                          setEditingProvider(updated);
+                          setFormVersion((v) => v + 1);
+                        }
                       } finally {
                         setResettingProvider(false);
                       }
