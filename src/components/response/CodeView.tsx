@@ -14,6 +14,9 @@ export function CodeView() {
   const systemPrompt = useRequestStore((s) => s.systemPrompt);
   const temperature = useRequestStore((s) => s.temperature);
   const maxTokens = useRequestStore((s) => s.maxTokens);
+  const topP = useRequestStore((s) => s.topP);
+  const frequencyPenalty = useRequestStore((s) => s.frequencyPenalty);
+  const presencePenalty = useRequestStore((s) => s.presencePenalty);
   const streamDefault = useRequestStore((s) => s.stream);
   const [overrideStream, setOverrideStream] = useState<boolean | null>(null);
   const stream = overrideStream ?? streamDefault;
@@ -41,11 +44,14 @@ export function CodeView() {
         systemPrompt,
         temperature,
         maxTokens,
+        topP,
+        frequencyPenalty,
+        presencePenalty,
         stream,
       });
     }
     return map;
-  }, [provider, model, messages, systemPrompt, temperature, maxTokens, stream, generators]);
+  }, [provider, model, messages, systemPrompt, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, stream, generators]);
 
   if (!provider || !model) {
     return (

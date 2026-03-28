@@ -19,7 +19,7 @@ export const openaiPythonGenerator: CodeGenerator = {
   language: 'python',
 
   generate(params: CodeGenParams): string {
-    const { provider, model, messages, systemPrompt, temperature, maxTokens, stream } = params;
+    const { provider, model, messages, systemPrompt, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, stream } = params;
 
     const isDefaultOpenAI = provider.baseUrl === 'https://api.openai.com/v1';
     const clientArgs: string[] = [];
@@ -46,6 +46,9 @@ export const openaiPythonGenerator: CodeGenerator = {
     kwargs.push(`    model="${model}",`);
     kwargs.push(`    temperature=${temperature},`);
     kwargs.push(`    max_tokens=${maxTokens},`);
+    kwargs.push(`    top_p=${topP},`);
+    kwargs.push(`    frequency_penalty=${frequencyPenalty},`);
+    kwargs.push(`    presence_penalty=${presencePenalty},`);
     kwargs.push(`    messages=[`);
     kwargs.push(messageLines.join('\n'));
     kwargs.push(`    ],`);
