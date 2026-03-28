@@ -35,6 +35,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "copyright": "© 2026 Andrew Mok",
     "macOS": {
       "minimumSystemVersion": "10.15"
     }

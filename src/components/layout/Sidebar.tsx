@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { FilePlus2, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AboutDialog } from '@/components/layout/AboutDialog';
 import { ProviderManager } from '@/components/providers/ProviderManager';
 import { HistoryList } from '@/components/history/HistoryList';
 import { useRequestStore } from '@/stores/request-store';
@@ -11,18 +9,13 @@ export function Sidebar() {
   const reset = useRequestStore((s) => s.reset);
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggle);
-  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-sidebar">
       <div className="flex items-center justify-between px-3 h-11 border-b border-sidebar-border shrink-0">
-        <button
-          className="text-[13px] font-semibold text-foreground/80 tracking-tight select-none cursor-pointer hover:text-foreground transition-colors"
-          onClick={() => setAboutOpen(true)}
-        >
+        <span className="text-[13px] font-semibold text-foreground/80 tracking-tight select-none">
           LLM Tester
-        </button>
-        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+        </span>
         <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
