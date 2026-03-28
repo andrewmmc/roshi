@@ -4,4 +4,4 @@ pre-commit:
     - name: lint
       run: npm run lint
     - name: typecheck
-      run: tsc -b
+      run: npm run typecheck
