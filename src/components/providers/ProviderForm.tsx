@@ -1,4 +1,4 @@
-import { useState, useEffect, type Ref } from 'react';
+import { useState, type Ref } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -53,20 +53,6 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
       value,
     }));
   });
-
-  // Sync form and header entries when initialData changes (e.g. after reset)
-  useEffect(() => {
-    if (initialData) {
-      setForm(initialData);
-      const record = initialData.customHeaders ?? {};
-      const entries = Object.entries(record).map(([key, value]) => ({
-        id: nanoid(),
-        key,
-        value,
-      }));
-      setHeaderEntries(entries);
-    }
-  }, [initialData]);
 
   const updateHeaderEntries = (entries: HeaderEntry[]) => {
     setHeaderEntries(entries);

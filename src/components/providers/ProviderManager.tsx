@@ -128,6 +128,7 @@ export function ProviderManager() {
 
           {view === 'edit' && editingProvider && (
             <ProviderForm
+              key={editingProvider.id}
               ref={formRef}
               initialData={editingProvider}
               onSubmit={handleEdit}
