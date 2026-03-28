@@ -96,7 +96,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
   };
 
   return (
-    <form ref={ref} onSubmit={handleSubmit}>
+    <form ref={ref} onSubmit={handleSubmit} data-1p-ignore data-lp-ignore>
       <div className="space-y-4 px-5 py-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
@@ -107,6 +107,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
               placeholder="My Provider"
               required
               disabled={isBuiltIn}
+              className="w-full"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -116,7 +117,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
               onValueChange={(val) => updateField('type', val as ProviderConfig['type'])}
               disabled={isBuiltIn}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,6 +177,8 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
             value={form.apiKey}
             onChange={(e) => updateField('apiKey', e.target.value)}
             placeholder="sk-..."
+            data-1p-ignore
+            data-lp-ignore
           />
         </div>
 
