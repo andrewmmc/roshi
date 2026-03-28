@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Settings, Pencil, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,8 @@ export function ProviderManager() {
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
   const [resettingAll, setResettingAll] = useState(false);
+  const [resettingProvider, setResettingProvider] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { providers, updateProvider, resetProvider, resetAllProviders } = useProviders();
 
@@ -31,6 +33,17 @@ export function ProviderManager() {
     }
   };
 
+  const handleClose = () => {
+    setEditingProvider(null);
+    setView('list');
+    setOpen(false);
+  };
+
+  const handleBackToList = () => {
+    setEditingProvider(null);
+    setView('list');
+  };
+
   return (
     <Dialog modal={false} open={open} onOpenChange={(val) => { setOpen(val); if (!val) setView('list'); }}>
       <DialogTrigger
@@ -38,23 +51,26 @@ export function ProviderManager() {
       >
         <Settings className="h-3.5 w-3.5" />
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={false} showOverlay={false}>
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-h-[82vh] !max-w-xl !flex min-h-0 flex-col gap-0 overflow-hidden p-0" showCloseButton={false} showOverlay={false}>
+        {/* Header */}
+        <DialogHeader className="relative shrink-0 border-b bg-muted/20 px-5 py-4 pr-14">
+          <DialogTitle className="text-[15px] tracking-tight">
             {view === 'list' && 'Providers'}
             {view === 'edit' && 'Edit Provider'}
           </DialogTitle>
-          {/* Custom close button: navigates back to list on sub-views, closes dialog on list */}
+          <p className="text-xs text-muted-foreground">
+            {view === 'list' && 'Tune credentials and model options for each connected provider.'}
+            {view === 'edit' && 'Update keys, headers, endpoints, and model entries without leaving the composer.'}
+          </p>
           <Button
             variant="ghost"
             size="icon-sm"
-            className="absolute top-2 right-2"
+            className="absolute top-3 right-3"
             onClick={() => {
               if (view === 'list') {
-                setOpen(false);
+                handleClose();
               } else {
-                setEditingProvider(null);
-                setView('list');
+                handleBackToList();
               }
             }}
           >
@@ -63,24 +79,25 @@ export function ProviderManager() {
           </Button>
         </DialogHeader>
 
-        {view === 'list' && (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
+        {/* Scrollable content */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {view === 'list' && (
+            <div className="flex flex-col gap-2 px-3 py-3">
               {providers.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted/50 group"
+                  className="group flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-4 py-3 shadow-sm transition-colors hover:border-foreground/15 hover:bg-muted/30"
                 >
-                  <div>
-                    <div className="text-sm font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium tracking-tight">{p.name}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {p.apiKey ? 'API key configured' : 'No API key'}
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 rounded-full text-muted-foreground opacity-70 transition hover:text-foreground group-hover:opacity-100"
                     onClick={() => {
                       setEditingProvider(p);
                       setView('edit');
@@ -91,33 +108,13 @@ export function ProviderManager() {
                 </div>
               ))}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="self-start text-xs text-destructive hover:text-destructive"
-              disabled={resettingAll}
-              onClick={async () => {
-                setResettingAll(true);
-                try {
-                  await resetAllProviders();
-                } finally {
-                  setResettingAll(false);
-                }
-              }}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              {resettingAll ? 'Resetting...' : 'Reset all to default'}
-            </Button>
-          </div>
-        )}
+          )}
 
-        {view === 'edit' && editingProvider && (
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          {view === 'edit' && editingProvider && (
             <ProviderForm
+              ref={formRef}
               initialData={editingProvider}
               onSubmit={handleEdit}
-              onCancel={() => { setEditingProvider(null); setView('list'); }}
-              submitLabel="Update"
               isBuiltIn={editingProvider.isBuiltIn}
               onReset={async () => {
                 await resetProvider(editingProvider.id);
@@ -129,8 +126,73 @@ export function ProviderManager() {
                 return data;
               }}
             />
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex shrink-0 items-center justify-between border-t bg-muted/15 px-5 py-4">
+          {view === 'list' && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-destructive hover:text-destructive"
+                disabled={resettingAll}
+                onClick={async () => {
+                  setResettingAll(true);
+                  try {
+                    await resetAllProviders();
+                  } finally {
+                    setResettingAll(false);
+                  }
+                }}
+              >
+                <RotateCcw className="mr-1 h-3 w-3" />
+                {resettingAll ? 'Resetting...' : 'Reset all to default'}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Close
+              </Button>
+            </>
+          )}
+
+          {view === 'edit' && editingProvider && (
+            <>
+              <div>
+                {editingProvider.isBuiltIn && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-destructive hover:text-destructive"
+                    disabled={resettingProvider}
+                    onClick={async () => {
+                      setResettingProvider(true);
+                      try {
+                        await resetProvider(editingProvider.id);
+                        const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
+                        if (updated) setEditingProvider(updated);
+                      } finally {
+                        setResettingProvider(false);
+                      }
+                    }}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    {resettingProvider ? 'Resetting...' : 'Reset to default'}
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={handleBackToList}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={() => formRef.current?.requestSubmit()}>
+                  Update
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
