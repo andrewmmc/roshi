@@ -18,6 +18,9 @@ export interface NormalizedRequest {
   model: string;
   temperature?: number;
   maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
   stream: boolean;
   systemPrompt?: string;
 }

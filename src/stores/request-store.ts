@@ -1,7 +1,13 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { NormalizedMessage, NormalizedRequest, NormalizedResponse, MessageAttachment } from '@/types/normalized';
-import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
+import {
+  DEFAULT_TEMPERATURE,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TOP_P,
+  DEFAULT_FREQUENCY_PENALTY,
+  DEFAULT_PRESENCE_PENALTY,
+} from '@/constants/defaults';
 import type { HistoryHeaderEntry } from '@/types/history';
 
 export interface HeaderEntry {
@@ -15,6 +21,9 @@ interface RequestStore {
   systemPrompt: string;
   temperature: number;
   maxTokens: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
   stream: boolean;
   customHeaders: HeaderEntry[];
 
@@ -39,6 +48,9 @@ interface RequestStore {
   setSystemPrompt: (prompt: string) => void;
   setTemperature: (temp: number) => void;
   setMaxTokens: (tokens: number) => void;
+  setTopP: (topP: number) => void;
+  setFrequencyPenalty: (penalty: number) => void;
+  setPresencePenalty: (penalty: number) => void;
   setStream: (stream: boolean) => void;
   addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
   removeAttachment: (messageIndex: number, attachmentId: string) => void;
@@ -79,6 +91,9 @@ export const useRequestStore = create<RequestStore>((set) => ({
   systemPrompt: '',
   temperature: DEFAULT_TEMPERATURE,
   maxTokens: DEFAULT_MAX_TOKENS,
+  topP: DEFAULT_TOP_P,
+  frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
+  presencePenalty: DEFAULT_PRESENCE_PENALTY,
   stream: true,
   customHeaders: [{ id: nanoid(), key: '', value: '' }],
 
@@ -102,6 +117,9 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setSystemPrompt: (systemPrompt) => set({ systemPrompt }),
   setTemperature: (temperature) => set({ temperature }),
   setMaxTokens: (maxTokens) => set({ maxTokens }),
+  setTopP: (topP) => set({ topP }),
+  setFrequencyPenalty: (frequencyPenalty) => set({ frequencyPenalty }),
+  setPresencePenalty: (presencePenalty) => set({ presencePenalty }),
   setStream: (stream) => set({ stream }),
   addAttachment: (messageIndex, attachment) =>
     set((s) => ({
@@ -136,6 +154,9 @@ export const useRequestStore = create<RequestStore>((set) => ({
       systemPrompt: '',
       temperature: DEFAULT_TEMPERATURE,
       maxTokens: DEFAULT_MAX_TOKENS,
+      topP: DEFAULT_TOP_P,
+      frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
+      presencePenalty: DEFAULT_PRESENCE_PENALTY,
       stream: true,
       customHeaders: [{ id: nanoid(), key: '', value: '' }],
       isLoading: false,

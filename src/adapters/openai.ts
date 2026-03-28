@@ -31,6 +31,9 @@ export const openaiAdapter: ProviderAdapter = {
 
     if (request.temperature !== undefined) body.temperature = request.temperature;
     if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
+    if (request.topP !== undefined) body.top_p = request.topP;
+    if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
+    if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
 
     if (request.stream) {
       body.stream_options = { include_usage: true };
