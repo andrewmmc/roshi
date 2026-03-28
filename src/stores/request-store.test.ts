@@ -233,6 +233,7 @@ describe('request-store', () => {
         temperature: 0.7,
         maxTokens: 2048,
         stream: false,
+        customHeaders: [{ key: 'X-Test', value: 'abc' }],
         response: { id: '1', model: 'gpt-4', content: 'Hi', role: 'assistant', finishReason: 'stop', usage: null },
         rawRequest: { model: 'gpt-4' },
         rawResponse: { id: '1' },
@@ -247,6 +248,9 @@ describe('request-store', () => {
       expect(getState().temperature).toBe(0.7);
       expect(getState().maxTokens).toBe(2048);
       expect(getState().stream).toBe(false);
+      expect(getState().customHeaders).toEqual([
+        expect.objectContaining({ key: 'X-Test', value: 'abc' }),
+      ]);
       expect(getState().response?.content).toBe('Hi');
       expect(getState().isLoading).toBe(false);
       expect(getState().isStreaming).toBe(false);
@@ -261,6 +265,7 @@ describe('request-store', () => {
         temperature: 1,
         maxTokens: 4096,
         stream: true,
+        customHeaders: [],
         response: null,
         rawRequest: null,
         rawResponse: null,
@@ -270,6 +275,9 @@ describe('request-store', () => {
       });
 
       expect(getState().statusCode).toBeNull();
+      expect(getState().customHeaders).toEqual([
+        expect.objectContaining({ key: '', value: '' }),
+      ]);
     });
 
     it('constructs sentRequest with empty model', () => {
@@ -279,6 +287,7 @@ describe('request-store', () => {
         temperature: 0.5,
         maxTokens: 1024,
         stream: true,
+        customHeaders: [],
         response: null,
         rawRequest: null,
         rawResponse: null,

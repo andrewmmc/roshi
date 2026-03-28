@@ -165,6 +165,10 @@ describe('useSendRequest', () => {
     });
 
     it('adds entry to history', async () => {
+      useRequestStore.setState({
+        ...useRequestStore.getState(),
+        customHeaders: [{ id: '1', key: 'X-Test', value: 'value' }],
+      });
       mockSendRequest.mockResolvedValue({
         response: { id: '1', model: 'm1', content: 'ok', role: 'assistant', finishReason: 'stop', usage: null },
         rawRequest: {},
@@ -177,6 +181,9 @@ describe('useSendRequest', () => {
       await act(async () => { await result.current.send(); });
 
       expect(mockDb.history.add).toHaveBeenCalled();
+      expect(mockDb.history.add).toHaveBeenCalledWith(expect.objectContaining({
+        customHeaders: [{ key: 'X-Test', value: 'value' }],
+      }));
     });
 
     it('filters custom headers by non-empty key', async () => {

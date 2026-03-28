@@ -59,6 +59,7 @@ describe('history-store', () => {
         providerName: 'TestProvider',
         modelId: 'gpt-4',
         request: { messages: [], model: 'gpt-4', stream: false },
+        customHeaders: [{ key: 'X-Test', value: 'value' }],
         rawRequest: {},
         response: null,
         rawResponse: null,
@@ -69,6 +70,7 @@ describe('history-store', () => {
 
       expect(result.id).toBe('mock-history-id');
       expect(result.createdAt).toBeInstanceOf(Date);
+      expect(result.customHeaders).toEqual([{ key: 'X-Test', value: 'value' }]);
       expect(mockDb.history.add).toHaveBeenCalledWith(result);
       expect(getState().entries[0].id).toBe('mock-history-id');
       expect(getState().entries[1].id).toBe('existing');

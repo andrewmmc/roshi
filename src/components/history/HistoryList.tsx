@@ -28,10 +28,11 @@ export function HistoryList() {
     selectModel(entry.modelId);
     loadFromHistory({
       messages: entry.request.messages,
-      systemPrompt: entry.request.systemPrompt || '',
-      temperature: entry.request.temperature || 1,
-      maxTokens: entry.request.maxTokens || 4096,
+      systemPrompt: entry.request.systemPrompt ?? '',
+      temperature: entry.request.temperature ?? 1,
+      maxTokens: entry.request.maxTokens ?? 4096,
       stream: entry.request.stream,
+      customHeaders: entry.customHeaders ?? [],
       response: entry.response,
       rawRequest: entry.rawRequest,
       rawResponse: entry.rawResponse,

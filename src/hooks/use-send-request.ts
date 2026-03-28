@@ -95,6 +95,10 @@ export function useSendRequest() {
     const abortController = new AbortController();
     abortRef.current = abortController;
 
+    const historyHeaders = store.customHeaders
+      .filter((header) => header.key)
+      .map(({ key, value }) => ({ key, value }));
+
     const baseHistoryEntry = {
       providerId: provider.id,
       providerName: provider.name,
@@ -107,6 +111,7 @@ export function useSendRequest() {
         stream: store.stream,
         systemPrompt: store.systemPrompt || undefined,
       },
+      customHeaders: historyHeaders,
     };
 
     try {
@@ -120,8 +125,8 @@ export function useSendRequest() {
           stream: store.stream && model.supportsStreaming,
           systemPrompt: store.systemPrompt || undefined,
         },
-        customHeaders: store.customHeaders.length > 0
-          ? Object.fromEntries(store.customHeaders.filter((h) => h.key).map((h) => [h.key, h.value]))
+        customHeaders: historyHeaders.length > 0
+          ? Object.fromEntries(historyHeaders.map((header) => [header.key, header.value]))
           : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {

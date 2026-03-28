@@ -1,5 +1,10 @@
 import type { NormalizedRequest, NormalizedResponse } from './normalized';
 
+export interface HistoryHeaderEntry {
+  key: string;
+  value: string;
+}
+
 export interface HistoryEntry {
   id: string;
   providerId: string;
@@ -7,6 +12,7 @@ export interface HistoryEntry {
   modelId: string;
   collectionId?: string;
   request: NormalizedRequest;
+  customHeaders?: HistoryHeaderEntry[];
   rawRequest: Record<string, unknown>;
   response: NormalizedResponse | null;
   rawResponse: Record<string, unknown> | null;

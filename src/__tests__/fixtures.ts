@@ -1,6 +1,6 @@
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
-import type { HistoryEntry } from '@/types/history';
+import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
 import type { CodeGenParams } from '@/services/codegen/types';
 
 export function makeModel(overrides?: Partial<ProviderModel>): ProviderModel {
@@ -66,6 +66,14 @@ export function makeOpenAIResponse(overrides?: Record<string, unknown>): Record<
   };
 }
 
+export function makeHistoryHeader(overrides?: Partial<HistoryHeaderEntry>): HistoryHeaderEntry {
+  return {
+    key: 'X-Test',
+    value: 'value',
+    ...overrides,
+  };
+}
+
 export function makeHistoryEntry(overrides?: Partial<HistoryEntry>): HistoryEntry {
   return {
     id: 'history-1',
@@ -73,6 +81,7 @@ export function makeHistoryEntry(overrides?: Partial<HistoryEntry>): HistoryEntr
     providerName: 'TestProvider',
     modelId: 'gpt-4',
     request: makeRequest(),
+    customHeaders: [],
     rawRequest: { model: 'gpt-4', messages: [{ role: 'user', content: 'Hello' }] },
     response: {
       id: 'chatcmpl-123',

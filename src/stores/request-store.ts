@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { NormalizedMessage, NormalizedRequest, NormalizedResponse, MessageAttachment } from '@/types/normalized';
 import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
+import type { HistoryHeaderEntry } from '@/types/history';
 
 export interface HeaderEntry {
   id: string;
@@ -63,6 +64,7 @@ interface RequestStore {
     temperature: number;
     maxTokens: number;
     stream: boolean;
+    customHeaders?: HistoryHeaderEntry[];
     response: NormalizedResponse | null;
     rawRequest: Record<string, unknown> | null;
     rawResponse: Record<string, unknown> | null;
@@ -153,6 +155,9 @@ export const useRequestStore = create<RequestStore>((set) => ({
     set({
       messages: data.messages.map((m) => ({ ...m, id: m.id || nanoid() })),
       systemPrompt: data.systemPrompt,
+      customHeaders: (data.customHeaders ?? []).length > 0
+        ? (data.customHeaders ?? []).map((header) => ({ ...header, id: nanoid() }))
+        : [{ id: nanoid(), key: '', value: '' }],
       sentRequest: {
         messages: data.messages,
         model: '',
