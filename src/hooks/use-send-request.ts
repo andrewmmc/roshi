@@ -4,6 +4,51 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { sendRequest, RequestError } from '@/services/llm-client';
 
+function extractProviderErrorDetail(rawResponse: Record<string, unknown>): string | null {
+  const error = rawResponse.error;
+  if (typeof error === 'string' && error.trim()) {
+    return error;
+  }
+
+  if (error && typeof error === 'object') {
+    const nestedMessage = (error as { message?: unknown }).message;
+    if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+      return nestedMessage;
+    }
+  }
+
+  const message = rawResponse.message;
+  if (typeof message === 'string' && message.trim()) {
+    return message;
+  }
+
+  try {
+    const fallback = JSON.stringify(rawResponse);
+    return fallback && fallback !== '{}' ? fallback : null;
+  } catch {
+    return null;
+  }
+}
+
+function isLikelyNetworkFailure(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return [
+    'load failed',
+    'failed to fetch',
+    'networkerror',
+    'network error',
+    'fetch failed',
+    'the network connection was lost',
+  ].some((fragment) => normalized.includes(fragment));
+}
+
+function getNetworkErrorDetail(message: string): string {
+  return [
+    message,
+    'The app did not receive an HTTP response from the provider. This usually means DNS, TLS/certificate validation, connectivity, or an unreachable host.',
+  ].join(' ');
+}
+
 export function useSendRequest() {
   const abortRef = useRef<AbortController | null>(null);
 
@@ -14,6 +59,7 @@ export function useSendRequest() {
 
     if (!provider || !model) {
       store.setError('Please select a provider and model');
+      store.setErrorDetail(null);
       return;
     }
 
@@ -22,11 +68,13 @@ export function useSendRequest() {
     );
     if (nonEmptyMessages.length === 0) {
       store.setError('Please enter at least one message');
+      store.setErrorDetail(null);
       return;
     }
 
     // Reset response state
     store.setError(null);
+    store.setErrorDetail(null);
     store.setResponse(null);
     store.setRawRequest(null);
     store.setRawResponse(null);
@@ -103,7 +151,11 @@ export function useSendRequest() {
       });
     } catch (err) {
       if (err instanceof RequestError) {
-        store.setError(err.message);
+        const detail = extractProviderErrorDetail(err.rawResponse);
+        const summary = `Provider returned HTTP ${err.status}`;
+
+        store.setError(summary);
+        store.setErrorDetail(detail);
         store.setRawRequest(err.rawRequest);
         store.setRawResponse(err.rawResponse);
         store.setDurationMs(err.durationMs);
@@ -114,14 +166,32 @@ export function useSendRequest() {
           rawRequest: err.rawRequest,
           response: null,
           rawResponse: err.rawResponse,
-          error: err.message,
+          error: detail ? `${summary}: ${detail}` : summary,
           durationMs: err.durationMs,
           statusCode: err.status,
         });
       } else if (err instanceof DOMException && err.name === 'AbortError') {
         store.setError('Request cancelled');
+        store.setErrorDetail(null);
       } else {
-        store.setError(err instanceof Error ? err.message : 'Unknown error');
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        if (err instanceof Error && isLikelyNetworkFailure(message)) {
+          store.setError('Network request failed before the provider responded');
+          store.setErrorDetail(getNetworkErrorDetail(message));
+          store.setRawResponse({
+            type: 'network_error',
+            message,
+            detail: getNetworkErrorDetail(message),
+          });
+        } else if (err instanceof Error) {
+          store.setError('Unexpected request error');
+          store.setErrorDetail(message);
+          store.setRawResponse({ type: 'unexpected_error', message });
+        } else {
+          store.setError('Unknown error');
+          store.setErrorDetail(String(err));
+          store.setRawResponse({ type: 'unknown_error', value: String(err) });
+        }
       }
     } finally {
       store.setLoading(false);

@@ -14,6 +14,7 @@ export function ChatView() {
   const isStreaming = useRequestStore((s) => s.isStreaming);
   const streamingContent = useRequestStore((s) => s.streamingContent);
   const error = useRequestStore((s) => s.error);
+  const errorDetail = useRequestStore((s) => s.errorDetail);
 
   const displayContent = isStreaming ? streamingContent : response?.content;
   const showLoading = isLoading && !displayContent;
@@ -88,8 +89,13 @@ export function ChatView() {
             <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-destructive text-right uppercase tracking-wide">
               err
             </div>
-            <div className="flex-1 rounded-md bg-destructive/5 border border-destructive/15 px-3 py-2 text-[13px] text-destructive font-mono break-all">
-              {error}
+            <div className="flex-1 rounded-md bg-destructive/5 border border-destructive/15 px-3 py-2 text-[13px] text-destructive">
+              <div className="font-medium">{error}</div>
+              {errorDetail && (
+                <div className="mt-1 whitespace-pre-wrap break-words font-mono text-[12px] text-destructive/90">
+                  {errorDetail}
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -25,6 +25,7 @@ interface RequestStore {
   rawRequest: Record<string, unknown> | null;
   rawResponse: Record<string, unknown> | null;
   error: string | null;
+  errorDetail: string | null;
   durationMs: number | null;
   statusCode: number | null;
   sentRequest: NormalizedRequest | null;
@@ -50,6 +51,7 @@ interface RequestStore {
   setRawRequest: (raw: Record<string, unknown> | null) => void;
   setRawResponse: (raw: Record<string, unknown> | null) => void;
   setError: (error: string | null) => void;
+  setErrorDetail: (detail: string | null) => void;
   setDurationMs: (ms: number | null) => void;
   setStatusCode: (code: number | null) => void;
   setSentRequest: (request: NormalizedRequest | null) => void;
@@ -85,6 +87,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   rawRequest: null,
   rawResponse: null,
   error: null,
+  errorDetail: null,
   durationMs: null,
   statusCode: null,
   sentRequest: null,
@@ -120,6 +123,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setRawRequest: (rawRequest) => set({ rawRequest }),
   setRawResponse: (rawResponse) => set({ rawResponse }),
   setError: (error) => set({ error }),
+  setErrorDetail: (errorDetail) => set({ errorDetail }),
   setDurationMs: (durationMs) => set({ durationMs }),
   setStatusCode: (statusCode) => set({ statusCode }),
   setSentRequest: (sentRequest) => set({ sentRequest }),
@@ -139,6 +143,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       rawRequest: null,
       rawResponse: null,
       error: null,
+      errorDetail: null,
       durationMs: null,
       statusCode: null,
       sentRequest: null,
@@ -166,6 +171,7 @@ export const useRequestStore = create<RequestStore>((set) => ({
       rawRequest: data.rawRequest,
       rawResponse: data.rawResponse,
       error: data.error,
+      errorDetail: null,
       durationMs: data.durationMs,
       statusCode: data.statusCode ?? null,
     }),

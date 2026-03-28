@@ -1,4 +1,5 @@
 import type { ProviderModel } from '@/types/provider';
+import { runtimeFetch } from './runtime-fetch';
 
 const MODELS_API_URL = 'https://models.dev/api.json';
 
@@ -60,7 +61,7 @@ function sortByReleaseDate(models: [string, ApiModel][]): ProviderModel[] {
 }
 
 export async function fetchModelsFromApi(): Promise<FetchedModels> {
-  const res = await fetch(MODELS_API_URL);
+  const res = await runtimeFetch(MODELS_API_URL);
   if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
   const data: ModelsApiResponse = await res.json();
 

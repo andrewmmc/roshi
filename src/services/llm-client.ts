@@ -2,6 +2,7 @@ import { EventSourceParserStream } from 'eventsource-parser/stream';
 import type { ProviderConfig } from '@/types/provider';
 import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } from '@/types/normalized';
 import { getAdapter } from '@/adapters';
+import { runtimeFetch } from './runtime-fetch';
 
 export interface SendRequestOptions {
   provider: ProviderConfig;
@@ -29,7 +30,7 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
 
   const startTime = performance.now();
 
-  const fetchResponse = await fetch(url, {
+  const fetchResponse = await runtimeFetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),

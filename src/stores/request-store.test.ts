@@ -25,6 +25,7 @@ describe('request-store', () => {
       rawRequest: null,
       rawResponse: null,
       error: null,
+      errorDetail: null,
       durationMs: null,
       statusCode: null,
       sentRequest: null,
@@ -174,6 +175,11 @@ describe('request-store', () => {
       expect(getState().error).toBe('Something failed');
     });
 
+    it('setErrorDetail', () => {
+      getState().setErrorDetail('Technical detail');
+      expect(getState().errorDetail).toBe('Technical detail');
+    });
+
     it('setDurationMs', () => {
       getState().setDurationMs(150);
       expect(getState().durationMs).toBe(150);
@@ -204,11 +210,13 @@ describe('request-store', () => {
   describe('reset', () => {
     it('restores all fields to defaults', () => {
       getState().setError('err');
+      getState().setErrorDetail('detail');
       getState().setLoading(true);
       getState().setTemperature(0.1);
       getState().reset();
 
       expect(getState().error).toBeNull();
+      expect(getState().errorDetail).toBeNull();
       expect(getState().isLoading).toBe(false);
       expect(getState().temperature).toBe(DEFAULT_TEMPERATURE);
       expect(getState().messages).toHaveLength(1);

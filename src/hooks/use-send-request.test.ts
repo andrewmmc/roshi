@@ -79,6 +79,7 @@ describe('useSendRequest', () => {
       rawRequest: null,
       rawResponse: null,
       error: null,
+      errorDetail: null,
       durationMs: null,
       statusCode: null,
       sentRequest: null,
@@ -160,6 +161,7 @@ describe('useSendRequest', () => {
       expect(state.statusCode).toBe(200);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
+      expect(state.errorDetail).toBeNull();
     });
 
     it('adds entry to history', async () => {
@@ -242,7 +244,8 @@ describe('useSendRequest', () => {
       await act(async () => { await result.current.send(); });
 
       const state = useRequestStore.getState();
-      expect(state.error).toBe('HTTP 401: Unauthorized');
+      expect(state.error).toBe('Provider returned HTTP 401');
+      expect(state.errorDetail).toBe('bad');
       expect(state.rawRequest).toEqual({ model: 'm1' });
       expect(state.rawResponse).toEqual({ error: 'bad' });
       expect(state.durationMs).toBe(100);
@@ -259,6 +262,19 @@ describe('useSendRequest', () => {
       await act(async () => { await result.current.send(); });
 
       expect(useRequestStore.getState().error).toBe('Request cancelled');
+      expect(useRequestStore.getState().errorDetail).toBeNull();
+    });
+
+    it('handles network-style Error with a clearer message', async () => {
+      mockSendRequest.mockRejectedValue(new Error('Load failed'));
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => { await result.current.send(); });
+
+      const state = useRequestStore.getState();
+      expect(state.error).toBe('Network request failed before the provider responded');
+      expect(state.errorDetail).toContain('Load failed');
+      expect(state.rawResponse).toEqual(expect.objectContaining({ type: 'network_error', message: 'Load failed' }));
     });
 
     it('handles generic Error', async () => {
@@ -267,7 +283,8 @@ describe('useSendRequest', () => {
 
       await act(async () => { await result.current.send(); });
 
-      expect(useRequestStore.getState().error).toBe('Network failed');
+      expect(useRequestStore.getState().error).toBe('Unexpected request error');
+      expect(useRequestStore.getState().errorDetail).toBe('Network failed');
     });
 
     it('handles non-Error thrown values', async () => {
@@ -277,6 +294,7 @@ describe('useSendRequest', () => {
       await act(async () => { await result.current.send(); });
 
       expect(useRequestStore.getState().error).toBe('Unknown error');
+      expect(useRequestStore.getState().errorDetail).toBe('string error');
     });
   });
 
