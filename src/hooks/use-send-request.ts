@@ -161,6 +161,9 @@ export function useSendRequest() {
           durationMs: err.durationMs,
           statusCode: err.status,
         });
+      } else if (err instanceof DOMException && err.name === 'TimeoutError') {
+        store.setError('Request timed out');
+        store.setErrorDetail('The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.');
       } else if (err instanceof DOMException && err.name === 'AbortError') {
         store.setError('Request cancelled');
         store.setErrorDetail(null);

@@ -12,3 +12,5 @@ export const FREQUENCY_PENALTY_MIN = 0;
 export const FREQUENCY_PENALTY_MAX = 2;
 export const PRESENCE_PENALTY_MIN = 0;
 export const PRESENCE_PENALTY_MAX = 2;
+
+export const DEFAULT_REQUEST_TIMEOUT_MS = 120_000;

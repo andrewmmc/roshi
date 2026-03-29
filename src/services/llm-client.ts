@@ -2,6 +2,7 @@ import { EventSourceParserStream } from 'eventsource-parser/stream';
 import type { ProviderConfig } from '@/types/provider';
 import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } from '@/types/normalized';
 import { getAdapter } from '@/adapters';
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '@/constants/defaults';
 import { runtimeFetch } from './runtime-fetch';
 
 export interface SendRequestOptions {
@@ -10,6 +11,7 @@ export interface SendRequestOptions {
   customHeaders?: Record<string, string>;
   onStreamChunk?: (chunk: NormalizedStreamChunk) => void;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
 export interface SendRequestResult {
@@ -21,7 +23,7 @@ export interface SendRequestResult {
 }
 
 export async function sendRequest(options: SendRequestOptions): Promise<SendRequestResult> {
-  const { provider, request, customHeaders, onStreamChunk, signal } = options;
+  const { provider, request, customHeaders, onStreamChunk, signal, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS } = options;
   const adapter = getAdapter(provider);
 
   const url = getRequestUrl(adapter.buildRequestUrl(provider));
@@ -38,11 +40,15 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
 
   const startTime = performance.now();
 
+  const combinedSignal = signal
+    ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
+    : AbortSignal.timeout(timeoutMs);
+
   const fetchResponse = await runtimeFetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
-    signal,
+    signal: combinedSignal,
   });
 
   if (!fetchResponse.ok) {

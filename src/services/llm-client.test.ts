@@ -140,8 +140,14 @@ describe('llm-client', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ signal: controller.signal }),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
+
+      // Aborting the user signal should abort the combined signal
+      const combinedSignal = mockFetch.mock.calls[0][1].signal as AbortSignal;
+      expect(combinedSignal.aborted).toBe(false);
+      controller.abort();
+      expect(combinedSignal.aborted).toBe(true);
     });
 
     it('throws RequestError with JSON error body', async () => {
