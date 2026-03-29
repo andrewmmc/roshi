@@ -75,7 +75,7 @@ export function useSendRequest() {
     store.setRawResponse(null);
     store.setDurationMs(null);
     store.setStatusCode(null);
-    store.setSentRequest({
+    const normalizedRequest = {
       messages: nonEmptyMessages,
       model: model.id,
       temperature: store.temperature,
@@ -85,7 +85,9 @@ export function useSendRequest() {
       presencePenalty: store.presencePenalty,
       stream: store.stream && model.supportsStreaming,
       systemPrompt: store.systemPrompt || undefined,
-    });
+    };
+
+    store.setSentRequest(normalizedRequest);
     store.setLoading(true);
     store.setStreaming(false);
     store.setStreamContent('');
@@ -101,34 +103,14 @@ export function useSendRequest() {
       providerId: provider.id,
       providerName: provider.name,
       modelId: model.id,
-      request: {
-        messages: nonEmptyMessages,
-        model: model.id,
-        temperature: store.temperature,
-        maxTokens: store.maxTokens,
-        topP: store.topP,
-        frequencyPenalty: store.frequencyPenalty,
-        presencePenalty: store.presencePenalty,
-        stream: store.stream,
-        systemPrompt: store.systemPrompt || undefined,
-      },
+      request: { ...normalizedRequest, stream: store.stream },
       customHeaders: historyHeaders,
     };
 
     try {
       const result = await sendRequest({
         provider,
-        request: {
-          messages: nonEmptyMessages,
-          model: model.id,
-          temperature: store.temperature,
-          maxTokens: store.maxTokens,
-          topP: store.topP,
-          frequencyPenalty: store.frequencyPenalty,
-          presencePenalty: store.presencePenalty,
-          stream: store.stream && model.supportsStreaming,
-          systemPrompt: store.systemPrompt || undefined,
-        },
+        request: normalizedRequest,
         customHeaders: historyHeaders.length > 0
           ? Object.fromEntries(historyHeaders.map((header) => [header.key, header.value]))
           : undefined,
