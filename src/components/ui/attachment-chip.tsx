@@ -16,6 +16,7 @@ export function AttachmentChip({ attachment, onRemove }: AttachmentChipProps) {
           type="button"
           className="shrink-0 hover:text-destructive transition-colors"
           onClick={onRemove}
+          aria-label={`Remove ${attachment.filename}`}
         >
           <X className="h-3 w-3" />
         </button>

@@ -219,7 +219,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
                 className="flex-1 text-sm"
               />
               {form.models.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeModel(i)}>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeModel(i)} aria-label="Remove model">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}

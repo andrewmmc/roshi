@@ -62,6 +62,7 @@ export function HistoryList() {
             size="icon"
             className="h-5 w-5 text-muted-foreground hover:text-destructive"
             onClick={() => setShowConfirm(true)}
+            aria-label="Clear all history"
           >
             <Trash2 className="h-3 w-3" />
           </Button>

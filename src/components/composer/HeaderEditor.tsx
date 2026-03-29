@@ -87,6 +87,7 @@ export function HeaderEditor() {
             className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
+            aria-label="Remove header"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

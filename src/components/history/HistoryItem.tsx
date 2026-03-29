@@ -38,6 +38,7 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
         variant="ghost"
         size="icon"
         className="absolute right-0.5 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+        aria-label="Delete history entry"
         onClick={(e) => {
           e.stopPropagation();
           onDelete(entry.id);

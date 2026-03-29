@@ -23,6 +23,7 @@ export function Sidebar() {
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
             onClick={toggleTheme}
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {theme === 'light' ? (
               <Moon className="h-3.5 w-3.5" />
@@ -36,6 +37,7 @@ export function Sidebar() {
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
             onClick={reset}
             title="New request"
+            aria-label="New request"
           >
             <FilePlus2 className="h-3.5 w-3.5" />
           </Button>

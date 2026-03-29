@@ -31,6 +31,7 @@ export function CopyButton({ text }: { text: string }) {
       className="h-6 w-6 text-muted-foreground hover:text-foreground"
       onClick={handleCopy}
       disabled={!text}
+      aria-label={copied ? 'Copied' : 'Copy to clipboard'}
     >
       {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
     </Button>

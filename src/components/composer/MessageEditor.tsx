@@ -152,6 +152,7 @@ export function MessageEditor() {
                 className="h-7 w-7 text-muted-foreground hover:text-foreground"
                 onClick={() => fileInputRefs.current.get(index)?.click()}
                 title="Attach file"
+                aria-label="Attach file"
               >
                 <Paperclip className="h-3.5 w-3.5" />
               </Button>
@@ -178,6 +179,7 @@ export function MessageEditor() {
                   setUrlValue('');
                 }}
                 title="Attach URL"
+                aria-label="Attach URL"
               >
                 <Link className="h-3.5 w-3.5" />
               </Button>
@@ -187,6 +189,7 @@ export function MessageEditor() {
                 className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
                 onClick={() => removeMessage(index)}
                 disabled={messages.length <= 1}
+                aria-label="Remove message"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
