@@ -4,7 +4,9 @@ import { makeProvider } from '@/__tests__/fixtures';
 
 describe('getAdapter', () => {
   it('returns openai adapter for openai-compatible', () => {
-    expect(getAdapter(makeProvider({ type: 'openai-compatible' }))).toBe(openaiAdapter);
+    expect(getAdapter(makeProvider({ type: 'openai-compatible' }))).toBe(
+      openaiAdapter,
+    );
   });
 
   it('returns openai adapter for custom', () => {
@@ -16,6 +18,8 @@ describe('getAdapter', () => {
   });
 
   it('returns openai adapter for google-gemini (fallback)', () => {
-    expect(getAdapter(makeProvider({ type: 'google-gemini' }))).toBe(openaiAdapter);
+    expect(getAdapter(makeProvider({ type: 'google-gemini' }))).toBe(
+      openaiAdapter,
+    );
   });
 });

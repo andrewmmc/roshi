@@ -25,21 +25,31 @@ export function ChatView() {
       <div className="flex flex-col gap-2 p-4">
         {systemPrompt && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+            <div className="text-muted-foreground w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase">
               sys
             </div>
-            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] italic text-muted-foreground">
+            <div className="bg-muted/40 text-muted-foreground flex-1 rounded-md px-3 py-2 text-[13px] italic">
               {systemPrompt}
             </div>
           </div>
         )}
 
         {messages
-          .filter((m) => m.content.trim() || (m.attachments && m.attachments.length > 0))
+          .filter(
+            (m) =>
+              m.content.trim() || (m.attachments && m.attachments.length > 0),
+          )
           .map((msg) => (
-            <div key={msg.id ?? `${msg.role}-${msg.content.slice(0, 32)}`} className="flex gap-3">
-              <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
-                {msg.role === 'user' ? 'you' : msg.role === 'assistant' ? 'ai' : 'sys'}
+            <div
+              key={msg.id ?? `${msg.role}-${msg.content.slice(0, 32)}`}
+              className="flex gap-3"
+            >
+              <div className="text-muted-foreground w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase">
+                {msg.role === 'user'
+                  ? 'you'
+                  : msg.role === 'assistant'
+                    ? 'ai'
+                    : 'sys'}
               </div>
               <div
                 className={`flex-1 rounded-md px-3 py-2 text-[13px] ${
@@ -47,12 +57,12 @@ export function ChatView() {
                     ? 'bg-foreground/[0.04]'
                     : msg.role === 'assistant'
                       ? 'bg-muted/40'
-                      : 'bg-muted/30 italic text-muted-foreground'
+                      : 'bg-muted/30 text-muted-foreground italic'
                 }`}
               >
                 {msg.content}
                 {msg.attachments && msg.attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {msg.attachments.map((att) => (
                       <AttachmentChip key={att.id} attachment={att} />
                     ))}
@@ -64,21 +74,21 @@ export function ChatView() {
 
         {showLoading && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+            <div className="text-muted-foreground w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase">
               ai
             </div>
-            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px]">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <div className="bg-muted/40 flex-1 rounded-md px-3 py-2 text-[13px]">
+              <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
             </div>
           </div>
         )}
 
         {displayContent && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-muted-foreground text-right uppercase tracking-wide">
+            <div className="text-muted-foreground w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase">
               ai
             </div>
-            <div className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-[13px] prose prose-sm dark:prose-invert max-w-none prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs">
+            <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs max-w-none flex-1 rounded-md px-3 py-2 text-[13px]">
               <Markdown>{displayContent}</Markdown>
               {isStreaming && <StreamingIndicator />}
             </div>
@@ -87,18 +97,18 @@ export function ChatView() {
 
         {error && (
           <div className="flex gap-3">
-            <div className="shrink-0 w-14 pt-1.5 text-[11px] font-medium text-destructive text-right uppercase tracking-wide">
+            <div className="text-destructive w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase">
               err
             </div>
-            <div className="flex-1 rounded-md bg-destructive/5 border border-destructive/15 px-3 py-2 text-[13px] text-destructive">
+            <div className="bg-destructive/5 border-destructive/15 text-destructive flex-1 rounded-md border px-3 py-2 text-[13px]">
               <div className="font-medium">{error}</div>
               {errorDetail && (
-                <div className="mt-1 whitespace-pre-wrap break-words font-mono text-[12px] text-destructive/90">
+                <div className="text-destructive/90 mt-1 font-mono text-[12px] break-words whitespace-pre-wrap">
                   {errorDetail}
                 </div>
               )}
               {rawResponse && (
-                <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-destructive/80 bg-destructive/5 rounded p-2 overflow-auto max-h-48">
+                <pre className="text-destructive/80 bg-destructive/5 mt-2 max-h-48 overflow-auto rounded p-2 font-mono text-[11px] break-words whitespace-pre-wrap">
                   {JSON.stringify(rawResponse, null, 2)}
                 </pre>
               )}

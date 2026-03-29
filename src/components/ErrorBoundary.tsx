@@ -30,11 +30,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className={containerClass}>
-          <h1 className="text-lg font-semibold text-destructive">Something went wrong</h1>
-          <p className="text-sm text-muted-foreground font-mono max-w-lg break-all">
+          <h1 className="text-destructive text-lg font-semibold">
+            Something went wrong
+          </h1>
+          <p className="text-muted-foreground max-w-lg font-mono text-sm break-all">
             {this.state.error.message}
           </p>
-          <Button variant="outline" onClick={() => this.setState({ error: null })}>
+          <Button
+            variant="outline"
+            onClick={() => this.setState({ error: null })}
+          >
             Try again
           </Button>
         </div>

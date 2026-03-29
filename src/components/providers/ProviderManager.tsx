@@ -20,7 +20,8 @@ function getProviderDetails(provider: ProviderConfig): string {
   const builtin = builtinProviders.find((b) => b.name === provider.name);
   const hasApiKey = Boolean(provider.apiKey);
   const hasCustomHeaders = Object.keys(provider.customHeaders ?? {}).length > 0;
-  const hasCustomEndpoint = builtin && provider.endpoints.chat !== builtin.endpoints.chat;
+  const hasCustomEndpoint =
+    builtin && provider.endpoints.chat !== builtin.endpoints.chat;
   const hasCustomBaseUrl = builtin && provider.baseUrl !== builtin.baseUrl;
 
   return [
@@ -28,19 +29,24 @@ function getProviderDetails(provider: ProviderConfig): string {
     hasCustomHeaders && 'Custom headers',
     hasCustomEndpoint && 'Custom endpoint',
     hasCustomBaseUrl && 'Custom base URL',
-  ].filter(Boolean).join(' · ');
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 export function ProviderManager() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>('list');
-  const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
+  const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
+    null,
+  );
   const [resettingAll, setResettingAll] = useState(false);
   const [resettingProvider, setResettingProvider] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { providers, updateProvider, resetProvider, resetAllProviders } = useProviders();
+  const { providers, updateProvider, resetProvider, resetAllProviders } =
+    useProviders();
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
@@ -62,22 +68,41 @@ export function ProviderManager() {
   };
 
   return (
-    <Dialog modal={false} open={open} onOpenChange={(val) => { setOpen(val); if (!val) setView('list'); }}>
+    <Dialog
+      modal={false}
+      open={open}
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) setView('list');
+      }}
+    >
       <DialogTrigger
-        render={<Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
+          />
+        }
       >
         <Settings className="h-3.5 w-3.5" />
       </DialogTrigger>
-      <DialogContent className="max-h-[82vh] !max-w-xl !flex min-h-0 flex-col gap-0 overflow-hidden p-0" showCloseButton={false} showOverlay={false}>
+      <DialogContent
+        className="!flex max-h-[82vh] min-h-0 !max-w-xl flex-col gap-0 overflow-hidden p-0"
+        showCloseButton={false}
+        showOverlay={false}
+      >
         {/* Header */}
-        <DialogHeader className="relative shrink-0 border-b bg-muted/20 px-5 py-4 pr-14">
+        <DialogHeader className="bg-muted/20 relative shrink-0 border-b px-5 py-4 pr-14">
           <DialogTitle className="text-[15px] tracking-tight">
             {view === 'list' && 'Providers'}
             {view === 'edit' && 'Edit Provider'}
           </DialogTitle>
-          <p className="text-xs text-muted-foreground">
-            {view === 'list' && 'Tune credentials and model options for each connected provider.'}
-            {view === 'edit' && 'Update keys, headers, endpoints, and model entries without leaving the composer.'}
+          <p className="text-muted-foreground text-xs">
+            {view === 'list' &&
+              'Tune credentials and model options for each connected provider.'}
+            {view === 'edit' &&
+              'Update keys, headers, endpoints, and model entries without leaving the composer.'}
           </p>
           <Button
             variant="ghost"
@@ -103,18 +128,20 @@ export function ProviderManager() {
               {providers.map((p) => (
                 <div
                   key={p.id}
-                  className="group flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-4 py-3 transition-colors hover:border-foreground/15 hover:bg-muted/30"
+                  className="group border-border/60 bg-background/80 hover:border-foreground/15 hover:bg-muted/30 flex items-center justify-between rounded-xl border px-4 py-3 transition-colors"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-medium tracking-tight">{p.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">
+                    <div className="text-sm font-medium tracking-tight">
+                      {p.name}
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
                       {getProviderDetails(p)}
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-full text-muted-foreground opacity-70 transition hover:text-foreground group-hover:opacity-100"
+                    className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-full opacity-70 transition group-hover:opacity-100"
                     onClick={() => {
                       setEditingProvider(p);
                       setView('edit');
@@ -136,7 +163,9 @@ export function ProviderManager() {
               isBuiltIn={editingProvider.isBuiltIn}
               onReset={async () => {
                 await resetProvider(editingProvider.id);
-                const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
+                const updated = useProviderStore
+                  .getState()
+                  .providers.find((p) => p.id === editingProvider.id);
                 if (!updated) return null;
                 setEditingProvider(updated);
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -148,13 +177,13 @@ export function ProviderManager() {
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 items-center justify-between border-t bg-muted/15 px-5 py-4">
+        <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
           {view === 'list' && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive text-xs"
                 disabled={resettingAll}
                 onClick={async () => {
                   setResettingAll(true);
@@ -182,13 +211,15 @@ export function ProviderManager() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-xs text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive text-xs"
                     disabled={resettingProvider}
                     onClick={async () => {
                       setResettingProvider(true);
                       try {
                         await resetProvider(editingProvider.id);
-                        const updated = useProviderStore.getState().providers.find((p) => p.id === editingProvider.id);
+                        const updated = useProviderStore
+                          .getState()
+                          .providers.find((p) => p.id === editingProvider.id);
                         if (updated) {
                           setEditingProvider(updated);
                           setFormVersion((v) => v + 1);
@@ -198,16 +229,23 @@ export function ProviderManager() {
                       }
                     }}
                   >
-                    <RotateCcw className="h-3 w-3 mr-1" />
+                    <RotateCcw className="mr-1 h-3 w-3" />
                     {resettingProvider ? 'Resetting...' : 'Reset to default'}
                   </Button>
                 )}
               </div>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={handleBackToList}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBackToList}
+                >
                   Cancel
                 </Button>
-                <Button type="button" onClick={() => formRef.current?.requestSubmit()}>
+                <Button
+                  type="button"
+                  onClick={() => formRef.current?.requestSubmit()}
+                >
                   Update
                 </Button>
               </div>

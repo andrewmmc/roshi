@@ -6,16 +6,16 @@ This is a single-service React + TypeScript + Vite SPA (**LLM Tester** — a Pos
 
 ### Quick reference
 
-| Action | Command |
-|--------|---------|
-| Install deps | `npm install` |
-| Dev server | `npm run dev` (Vite on port 5173, `--host` enabled) |
-| Lint | `npm run lint` |
-| Build | `npm run build` (`tsc -b && vite build`) |
-| Preview prod build | `npm run preview` |
-| Test | `npm run test` (Vitest, single run) |
-| Test (watch) | `npm run test:watch` |
-| Test (coverage) | `npm run test:coverage` (V8 provider) |
+| Action             | Command                                             |
+| ------------------ | --------------------------------------------------- |
+| Install deps       | `npm install`                                       |
+| Dev server         | `npm run dev` (Vite on port 5173, `--host` enabled) |
+| Lint               | `npm run lint`                                      |
+| Build              | `npm run build` (`tsc -b && vite build`)            |
+| Preview prod build | `npm run preview`                                   |
+| Test               | `npm run test` (Vitest, single run)                 |
+| Test (watch)       | `npm run test:watch`                                |
+| Test (coverage)    | `npm run test:coverage` (V8 provider)               |
 
 ### Notes
 

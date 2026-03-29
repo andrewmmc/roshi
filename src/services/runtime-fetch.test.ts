@@ -43,7 +43,9 @@ describe('runtimeFetch', () => {
 
     await runtimeFetch('https://example.com', { method: 'POST' });
 
-    expect(tauriFetchMock).toHaveBeenCalledWith('https://example.com', { method: 'POST' });
+    expect(tauriFetchMock).toHaveBeenCalledWith('https://example.com', {
+      method: 'POST',
+    });
     expect(fetch).not.toHaveBeenCalled();
     expect(shouldUseTauriHttpClient()).toBe(true);
   });

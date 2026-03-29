@@ -11,19 +11,23 @@ export function Sidebar() {
   const toggleTheme = useThemeStore((s) => s.toggle);
 
   return (
-    <div className="flex flex-col h-full bg-sidebar">
-      <div className="flex items-center justify-between px-3 h-11 border-b border-sidebar-border shrink-0">
-        <span className="text-[13px] font-semibold text-foreground/80 tracking-tight select-none">
+    <div className="bg-sidebar flex h-full flex-col">
+      <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
+        <span className="text-foreground/80 text-[13px] font-semibold tracking-tight select-none">
           LLM Tester
         </span>
         <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={toggleTheme}
-            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            title={
+              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+            }
+            aria-label={
+              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+            }
           >
             {theme === 'light' ? (
               <Moon className="h-3.5 w-3.5" />
@@ -34,7 +38,7 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={reset}
             title="New request"
             aria-label="New request"

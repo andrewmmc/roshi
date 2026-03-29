@@ -2,8 +2,18 @@ import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
 import { Readable } from 'node:stream';
 
-const SKIP_REQUEST_HEADERS = new Set(['host', 'origin', 'referer', 'connection', 'accept-encoding']);
-const SKIP_RESPONSE_HEADERS = new Set(['content-encoding', 'transfer-encoding', 'connection']);
+const SKIP_REQUEST_HEADERS = new Set([
+  'host',
+  'origin',
+  'referer',
+  'connection',
+  'accept-encoding',
+]);
+const SKIP_RESPONSE_HEADERS = new Set([
+  'content-encoding',
+  'transfer-encoding',
+  'connection',
+]);
 
 function collectBody(req: IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -43,14 +53,21 @@ export function devProxyPlugin() {
         for (const [key, value] of Object.entries(req.headers)) {
           if (!value) continue;
           if (SKIP_REQUEST_HEADERS.has(key)) continue;
-          upstreamHeaders.set(key, Array.isArray(value) ? value.join(', ') : value);
+          upstreamHeaders.set(
+            key,
+            Array.isArray(value) ? value.join(', ') : value,
+          );
         }
 
         try {
           let requestBody: Uint8Array | undefined;
           if (req.method !== 'GET' && req.method !== 'HEAD') {
             const buf = await collectBody(req);
-            requestBody = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+            requestBody = new Uint8Array(
+              buf.buffer,
+              buf.byteOffset,
+              buf.byteLength,
+            );
             upstreamHeaders.set('content-length', String(requestBody.length));
           }
 
@@ -72,14 +89,17 @@ export function devProxyPlugin() {
             return;
           }
 
-          Readable.fromWeb(upstreamResponse.body as import('stream/web').ReadableStream).pipe(res);
+          Readable.fromWeb(
+            upstreamResponse.body as import('stream/web').ReadableStream,
+          ).pipe(res);
         } catch (error) {
           if (abortController.signal.aborted) {
             res.end();
             return;
           }
 
-          const message = error instanceof Error ? error.message : 'Proxy request failed';
+          const message =
+            error instanceof Error ? error.message : 'Proxy request failed';
           res.statusCode = 502;
           res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify({ error: message }));

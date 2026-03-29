@@ -13,7 +13,9 @@ export function makeModel(overrides?: Partial<ProviderModel>): ProviderModel {
   };
 }
 
-export function makeProvider(overrides?: Partial<ProviderConfig>): ProviderConfig {
+export function makeProvider(
+  overrides?: Partial<ProviderConfig>,
+): ProviderConfig {
   return {
     id: 'test-provider',
     name: 'TestProvider',
@@ -28,7 +30,9 @@ export function makeProvider(overrides?: Partial<ProviderConfig>): ProviderConfi
   };
 }
 
-export function makeMessage(overrides?: Partial<NormalizedMessage>): NormalizedMessage {
+export function makeMessage(
+  overrides?: Partial<NormalizedMessage>,
+): NormalizedMessage {
   return {
     role: 'user',
     content: 'Hello',
@@ -36,7 +40,9 @@ export function makeMessage(overrides?: Partial<NormalizedMessage>): NormalizedM
   };
 }
 
-export function makeRequest(overrides?: Partial<NormalizedRequest>): NormalizedRequest {
+export function makeRequest(
+  overrides?: Partial<NormalizedRequest>,
+): NormalizedRequest {
   return {
     messages: [makeMessage()],
     model: 'gpt-4',
@@ -47,7 +53,9 @@ export function makeRequest(overrides?: Partial<NormalizedRequest>): NormalizedR
   };
 }
 
-export function makeOpenAIResponse(overrides?: Record<string, unknown>): Record<string, unknown> {
+export function makeOpenAIResponse(
+  overrides?: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     id: 'chatcmpl-123',
     model: 'gpt-4',
@@ -66,7 +74,9 @@ export function makeOpenAIResponse(overrides?: Record<string, unknown>): Record<
   };
 }
 
-export function makeHistoryHeader(overrides?: Partial<HistoryHeaderEntry>): HistoryHeaderEntry {
+export function makeHistoryHeader(
+  overrides?: Partial<HistoryHeaderEntry>,
+): HistoryHeaderEntry {
   return {
     key: 'X-Test',
     value: 'value',
@@ -74,7 +84,9 @@ export function makeHistoryHeader(overrides?: Partial<HistoryHeaderEntry>): Hist
   };
 }
 
-export function makeHistoryEntry(overrides?: Partial<HistoryEntry>): HistoryEntry {
+export function makeHistoryEntry(
+  overrides?: Partial<HistoryEntry>,
+): HistoryEntry {
   return {
     id: 'history-1',
     providerId: 'test-provider',
@@ -82,7 +94,10 @@ export function makeHistoryEntry(overrides?: Partial<HistoryEntry>): HistoryEntr
     modelId: 'gpt-4',
     request: makeRequest(),
     customHeaders: [],
-    rawRequest: { model: 'gpt-4', messages: [{ role: 'user', content: 'Hello' }] },
+    rawRequest: {
+      model: 'gpt-4',
+      messages: [{ role: 'user', content: 'Hello' }],
+    },
     response: {
       id: 'chatcmpl-123',
       model: 'gpt-4',
@@ -100,7 +115,9 @@ export function makeHistoryEntry(overrides?: Partial<HistoryEntry>): HistoryEntr
   };
 }
 
-export function makeCodeGenParams(overrides?: Partial<CodeGenParams>): CodeGenParams {
+export function makeCodeGenParams(
+  overrides?: Partial<CodeGenParams>,
+): CodeGenParams {
   return {
     provider: makeProvider(),
     model: 'gpt-4',

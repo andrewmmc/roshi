@@ -16,13 +16,15 @@ import { useRequestStore } from '@/stores/request-store';
 import type { NormalizedMessage } from '@/types/normalized';
 
 function AttachmentChips({ messageIndex }: { messageIndex: number }) {
-  const attachments = useRequestStore((s) => s.messages[messageIndex]?.attachments);
+  const attachments = useRequestStore(
+    (s) => s.messages[messageIndex]?.attachments,
+  );
   const removeAttachment = useRequestStore((s) => s.removeAttachment);
 
   if (!attachments || attachments.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1.5">
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
       {attachments.map((att) => (
         <AttachmentChip
           key={att.id}
@@ -54,7 +56,8 @@ export function MessageEditor() {
 
   const handleAddMessage = () => {
     const lastRole = messages[messages.length - 1]?.role;
-    const nextRole: NormalizedMessage['role'] = lastRole === 'user' ? 'assistant' : 'user';
+    const nextRole: NormalizedMessage['role'] =
+      lastRole === 'user' ? 'assistant' : 'user';
     addMessage({ role: nextRole, content: '' });
   };
 
@@ -90,12 +93,14 @@ export function MessageEditor() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
         {messages.map((msg, index) => (
-          <div key={msg.id || index} className="flex gap-2 items-start">
+          <div key={msg.id || index} className="flex items-start gap-2">
             <Select
               value={msg.role}
-              onValueChange={(val) => handleRoleChange(index, val as NormalizedMessage['role'])}
+              onValueChange={(val) =>
+                handleRoleChange(index, val as NormalizedMessage['role'])
+              }
             >
-              <SelectTrigger className="w-[100px] h-7 text-xs shrink-0 capitalize">
+              <SelectTrigger className="h-7 w-[100px] shrink-0 text-xs capitalize">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -103,32 +108,35 @@ export function MessageEditor() {
                 <SelectItem value="assistant">Assistant</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <Textarea
                 value={msg.content}
                 onChange={(e) => handleContentChange(index, e.target.value)}
                 placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
-                className="min-h-[52px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
+                className="bg-muted/30 border-border/60 min-h-[52px] resize-y font-mono text-[13px]"
                 rows={2}
               />
               <AttachmentChips messageIndex={index} />
               {urlInputIndex === index && (
-                <div className="flex gap-1.5 mt-1.5">
+                <div className="mt-1.5 flex gap-1.5">
                   <Input
                     value={urlValue}
                     onChange={(e) => setUrlValue(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleUrlSubmit(index);
-                      if (e.key === 'Escape') { setUrlInputIndex(null); setUrlValue(''); }
+                      if (e.key === 'Escape') {
+                        setUrlInputIndex(null);
+                        setUrlValue('');
+                      }
                     }}
                     placeholder="https://example.com/document.pdf"
-                    className="h-7 text-xs font-mono flex-1"
+                    className="h-7 flex-1 font-mono text-xs"
                     autoFocus
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs shrink-0"
+                    className="h-7 shrink-0 text-xs"
                     onClick={() => handleUrlSubmit(index)}
                     disabled={!urlValue.trim()}
                   >
@@ -137,19 +145,22 @@ export function MessageEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs shrink-0"
-                    onClick={() => { setUrlInputIndex(null); setUrlValue(''); }}
+                    className="h-7 shrink-0 text-xs"
+                    onClick={() => {
+                      setUrlInputIndex(null);
+                      setUrlValue('');
+                    }}
                   >
                     Cancel
                   </Button>
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-0.5 shrink-0">
+            <div className="flex shrink-0 flex-col gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground h-7 w-7"
                 onClick={() => fileInputRefs.current.get(index)?.click()}
                 title="Attach file"
                 aria-label="Attach file"
@@ -173,7 +184,7 @@ export function MessageEditor() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground h-7 w-7"
                 onClick={() => {
                   setUrlInputIndex(urlInputIndex === index ? null : index);
                   setUrlValue('');
@@ -186,7 +197,7 @@ export function MessageEditor() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
                 onClick={() => removeMessage(index)}
                 disabled={messages.length <= 1}
                 aria-label="Remove message"
@@ -198,8 +209,13 @@ export function MessageEditor() {
         ))}
       </div>
 
-      <Button variant="outline" size="sm" className="self-start h-7 text-xs" onClick={handleAddMessage}>
-        <Plus className="h-3 w-3 mr-1.5" />
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 self-start text-xs"
+        onClick={handleAddMessage}
+      >
+        <Plus className="mr-1.5 h-3 w-3" />
         Add Message
       </Button>
     </div>

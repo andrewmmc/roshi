@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function AppLayout() {
   return (
-    <div className="h-screen w-screen overflow-hidden bg-sidebar">
+    <div className="bg-sidebar h-screen w-screen overflow-hidden">
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel defaultSize="24%" minSize="18%" maxSize="32%">
           <ErrorBoundary panel>

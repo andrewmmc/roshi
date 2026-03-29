@@ -7,7 +7,9 @@ const { mockDb } = vi.hoisted(() => ({
   mockDb: {
     history: {
       orderBy: vi.fn().mockReturnValue({
-        reverse: vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }),
+        reverse: vi
+          .fn()
+          .mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }),
       }),
       add: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),

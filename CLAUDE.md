@@ -33,6 +33,7 @@ LLM Tester is a browser/desktop app for testing LLM provider APIs. It sends requ
 ### State management
 
 Four Zustand stores, no middleware:
+
 - **provider-store** — Provider CRUD, selection (persisted to localStorage)
 - **request-store** — Composer state, response/streaming state, loading flags
 - **history-store** — History entries loaded from IndexedDB

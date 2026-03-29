@@ -3,7 +3,9 @@ import { makeProvider } from '@/__tests__/fixtures';
 
 describe('getCodeGenerators', () => {
   it('returns generators for openai-compatible', () => {
-    const generators = getCodeGenerators(makeProvider({ type: 'openai-compatible' }));
+    const generators = getCodeGenerators(
+      makeProvider({ type: 'openai-compatible' }),
+    );
     expect(generators).toHaveLength(2);
     expect(generators[0].language).toBe('python');
     expect(generators[1].language).toBe('javascript');
@@ -19,6 +21,8 @@ describe('getCodeGenerators', () => {
   });
 
   it('returns empty array for google-gemini', () => {
-    expect(getCodeGenerators(makeProvider({ type: 'google-gemini' }))).toEqual([]);
+    expect(getCodeGenerators(makeProvider({ type: 'google-gemini' }))).toEqual(
+      [],
+    );
   });
 });

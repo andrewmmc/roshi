@@ -11,17 +11,25 @@ export function RequestComposer() {
   const setSystemPrompt = useRequestStore((s) => s.setSystemPrompt);
 
   return (
-    <Tabs defaultValue="messages" className="h-full flex flex-col gap-0">
-      <div className="flex items-center px-3 h-10 border-b shrink-0">
+    <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
+      <div className="flex h-10 shrink-0 items-center border-b px-3">
         <TabsList variant="line" className="h-7 gap-0">
-          <TabsTrigger value="messages" className="text-xs px-3">Messages</TabsTrigger>
-          <TabsTrigger value="system" className="text-xs px-3">System Prompt</TabsTrigger>
-          <TabsTrigger value="headers" className="text-xs px-3">Headers</TabsTrigger>
-          <TabsTrigger value="parameters" className="text-xs px-3">Parameters</TabsTrigger>
+          <TabsTrigger value="messages" className="px-3 text-xs">
+            Messages
+          </TabsTrigger>
+          <TabsTrigger value="system" className="px-3 text-xs">
+            System Prompt
+          </TabsTrigger>
+          <TabsTrigger value="headers" className="px-3 text-xs">
+            Headers
+          </TabsTrigger>
+          <TabsTrigger value="parameters" className="px-3 text-xs">
+            Parameters
+          </TabsTrigger>
         </TabsList>
       </div>
 
-      <TabsContent value="messages" className="flex-1 min-h-0 overflow-hidden">
+      <TabsContent value="messages" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <MessageEditor />
@@ -29,21 +37,21 @@ export function RequestComposer() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="system" className="flex-1 min-h-0 overflow-hidden">
+      <TabsContent value="system" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               placeholder="System prompt (optional)"
-              className="min-h-[80px] resize-y text-[13px] font-mono bg-muted/30 border-border/60"
+              className="bg-muted/30 border-border/60 min-h-[80px] resize-y font-mono text-[13px]"
               rows={3}
             />
           </div>
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="headers" className="flex-1 min-h-0 overflow-hidden">
+      <TabsContent value="headers" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             <HeaderEditor />
@@ -51,7 +59,10 @@ export function RequestComposer() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="parameters" className="flex-1 min-h-0 overflow-hidden">
+      <TabsContent
+        value="parameters"
+        className="min-h-0 flex-1 overflow-hidden"
+      >
         <ScrollArea className="h-full">
           <div className="p-4">
             <ParameterControls />

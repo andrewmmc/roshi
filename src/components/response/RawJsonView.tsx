@@ -3,17 +3,28 @@ import { useRequestStore } from '@/stores/request-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 
-const JsonBlock = memo(function JsonBlock({ data, label }: { data: unknown; label: string }) {
-  const jsonStr = useMemo(() => (data ? JSON.stringify(data, null, 2) : ''), [data]);
+const JsonBlock = memo(function JsonBlock({
+  data,
+  label,
+}: {
+  data: unknown;
+  label: string;
+}) {
+  const jsonStr = useMemo(
+    () => (data ? JSON.stringify(data, null, 2) : ''),
+    [data],
+  );
 
   if (!data) {
     return (
-      <div className="p-4 text-[13px] text-muted-foreground italic">No {label} data available</div>
+      <div className="text-muted-foreground p-4 text-[13px] italic">
+        No {label} data available
+      </div>
     );
   }
 
   return (
-    <pre className="p-4 text-[13px] font-mono whitespace-pre-wrap break-words">
+    <pre className="p-4 font-mono text-[13px] break-words whitespace-pre-wrap">
       {jsonStr}
     </pre>
   );
@@ -31,18 +42,32 @@ export function RawJsonView() {
   );
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 mt-2">
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="flex h-full flex-col"
+    >
+      <div className="mt-2 flex items-center justify-between px-4">
         <TabsList className="h-7">
-          <TabsTrigger value="response" className="text-xs h-6 px-2.5">Response</TabsTrigger>
-          <TabsTrigger value="request" className="text-xs h-6 px-2.5">Request</TabsTrigger>
+          <TabsTrigger value="response" className="h-6 px-2.5 text-xs">
+            Response
+          </TabsTrigger>
+          <TabsTrigger value="request" className="h-6 px-2.5 text-xs">
+            Request
+          </TabsTrigger>
         </TabsList>
         <CopyButton text={activeJson} />
       </div>
-      <TabsContent value="response" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+      <TabsContent
+        value="response"
+        className="mt-0 min-h-0 flex-1 overflow-y-auto"
+      >
         <JsonBlock data={rawResponse} label="response" />
       </TabsContent>
-      <TabsContent value="request" className="flex-1 min-h-0 mt-0 overflow-y-auto">
+      <TabsContent
+        value="request"
+        className="mt-0 min-h-0 flex-1 overflow-y-auto"
+      >
         <JsonBlock data={rawRequest} label="request" />
       </TabsContent>
     </Tabs>

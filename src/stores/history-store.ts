@@ -8,7 +8,9 @@ interface HistoryStore {
   loaded: boolean;
 
   load: () => Promise<void>;
-  addEntry: (entry: Omit<HistoryEntry, 'id' | 'createdAt'>) => Promise<HistoryEntry>;
+  addEntry: (
+    entry: Omit<HistoryEntry, 'id' | 'createdAt'>,
+  ) => Promise<HistoryEntry>;
   deleteEntry: (id: string) => Promise<void>;
   clearAll: () => Promise<void>;
 }

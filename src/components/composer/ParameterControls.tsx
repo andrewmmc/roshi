@@ -29,7 +29,9 @@ function NumberInputRow({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <Label className="text-xs text-muted-foreground w-32 shrink-0">{label}</Label>
+      <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+        {label}
+      </Label>
       <Input
         type="number"
         value={value.toFixed(decimals)}
@@ -40,7 +42,7 @@ function NumberInputRow({
         step={step}
         min={min}
         max={max}
-        className="w-24 h-7 text-xs font-mono"
+        className="h-7 w-24 font-mono text-xs"
       />
     </div>
   );
@@ -105,20 +107,24 @@ export function ParameterControls() {
       />
 
       <div className="flex items-center gap-3">
-        <Label className="text-xs text-muted-foreground w-32 shrink-0">Max Tokens</Label>
+        <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+          Max Tokens
+        </Label>
         <Input
           type="number"
           value={maxTokens}
           onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
-          className="w-24 h-7 text-xs font-mono"
+          className="h-7 w-24 font-mono text-xs"
           min={1}
           max={1000000}
         />
       </div>
 
       <div className="flex items-center gap-3">
-        <Label className="text-xs text-muted-foreground w-32 shrink-0">Stream</Label>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+          Stream
+        </Label>
+        <label className="flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
             checked={stream}
@@ -129,7 +135,12 @@ export function ParameterControls() {
       </div>
 
       <div className="flex justify-end pt-1">
-        <Button variant="ghost" size="sm" onClick={reset} className="h-7 text-xs">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={reset}
+          className="h-7 text-xs"
+        >
           Reset to defaults
         </Button>
       </div>

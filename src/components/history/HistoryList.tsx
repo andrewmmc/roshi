@@ -35,12 +35,15 @@ export function HistoryList() {
 
   const filtered = useMemo(() => {
     let result = entries;
-    if (statusFilter === 'error') result = result.filter((e) => e.error !== null);
-    if (statusFilter === 'success') result = result.filter((e) => e.error === null);
+    if (statusFilter === 'error')
+      result = result.filter((e) => e.error !== null);
+    if (statusFilter === 'success')
+      result = result.filter((e) => e.error === null);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((e) => {
-        const msg = e.request.messages.find((m) => m.role === 'user')?.content ?? '';
+        const msg =
+          e.request.messages.find((m) => m.role === 'user')?.content ?? '';
         return (
           e.providerName.toLowerCase().includes(q) ||
           e.modelId.toLowerCase().includes(q) ||
@@ -62,8 +65,10 @@ export function HistoryList() {
       temperature: entry.request.temperature ?? 1,
       maxTokens: entry.request.maxTokens ?? 4096,
       topP: entry.request.topP ?? DEFAULT_TOP_P,
-      frequencyPenalty: entry.request.frequencyPenalty ?? DEFAULT_FREQUENCY_PENALTY,
-      presencePenalty: entry.request.presencePenalty ?? DEFAULT_PRESENCE_PENALTY,
+      frequencyPenalty:
+        entry.request.frequencyPenalty ?? DEFAULT_FREQUENCY_PENALTY,
+      presencePenalty:
+        entry.request.presencePenalty ?? DEFAULT_PRESENCE_PENALTY,
       stream: entry.request.stream,
       customHeaders: entry.customHeaders ?? [],
       response: entry.response,
@@ -76,16 +81,16 @@ export function HistoryList() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 h-10 border-b border-sidebar-border shrink-0">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+    <div className="flex h-full flex-col">
+      <div className="border-sidebar-border flex h-10 shrink-0 items-center justify-between border-b px-3">
+        <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
           History
         </span>
         {entries.length > 0 && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-5 w-5 text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-5 w-5"
             onClick={() => setShowConfirm(true)}
             aria-label="Clear all history"
           >
@@ -94,19 +99,19 @@ export function HistoryList() {
         )}
       </div>
       {entries.length > 0 && (
-        <div className="px-2 pt-2 pb-1 space-y-1.5 shrink-0">
+        <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2" />
             <Input
               placeholder="Search history..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
+              className="bg-sidebar-accent/50 border-sidebar-border h-7 pr-7 pl-7 text-xs"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
                 aria-label="Clear search"
               >
                 <X className="h-3 w-3" />
@@ -118,17 +123,21 @@ export function HistoryList() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
                   statusFilter === status
                     ? 'bg-sidebar-accent text-foreground'
                     : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
                 }`}
               >
-                {status === 'all' ? 'All' : status === 'success' ? 'Success' : 'Error'}
+                {status === 'all'
+                  ? 'All'
+                  : status === 'success'
+                    ? 'Success'
+                    : 'Error'}
               </button>
             ))}
             {isFiltering && (
-              <span className="text-[10px] text-muted-foreground/70 ml-auto self-center">
+              <span className="text-muted-foreground/70 ml-auto self-center text-[10px]">
                 {filtered.length} of {entries.length}
               </span>
             )}
@@ -138,12 +147,12 @@ export function HistoryList() {
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-px p-1">
           {entries.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-8">
+            <p className="text-muted-foreground py-8 text-center text-xs">
               No history yet
             </p>
           )}
           {entries.length > 0 && filtered.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-8">
+            <p className="text-muted-foreground py-8 text-center text-xs">
               No matching entries
             </p>
           )}
@@ -163,7 +172,8 @@ export function HistoryList() {
           <DialogHeader>
             <DialogTitle>Delete all history?</DialogTitle>
             <DialogDescription>
-              This will permanently remove all {entries.length} history entries. This action cannot be undone.
+              This will permanently remove all {entries.length} history entries.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

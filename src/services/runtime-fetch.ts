@@ -5,7 +5,10 @@ export function shouldUseTauriHttpClient(): boolean {
   return !import.meta.env.DEV && isTauri();
 }
 
-export function runtimeFetch(input: URL | Request | string, init?: RequestInit): Promise<Response> {
+export function runtimeFetch(
+  input: URL | Request | string,
+  init?: RequestInit,
+): Promise<Response> {
   if (shouldUseTauriHttpClient()) {
     return tauriFetch(input, init);
   }

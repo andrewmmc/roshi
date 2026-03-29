@@ -10,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { HeaderListEditor, type HeaderEntry } from '@/components/ui/header-list-editor';
+import {
+  HeaderListEditor,
+  type HeaderEntry,
+} from '@/components/ui/header-list-editor';
 import { headersToRecord } from '@/components/ui/header-utils';
 import { Trash2, Plus } from 'lucide-react';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
@@ -41,8 +44,15 @@ const defaultFormData: ProviderFormData = {
   customHeaders: {},
 };
 
-export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: ProviderFormProps) {
-  const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
+export function ProviderForm({
+  ref,
+  initialData,
+  onSubmit,
+  isBuiltIn = false,
+}: ProviderFormProps) {
+  const [form, setForm] = useState<ProviderFormData>(
+    initialData || defaultFormData,
+  );
 
   const toFormModels = (models: ProviderModel[]): FormModel[] =>
     models.map((m) => ({ ...m, _formKey: nanoid() }));
@@ -66,7 +76,10 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
     setHeaderEntries(entries);
   };
 
-  const updateField = <K extends keyof ProviderFormData>(key: K, value: ProviderFormData[K]) => {
+  const updateField = <K extends keyof ProviderFormData>(
+    key: K,
+    value: ProviderFormData[K],
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -82,7 +95,16 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
   };
 
   const addModel = () => {
-    setFormModels((prev) => [...prev, { id: '', name: '', displayName: '', supportsStreaming: true, _formKey: nanoid() }]);
+    setFormModels((prev) => [
+      ...prev,
+      {
+        id: '',
+        name: '',
+        displayName: '',
+        supportsStreaming: true,
+        _formKey: nanoid(),
+      },
+    ]);
   };
 
   const removeModel = (index: number) => {
@@ -124,14 +146,18 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
             <Label className="text-xs">Type</Label>
             <Select
               value={form.type}
-              onValueChange={(val) => updateField('type', val as ProviderConfig['type'])}
+              onValueChange={(val) =>
+                updateField('type', val as ProviderConfig['type'])
+              }
               disabled={isBuiltIn}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="openai-compatible">OpenAI Compatible</SelectItem>
+                <SelectItem value="openai-compatible">
+                  OpenAI Compatible
+                </SelectItem>
                 <SelectItem value="anthropic">Anthropic</SelectItem>
                 <SelectItem value="google-gemini">Google Gemini</SelectItem>
                 <SelectItem value="custom">Custom</SelectItem>
@@ -155,7 +181,12 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
             <Label className="text-xs">Auth Type</Label>
             <Select
               value={form.auth.type}
-              onValueChange={(val) => updateField('auth', { ...form.auth, type: val as ProviderConfig['auth']['type'] })}
+              onValueChange={(val) =>
+                updateField('auth', {
+                  ...form.auth,
+                  type: val as ProviderConfig['auth']['type'],
+                })
+              }
               disabled={isBuiltIn}
             >
               <SelectTrigger>
@@ -174,7 +205,12 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
               <Label className="text-xs">Header Name</Label>
               <Input
                 value={form.auth.headerName || ''}
-                onChange={(e) => updateField('auth', { ...form.auth, headerName: e.target.value })}
+                onChange={(e) =>
+                  updateField('auth', {
+                    ...form.auth,
+                    headerName: e.target.value,
+                  })
+                }
                 placeholder="x-api-key"
               />
             </div>
@@ -215,7 +251,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
         <div className="flex flex-col gap-2">
           <Label className="text-xs">Models</Label>
           {formModels.map((model, i) => (
-            <div key={model._formKey} className="flex gap-2 items-center">
+            <div key={model._formKey} className="flex items-center gap-2">
               <Input
                 value={model.id}
                 onChange={(e) => updateModel(i, { id: e.target.value })}
@@ -224,19 +260,34 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
               />
               <Input
                 value={model.displayName}
-                onChange={(e) => updateModel(i, { displayName: e.target.value })}
+                onChange={(e) =>
+                  updateModel(i, { displayName: e.target.value })
+                }
                 placeholder="Display Name"
                 className="flex-1 text-sm"
               />
               {formModels.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeModel(i)} aria-label="Remove model">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => removeModel(i)}
+                  aria-label="Remove model"
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" className="self-start" onClick={addModel}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start"
+            onClick={addModel}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
             Add Model
           </Button>
         </div>

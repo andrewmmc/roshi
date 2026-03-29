@@ -96,7 +96,10 @@ describe('provider-store', () => {
         models: [makeModel({ id: 'gpt-4' })],
       });
       mockDb.providers.toArray.mockResolvedValue([existingProvider]);
-      localStorage.setItem('llm-tester-selection', JSON.stringify({ providerId: 'p1', modelId: 'gpt-4' }));
+      localStorage.setItem(
+        'llm-tester-selection',
+        JSON.stringify({ providerId: 'p1', modelId: 'gpt-4' }),
+      );
 
       await getState().load();
 
@@ -105,7 +108,10 @@ describe('provider-store', () => {
     });
 
     it('falls back to first provider when saved selection is invalid', async () => {
-      localStorage.setItem('llm-tester-selection', JSON.stringify({ providerId: 'nonexistent', modelId: 'x' }));
+      localStorage.setItem(
+        'llm-tester-selection',
+        JSON.stringify({ providerId: 'nonexistent', modelId: 'x' }),
+      );
       mockFetchModels.mockResolvedValue([makeModel({ id: 'm1' })]);
 
       await getState().load();
@@ -183,7 +189,9 @@ describe('provider-store', () => {
 
       await getState().updateProvider('p1', { name: 'Updated' });
 
-      expect(mockDb.providers.update).toHaveBeenCalledWith('p1', { name: 'Updated' });
+      expect(mockDb.providers.update).toHaveBeenCalledWith('p1', {
+        name: 'Updated',
+      });
       expect(getState().providers[0].name).toBe('Updated');
     });
   });
@@ -220,7 +228,10 @@ describe('provider-store', () => {
     });
 
     it('updates selection when deleting selected provider', async () => {
-      const remaining = makeProvider({ id: 'p2', models: [makeModel({ id: 'm2' })] });
+      const remaining = makeProvider({
+        id: 'p2',
+        models: [makeModel({ id: 'm2' })],
+      });
       useProviderStore.setState({
         loaded: true,
         providers: [makeProvider({ id: 'p1', isBuiltIn: false }), remaining],
@@ -259,7 +270,12 @@ describe('provider-store', () => {
     it('updates model selection and persists', () => {
       useProviderStore.setState({
         loaded: true,
-        providers: [makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' }), makeModel({ id: 'm2' })] })],
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'm1' }), makeModel({ id: 'm2' })],
+          }),
+        ],
         selectedProviderId: 'p1',
         selectedModelId: 'm1',
       });
@@ -291,7 +307,14 @@ describe('provider-store', () => {
 
       useProviderStore.setState({
         loaded: true,
-        providers: [makeProvider({ id: 'p1', name: 'OpenAI', isBuiltIn: true, apiKey: 'old-key' })],
+        providers: [
+          makeProvider({
+            id: 'p1',
+            name: 'OpenAI',
+            isBuiltIn: true,
+            apiKey: 'old-key',
+          }),
+        ],
       });
 
       await getState().resetProvider('p1');
@@ -306,7 +329,9 @@ describe('provider-store', () => {
 
       useProviderStore.setState({
         loaded: true,
-        providers: [makeProvider({ id: 'p1', name: 'OpenAI', isBuiltIn: true })],
+        providers: [
+          makeProvider({ id: 'p1', name: 'OpenAI', isBuiltIn: true }),
+        ],
       });
 
       await getState().resetProvider('p1');
@@ -324,7 +349,11 @@ describe('provider-store', () => {
         loaded: true,
         providers: [
           makeProvider({ id: 'old-openai', name: 'OpenAI', isBuiltIn: true }),
-          makeProvider({ id: 'old-router', name: 'OpenRouter', isBuiltIn: true }),
+          makeProvider({
+            id: 'old-router',
+            name: 'OpenRouter',
+            isBuiltIn: true,
+          }),
           makeProvider({ id: 'custom', name: 'Custom', isBuiltIn: false }),
         ],
       });

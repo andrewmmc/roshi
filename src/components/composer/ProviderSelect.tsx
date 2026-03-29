@@ -10,8 +10,15 @@ import {
 import { Loader2 } from 'lucide-react';
 
 export function ProviderSelect() {
-  const { providers, selectedProviderId, selectedModelId, selectProvider, selectModel, getSelectedProvider, getSelectedModel } =
-    useProviders();
+  const {
+    providers,
+    selectedProviderId,
+    selectedModelId,
+    selectProvider,
+    selectModel,
+    getSelectedProvider,
+    getSelectedModel,
+  } = useProviders();
   const seeding = useProviderStore((s) => s.seeding);
 
   const selectedProvider = getSelectedProvider();
@@ -19,7 +26,7 @@ export function ProviderSelect() {
 
   if (seeding) {
     return (
-      <div className="flex items-center gap-2 h-7 px-2 text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex h-7 items-center gap-2 px-2 text-xs">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         Loading providers…
       </div>
@@ -29,7 +36,7 @@ export function ProviderSelect() {
   return (
     <div className="flex gap-2">
       <Select value={selectedProviderId || ''} onValueChange={selectProvider}>
-        <SelectTrigger className="w-[160px] h-7 text-xs">
+        <SelectTrigger className="h-7 w-[160px] text-xs">
           <SelectValue placeholder="Provider">
             {selectedProvider?.name ?? 'Provider'}
           </SelectValue>
@@ -44,7 +51,7 @@ export function ProviderSelect() {
       </Select>
 
       <Select value={selectedModelId || ''} onValueChange={selectModel}>
-        <SelectTrigger className="w-[200px] h-7 text-xs">
+        <SelectTrigger className="h-7 w-[200px] text-xs">
           <SelectValue placeholder="Model">
             {selectedModel?.displayName ?? 'Model'}
           </SelectValue>
@@ -57,7 +64,7 @@ export function ProviderSelect() {
               </SelectItem>
             ))
           ) : (
-            <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+            <div className="text-muted-foreground px-2 py-3 text-center text-xs">
               No models available.
             </div>
           )}

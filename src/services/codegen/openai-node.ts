@@ -6,10 +6,7 @@ function escapeJSString(s: string): string {
   }
   return (
     '"' +
-    s
-      .replace(/\\/g, '\\\\')
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, '\\n') +
+    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
     '"'
   );
 }
@@ -19,7 +16,18 @@ export const openaiNodeGenerator: CodeGenerator = {
   language: 'javascript',
 
   generate(params: CodeGenParams): string {
-    const { provider, model, messages, systemPrompt, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, stream } = params;
+    const {
+      provider,
+      model,
+      messages,
+      systemPrompt,
+      temperature,
+      maxTokens,
+      topP,
+      frequencyPenalty,
+      presencePenalty,
+      stream,
+    } = params;
 
     const isDefaultOpenAI = provider.baseUrl === 'https://api.openai.com/v1';
     const clientArgs: string[] = [];
@@ -30,16 +38,22 @@ export const openaiNodeGenerator: CodeGenerator = {
 
     if (provider.auth.type === 'api-key-header') {
       const headerName = provider.auth.headerName || 'x-api-key';
-      clientArgs.push(`  defaultHeaders: { "${headerName}": process.env.API_KEY },`);
+      clientArgs.push(
+        `  defaultHeaders: { "${headerName}": process.env.API_KEY },`,
+      );
     }
 
     const messageLines: string[] = [];
     if (systemPrompt.trim()) {
-      messageLines.push(`    { role: "system", content: ${escapeJSString(systemPrompt)} },`);
+      messageLines.push(
+        `    { role: "system", content: ${escapeJSString(systemPrompt)} },`,
+      );
     }
     for (const msg of messages) {
       if (!msg.content.trim()) continue;
-      messageLines.push(`    { role: "${msg.role}", content: ${escapeJSString(msg.content)} },`);
+      messageLines.push(
+        `    { role: "${msg.role}", content: ${escapeJSString(msg.content)} },`,
+      );
     }
 
     const args: string[] = [];

@@ -6,16 +6,16 @@ Build a Postman-like GUI client for testing LLM service APIs. The app lets users
 
 ## Tech Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Framework | React 19 + TypeScript + Vite | Best ecosystem, shadcn/ui support, Tauri path |
-| UI Components | shadcn/ui (Radix primitives) + Tailwind CSS | Resizable panels, tabs, dialogs out of the box |
-| State | Zustand | Minimal boilerplate, persistence middleware |
-| Storage | Dexie.js (IndexedDB) | Structured data, live queries, no size limit |
-| Streaming | fetch + ReadableStream + `eventsource-parser` | Standard APIs, lightweight |
-| CORS | Vite dev proxy | Simplest for v1 local dev tool |
-| Package manager | npm | User preference |
-| Desktop (future) | Tauri | Small binary, native webview, bypasses CORS |
+| Layer            | Choice                                        | Why                                            |
+| ---------------- | --------------------------------------------- | ---------------------------------------------- |
+| Framework        | React 19 + TypeScript + Vite                  | Best ecosystem, shadcn/ui support, Tauri path  |
+| UI Components    | shadcn/ui (Radix primitives) + Tailwind CSS   | Resizable panels, tabs, dialogs out of the box |
+| State            | Zustand                                       | Minimal boilerplate, persistence middleware    |
+| Storage          | Dexie.js (IndexedDB)                          | Structured data, live queries, no size limit   |
+| Streaming        | fetch + ReadableStream + `eventsource-parser` | Standard APIs, lightweight                     |
+| CORS             | Vite dev proxy                                | Simplest for v1 local dev tool                 |
+| Package manager  | npm                                           | User preference                                |
+| Desktop (future) | Tauri                                         | Small binary, native webview, bypasses CORS    |
 
 ## Architecture
 
@@ -42,15 +42,21 @@ interface ProviderConfig {
   id: string;
   name: string;
   type: 'openai-compatible' | 'anthropic' | 'google-gemini' | 'custom';
-  baseUrl: string;                    // e.g. "https://api.openai.com/v1"
+  baseUrl: string; // e.g. "https://api.openai.com/v1"
   auth: {
     type: 'bearer' | 'api-key-header' | 'query-param' | 'none';
-    headerName?: string;              // e.g. "x-api-key"
-    valuePrefix?: string;             // e.g. "Bearer "
+    headerName?: string; // e.g. "x-api-key"
+    valuePrefix?: string; // e.g. "Bearer "
   };
   apiKey: string;
-  endpoints: { chat: string };        // e.g. "/chat/completions"
-  models: { id: string; name: string; displayName: string; maxTokens?: number; supportsStreaming: boolean }[];
+  endpoints: { chat: string }; // e.g. "/chat/completions"
+  models: {
+    id: string;
+    name: string;
+    displayName: string;
+    maxTokens?: number;
+    supportsStreaming: boolean;
+  }[];
   defaults?: { temperature?: number; maxTokens?: number };
   isBuiltIn: boolean;
 }
@@ -71,15 +77,23 @@ interface NormalizedRequest {
 }
 
 interface NormalizedResponse {
-  id: string; model: string; content: string; role: 'assistant';
+  id: string;
+  model: string;
+  content: string;
+  role: 'assistant';
   finishReason: string | null;
-  usage: { promptTokens: number; completionTokens: number; totalTokens: number } | null;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  } | null;
 }
 ```
 
 ### Database Schema (Dexie)
 
 Three tables:
+
 - **providers** -- `id, name, type, isBuiltIn` (provider configs with API keys)
 - **history** -- `id, providerId, collectionId, createdAt` (every request/response pair, stores both raw and normalized)
 - **collections** -- `id, parentId, sortOrder` (folders to group requests)
@@ -87,6 +101,7 @@ Three tables:
 ### Chat View vs Raw JSON Toggle
 
 The response panel has two tabs:
+
 - **Chat** -- renders `NormalizedResponse` as conversation bubbles with Markdown
 - **Raw JSON** -- renders the exact API response payload in a JSON tree viewer
 
@@ -163,6 +178,7 @@ llm-tester/
 ## Implementation Phases
 
 ### Phase 1: Foundation + End-to-End Request
+
 1. Scaffold: `npm create vite@latest` with react-ts template
 2. Install and configure: Tailwind CSS, shadcn/ui, Zustand, Dexie, nanoid, eventsource-parser
 3. Set up shadcn/ui components: resizable panels, tabs, button, input, select, dialog, textarea
@@ -175,6 +191,7 @@ llm-tester/
 10. Display raw JSON response
 
 ### Phase 2: Full UI + Streaming
+
 1. Build `ProviderSelect` (provider + model dropdowns)
 2. Build `MessageEditor` -- multiple messages with role selection
 3. Build `ParameterControls` (temperature, max tokens)
@@ -185,6 +202,7 @@ llm-tester/
 8. Loading/error states
 
 ### Phase 3: Provider Management + History
+
 1. Build `ProviderManager` -- add/edit/delete custom providers
 2. Build `ProviderForm` with all config fields
 3. Ship built-in provider templates as importable JSON
@@ -194,6 +212,7 @@ llm-tester/
 7. Add `HeaderEditor` for custom headers per request
 
 ### Phase 4: Collections + Polish (future)
+
 - Folder/group organization for requests
 - Drag-and-drop, rename, duplicate, delete
 - Keyboard shortcuts (Cmd+Enter to send)
@@ -201,6 +220,7 @@ llm-tester/
 - Request timing + token usage display
 
 ### Phase 5: Desktop via Tauri — DONE
+
 - Tauri v2 wraps the web app as a native macOS desktop app
 - CORS is bypassed natively in the desktop webview — no proxy needed
 - Browser `fetch()` works as-is in Tauri's WebKit webview
@@ -210,24 +230,31 @@ llm-tester/
 #### Building the macOS Desktop App
 
 **Prerequisites:**
+
 - [Rust toolchain](https://rustup.rs/): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 - Xcode Command Line Tools: `xcode-select --install`
 
 **Development:**
+
 ```bash
 npm run tauri:dev
 ```
+
 Launches the desktop app with hot-reload. The Vite dev server runs in the background.
 
 **Production build:**
+
 ```bash
 npm run tauri:build
 ```
+
 Produces:
+
 - `src-tauri/target/release/bundle/macos/LLM Tester.app`
 - `src-tauri/target/release/bundle/dmg/LLM Tester_0.1.0_aarch64.dmg`
 
 **Web-only development** (no Tauri, as before):
+
 ```bash
 npm run dev
 ```
@@ -235,6 +262,7 @@ npm run dev
 ## Verification
 
 After each phase:
+
 1. **Phase 1:** Type a message, send to an OpenAI-compatible endpoint via Vite proxy, see raw JSON response
 2. **Phase 2:** Compose multi-message request, stream response, toggle between chat and raw view
 3. **Phase 3:** Create a custom provider, send request through it, see it in history, reload from history

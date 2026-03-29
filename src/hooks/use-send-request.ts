@@ -4,7 +4,9 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { sendRequest, RequestError } from '@/services/llm-client';
 
-function extractProviderErrorDetail(rawResponse: Record<string, unknown>): string | null {
+function extractProviderErrorDetail(
+  rawResponse: Record<string, unknown>,
+): string | null {
   const error = rawResponse.error;
   if (typeof error === 'string' && error.trim()) {
     return error;
@@ -111,9 +113,12 @@ export function useSendRequest() {
       const result = await sendRequest({
         provider,
         request: normalizedRequest,
-        customHeaders: historyHeaders.length > 0
-          ? Object.fromEntries(historyHeaders.map((header) => [header.key, header.value]))
-          : undefined,
+        customHeaders:
+          historyHeaders.length > 0
+            ? Object.fromEntries(
+                historyHeaders.map((header) => [header.key, header.value]),
+              )
+            : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
           if (!useRequestStore.getState().isStreaming) {
@@ -163,14 +168,18 @@ export function useSendRequest() {
         });
       } else if (err instanceof DOMException && err.name === 'TimeoutError') {
         store.setError('Request timed out');
-        store.setErrorDetail('The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.');
+        store.setErrorDetail(
+          'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
+        );
       } else if (err instanceof DOMException && err.name === 'AbortError') {
         store.setError('Request cancelled');
         store.setErrorDetail(null);
       } else {
         const message = err instanceof Error ? err.message : 'Unknown error';
         if (err instanceof Error && isLikelyNetworkFailure(message)) {
-          store.setError('Network request failed before the provider responded');
+          store.setError(
+            'Network request failed before the provider responded',
+          );
           store.setErrorDetail(getNetworkErrorDetail(message));
           store.setRawResponse({
             type: 'network_error',

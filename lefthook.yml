@@ -5,3 +5,5 @@ pre-commit:
       run: npm run lint
     - name: typecheck
       run: npm run typecheck
+    - name: format
+      run: npm run format:check

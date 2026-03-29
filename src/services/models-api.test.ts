@@ -69,10 +69,13 @@ describe('models-api', () => {
 
   describe('fetchModelsFromApi', () => {
     it('fetches and returns models for all providers', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
 
@@ -82,10 +85,13 @@ describe('models-api', () => {
     });
 
     it('excludes embedding models', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
       const ids = result.openai.map((m) => m.id);
@@ -93,10 +99,13 @@ describe('models-api', () => {
     });
 
     it('sorts by release_date descending', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
       expect(result.openai[0].id).toBe('gpt-4'); // 2023-03-14
@@ -104,10 +113,13 @@ describe('models-api', () => {
     });
 
     it('openrouter: openai-prefixed before anthropic-prefixed', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
       expect(result.openrouter[0].id).toBe('openai/gpt-4');
@@ -115,15 +127,23 @@ describe('models-api', () => {
     });
 
     it('throws on non-ok response', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
-      await expect(fetchModelsFromApi()).rejects.toThrow('Failed to fetch models: 500');
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+      await expect(fetchModelsFromApi()).rejects.toThrow(
+        'Failed to fetch models: 500',
+      );
     });
 
     it('returns empty arrays for missing providers', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({}),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({}),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
       expect(result.openai).toEqual([]);
@@ -132,19 +152,32 @@ describe('models-api', () => {
     });
 
     it('handles models without release_date', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({
-          openai: {
-            id: 'openai',
-            name: 'OpenAI',
-            models: {
-              'model-a': { id: 'model-a', name: 'A', modalities: { output: ['text'] } },
-              'model-b': { id: 'model-b', name: 'B', release_date: '2024-01-01', modalities: { output: ['text'] } },
-            },
-          },
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              openai: {
+                id: 'openai',
+                name: 'OpenAI',
+                models: {
+                  'model-a': {
+                    id: 'model-a',
+                    name: 'A',
+                    modalities: { output: ['text'] },
+                  },
+                  'model-b': {
+                    id: 'model-b',
+                    name: 'B',
+                    release_date: '2024-01-01',
+                    modalities: { output: ['text'] },
+                  },
+                },
+              },
+            }),
         }),
-      }));
+      );
 
       const result = await fetchModelsFromApi();
       // model-b has date, so comes first
@@ -153,28 +186,39 @@ describe('models-api', () => {
     });
 
     it('uses id as displayName fallback', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({
-          openai: {
-            id: 'openai',
-            name: 'OpenAI',
-            models: {
-              'no-name': { id: 'no-name', name: '', modalities: { output: ['text'] } },
-            },
-          },
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              openai: {
+                id: 'openai',
+                name: 'OpenAI',
+                models: {
+                  'no-name': {
+                    id: 'no-name',
+                    name: '',
+                    modalities: { output: ['text'] },
+                  },
+                },
+              },
+            }),
         }),
-      }));
+      );
 
       const result = await fetchModelsFromApi();
       expect(result.openai[0].displayName).toBe('no-name');
     });
 
     it('sets supportsStreaming to true', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const result = await fetchModelsFromApi();
       expect(result.openai.every((m) => m.supportsStreaming)).toBe(true);
@@ -183,30 +227,39 @@ describe('models-api', () => {
 
   describe('fetchModelsForProvider', () => {
     it('returns models for known provider', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const models = await fetchModelsForProvider('openai');
       expect(models.length).toBeGreaterThan(0);
     });
 
     it('is case-insensitive', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const models = await fetchModelsForProvider('OpenAI');
       expect(models.length).toBeGreaterThan(0);
     });
 
     it('returns empty array for unknown provider', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockModels),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
 
       const models = await fetchModelsForProvider('unknown');
       expect(models).toEqual([]);

@@ -15,22 +15,31 @@ export function ResponsePanel() {
 
   const selectedProvider = useSelectedProvider();
   const isCodeTabEnabled = selectedProvider
-    ? selectedProvider.type === 'openai-compatible' || selectedProvider.type === 'custom'
+    ? selectedProvider.type === 'openai-compatible' ||
+      selectedProvider.type === 'custom'
     : false;
 
   const hasContent = response || error || isStreaming || isLoading;
 
   return (
-    <Tabs defaultValue="chat" className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 h-11 border-b shrink-0">
+    <Tabs defaultValue="chat" className="flex h-full flex-col">
+      <div className="flex h-11 shrink-0 items-center justify-between border-b px-4">
         <TabsList className="h-7">
-          <TabsTrigger value="chat" className="text-xs h-6 px-2.5">Chat</TabsTrigger>
-          <TabsTrigger value="raw" className="text-xs h-6 px-2.5">Raw</TabsTrigger>
-          <TabsTrigger value="code" className="text-xs h-6 px-2.5" disabled={!isCodeTabEnabled}>
+          <TabsTrigger value="chat" className="h-6 px-2.5 text-xs">
+            Chat
+          </TabsTrigger>
+          <TabsTrigger value="raw" className="h-6 px-2.5 text-xs">
+            Raw
+          </TabsTrigger>
+          <TabsTrigger
+            value="code"
+            className="h-6 px-2.5 text-xs"
+            disabled={!isCodeTabEnabled}
+          >
             Code
           </TabsTrigger>
         </TabsList>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
           {isLoading && (
             <span className="animate-pulse">
               {isStreaming ? 'Streaming...' : 'Sending...'}
@@ -56,27 +65,27 @@ export function ResponsePanel() {
         </div>
       </div>
 
-      <TabsContent value="chat" className="flex-1 min-h-0 mt-0 overflow-hidden">
+      <TabsContent value="chat" className="mt-0 min-h-0 flex-1 overflow-hidden">
         {hasContent ? (
           <ChatView />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-[13px]">
+          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see the response
           </div>
         )}
       </TabsContent>
 
-      <TabsContent value="raw" className="flex-1 min-h-0 mt-0 overflow-hidden">
+      <TabsContent value="raw" className="mt-0 min-h-0 flex-1 overflow-hidden">
         {hasContent ? (
           <RawJsonView />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-[13px]">
+          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see raw JSON
           </div>
         )}
       </TabsContent>
 
-      <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-hidden">
+      <TabsContent value="code" className="mt-0 min-h-0 flex-1 overflow-hidden">
         <CodeView />
       </TabsContent>
     </Tabs>

@@ -1,5 +1,9 @@
 import { openaiNodeGenerator } from './openai-node';
-import { makeCodeGenParams, makeProvider, makeMessage } from '@/__tests__/fixtures';
+import {
+  makeCodeGenParams,
+  makeProvider,
+  makeMessage,
+} from '@/__tests__/fixtures';
 
 describe('openaiNodeGenerator', () => {
   it('has correct label and language', () => {
@@ -40,12 +44,16 @@ describe('openaiNodeGenerator', () => {
         provider: makeProvider({ auth: { type: 'api-key-header' } }),
       });
       const code = openaiNodeGenerator.generate(params);
-      expect(code).toContain('defaultHeaders: { "x-api-key": process.env.API_KEY }');
+      expect(code).toContain(
+        'defaultHeaders: { "x-api-key": process.env.API_KEY }',
+      );
     });
 
     it('uses custom header name', () => {
       const params = makeCodeGenParams({
-        provider: makeProvider({ auth: { type: 'api-key-header', headerName: 'X-Custom' } }),
+        provider: makeProvider({
+          auth: { type: 'api-key-header', headerName: 'X-Custom' },
+        }),
       });
       const code = openaiNodeGenerator.generate(params);
       expect(code).toContain('"X-Custom"');
@@ -65,7 +73,10 @@ describe('openaiNodeGenerator', () => {
 
     it('skips empty messages', () => {
       const params = makeCodeGenParams({
-        messages: [makeMessage({ content: '' }), makeMessage({ content: 'Hi' })],
+        messages: [
+          makeMessage({ content: '' }),
+          makeMessage({ content: 'Hi' }),
+        ],
       });
       const code = openaiNodeGenerator.generate(params);
       const userMatches = code.match(/role: "user"/g);

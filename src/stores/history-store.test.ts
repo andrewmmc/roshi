@@ -38,7 +38,10 @@ describe('history-store', () => {
 
   describe('load', () => {
     it('loads entries from DB and sets loaded', async () => {
-      const entries = [makeHistoryEntry({ id: '1' }), makeHistoryEntry({ id: '2' })];
+      const entries = [
+        makeHistoryEntry({ id: '1' }),
+        makeHistoryEntry({ id: '2' }),
+      ];
       setupOrderByChain(entries);
 
       await getState().load();

@@ -12,7 +12,13 @@ const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
     rawResponse: Record<string, unknown>;
     rawRequest: Record<string, unknown>;
     durationMs: number;
-    constructor(message: string, status: number, rawResponse: Record<string, unknown>, rawRequest: Record<string, unknown>, durationMs: number) {
+    constructor(
+      message: string,
+      status: number,
+      rawResponse: Record<string, unknown>,
+      rawRequest: Record<string, unknown>,
+      durationMs: number,
+    ) {
       super(message);
       this.name = 'RequestError';
       this.status = status;
@@ -41,7 +47,9 @@ const { mockDb } = vi.hoisted(() => ({
     },
     history: {
       orderBy: vi.fn().mockReturnValue({
-        reverse: vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }),
+        reverse: vi
+          .fn()
+          .mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }),
       }),
       add: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
@@ -50,10 +58,15 @@ const { mockDb } = vi.hoisted(() => ({
   },
 }));
 vi.mock('@/db', () => ({ db: mockDb }));
-vi.mock('@/services/models-api', () => ({ fetchModelsForProvider: vi.fn().mockResolvedValue([]) }));
+vi.mock('@/services/models-api', () => ({
+  fetchModelsForProvider: vi.fn().mockResolvedValue([]),
+}));
 
 describe('useSendRequest', () => {
-  const provider = makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] });
+  const provider = makeProvider({
+    id: 'p1',
+    models: [makeModel({ id: 'm1' })],
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -90,12 +103,19 @@ describe('useSendRequest', () => {
 
   describe('validation', () => {
     it('sets error when no provider selected', async () => {
-      useProviderStore.setState({ selectedProviderId: null, selectedModelId: null });
+      useProviderStore.setState({
+        selectedProviderId: null,
+        selectedModelId: null,
+      });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
-      expect(useRequestStore.getState().error).toBe('Please select a provider and model');
+      expect(useRequestStore.getState().error).toBe(
+        'Please select a provider and model',
+      );
       expect(mockSendRequest).not.toHaveBeenCalled();
     });
 
@@ -103,29 +123,46 @@ describe('useSendRequest', () => {
       useProviderStore.setState({ selectedModelId: null });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
-      expect(useRequestStore.getState().error).toBe('Please select a provider and model');
+      expect(useRequestStore.getState().error).toBe(
+        'Please select a provider and model',
+      );
     });
 
     it('sets error when all messages are empty', async () => {
       useRequestStore.setState({ messages: [makeMessage({ content: '' })] });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
-      expect(useRequestStore.getState().error).toBe('Please enter at least one message');
+      expect(useRequestStore.getState().error).toBe(
+        'Please enter at least one message',
+      );
     });
 
     it('accepts messages with only attachments', async () => {
       useRequestStore.setState({
-        messages: [makeMessage({
-          content: '',
-          attachments: [{ id: 'a', filename: 'f', mimeType: 't', data: 'd' }],
-        })],
+        messages: [
+          makeMessage({
+            content: '',
+            attachments: [{ id: 'a', filename: 'f', mimeType: 't', data: 'd' }],
+          }),
+        ],
       });
       mockSendRequest.mockResolvedValue({
-        response: { id: '1', model: 'm1', content: 'ok', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'ok',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: {},
         rawResponse: {},
         durationMs: 100,
@@ -133,7 +170,9 @@ describe('useSendRequest', () => {
       });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(mockSendRequest).toHaveBeenCalled();
     });
@@ -142,7 +181,14 @@ describe('useSendRequest', () => {
   describe('successful request', () => {
     it('sends request and stores result', async () => {
       const sendResult = {
-        response: { id: '1', model: 'm1', content: 'Hi', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'Hi',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: { model: 'm1' },
         rawResponse: { id: '1' },
         durationMs: 150,
@@ -151,7 +197,9 @@ describe('useSendRequest', () => {
       mockSendRequest.mockResolvedValue(sendResult);
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       const state = useRequestStore.getState();
       expect(state.response?.content).toBe('Hi');
@@ -170,7 +218,14 @@ describe('useSendRequest', () => {
         customHeaders: [{ id: '1', key: 'X-Test', value: 'value' }],
       });
       mockSendRequest.mockResolvedValue({
-        response: { id: '1', model: 'm1', content: 'ok', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'ok',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: {},
         rawResponse: {},
         durationMs: 100,
@@ -178,12 +233,16 @@ describe('useSendRequest', () => {
       });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(mockDb.history.add).toHaveBeenCalled();
-      expect(mockDb.history.add).toHaveBeenCalledWith(expect.objectContaining({
-        customHeaders: [{ key: 'X-Test', value: 'value' }],
-      }));
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customHeaders: [{ key: 'X-Test', value: 'value' }],
+        }),
+      );
     });
 
     it('filters custom headers by non-empty key', async () => {
@@ -195,7 +254,14 @@ describe('useSendRequest', () => {
         ],
       });
       mockSendRequest.mockResolvedValue({
-        response: { id: '1', model: 'm1', content: '', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'm1',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: {},
         rawResponse: {},
         durationMs: 0,
@@ -203,7 +269,9 @@ describe('useSendRequest', () => {
       });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(mockSendRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -214,16 +282,25 @@ describe('useSendRequest', () => {
 
     it('disables stream when model does not support it', async () => {
       useProviderStore.setState({
-        providers: [makeProvider({
-          id: 'p1',
-          models: [makeModel({ id: 'm1', supportsStreaming: false })],
-        })],
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'm1', supportsStreaming: false })],
+          }),
+        ],
         selectedProviderId: 'p1',
         selectedModelId: 'm1',
       });
       useRequestStore.setState({ ...useRequestStore.getState(), stream: true });
       mockSendRequest.mockResolvedValue({
-        response: { id: '1', model: 'm1', content: '', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'm1',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: {},
         rawResponse: {},
         durationMs: 0,
@@ -231,7 +308,9 @@ describe('useSendRequest', () => {
       });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(mockSendRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -244,11 +323,19 @@ describe('useSendRequest', () => {
   describe('error handling', () => {
     it('handles RequestError', async () => {
       mockSendRequest.mockRejectedValue(
-        new MockRequestError('HTTP 401: Unauthorized', 401, { error: 'bad' }, { model: 'm1' }, 100),
+        new MockRequestError(
+          'HTTP 401: Unauthorized',
+          401,
+          { error: 'bad' },
+          { model: 'm1' },
+          100,
+        ),
       );
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       const state = useRequestStore.getState();
       expect(state.error).toBe('Provider returned HTTP 401');
@@ -263,10 +350,14 @@ describe('useSendRequest', () => {
     });
 
     it('handles AbortError', async () => {
-      mockSendRequest.mockRejectedValue(new DOMException('Aborted', 'AbortError'));
+      mockSendRequest.mockRejectedValue(
+        new DOMException('Aborted', 'AbortError'),
+      );
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(useRequestStore.getState().error).toBe('Request cancelled');
       expect(useRequestStore.getState().errorDetail).toBeNull();
@@ -276,19 +367,30 @@ describe('useSendRequest', () => {
       mockSendRequest.mockRejectedValue(new Error('Load failed'));
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       const state = useRequestStore.getState();
-      expect(state.error).toBe('Network request failed before the provider responded');
+      expect(state.error).toBe(
+        'Network request failed before the provider responded',
+      );
       expect(state.errorDetail).toContain('Load failed');
-      expect(state.rawResponse).toEqual(expect.objectContaining({ type: 'network_error', message: 'Load failed' }));
+      expect(state.rawResponse).toEqual(
+        expect.objectContaining({
+          type: 'network_error',
+          message: 'Load failed',
+        }),
+      );
     });
 
     it('handles generic Error', async () => {
       mockSendRequest.mockRejectedValue(new Error('Network failed'));
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(useRequestStore.getState().error).toBe('Unexpected request error');
       expect(useRequestStore.getState().errorDetail).toBe('Network failed');
@@ -298,7 +400,9 @@ describe('useSendRequest', () => {
       mockSendRequest.mockRejectedValue('string error');
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       expect(useRequestStore.getState().error).toBe('Unknown error');
       expect(useRequestStore.getState().errorDetail).toBe('string error');
@@ -307,21 +411,34 @@ describe('useSendRequest', () => {
 
   describe('streaming', () => {
     it('calls onStreamChunk callback during streaming', async () => {
-      mockSendRequest.mockImplementation(async (options: { onStreamChunk?: (chunk: { content: string }) => void }) => {
-        options.onStreamChunk?.({ content: 'Hello' });
-        options.onStreamChunk?.({ content: ' World' });
-        return {
-          response: { id: '1', model: 'm1', content: 'Hello World', role: 'assistant', finishReason: 'stop', usage: null },
-          rawRequest: {},
-          rawResponse: {},
-          durationMs: 100,
-          statusCode: 200,
-        };
-      });
+      mockSendRequest.mockImplementation(
+        async (options: {
+          onStreamChunk?: (chunk: { content: string }) => void;
+        }) => {
+          options.onStreamChunk?.({ content: 'Hello' });
+          options.onStreamChunk?.({ content: ' World' });
+          return {
+            response: {
+              id: '1',
+              model: 'm1',
+              content: 'Hello World',
+              role: 'assistant',
+              finishReason: 'stop',
+              usage: null,
+            },
+            rawRequest: {},
+            rawResponse: {},
+            durationMs: 100,
+            statusCode: 200,
+          };
+        },
+      );
       useRequestStore.setState({ ...useRequestStore.getState(), stream: true });
       const { result } = renderHook(() => useSendRequest());
 
-      await act(async () => { await result.current.send(); });
+      await act(async () => {
+        await result.current.send();
+      });
 
       const state = useRequestStore.getState();
       expect(state.streamingContent).toBe('Hello World');
@@ -334,7 +451,9 @@ describe('useSendRequest', () => {
       mockSendRequest.mockImplementation(
         (options: { signal: AbortSignal }) =>
           new Promise((_resolve, reject) => {
-            options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+            options.signal.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError')),
+            );
           }),
       );
 
@@ -349,7 +468,9 @@ describe('useSendRequest', () => {
         result.current.cancel();
       });
 
-      await act(async () => { await sendPromise!; });
+      await act(async () => {
+        await sendPromise!;
+      });
 
       expect(useRequestStore.getState().error).toBe('Request cancelled');
     });

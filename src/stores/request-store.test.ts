@@ -78,7 +78,11 @@ describe('request-store', () => {
     });
 
     it('updateMessage replaces at index', () => {
-      getState().updateMessage(0, { id: 'msg-1', role: 'assistant', content: 'Updated' });
+      getState().updateMessage(0, {
+        id: 'msg-1',
+        role: 'assistant',
+        content: 'Updated',
+      });
       expect(getState().messages[0].role).toBe('assistant');
       expect(getState().messages[0].content).toBe('Updated');
     });
@@ -94,7 +98,12 @@ describe('request-store', () => {
 
   describe('attachments', () => {
     it('addAttachment adds to message', () => {
-      const attachment = { id: 'att-1', filename: 'test.pdf', mimeType: 'application/pdf', data: 'data:...' };
+      const attachment = {
+        id: 'att-1',
+        filename: 'test.pdf',
+        mimeType: 'application/pdf',
+        data: 'data:...',
+      };
       getState().addAttachment(0, attachment);
       expect(getState().messages[0].attachments).toEqual([attachment]);
     });
@@ -102,7 +111,12 @@ describe('request-store', () => {
     it('addAttachment initializes attachments array if undefined', () => {
       getState().setMessages([{ id: 'a', role: 'user', content: 'Hi' }]);
       expect(getState().messages[0].attachments).toBeUndefined();
-      getState().addAttachment(0, { id: 'att-1', filename: 'f', mimeType: 't', data: 'd' });
+      getState().addAttachment(0, {
+        id: 'att-1',
+        filename: 'f',
+        mimeType: 't',
+        data: 'd',
+      });
       expect(getState().messages[0].attachments).toHaveLength(1);
     });
 
@@ -165,7 +179,14 @@ describe('request-store', () => {
     });
 
     it('setResponse', () => {
-      const resp = { id: '1', model: 'gpt-4', content: 'Hi', role: 'assistant' as const, finishReason: 'stop', usage: null };
+      const resp = {
+        id: '1',
+        model: 'gpt-4',
+        content: 'Hi',
+        role: 'assistant' as const,
+        finishReason: 'stop',
+        usage: null,
+      };
       getState().setResponse(resp);
       expect(getState().response).toEqual(resp);
     });
@@ -191,7 +212,13 @@ describe('request-store', () => {
     });
 
     it('setSentRequest', () => {
-      const req = { messages: [], model: 'gpt-4', stream: false, temperature: 1, maxTokens: 4096 };
+      const req = {
+        messages: [],
+        model: 'gpt-4',
+        stream: false,
+        temperature: 1,
+        maxTokens: 4096,
+      };
       getState().setSentRequest(req);
       expect(getState().sentRequest).toEqual(req);
     });
@@ -234,7 +261,14 @@ describe('request-store', () => {
         maxTokens: 2048,
         stream: false,
         customHeaders: [{ key: 'X-Test', value: 'abc' }],
-        response: { id: '1', model: 'gpt-4', content: 'Hi', role: 'assistant', finishReason: 'stop', usage: null },
+        response: {
+          id: '1',
+          model: 'gpt-4',
+          content: 'Hi',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
         rawRequest: { model: 'gpt-4' },
         rawResponse: { id: '1' },
         error: null,

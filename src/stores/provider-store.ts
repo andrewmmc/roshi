@@ -11,11 +11,16 @@ function saveSelection(providerId: string | null, modelId: string | null) {
   localStorage.setItem(SELECTION_KEY, JSON.stringify({ providerId, modelId }));
 }
 
-function loadSelection(): { providerId: string | null; modelId: string | null } {
+function loadSelection(): {
+  providerId: string | null;
+  modelId: string | null;
+} {
   try {
     const raw = localStorage.getItem(SELECTION_KEY);
     if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { providerId: null, modelId: null };
 }
 
@@ -27,8 +32,13 @@ interface ProviderStore {
   seeding: boolean;
 
   load: () => Promise<void>;
-  addProvider: (provider: Omit<ProviderConfig, 'id'>) => Promise<ProviderConfig>;
-  updateProvider: (id: string, updates: Partial<ProviderConfig>) => Promise<void>;
+  addProvider: (
+    provider: Omit<ProviderConfig, 'id'>,
+  ) => Promise<ProviderConfig>;
+  updateProvider: (
+    id: string,
+    updates: Partial<ProviderConfig>,
+  ) => Promise<void>;
   deleteProvider: (id: string) => Promise<void>;
   selectProvider: (id: string | null) => void;
   selectModel: (id: string | null) => void;
@@ -55,12 +65,14 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     // Seed missing built-in providers with models fetched from API
     const needsSeed = builtinProviders.filter(
-      (template) => !providers.some((p) => p.name === template.name && p.isBuiltIn),
+      (template) =>
+        !providers.some((p) => p.name === template.name && p.isBuiltIn),
     );
 
     if (needsSeed.length > 0) {
       set({ seeding: true });
-      let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] = [];
+      let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] =
+        [];
       try {
         fetchedModels = await Promise.all(
           needsSeed.map((t) => fetchModelsForProvider(t.name)),
@@ -73,7 +85,12 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       for (let i = 0; i < needsSeed.length; i++) {
         const template = needsSeed[i];
         const models = fetchedModels[i];
-        const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '', models };
+        const newProvider: ProviderConfig = {
+          ...template,
+          id: nanoid(),
+          apiKey: '',
+          models,
+        };
         await db.providers.add(newProvider);
         providers.push(newProvider);
       }
@@ -81,9 +98,15 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     }
 
     const saved = loadSelection();
-    const savedProviderValid = saved.providerId && providers.some((p) => p.id === saved.providerId);
-    const savedProviderObj = savedProviderValid ? providers.find((p) => p.id === saved.providerId) : null;
-    const savedModelValid = savedProviderObj && saved.modelId && savedProviderObj.models.some((m) => m.id === saved.modelId);
+    const savedProviderValid =
+      saved.providerId && providers.some((p) => p.id === saved.providerId);
+    const savedProviderObj = savedProviderValid
+      ? providers.find((p) => p.id === saved.providerId)
+      : null;
+    const savedModelValid =
+      savedProviderObj &&
+      saved.modelId &&
+      savedProviderObj.models.some((m) => m.id === saved.modelId);
 
     if (!savedProviderValid || !savedModelValid) {
       localStorage.removeItem(SELECTION_KEY);
@@ -91,7 +114,9 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     const selectedProviderId = savedProviderValid
       ? saved.providerId
-      : providers.length > 0 ? providers[0].id : null;
+      : providers.length > 0
+        ? providers[0].id
+        : null;
     const fallbackProvider = providers.find((p) => p.id === selectedProviderId);
     const selectedModelId = savedModelValid
       ? saved.modelId
@@ -119,7 +144,9 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   updateProvider: async (id, updates) => {
     await db.providers.update(id, updates);
     set((state) => ({
-      providers: state.providers.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+      providers: state.providers.map((p) =>
+        p.id === id ? { ...p, ...updates } : p,
+      ),
     }));
   },
 
@@ -132,9 +159,12 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       const providers = state.providers.filter((p) => p.id !== id);
       const updates: Partial<ProviderStore> = { providers };
       if (state.selectedProviderId === id) {
-        updates.selectedProviderId = providers.length > 0 ? providers[0].id : null;
+        updates.selectedProviderId =
+          providers.length > 0 ? providers[0].id : null;
         updates.selectedModelId =
-          providers.length > 0 && providers[0].models.length > 0 ? providers[0].models[0].id : null;
+          providers.length > 0 && providers[0].models.length > 0
+            ? providers[0].models[0].id
+            : null;
         localStorage.removeItem(SELECTION_KEY);
       }
       return updates;
@@ -167,7 +197,12 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       // Keep empty models on fetch failure
     }
 
-    const reset: ProviderConfig = { ...template, id: provider.id, apiKey: '', models };
+    const reset: ProviderConfig = {
+      ...template,
+      id: provider.id,
+      apiKey: '',
+      models,
+    };
     await db.providers.put(reset);
     set((state) => ({
       providers: state.providers.map((p) => (p.id === id ? reset : p)),
@@ -180,7 +215,8 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     // Re-seed from builtin templates with fresh models from API
     const newProviders: ProviderConfig[] = [];
-    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] = [];
+    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] =
+      [];
     try {
       fetchedModels = await Promise.all(
         builtinProviders.map((t) => fetchModelsForProvider(t.name)),
@@ -192,14 +228,22 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     for (let i = 0; i < builtinProviders.length; i++) {
       const template = builtinProviders[i];
       const models = fetchedModels[i];
-      const newProvider: ProviderConfig = { ...template, id: nanoid(), apiKey: '', models };
+      const newProvider: ProviderConfig = {
+        ...template,
+        id: nanoid(),
+        apiKey: '',
+        models,
+      };
       await db.providers.add(newProvider);
       newProviders.push(newProvider);
     }
 
-    const selectedProviderId = newProviders.length > 0 ? newProviders[0].id : null;
+    const selectedProviderId =
+      newProviders.length > 0 ? newProviders[0].id : null;
     const selectedModelId =
-      selectedProviderId && newProviders[0].models.length > 0 ? newProviders[0].models[0].id : null;
+      selectedProviderId && newProviders[0].models.length > 0
+        ? newProviders[0].models[0].id
+        : null;
     saveSelection(selectedProviderId, selectedModelId);
     set({ providers: newProviders, selectedProviderId, selectedModelId });
   },

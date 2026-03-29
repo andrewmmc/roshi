@@ -19,26 +19,46 @@ export function MainPanel() {
   const hasProvider = useProviderStore((s) => s.providers.length > 0);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isLoading && hasProvider) {
+    if (
+      (e.metaKey || e.ctrlKey) &&
+      e.key === 'Enter' &&
+      !isLoading &&
+      hasProvider
+    ) {
       e.preventDefault();
       send();
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-background" onKeyDown={handleKeyDown}>
-      <div className="flex items-center justify-between gap-3 px-4 h-11 border-b shrink-0">
+    <div
+      className="bg-background flex h-full flex-col"
+      onKeyDown={handleKeyDown}
+    >
+      <div className="flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <ProviderSelect />
         {isLoading ? (
-          <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={cancel}>
-            <Square className="h-3 w-3 mr-1.5" />
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={cancel}
+          >
+            <Square className="mr-1.5 h-3 w-3" />
             Stop
           </Button>
         ) : (
-          <Button size="sm" className="h-7 text-xs" onClick={send} disabled={!hasProvider}>
-            <Send className="h-3 w-3 mr-1.5" />
+          <Button
+            size="sm"
+            className="h-7 text-xs"
+            onClick={send}
+            disabled={!hasProvider}
+          >
+            <Send className="mr-1.5 h-3 w-3" />
             Send
-            <kbd className="ml-1.5 text-[10px] opacity-50 hidden sm:inline">⌘↵</kbd>
+            <kbd className="ml-1.5 hidden text-[10px] opacity-50 sm:inline">
+              ⌘↵
+            </kbd>
           </Button>
         )}
       </div>

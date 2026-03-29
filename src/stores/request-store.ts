@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { NormalizedMessage, NormalizedRequest, NormalizedResponse, MessageAttachment } from '@/types/normalized';
+import type {
+  NormalizedMessage,
+  NormalizedRequest,
+  NormalizedResponse,
+  MessageAttachment,
+} from '@/types/normalized';
 import {
   DEFAULT_TEMPERATURE,
   DEFAULT_MAX_TOKENS,
@@ -113,10 +118,16 @@ export const useRequestStore = create<RequestStore>((set) => ({
   sentRequest: null,
 
   setMessages: (messages) => set({ messages }),
-  addMessage: (message) => set((s) => ({ messages: [...s.messages, { ...message, id: message.id || nanoid() }] })),
+  addMessage: (message) =>
+    set((s) => ({
+      messages: [...s.messages, { ...message, id: message.id || nanoid() }],
+    })),
   updateMessage: (index, message) =>
-    set((s) => ({ messages: s.messages.map((m, i) => (i === index ? message : m)) })),
-  removeMessage: (index) => set((s) => ({ messages: s.messages.filter((_, i) => i !== index) })),
+    set((s) => ({
+      messages: s.messages.map((m, i) => (i === index ? message : m)),
+    })),
+  removeMessage: (index) =>
+    set((s) => ({ messages: s.messages.filter((_, i) => i !== index) })),
   setSystemPrompt: (systemPrompt) => set({ systemPrompt }),
   setTemperature: (temperature) => set({ temperature }),
   setMaxTokens: (maxTokens) => set({ maxTokens }),
@@ -127,13 +138,22 @@ export const useRequestStore = create<RequestStore>((set) => ({
   addAttachment: (messageIndex, attachment) =>
     set((s) => ({
       messages: s.messages.map((m, i) =>
-        i === messageIndex ? { ...m, attachments: [...(m.attachments || []), attachment] } : m,
+        i === messageIndex
+          ? { ...m, attachments: [...(m.attachments || []), attachment] }
+          : m,
       ),
     })),
   removeAttachment: (messageIndex, attachmentId) =>
     set((s) => ({
       messages: s.messages.map((m, i) =>
-        i === messageIndex ? { ...m, attachments: (m.attachments || []).filter((a) => a.id !== attachmentId) } : m,
+        i === messageIndex
+          ? {
+              ...m,
+              attachments: (m.attachments || []).filter(
+                (a) => a.id !== attachmentId,
+              ),
+            }
+          : m,
       ),
     })),
   setCustomHeaders: (customHeaders) => set({ customHeaders }),
@@ -141,7 +161,8 @@ export const useRequestStore = create<RequestStore>((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setStreaming: (isStreaming) => set({ isStreaming }),
   setStreamContent: (streamingContent) => set({ streamingContent }),
-  appendStreamContent: (content) => set((s) => ({ streamingContent: s.streamingContent + content })),
+  appendStreamContent: (content) =>
+    set((s) => ({ streamingContent: s.streamingContent + content })),
   setResponse: (response) => set({ response }),
   setRawRequest: (rawRequest) => set({ rawRequest }),
   setRawResponse: (rawResponse) => set({ rawResponse }),
@@ -179,9 +200,13 @@ export const useRequestStore = create<RequestStore>((set) => ({
     set({
       messages: data.messages.map((m) => ({ ...m, id: m.id || nanoid() })),
       systemPrompt: data.systemPrompt,
-      customHeaders: (data.customHeaders ?? []).length > 0
-        ? (data.customHeaders ?? []).map((header) => ({ ...header, id: nanoid() }))
-        : [{ id: nanoid(), key: '', value: '' }],
+      customHeaders:
+        (data.customHeaders ?? []).length > 0
+          ? (data.customHeaders ?? []).map((header) => ({
+              ...header,
+              id: nanoid(),
+            }))
+          : [{ id: nanoid(), key: '', value: '' }],
       sentRequest: {
         messages: data.messages,
         model: '',

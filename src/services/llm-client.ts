@@ -1,6 +1,10 @@
 import { EventSourceParserStream } from 'eventsource-parser/stream';
 import type { ProviderConfig } from '@/types/provider';
-import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } from '@/types/normalized';
+import type {
+  NormalizedRequest,
+  NormalizedResponse,
+  NormalizedStreamChunk,
+} from '@/types/normalized';
 import { getAdapter } from '@/adapters';
 import { DEFAULT_REQUEST_TIMEOUT_MS } from '@/constants/defaults';
 import { runtimeFetch } from './runtime-fetch';
@@ -22,8 +26,17 @@ export interface SendRequestResult {
   statusCode: number;
 }
 
-export async function sendRequest(options: SendRequestOptions): Promise<SendRequestResult> {
-  const { provider, request, customHeaders, onStreamChunk, signal, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS } = options;
+export async function sendRequest(
+  options: SendRequestOptions,
+): Promise<SendRequestResult> {
+  const {
+    provider,
+    request,
+    customHeaders,
+    onStreamChunk,
+    signal,
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  } = options;
   const adapter = getAdapter(provider);
 
   const url = getRequestUrl(adapter.buildRequestUrl(provider));
@@ -70,14 +83,27 @@ export async function sendRequest(options: SendRequestOptions): Promise<SendRequ
   }
 
   if (request.stream && fetchResponse.body) {
-    return handleStream(fetchResponse.body, adapter, body, startTime, fetchResponse.status, onStreamChunk);
+    return handleStream(
+      fetchResponse.body,
+      adapter,
+      body,
+      startTime,
+      fetchResponse.status,
+      onStreamChunk,
+    );
   }
 
   const rawResponse = await fetchResponse.json();
   const durationMs = Math.round(performance.now() - startTime);
   const response = adapter.parseResponse(rawResponse);
 
-  return { response, rawRequest: body, rawResponse, durationMs, statusCode: fetchResponse.status };
+  return {
+    response,
+    rawRequest: body,
+    rawResponse,
+    durationMs,
+    statusCode: fetchResponse.status,
+  };
 }
 
 function getRequestUrl(targetUrl: string): string {
@@ -154,7 +180,10 @@ async function handleStream(
     usage,
   };
 
-  const rawResponse = { chunks: allChunks, reconstructed: { id: lastId, model: lastModel, content: fullContent } };
+  const rawResponse = {
+    chunks: allChunks,
+    reconstructed: { id: lastId, model: lastModel, content: fullContent },
+  };
 
   return { response, rawRequest, rawResponse, durationMs, statusCode };
 }

@@ -4,7 +4,11 @@ import { HistoryList } from './HistoryList';
 import { useHistoryStore } from '@/stores/history-store';
 import { useRequestStore } from '@/stores/request-store';
 import { useProviderStore } from '@/stores/provider-store';
-import { makeHistoryEntry, makeModel, makeProvider } from '@/__tests__/fixtures';
+import {
+  makeHistoryEntry,
+  makeModel,
+  makeProvider,
+} from '@/__tests__/fixtures';
 
 describe('HistoryList', () => {
   beforeEach(() => {
@@ -18,7 +22,9 @@ describe('HistoryList', () => {
     });
 
     useProviderStore.setState({
-      providers: [makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] })],
+      providers: [
+        makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] }),
+      ],
       selectedProviderId: null,
       selectedModelId: null,
       loaded: true,

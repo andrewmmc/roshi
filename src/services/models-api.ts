@@ -58,7 +58,9 @@ function collectModels(
 
 function sortByReleaseDate(models: [string, ApiModel][]): ProviderModel[] {
   return models
-    .sort(([, a], [, b]) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
+    .sort(([, a], [, b]) =>
+      (b.release_date ?? '').localeCompare(a.release_date ?? ''),
+    )
     .map(([id, model]) => toProviderModel(id, model));
 }
 
@@ -66,7 +68,10 @@ function readCache(): FetchedModels | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    const { timestamp, data } = JSON.parse(raw) as { timestamp: number; data: FetchedModels };
+    const { timestamp, data } = JSON.parse(raw) as {
+      timestamp: number;
+      data: FetchedModels;
+    };
     if (Date.now() - timestamp > CACHE_TTL_MS) return null;
     return data;
   } catch {
@@ -76,7 +81,10 @@ function readCache(): FetchedModels | null {
 
 function writeCache(data: FetchedModels): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ timestamp: Date.now(), data }),
+    );
   } catch {
     // localStorage full or unavailable — ignore
   }
@@ -85,21 +93,29 @@ function writeCache(data: FetchedModels): void {
 function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   return {
     openai: data.openai?.models
-      ? sortByReleaseDate(collectModels(data.openai.models, (_id, m) => isTextChatModel(m)))
+      ? sortByReleaseDate(
+          collectModels(data.openai.models, (_id, m) => isTextChatModel(m)),
+        )
       : [],
     anthropic: data.anthropic?.models
-      ? sortByReleaseDate(collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)))
+      ? sortByReleaseDate(
+          collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)),
+        )
       : [],
     openrouter: data.openrouter?.models
       ? [
-          ...sortByReleaseDate(collectModels(
-            data.openrouter.models,
-            (id, m) => id.startsWith('openai/') && isTextChatModel(m),
-          )),
-          ...sortByReleaseDate(collectModels(
-            data.openrouter.models,
-            (id, m) => id.startsWith('anthropic/') && isTextChatModel(m),
-          )),
+          ...sortByReleaseDate(
+            collectModels(
+              data.openrouter.models,
+              (id, m) => id.startsWith('openai/') && isTextChatModel(m),
+            ),
+          ),
+          ...sortByReleaseDate(
+            collectModels(
+              data.openrouter.models,
+              (id, m) => id.startsWith('anthropic/') && isTextChatModel(m),
+            ),
+          ),
         ]
       : [],
   };
@@ -117,7 +133,9 @@ export async function fetchModelsFromApi(): Promise<FetchedModels> {
   return result;
 }
 
-export async function fetchModelsForProvider(providerName: string): Promise<ProviderModel[]> {
+export async function fetchModelsForProvider(
+  providerName: string,
+): Promise<ProviderModel[]> {
   const models = await fetchModelsFromApi();
   const key = providerName.toLowerCase() as keyof FetchedModels;
   return models[key] ?? [];

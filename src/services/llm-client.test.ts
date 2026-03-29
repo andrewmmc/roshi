@@ -8,11 +8,21 @@ vi.mock('@/adapters', () => ({
 
 import { getAdapter } from '@/adapters';
 
-function createMockAdapter(overrides?: Partial<ProviderAdapter>): ProviderAdapter {
+function createMockAdapter(
+  overrides?: Partial<ProviderAdapter>,
+): ProviderAdapter {
   return {
-    buildRequestUrl: vi.fn().mockReturnValue('https://api.test.com/v1/chat/completions'),
-    buildRequestHeaders: vi.fn().mockReturnValue({ 'Content-Type': 'application/json', Authorization: 'Bearer test' }),
-    buildRequestBody: vi.fn().mockReturnValue({ model: 'gpt-4', messages: [{ role: 'user', content: 'Hello' }] }),
+    buildRequestUrl: vi
+      .fn()
+      .mockReturnValue('https://api.test.com/v1/chat/completions'),
+    buildRequestHeaders: vi.fn().mockReturnValue({
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer test',
+    }),
+    buildRequestBody: vi.fn().mockReturnValue({
+      model: 'gpt-4',
+      messages: [{ role: 'user', content: 'Hello' }],
+    }),
     parseResponse: vi.fn().mockReturnValue({
       id: 'chatcmpl-123',
       model: 'gpt-4',
@@ -54,7 +64,13 @@ describe('llm-client', () => {
 
   describe('RequestError', () => {
     it('extends Error with correct properties', () => {
-      const err = new RequestError('test error', 400, { error: 'bad' }, { model: 'gpt-4' }, 100);
+      const err = new RequestError(
+        'test error',
+        400,
+        { error: 'bad' },
+        { model: 'gpt-4' },
+        100,
+      );
 
       expect(err).toBeInstanceOf(Error);
       expect(err.name).toBe('RequestError');
@@ -68,13 +84,22 @@ describe('llm-client', () => {
 
   describe('sendRequest — non-streaming', () => {
     it('returns parsed response on success', async () => {
-      const rawResponse = { id: 'chatcmpl-123', model: 'gpt-4', choices: [{ message: { content: 'Hi' } }] };
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(rawResponse),
-      }));
-      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(150);
+      const rawResponse = {
+        id: 'chatcmpl-123',
+        model: 'gpt-4',
+        choices: [{ message: { content: 'Hi' } }],
+      };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(rawResponse),
+        }),
+      );
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(150);
 
       const result = await sendRequest({
         provider: makeProvider(),
@@ -88,19 +113,31 @@ describe('llm-client', () => {
     });
 
     it('calls adapter methods in order', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({}),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({}),
+        }),
+      );
 
       const provider = makeProvider();
       const request = makeRequest();
-      await sendRequest({ provider, request, customHeaders: { 'X-Test': '1' } });
+      await sendRequest({
+        provider,
+        request,
+        customHeaders: { 'X-Test': '1' },
+      });
 
       expect(mockAdapter.buildRequestUrl).toHaveBeenCalledWith(provider);
-      expect(mockAdapter.buildRequestHeaders).toHaveBeenCalledWith(provider, { 'X-Test': '1' });
-      expect(mockAdapter.buildRequestBody).toHaveBeenCalledWith(request, provider);
+      expect(mockAdapter.buildRequestHeaders).toHaveBeenCalledWith(provider, {
+        'X-Test': '1',
+      });
+      expect(mockAdapter.buildRequestBody).toHaveBeenCalledWith(
+        request,
+        provider,
+      );
       expect(mockAdapter.parseResponse).toHaveBeenCalled();
     });
 
@@ -118,7 +155,10 @@ describe('llm-client', () => {
         'https://api.test.com/v1/chat/completions',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ model: 'gpt-4', messages: [{ role: 'user', content: 'Hello' }] }),
+          body: JSON.stringify({
+            model: 'gpt-4',
+            messages: [{ role: 'user', content: 'Hello' }],
+          }),
         }),
       );
     });
@@ -152,12 +192,17 @@ describe('llm-client', () => {
 
     it('throws RequestError with JSON error body', async () => {
       const errorJson = { error: { message: 'Invalid key' } };
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 401,
-        text: () => Promise.resolve(JSON.stringify(errorJson)),
-      }));
-      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(100);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 401,
+          text: () => Promise.resolve(JSON.stringify(errorJson)),
+        }),
+      );
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(100);
 
       try {
         await sendRequest({ provider: makeProvider(), request: makeRequest() });
@@ -172,11 +217,14 @@ describe('llm-client', () => {
     });
 
     it('throws RequestError with text error body', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: () => Promise.resolve('Internal Server Error'),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          text: () => Promise.resolve('Internal Server Error'),
+        }),
+      );
 
       try {
         await sendRequest({ provider: makeProvider(), request: makeRequest() });
@@ -191,11 +239,13 @@ describe('llm-client', () => {
   describe('sendRequest — streaming', () => {
     it('accumulates content from stream chunks', async () => {
       const chunk1 = JSON.stringify({
-        id: 'chatcmpl-1', model: 'gpt-4',
+        id: 'chatcmpl-1',
+        model: 'gpt-4',
         choices: [{ delta: { content: 'Hello' }, finish_reason: null }],
       });
       const chunk2 = JSON.stringify({
-        id: 'chatcmpl-1', model: 'gpt-4',
+        id: 'chatcmpl-1',
+        model: 'gpt-4',
         choices: [{ delta: { content: ' world' }, finish_reason: 'stop' }],
       });
       const chunkUsage = JSON.stringify({
@@ -205,19 +255,39 @@ describe('llm-client', () => {
       });
 
       mockAdapter = createMockAdapter({
-        parseStreamChunk: vi.fn()
-          .mockReturnValueOnce({ content: 'Hello', finishReason: null, model: 'gpt-4', id: 'chatcmpl-1' })
-          .mockReturnValueOnce({ content: ' world', finishReason: 'stop', model: 'gpt-4', id: 'chatcmpl-1' })
-          .mockReturnValueOnce({ content: '', finishReason: null, usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 } }),
+        parseStreamChunk: vi
+          .fn()
+          .mockReturnValueOnce({
+            content: 'Hello',
+            finishReason: null,
+            model: 'gpt-4',
+            id: 'chatcmpl-1',
+          })
+          .mockReturnValueOnce({
+            content: ' world',
+            finishReason: 'stop',
+            model: 'gpt-4',
+            id: 'chatcmpl-1',
+          })
+          .mockReturnValueOnce({
+            content: '',
+            finishReason: null,
+            usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+          }),
       });
       vi.mocked(getAdapter).mockReturnValue(mockAdapter);
 
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        body: createSSEStream([chunk1, chunk2, chunkUsage, '[DONE]']),
-      }));
-      vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(200);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          body: createSSEStream([chunk1, chunk2, chunkUsage, '[DONE]']),
+        }),
+      );
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(200);
 
       const chunks: unknown[] = [];
       const result = await sendRequest({
@@ -228,7 +298,11 @@ describe('llm-client', () => {
 
       expect(result.response.content).toBe('Hello world');
       expect(result.response.finishReason).toBe('stop');
-      expect(result.response.usage).toEqual({ promptTokens: 10, completionTokens: 5, totalTokens: 15 });
+      expect(result.response.usage).toEqual({
+        promptTokens: 10,
+        completionTokens: 5,
+        totalTokens: 15,
+      });
       expect(result.durationMs).toBe(200);
       expect(chunks).toHaveLength(3);
       expect(result.rawResponse).toHaveProperty('chunks');
@@ -237,18 +311,29 @@ describe('llm-client', () => {
 
     it('skips [DONE] and empty data events', async () => {
       mockAdapter = createMockAdapter({
-        parseStreamChunk: vi.fn().mockReturnValue({ content: 'Hi', finishReason: 'stop', model: 'gpt-4', id: '1' }),
+        parseStreamChunk: vi.fn().mockReturnValue({
+          content: 'Hi',
+          finishReason: 'stop',
+          model: 'gpt-4',
+          id: '1',
+        }),
       });
       vi.mocked(getAdapter).mockReturnValue(mockAdapter);
 
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        body: createSSEStream([
-          JSON.stringify({ id: '1', choices: [{ delta: { content: 'Hi' }, finish_reason: 'stop' }] }),
-          '[DONE]',
-        ]),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          body: createSSEStream([
+            JSON.stringify({
+              id: '1',
+              choices: [{ delta: { content: 'Hi' }, finish_reason: 'stop' }],
+            }),
+            '[DONE]',
+          ]),
+        }),
+      );
 
       const result = await sendRequest({
         provider: makeProvider(),
@@ -275,7 +360,9 @@ describe('llm-client', () => {
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toMatch(/^\/api\/proxy\?url=/);
-      expect(calledUrl).toContain(encodeURIComponent('https://api.test.com/v1/chat/completions'));
+      expect(calledUrl).toContain(
+        encodeURIComponent('https://api.test.com/v1/chat/completions'),
+      );
     });
 
     it('does not proxy when DEV is falsy', async () => {

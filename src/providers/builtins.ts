@@ -9,7 +9,10 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     auth: { type: 'bearer' },
     endpoints: { chat: '/chat/completions' },
     models: [],
-    defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
+    defaults: {
+      temperature: DEFAULT_TEMPERATURE,
+      maxTokens: DEFAULT_MAX_TOKENS,
+    },
     isBuiltIn: true,
   },
   // TODO: Re-enable Anthropic provider once adapter is implemented
@@ -30,7 +33,10 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
     auth: { type: 'bearer' },
     endpoints: { chat: '/chat/completions' },
     models: [],
-    defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
+    defaults: {
+      temperature: DEFAULT_TEMPERATURE,
+      maxTokens: DEFAULT_MAX_TOKENS,
+    },
     isBuiltIn: true,
   },
 ];

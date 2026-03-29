@@ -16,7 +16,10 @@ export function HeaderEditor() {
   const presetHeaders = useMemo(() => {
     if (!provider) return [];
     const adapter = getAdapter(provider);
-    const headers = adapter.buildRequestHeaders(provider, provider.customHeaders);
+    const headers = adapter.buildRequestHeaders(
+      provider,
+      provider.customHeaders,
+    );
     return Object.entries(headers).map(([key, value]) => ({ key, value }));
   }, [provider]);
 
@@ -25,11 +28,15 @@ export function HeaderEditor() {
   };
 
   const updateKey = (index: number, key: string) => {
-    setCustomHeaders(customHeaders.map((h, i) => (i === index ? { ...h, key } : h)));
+    setCustomHeaders(
+      customHeaders.map((h, i) => (i === index ? { ...h, key } : h)),
+    );
   };
 
   const updateValue = (index: number, value: string) => {
-    setCustomHeaders(customHeaders.map((h, i) => (i === index ? { ...h, value } : h)));
+    setCustomHeaders(
+      customHeaders.map((h, i) => (i === index ? { ...h, value } : h)),
+    );
   };
 
   const removeHeader = (index: number) => {
@@ -40,51 +47,51 @@ export function HeaderEditor() {
     <div className="flex flex-col gap-2">
       {presetHeaders.length > 0 && (
         <>
-          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+          <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
             From provider
           </p>
           {presetHeaders.map(({ key, value }) => (
-            <div key={key} className="flex gap-2 items-center">
+            <div key={key} className="flex items-center gap-2">
               <Input
                 value={key}
                 readOnly
                 disabled
-                className="h-7 text-xs font-mono flex-1"
+                className="h-7 flex-1 font-mono text-xs"
               />
               <Input
                 value={maskHeaderValue(key, value, provider?.apiKey)}
                 readOnly
                 disabled
-                className="h-7 text-xs font-mono flex-1"
+                className="h-7 flex-1 font-mono text-xs"
               />
-              <div className="shrink-0 h-7 w-7 flex items-center justify-center text-muted-foreground">
+              <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
                 <Lock className="h-3 w-3" />
               </div>
             </div>
           ))}
-          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mt-2">
+          <p className="text-muted-foreground mt-2 text-[11px] font-medium tracking-wider uppercase">
             Custom
           </p>
         </>
       )}
       {customHeaders.map((header, index) => (
-        <div key={header.id} className="flex gap-2 items-center">
+        <div key={header.id} className="flex items-center gap-2">
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
-            className="h-7 text-xs font-mono flex-1"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
-            className="h-7 text-xs font-mono flex-1"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
             aria-label="Remove header"
@@ -93,8 +100,13 @@ export function HeaderEditor() {
           </Button>
         </div>
       ))}
-      <Button variant="outline" size="sm" className="self-start" onClick={addHeader}>
-        <Plus className="h-3.5 w-3.5 mr-1.5" />
+      <Button
+        variant="outline"
+        size="sm"
+        className="self-start"
+        onClick={addHeader}
+      >
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
         Add Header
       </Button>
     </div>

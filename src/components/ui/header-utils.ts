@@ -5,7 +5,9 @@ import type { HeaderEntry } from './header-list-editor';
 /**
  * Convert header entries array to Record<string, string>, filtering out entries with empty keys
  */
-export function headersToRecord(headers: HeaderEntry[]): Record<string, string> {
+export function headersToRecord(
+  headers: HeaderEntry[],
+): Record<string, string> {
   const record: Record<string, string> = {};
   for (const header of headers) {
     if (header.key.trim()) {
@@ -21,7 +23,11 @@ export function headersToRecord(headers: HeaderEntry[]): Record<string, string> 
 /**
  * Mask sensitive header values (auth tokens, Bearer prefixed values)
  */
-export function maskHeaderValue(key: string, value: string, apiKey?: string): string {
+export function maskHeaderValue(
+  key: string,
+  value: string,
+  apiKey?: string,
+): string {
   const lower = key.toLowerCase();
   if (lower === 'authorization' || lower === 'x-api-key') {
     if (!apiKey) return '';
@@ -29,7 +35,10 @@ export function maskHeaderValue(key: string, value: string, apiKey?: string): st
   if (value.startsWith('Bearer ')) {
     const token = value.slice(7);
     if (!token) return 'Bearer ';
-    return 'Bearer ' + (token.length > 8 ? token.slice(0, 4) + '••••••••' : '••••••••');
+    return (
+      'Bearer ' +
+      (token.length > 8 ? token.slice(0, 4) + '••••••••' : '••••••••')
+    );
   }
   if (apiKey && value === apiKey) {
     return value.length > 8 ? value.slice(0, 4) + '••••••••' : '••••••••';
@@ -37,7 +46,9 @@ export function maskHeaderValue(key: string, value: string, apiKey?: string): st
   return value;
 }
 
-export function recordToHeaders(record: Record<string, string> = {}): HeaderEntry[] {
+export function recordToHeaders(
+  record: Record<string, string> = {},
+): HeaderEntry[] {
   const entries = Object.entries(record).map(([key, value]) => ({
     id: nanoid(),
     key,

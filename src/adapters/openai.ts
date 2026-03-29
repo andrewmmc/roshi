@@ -1,11 +1,18 @@
 import type { ProviderAdapter } from './types';
 import type { ProviderConfig } from '@/types/provider';
-import type { NormalizedRequest, NormalizedResponse, NormalizedStreamChunk } from '@/types/normalized';
+import type {
+  NormalizedRequest,
+  NormalizedResponse,
+  NormalizedStreamChunk,
+} from '@/types/normalized';
 
 export const openaiAdapter: ProviderAdapter = {
   buildRequestBody(request: NormalizedRequest): Record<string, unknown> {
     const messages = request.systemPrompt
-      ? [{ role: 'system' as const, content: request.systemPrompt }, ...request.messages]
+      ? [
+          { role: 'system' as const, content: request.systemPrompt },
+          ...request.messages,
+        ]
       : request.messages;
 
     const body: Record<string, unknown> = {
@@ -29,11 +36,14 @@ export const openaiAdapter: ProviderAdapter = {
       stream: request.stream,
     };
 
-    if (request.temperature !== undefined) body.temperature = request.temperature;
+    if (request.temperature !== undefined)
+      body.temperature = request.temperature;
     if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
     if (request.topP !== undefined) body.top_p = request.topP;
-    if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
-    if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
+    if (request.frequencyPenalty !== undefined)
+      body.frequency_penalty = request.frequencyPenalty;
+    if (request.presencePenalty !== undefined)
+      body.presence_penalty = request.presencePenalty;
 
     if (request.stream) {
       body.stream_options = { include_usage: true };
@@ -42,7 +52,10 @@ export const openaiAdapter: ProviderAdapter = {
     return body;
   },
 
-  buildRequestHeaders(provider: ProviderConfig, customHeaders?: Record<string, string>): Record<string, string> {
+  buildRequestHeaders(
+    provider: ProviderConfig,
+    customHeaders?: Record<string, string>,
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -78,8 +91,15 @@ export const openaiAdapter: ProviderAdapter = {
     const data = raw as {
       id: string;
       model: string;
-      choices: { message: { content: string; role: string }; finish_reason: string }[];
-      usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+      choices: {
+        message: { content: string; role: string };
+        finish_reason: string;
+      }[];
+      usage?: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      };
     };
 
     const choice = data.choices?.[0];
@@ -107,8 +127,15 @@ export const openaiAdapter: ProviderAdapter = {
       const parsed = JSON.parse(data) as {
         id?: string;
         model?: string;
-        choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
-        usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+        choices?: {
+          delta?: { content?: string };
+          finish_reason?: string | null;
+        }[];
+        usage?: {
+          prompt_tokens: number;
+          completion_tokens: number;
+          total_tokens: number;
+        };
       };
 
       const choice = parsed.choices?.[0];

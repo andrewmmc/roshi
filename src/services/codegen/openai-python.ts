@@ -6,10 +6,7 @@ function escapePythonString(s: string): string {
   }
   return (
     '"' +
-    s
-      .replace(/\\/g, '\\\\')
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, '\\n') +
+    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
     '"'
   );
 }
@@ -19,7 +16,18 @@ export const openaiPythonGenerator: CodeGenerator = {
   language: 'python',
 
   generate(params: CodeGenParams): string {
-    const { provider, model, messages, systemPrompt, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, stream } = params;
+    const {
+      provider,
+      model,
+      messages,
+      systemPrompt,
+      temperature,
+      maxTokens,
+      topP,
+      frequencyPenalty,
+      presencePenalty,
+      stream,
+    } = params;
 
     const isDefaultOpenAI = provider.baseUrl === 'https://api.openai.com/v1';
     const clientArgs: string[] = [];
@@ -30,16 +38,22 @@ export const openaiPythonGenerator: CodeGenerator = {
 
     if (provider.auth.type === 'api-key-header') {
       const headerName = provider.auth.headerName || 'x-api-key';
-      clientArgs.push(`    default_headers={"${headerName}": os.environ.get("API_KEY")}`);
+      clientArgs.push(
+        `    default_headers={"${headerName}": os.environ.get("API_KEY")}`,
+      );
     }
 
     const messageLines: string[] = [];
     if (systemPrompt.trim()) {
-      messageLines.push(`        {"role": "system", "content": ${escapePythonString(systemPrompt)}},`);
+      messageLines.push(
+        `        {"role": "system", "content": ${escapePythonString(systemPrompt)}},`,
+      );
     }
     for (const msg of messages) {
       if (!msg.content.trim()) continue;
-      messageLines.push(`        {"role": "${msg.role}", "content": ${escapePythonString(msg.content)}},`);
+      messageLines.push(
+        `        {"role": "${msg.role}", "content": ${escapePythonString(msg.content)}},`,
+      );
     }
 
     const kwargs: string[] = [];

@@ -15,7 +15,9 @@ const { mockDb } = vi.hoisted(() => ({
   },
 }));
 vi.mock('@/db', () => ({ db: mockDb }));
-vi.mock('@/services/models-api', () => ({ fetchModelsForProvider: vi.fn().mockResolvedValue([]) }));
+vi.mock('@/services/models-api', () => ({
+  fetchModelsForProvider: vi.fn().mockResolvedValue([]),
+}));
 
 describe('useProviders', () => {
   beforeEach(() => {
