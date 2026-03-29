@@ -2,6 +2,8 @@ import type { ProviderModel } from '@/types/provider';
 import { runtimeFetch } from './runtime-fetch';
 
 const MODELS_API_URL = 'https://models.dev/api.json';
+const CACHE_KEY = 'llm-tester-models-cache';
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface ApiModel {
   id: string;
@@ -60,11 +62,27 @@ function sortByReleaseDate(models: [string, ApiModel][]): ProviderModel[] {
     .map(([id, model]) => toProviderModel(id, model));
 }
 
-export async function fetchModelsFromApi(): Promise<FetchedModels> {
-  const res = await runtimeFetch(MODELS_API_URL);
-  if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
-  const data: ModelsApiResponse = await res.json();
+function readCache(): FetchedModels | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { timestamp, data } = JSON.parse(raw) as { timestamp: number; data: FetchedModels };
+    if (Date.now() - timestamp > CACHE_TTL_MS) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
 
+function writeCache(data: FetchedModels): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+  } catch {
+    // localStorage full or unavailable — ignore
+  }
+}
+
+function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   return {
     openai: data.openai?.models
       ? sortByReleaseDate(collectModels(data.openai.models, (_id, m) => isTextChatModel(m)))
@@ -85,6 +103,18 @@ export async function fetchModelsFromApi(): Promise<FetchedModels> {
         ]
       : [],
   };
+}
+
+export async function fetchModelsFromApi(): Promise<FetchedModels> {
+  const cached = readCache();
+  if (cached) return cached;
+
+  const res = await runtimeFetch(MODELS_API_URL);
+  if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
+  const data: ModelsApiResponse = await res.json();
+  const result = parseModelsResponse(data);
+  writeCache(result);
+  return result;
 }
 
 export async function fetchModelsForProvider(providerName: string): Promise<ProviderModel[]> {

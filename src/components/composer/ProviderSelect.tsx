@@ -1,4 +1,5 @@
 import { useProviders } from '@/hooks/use-providers';
+import { useProviderStore } from '@/stores/provider-store';
 import {
   Select,
   SelectContent,
@@ -6,13 +7,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 
 export function ProviderSelect() {
   const { providers, selectedProviderId, selectedModelId, selectProvider, selectModel, getSelectedProvider, getSelectedModel } =
     useProviders();
+  const seeding = useProviderStore((s) => s.seeding);
 
   const selectedProvider = getSelectedProvider();
   const selectedModel = getSelectedModel();
+
+  if (seeding) {
+    return (
+      <div className="flex items-center gap-2 h-7 px-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Loading providers…
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-2">

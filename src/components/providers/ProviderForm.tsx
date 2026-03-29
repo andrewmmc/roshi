@@ -18,6 +18,7 @@ import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 import { nanoid } from 'nanoid';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
+type FormModel = ProviderModel & { _formKey: string };
 
 interface ProviderFormProps {
   ref?: Ref<HTMLFormElement>;
@@ -43,6 +44,13 @@ const defaultFormData: ProviderFormData = {
 export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(initialData || defaultFormData);
 
+  const toFormModels = (models: ProviderModel[]): FormModel[] =>
+    models.map((m) => ({ ...m, _formKey: nanoid() }));
+
+  const [formModels, setFormModels] = useState<FormModel[]>(() =>
+    toFormModels((initialData || defaultFormData).models),
+  );
+
   // Initialize header entries from initialData once, then track as separate state
   // This prevents ID regeneration on every render which causes input focus loss
   const [headerEntries, setHeaderEntries] = useState<HeaderEntry[]>(() => {
@@ -63,29 +71,31 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
   };
 
   const updateModel = (index: number, updates: Partial<ProviderModel>) => {
-    const models = [...form.models];
-    models[index] = { ...models[index], ...updates };
-    // Sync name with id if name is empty
-    if (updates.id && !models[index].name) {
-      models[index].name = updates.id;
-    }
-    updateField('models', models);
+    setFormModels((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], ...updates };
+      if (updates.id && !next[index].name) {
+        next[index].name = updates.id;
+      }
+      return next;
+    });
   };
 
   const addModel = () => {
-    updateField('models', [...form.models, { id: '', name: '', displayName: '', supportsStreaming: true }]);
+    setFormModels((prev) => [...prev, { id: '', name: '', displayName: '', supportsStreaming: true, _formKey: nanoid() }]);
   };
 
   const removeModel = (index: number) => {
-    updateField('models', form.models.filter((_, i) => i !== index));
+    setFormModels((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Clean up models: remove empty ones, sync names
-    const cleanedModels = form.models
+    // Clean up models: remove empty ones, sync names, strip _formKey
+    const cleanedModels = formModels
       .filter((m) => m.id.trim())
-      .map((m) => ({
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ _formKey, ...m }) => ({
         ...m,
         name: m.name || m.id,
         displayName: m.displayName || m.id,
@@ -204,8 +214,8 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
 
         <div className="flex flex-col gap-2">
           <Label className="text-xs">Models</Label>
-          {form.models.map((model, i) => (
-            <div key={i} className="flex gap-2 items-center">
+          {formModels.map((model, i) => (
+            <div key={model._formKey} className="flex gap-2 items-center">
               <Input
                 value={model.id}
                 onChange={(e) => updateModel(i, { id: e.target.value })}
@@ -218,7 +228,7 @@ export function ProviderForm({ ref, initialData, onSubmit, isBuiltIn = false }: 
                 placeholder="Display Name"
                 className="flex-1 text-sm"
               />
-              {form.models.length > 1 && (
+              {formModels.length > 1 && (
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeModel(i)} aria-label="Remove model">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

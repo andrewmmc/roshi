@@ -24,6 +24,7 @@ interface ProviderStore {
   selectedProviderId: string | null;
   selectedModelId: string | null;
   loaded: boolean;
+  seeding: boolean;
 
   load: () => Promise<void>;
   addProvider: (provider: Omit<ProviderConfig, 'id'>) => Promise<ProviderConfig>;
@@ -43,6 +44,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   selectedProviderId: null,
   selectedModelId: null,
   loaded: false,
+  seeding: false,
 
   load: async () => {
     if (get().loaded) return;
@@ -57,6 +59,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     );
 
     if (needsSeed.length > 0) {
+      set({ seeding: true });
       let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] = [];
       try {
         fetchedModels = await Promise.all(
@@ -74,6 +77,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
         await db.providers.add(newProvider);
         providers.push(newProvider);
       }
+      set({ seeding: false });
     }
 
     const saved = loadSelection();
