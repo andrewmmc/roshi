@@ -75,6 +75,9 @@ interface RequestStore {
     systemPrompt: string;
     temperature: number;
     maxTokens: number;
+    topP: number;
+    frequencyPenalty: number;
+    presencePenalty: number;
     stream: boolean;
     customHeaders?: HistoryHeaderEntry[];
     response: NormalizedResponse | null;
@@ -189,6 +192,9 @@ export const useRequestStore = create<RequestStore>((set) => ({
       },
       temperature: data.temperature,
       maxTokens: data.maxTokens,
+      topP: data.topP,
+      frequencyPenalty: data.frequencyPenalty,
+      presencePenalty: data.presencePenalty,
       stream: data.stream,
       isLoading: false,
       isStreaming: false,

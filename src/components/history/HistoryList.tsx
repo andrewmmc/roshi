@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import {
+  DEFAULT_TOP_P,
+  DEFAULT_FREQUENCY_PENALTY,
+  DEFAULT_PRESENCE_PENALTY,
+} from '@/constants/defaults';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -31,6 +36,9 @@ export function HistoryList() {
       systemPrompt: entry.request.systemPrompt ?? '',
       temperature: entry.request.temperature ?? 1,
       maxTokens: entry.request.maxTokens ?? 4096,
+      topP: entry.request.topP ?? DEFAULT_TOP_P,
+      frequencyPenalty: entry.request.frequencyPenalty ?? DEFAULT_FREQUENCY_PENALTY,
+      presencePenalty: entry.request.presencePenalty ?? DEFAULT_PRESENCE_PENALTY,
       stream: entry.request.stream,
       customHeaders: entry.customHeaders ?? [],
       response: entry.response,
