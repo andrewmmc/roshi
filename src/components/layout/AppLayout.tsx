@@ -5,13 +5,16 @@ import {
 } from '@/components/ui/resizable';
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function AppLayout() {
   return (
     <div className="h-screen w-screen overflow-hidden bg-sidebar">
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel defaultSize="24%" minSize="18%" maxSize="32%">
-          <Sidebar />
+          <ErrorBoundary panel>
+            <Sidebar />
+          </ErrorBoundary>
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize="76%" minSize="40%">

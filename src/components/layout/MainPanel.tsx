@@ -11,6 +11,7 @@ import { Send, Square } from 'lucide-react';
 import { useRequestStore } from '@/stores/request-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { useProviderStore } from '@/stores/provider-store';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function MainPanel() {
   const isLoading = useRequestStore((s) => s.isLoading);
@@ -43,11 +44,15 @@ export function MainPanel() {
       </div>
       <ResizablePanelGroup orientation="vertical" className="flex-1">
         <ResizablePanel defaultSize="40%" minSize="20%">
-          <RequestComposer />
+          <ErrorBoundary panel>
+            <RequestComposer />
+          </ErrorBoundary>
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize="60%" minSize="20%">
-          <ResponsePanel />
+          <ErrorBoundary panel>
+            <ResponsePanel />
+          </ErrorBoundary>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

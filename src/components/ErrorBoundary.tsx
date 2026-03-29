@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
+  panel?: boolean;
 }
 
 interface State {
@@ -23,8 +24,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      const containerClass = this.props.panel
+        ? 'flex flex-col items-center justify-center h-full gap-3 p-6 text-center'
+        : 'flex flex-col items-center justify-center h-screen gap-4 p-8 text-center';
+
       return (
-        <div className="flex flex-col items-center justify-center h-screen gap-4 p-8 text-center">
+        <div className={containerClass}>
           <h1 className="text-lg font-semibold text-destructive">Something went wrong</h1>
           <p className="text-sm text-muted-foreground font-mono max-w-lg break-all">
             {this.state.error.message}
