@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: false
+  jobs:
+    - name: format
+      run: bash ./scripts/run-with-node.sh "npx prettier --write --ignore-unknown {staged_files}"
+      stage_fixed: true
+
+    - name: lint
+      glob: '*.{js,jsx,ts,tsx}'
+      run: bash ./scripts/run-with-node.sh "npx eslint --fix {staged_files}"
+      stage_fixed: true
+
+    - name: typecheck
+      run: bash ./scripts/run-with-node.sh "npm run typecheck"
