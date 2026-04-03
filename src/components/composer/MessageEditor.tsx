@@ -1,5 +1,13 @@
 import { useRef, useState, useEffect } from 'react';
-import { Plus, Trash2, Paperclip, Link } from 'lucide-react';
+import { Plus, Trash2, Paperclip, Link, Ellipsis, Eraser } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { nanoid } from 'nanoid';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { useComposerStore } from '@/stores/composer-store';
 import { guessMimeType, SUPPORTED_FILE_ACCEPT } from '@/utils/mime';
@@ -48,6 +63,25 @@ export function MessageEditor() {
   const addMessageBtnRef = useRef<HTMLButtonElement>(null);
   const [urlInputIndex, setUrlInputIndex] = useState<number | null>(null);
   const [urlValue, setUrlValue] = useState('');
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'clear' | 'delete';
+    index: number;
+  } | null>(null);
+
+  const handleClearMessage = (index: number) => {
+    setConfirmAction({ type: 'clear', index });
+  };
+
+  const handleRemoveMessage = (index: number) => {
+    const msg = messages[index];
+    const hasContent = msg.content.trim() !== '';
+    const hasAttachments = (msg.attachments?.length ?? 0) > 0;
+    if (hasContent || hasAttachments) {
+      setConfirmAction({ type: 'delete', index });
+    } else {
+      removeMessage(index);
+    }
+  };
 
   const scrollGeneration = useComposerStore((s) => s.scrollGeneration);
 
@@ -196,17 +230,7 @@ export function MessageEditor() {
                 </div>
               )}
             </div>
-            <div className="flex shrink-0 flex-col gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground h-7 w-7"
-                onClick={() => fileInputRefs.current.get(index)?.click()}
-                title="Attach file"
-                aria-label="Attach file"
-              >
-                <Paperclip className="h-3.5 w-3.5" />
-              </Button>
+            <div className="shrink-0">
               <input
                 ref={(el) => {
                   if (el) fileInputRefs.current.set(index, el);
@@ -221,29 +245,51 @@ export function MessageEditor() {
                   e.target.value = '';
                 }}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground h-7 w-7"
-                onClick={() => {
-                  setUrlInputIndex(urlInputIndex === index ? null : index);
-                  setUrlValue('');
-                }}
-                title="Attach URL"
-                aria-label="Attach URL"
-              >
-                <Link className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
-                onClick={() => removeMessage(index)}
-                disabled={messages.length <= 1}
-                aria-label="Remove message"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md">
+                  <Ellipsis className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  side="bottom"
+                  className="min-w-40"
+                >
+                  <DropdownMenuItem
+                    onClick={() => fileInputRefs.current.get(index)?.click()}
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Attach file
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setUrlInputIndex(urlInputIndex === index ? null : index);
+                      setUrlValue('');
+                    }}
+                  >
+                    <Link className="h-3.5 w-3.5" />
+                    Attach URL
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => handleClearMessage(index)}
+                    disabled={
+                      !messages[index].content.trim() &&
+                      !(messages[index].attachments?.length ?? 0)
+                    }
+                  >
+                    <Eraser className="h-3.5 w-3.5" />
+                    Clear message
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => handleRemoveMessage(index)}
+                    disabled={messages.length <= 1}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete message
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         ))}
@@ -259,6 +305,52 @@ export function MessageEditor() {
         <Plus className="mr-1.5 h-3 w-3" />
         Add Message
       </Button>
+
+      <Dialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction?.type === 'clear'
+                ? 'Clear message?'
+                : 'Delete message?'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction?.type === 'clear'
+                ? 'This will clear all content and attachments from this message.'
+                : 'This message has content that will be lost. This action cannot be undone.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmAction) {
+                  if (confirmAction.type === 'clear') {
+                    updateMessage(confirmAction.index, {
+                      ...messages[confirmAction.index],
+                      content: '',
+                      attachments: [],
+                    });
+                  } else {
+                    removeMessage(confirmAction.index);
+                  }
+                }
+                setConfirmAction(null);
+              }}
+            >
+              {confirmAction?.type === 'clear' ? 'Clear' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
