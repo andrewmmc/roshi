@@ -10,6 +10,9 @@ const ChatView = lazy(() =>
 const RawJsonView = lazy(() =>
   import('./RawJsonView').then((m) => ({ default: m.RawJsonView })),
 );
+const HeadersView = lazy(() =>
+  import('./HeadersView').then((m) => ({ default: m.HeadersView })),
+);
 const CodeView = lazy(() =>
   import('./CodeView').then((m) => ({ default: m.CodeView })),
 );
@@ -38,7 +41,10 @@ export function ResponsePanel() {
             Chat
           </TabsTrigger>
           <TabsTrigger value="raw" className="h-6 px-2.5 text-xs">
-            Raw
+            Body
+          </TabsTrigger>
+          <TabsTrigger value="headers" className="h-6 px-2.5 text-xs">
+            Headers
           </TabsTrigger>
           <TabsTrigger
             value="code"
@@ -96,6 +102,21 @@ export function ResponsePanel() {
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see raw JSON
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent
+        value="headers"
+        className="mt-0 min-h-0 flex-1 overflow-hidden"
+      >
+        {hasContent ? (
+          <Suspense>
+            <HeadersView />
+          </Suspense>
+        ) : (
+          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
+            Send a request to see headers
           </div>
         )}
       </TabsContent>

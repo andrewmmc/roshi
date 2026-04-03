@@ -70,13 +70,12 @@ export function RawJsonView() {
         className="mt-0 min-h-0 flex-1 overflow-y-auto"
       >
         {requestUrl && (
-          <div className="border-b px-4 py-2">
-            <span className="text-muted-foreground font-mono text-[13px]">
-              POST{' '}
-            </span>
-            <span className="font-mono text-[13px] break-all">
-              {requestUrl}
-            </span>
+          <div className="flex items-center justify-between border-b px-4 py-2">
+            <div className="font-mono text-[13px] break-all">
+              <span className="text-muted-foreground">POST </span>
+              <span>{requestUrl}</span>
+            </div>
+            <CopyButton text={requestUrl} className="ml-2 shrink-0" />
           </div>
         )}
         <JsonBlock data={rawRequest} label="request" />

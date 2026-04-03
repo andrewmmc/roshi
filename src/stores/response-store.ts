@@ -9,6 +9,8 @@ interface ResponseState {
   rawRequest: Record<string, unknown> | null;
   rawResponse: Record<string, unknown> | null;
   requestUrl: string | null;
+  requestHeaders: Record<string, string> | null;
+  responseHeaders: Record<string, string> | null;
   error: string | null;
   errorDetail: string | null;
   durationMs: number | null;
@@ -25,6 +27,8 @@ interface ResponseActions {
   setRawRequest: (raw: Record<string, unknown> | null) => void;
   setRawResponse: (raw: Record<string, unknown> | null) => void;
   setRequestUrl: (url: string | null) => void;
+  setRequestHeaders: (headers: Record<string, string> | null) => void;
+  setResponseHeaders: (headers: Record<string, string> | null) => void;
   setError: (error: string | null) => void;
   setErrorDetail: (detail: string | null) => void;
   setDurationMs: (ms: number | null) => void;
@@ -57,6 +61,8 @@ const INITIAL_RESPONSE_STATE: ResponseState = {
   rawRequest: null,
   rawResponse: null,
   requestUrl: null,
+  requestHeaders: null,
+  responseHeaders: null,
   error: null,
   errorDetail: null,
   durationMs: null,
@@ -76,6 +82,8 @@ export const useResponseStore = create<ResponseStore>((set) => ({
   setRawRequest: (rawRequest) => set({ rawRequest }),
   setRawResponse: (rawResponse) => set({ rawResponse }),
   setRequestUrl: (requestUrl) => set({ requestUrl }),
+  setRequestHeaders: (requestHeaders) => set({ requestHeaders }),
+  setResponseHeaders: (responseHeaders) => set({ responseHeaders }),
   setError: (error) => set({ error }),
   setErrorDetail: (errorDetail) => set({ errorDetail }),
   setDurationMs: (durationMs) => set({ durationMs }),

@@ -80,6 +80,8 @@ export function useSendRequest() {
     respStore.setResponse(null);
     respStore.setRawRequest(null);
     respStore.setRawResponse(null);
+    respStore.setRequestHeaders(null);
+    respStore.setResponseHeaders(null);
     respStore.setDurationMs(null);
     respStore.setStatusCode(null);
     const modelId = model?.id ?? selectedModelId ?? '';
@@ -144,6 +146,8 @@ export function useSendRequest() {
       respStore.setRawRequest(result.rawRequest);
       respStore.setRawResponse(result.rawResponse);
       respStore.setRequestUrl(result.requestUrl);
+      respStore.setRequestHeaders(result.requestHeaders);
+      respStore.setResponseHeaders(result.responseHeaders);
       respStore.setDurationMs(result.durationMs);
       respStore.setStatusCode(result.statusCode);
 
@@ -171,6 +175,8 @@ export function useSendRequest() {
         respStore.setErrorDetail(detail);
         respStore.setRawRequest(err.rawRequest);
         respStore.setRawResponse(err.rawResponse);
+        respStore.setRequestHeaders(err.requestHeaders);
+        respStore.setResponseHeaders(err.responseHeaders);
         respStore.setDurationMs(err.durationMs);
         respStore.setStatusCode(err.status);
 

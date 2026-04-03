@@ -11,6 +11,8 @@ describe('response-store', () => {
       response: null,
       rawRequest: null,
       rawResponse: null,
+      requestHeaders: null,
+      responseHeaders: null,
       error: null,
       errorDetail: null,
       durationMs: null,

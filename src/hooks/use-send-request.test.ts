@@ -12,12 +12,16 @@ const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
     status: number;
     rawResponse: Record<string, unknown>;
     rawRequest: Record<string, unknown>;
+    requestHeaders: Record<string, string>;
+    responseHeaders: Record<string, string>;
     durationMs: number;
     constructor(
       message: string,
       status: number,
       rawResponse: Record<string, unknown>,
       rawRequest: Record<string, unknown>,
+      requestHeaders: Record<string, string>,
+      responseHeaders: Record<string, string>,
       durationMs: number,
     ) {
       super(message);
@@ -25,6 +29,8 @@ const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
       this.status = status;
       this.rawResponse = rawResponse;
       this.rawRequest = rawRequest;
+      this.requestHeaders = requestHeaders;
+      this.responseHeaders = responseHeaders;
       this.durationMs = durationMs;
     }
   }
@@ -95,6 +101,8 @@ describe('useSendRequest', () => {
       response: null,
       rawRequest: null,
       rawResponse: null,
+      requestHeaders: null,
+      responseHeaders: null,
       error: null,
       errorDetail: null,
       durationMs: null,
@@ -335,6 +343,8 @@ describe('useSendRequest', () => {
           401,
           { error: 'bad' },
           { model: 'm1' },
+          { Authorization: 'Bearer token' },
+          { 'x-request-id': 'abc' },
           100,
         ),
       );

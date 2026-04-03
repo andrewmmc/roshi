@@ -12,7 +12,7 @@ function escapePythonString(s: string): string {
 }
 
 export const openaiPythonGenerator: CodeGenerator = {
-  label: 'Python (OpenAI SDK)',
+  label: 'Python',
   language: 'python',
 
   generate(params: CodeGenParams): string {
@@ -79,7 +79,7 @@ export const openaiPythonGenerator: CodeGenerator = {
       clientArgs.length > 0 ? '\n' + clientArgs.join(',\n') + '\n' : '';
 
     if (stream) {
-      return `${importLine}\n\nclient = OpenAI(${clientArgsStr})\n\nstream = client.chat.completions.create(\n${kwargs.join('\n')}\n)\n\nfor chunk in stream:\n    content = chunk.choices[0].delta.content\n    if content is not None:\n        ...\n`;
+      return `${importLine}\n\nclient = OpenAI(${clientArgsStr})\n\nstream = client.chat.completions.create(\n${kwargs.join('\n')}\n)\n\nfor chunk in stream:\n    content = chunk.choices[0].delta.content\n    if content is not None:\n        print(content, end="", flush=True)\n`;
     }
 
     return `${importLine}\n\nclient = OpenAI(${clientArgsStr})\n\nresponse = client.chat.completions.create(\n${kwargs.join('\n')}\n)\n\ncontent = response.choices[0].message.content\n`;

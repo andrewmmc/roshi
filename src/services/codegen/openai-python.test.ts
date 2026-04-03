@@ -7,7 +7,7 @@ import {
 
 describe('openaiPythonGenerator', () => {
   it('has correct label and language', () => {
-    expect(openaiPythonGenerator.label).toBe('Python (OpenAI SDK)');
+    expect(openaiPythonGenerator.label).toBe('Python');
     expect(openaiPythonGenerator.language).toBe('python');
   });
 

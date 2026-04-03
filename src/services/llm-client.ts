@@ -23,6 +23,8 @@ export interface SendRequestResult {
   rawRequest: Record<string, unknown>;
   rawResponse: Record<string, unknown>;
   requestUrl: string;
+  requestHeaders: Record<string, string>;
+  responseHeaders: Record<string, string>;
   durationMs: number;
   statusCode: number;
 }
@@ -70,6 +72,11 @@ export async function sendRequest(
     signal: combinedSignal,
   });
 
+  const responseHeaders: Record<string, string> = {};
+  fetchResponse.headers.forEach((value, key) => {
+    responseHeaders[key] = value;
+  });
+
   if (!fetchResponse.ok) {
     const errorText = await fetchResponse.text();
     let errorJson: Record<string, unknown> | null = null;
@@ -84,6 +91,8 @@ export async function sendRequest(
       fetchResponse.status,
       errorJson || { error: errorText },
       body,
+      headers,
+      responseHeaders,
       durationMs,
     );
   }
@@ -93,6 +102,8 @@ export async function sendRequest(
       fetchResponse.body,
       adapter,
       body,
+      headers,
+      responseHeaders,
       rawUrl,
       startTime,
       fetchResponse.status,
@@ -109,6 +120,8 @@ export async function sendRequest(
     rawRequest: body,
     rawResponse,
     requestUrl: rawUrl,
+    requestHeaders: headers,
+    responseHeaders,
     durationMs,
     statusCode: fetchResponse.status,
   };
@@ -135,6 +148,8 @@ async function handleStream(
   body: ReadableStream<Uint8Array>,
   adapter: ReturnType<typeof getAdapter>,
   rawRequest: Record<string, unknown>,
+  requestHeaders: Record<string, string>,
+  responseHeaders: Record<string, string>,
   requestUrl: string,
   startTime: number,
   statusCode: number,
@@ -199,6 +214,8 @@ async function handleStream(
     rawRequest,
     rawResponse,
     requestUrl,
+    requestHeaders,
+    responseHeaders,
     durationMs,
     statusCode,
   };
@@ -208,6 +225,8 @@ export class RequestError extends Error {
   status: number;
   rawResponse: Record<string, unknown>;
   rawRequest: Record<string, unknown>;
+  requestHeaders: Record<string, string>;
+  responseHeaders: Record<string, string>;
   durationMs: number;
 
   constructor(
@@ -215,6 +234,8 @@ export class RequestError extends Error {
     status: number,
     rawResponse: Record<string, unknown>,
     rawRequest: Record<string, unknown>,
+    requestHeaders: Record<string, string>,
+    responseHeaders: Record<string, string>,
     durationMs: number,
   ) {
     super(message);
@@ -222,6 +243,8 @@ export class RequestError extends Error {
     this.status = status;
     this.rawResponse = rawResponse;
     this.rawRequest = rawRequest;
+    this.requestHeaders = requestHeaders;
+    this.responseHeaders = responseHeaders;
     this.durationMs = durationMs;
   }
 }

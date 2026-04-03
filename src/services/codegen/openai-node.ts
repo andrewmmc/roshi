@@ -85,7 +85,7 @@ ${args.join('\n')}
 for await (const chunk of stream) {
   const content = chunk.choices[0]?.delta?.content;
   if (content) {
-    // ...
+    process.stdout.write(content);
   }
 }
 `;

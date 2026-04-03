@@ -69,6 +69,8 @@ describe('llm-client', () => {
         400,
         { error: 'bad' },
         { model: 'gpt-4' },
+        { 'Content-Type': 'application/json' },
+        { 'x-request-id': 'abc' },
         100,
       );
 
@@ -78,6 +80,10 @@ describe('llm-client', () => {
       expect(err.status).toBe(400);
       expect(err.rawResponse).toEqual({ error: 'bad' });
       expect(err.rawRequest).toEqual({ model: 'gpt-4' });
+      expect(err.requestHeaders).toEqual({
+        'Content-Type': 'application/json',
+      });
+      expect(err.responseHeaders).toEqual({ 'x-request-id': 'abc' });
       expect(err.durationMs).toBe(100);
     });
   });
@@ -94,6 +100,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: () => Promise.resolve(rawResponse),
         }),
       );
@@ -110,6 +117,13 @@ describe('llm-client', () => {
       expect(result.durationMs).toBe(150);
       expect(result.rawResponse).toBe(rawResponse);
       expect(result.response.content).toBe('Hello there!');
+      expect(result.requestHeaders).toEqual({
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer test',
+      });
+      expect(result.responseHeaders).toEqual({
+        'content-type': 'application/json',
+      });
     });
 
     it('calls adapter methods in order', async () => {
@@ -118,6 +132,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
+          headers: new Headers(),
           json: () => Promise.resolve({}),
         }),
       );
@@ -148,6 +163,7 @@ describe('llm-client', () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: () => Promise.resolve({}),
       });
       vi.stubGlobal('fetch', mockFetch);
@@ -170,6 +186,7 @@ describe('llm-client', () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: () => Promise.resolve({}),
       });
       vi.stubGlobal('fetch', mockFetch);
@@ -200,6 +217,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: false,
           status: 401,
+          headers: new Headers({ 'content-type': 'application/json' }),
           text: () => Promise.resolve(JSON.stringify(errorJson)),
         }),
       );
@@ -225,6 +243,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: false,
           status: 500,
+          headers: new Headers(),
           text: () => Promise.resolve('Internal Server Error'),
         }),
       );
@@ -285,6 +304,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
+          headers: new Headers(),
           body: createSSEStream([chunk1, chunk2, chunkUsage, '[DONE]']),
         }),
       );
@@ -328,6 +348,7 @@ describe('llm-client', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
+          headers: new Headers(),
           body: createSSEStream([
             JSON.stringify({
               id: '1',
@@ -355,6 +376,7 @@ describe('llm-client', () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: () => Promise.resolve({}),
       });
       vi.stubGlobal('fetch', mockFetch);
@@ -373,6 +395,7 @@ describe('llm-client', () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: () => Promise.resolve({}),
       });
       vi.stubGlobal('fetch', mockFetch);

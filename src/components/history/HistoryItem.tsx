@@ -24,8 +24,8 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
         <div className="min-w-0 flex-1">
           <div className="text-muted-foreground flex items-center gap-1 text-[11px]">
             <span className="truncate">{entry.providerName}</span>
-            <span className="opacity-40">/</span>
-            <span className="truncate">{entry.modelId}</span>
+            {entry.modelId && <span className="opacity-40">/</span>}
+            {entry.modelId && <span className="truncate">{entry.modelId}</span>}
           </div>
           <div
             className={`truncate text-[13px] leading-snug ${hasError ? 'text-destructive' : 'text-foreground/80'}`}
