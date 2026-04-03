@@ -16,13 +16,19 @@ describe('getCodeGenerators', () => {
     expect(generators).toHaveLength(2);
   });
 
-  it('returns empty array for anthropic', () => {
-    expect(getCodeGenerators(makeProvider({ type: 'anthropic' }))).toEqual([]);
+  it('returns generators for anthropic', () => {
+    const generators = getCodeGenerators(makeProvider({ type: 'anthropic' }));
+    expect(generators).toHaveLength(2);
+    expect(generators[0].language).toBe('python');
+    expect(generators[1].language).toBe('javascript');
   });
 
-  it('returns empty array for google-gemini', () => {
-    expect(getCodeGenerators(makeProvider({ type: 'google-gemini' }))).toEqual(
-      [],
+  it('returns generators for google-gemini', () => {
+    const generators = getCodeGenerators(
+      makeProvider({ type: 'google-gemini' }),
     );
+    expect(generators).toHaveLength(2);
+    expect(generators[0].language).toBe('python');
+    expect(generators[1].language).toBe('javascript');
   });
 });

@@ -76,8 +76,18 @@ export function HistoryList() {
     (entry: HistoryEntry) => {
       selectProvider(entry.providerId);
       selectModel(entry.modelId);
+      // Restore sent messages; if a response exists, also append the assistant
+      // reply and an empty user row so the composer is ready for multi-turn.
+      const restoredMessages = [...entry.request.messages];
+      if (entry.response?.content) {
+        restoredMessages.push({
+          role: 'assistant',
+          content: entry.response.content,
+        });
+        restoredMessages.push({ role: 'user', content: '' });
+      }
       loadComposerFromHistory({
-        messages: entry.request.messages,
+        messages: restoredMessages,
         systemPrompt: entry.request.systemPrompt ?? '',
         temperature: entry.request.temperature ?? 1,
         maxTokens: entry.request.maxTokens ?? 4096,

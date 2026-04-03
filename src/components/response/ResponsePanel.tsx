@@ -28,7 +28,9 @@ export function ResponsePanel() {
   const selectedProvider = useSelectedProvider();
   const isCodeTabEnabled = selectedProvider
     ? selectedProvider.type === 'openai-compatible' ||
-      selectedProvider.type === 'custom'
+      selectedProvider.type === 'custom' ||
+      selectedProvider.type === 'anthropic' ||
+      selectedProvider.type === 'google-gemini'
     : false;
 
   const hasContent = response || error || isStreaming || isLoading;
