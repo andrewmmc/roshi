@@ -62,6 +62,7 @@ export function Sidebar() {
               <Sun className="h-3.5 w-3.5" />
             )}
           </Button>
+          <ProviderManager />
           <Button
             variant="ghost"
             size="icon"
@@ -72,7 +73,6 @@ export function Sidebar() {
           >
             <FilePlus2 className="h-3.5 w-3.5" />
           </Button>
-          <ProviderManager />
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
