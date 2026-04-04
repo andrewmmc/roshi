@@ -45,6 +45,8 @@ interface ResponseActions {
     rawRequest: Record<string, unknown> | null;
     rawResponse: Record<string, unknown> | null;
     requestUrl: string | null;
+    requestHeaders: Record<string, string> | null;
+    responseHeaders: Record<string, string> | null;
     error: string | null;
     durationMs: number | null;
     statusCode: number | null;
@@ -101,6 +103,8 @@ export const useResponseStore = create<ResponseStore>((set) => ({
       rawRequest: data.rawRequest,
       rawResponse: data.rawResponse,
       requestUrl: data.requestUrl,
+      requestHeaders: data.requestHeaders ?? null,
+      responseHeaders: data.responseHeaders ?? null,
       error: data.error,
       errorDetail: null,
       durationMs: data.durationMs,

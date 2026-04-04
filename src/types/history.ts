@@ -15,6 +15,8 @@ export interface HistoryEntry {
   customHeaders?: HistoryHeaderEntry[];
   rawRequest: Record<string, unknown>;
   requestUrl: string | null;
+  requestHeaders: Record<string, string> | null;
+  responseHeaders: Record<string, string> | null;
   response: NormalizedResponse | null;
   rawResponse: Record<string, unknown> | null;
   error: string | null;

@@ -115,6 +115,8 @@ export function HistoryList() {
         rawRequest: entry.rawRequest,
         rawResponse: entry.rawResponse,
         requestUrl: entry.requestUrl ?? null,
+        requestHeaders: entry.requestHeaders ?? null,
+        responseHeaders: entry.responseHeaders ?? null,
         error: entry.error,
         durationMs: entry.durationMs,
         statusCode: entry.statusCode,
