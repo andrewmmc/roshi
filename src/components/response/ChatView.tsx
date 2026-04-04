@@ -40,7 +40,7 @@ export function ChatView() {
             >
               sys
             </div>
-            <div className="bg-muted/40 text-muted-foreground flex-1 rounded-md px-3 py-2 text-[13px] italic">
+            <div className="bg-muted/40 text-muted-foreground flex-1 rounded-md px-3 py-2 text-[13px] italic select-text">
               {systemPrompt}
             </div>
           </div>
@@ -63,7 +63,7 @@ export function ChatView() {
                 {getRoleLabel(msg.role)}
               </div>
               <div
-                className={`relative flex-1 rounded-md px-3 py-2 text-[13px] ${
+                className={`relative flex-1 rounded-md px-3 py-2 text-[13px] select-text ${
                   msg.role === 'user'
                     ? 'bg-muted/25'
                     : msg.role === 'assistant'
@@ -111,7 +111,7 @@ export function ChatView() {
             >
               {getRoleLabel('assistant')}
             </div>
-            <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs relative max-w-none flex-1 rounded-md px-3 py-2 text-[13px]">
+            <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs relative max-w-none flex-1 rounded-md px-3 py-2 text-[13px] select-text">
               {!isStreaming && (
                 <CopyButton
                   text={displayContent}

@@ -53,7 +53,7 @@ export function RequestComposer() {
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               placeholder="System prompt (optional)"
-              className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[13px]"
+              className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[12px] md:text-[12px]"
               rows={3}
             />
           </div>

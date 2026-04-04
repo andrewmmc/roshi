@@ -56,13 +56,13 @@ export function HeaderEditor() {
                 value={key}
                 readOnly
                 disabled
-                className="h-7 flex-1 font-mono text-xs"
+                className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
               />
               <Input
                 value={maskHeaderValue(key, value, provider?.apiKey)}
                 readOnly
                 disabled
-                className="h-7 flex-1 font-mono text-xs"
+                className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
               />
               <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
                 <Lock className="h-3 w-3" />
@@ -80,13 +80,13 @@ export function HeaderEditor() {
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
-            className="h-7 flex-1 font-mono text-xs"
+            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
-            className="h-7 flex-1 font-mono text-xs"
+            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <Button
             variant="ghost"

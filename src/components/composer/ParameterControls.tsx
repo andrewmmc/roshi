@@ -51,7 +51,7 @@ function NumberInputRow({
         min={min}
         max={max}
         disabled={disabled}
-        className="h-7 w-24 font-mono text-xs"
+        className="h-7 w-24 font-mono text-[12px] md:text-[12px]"
       />
     </div>
   );
@@ -154,7 +154,7 @@ export function ParameterControls() {
           type="number"
           value={maxTokens}
           onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
-          className="h-7 w-24 font-mono text-xs"
+          className="h-7 w-24 font-mono text-[12px] md:text-[12px]"
           min={1}
           max={1000000}
         />
@@ -204,7 +204,7 @@ export function ParameterControls() {
                 Math.max(1024, parseInt(e.target.value, 10) || 1024),
               )
             }
-            className="h-7 w-24 font-mono text-xs"
+            className="h-7 w-24 font-mono text-[12px] md:text-[12px]"
             min={1024}
             max={1000000}
             step={1024}

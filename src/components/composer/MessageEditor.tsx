@@ -187,7 +187,7 @@ export function MessageEditor() {
                 value={msg.content}
                 onChange={(e) => handleContentChange(index, e.target.value)}
                 placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
-                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-[13px]"
+                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-[12px] md:text-[12px]"
                 rows={2}
               />
               <AttachmentChips messageIndex={index} />
