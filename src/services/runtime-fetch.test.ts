@@ -26,7 +26,7 @@ describe('runtimeFetch', () => {
   });
 
   it('uses browser fetch during dev', async () => {
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true);
     isTauriMock.mockReturnValue(true);
 
     await runtimeFetch('https://example.com');
@@ -37,7 +37,7 @@ describe('runtimeFetch', () => {
   });
 
   it('uses the Tauri HTTP client in production Tauri builds', async () => {
-    vi.stubEnv('DEV', '');
+    vi.stubEnv('DEV', false);
     isTauriMock.mockReturnValue(true);
     tauriFetchMock.mockResolvedValue({ ok: true });
 

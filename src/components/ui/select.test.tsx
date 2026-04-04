@@ -15,9 +15,15 @@ import {
 vi.mock('@base-ui/react/select', () => {
   const make =
     (tag: string) =>
-    ({ children, render, ...props }: Record<string, unknown>) => {
-      const Tag = tag as keyof JSX.IntrinsicElements;
-      return <Tag {...props}>{render ?? children}</Tag>;
+    ({
+      children,
+      render,
+      ...props
+    }: Record<string, unknown> & {
+      children?: React.ReactNode;
+      render?: React.ReactNode;
+    }) => {
+      return React.createElement(tag, props, render ?? children);
     };
 
   return {
@@ -50,7 +56,7 @@ describe('select wrappers', () => {
         <SelectGroup className="group-class" />
         <SelectValue>Value</SelectValue>
         <SelectTrigger size="sm">Trigger</SelectTrigger>
-        <SelectLabel inset>Label</SelectLabel>
+        <SelectLabel>Label</SelectLabel>
         <SelectItem value="one">One</SelectItem>
         <SelectSeparator className="sep" />
       </>,

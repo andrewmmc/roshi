@@ -11,8 +11,7 @@ describe('AttachmentChip', () => {
           id: 'att_1',
           filename: 'notes.txt',
           mimeType: 'text/plain',
-          size: 128,
-          dataUrl: 'data:text/plain;base64,SGVsbG8=',
+          data: 'data:text/plain;base64,SGVsbG8=',
         }}
         onRemove={onRemove}
       />,
@@ -31,8 +30,7 @@ describe('AttachmentChip', () => {
           id: 'att_2',
           filename: 'photo.png',
           mimeType: 'image/png',
-          size: 256,
-          dataUrl: 'data:image/png;base64,AAAA',
+          data: 'data:image/png;base64,AAAA',
         }}
       />,
     );

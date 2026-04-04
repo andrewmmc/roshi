@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ErrorBoundary } from './ErrorBoundary';
 
-function ThrowOnRender() {
+function ThrowOnRender(): null {
   throw new Error('boom');
 }
 

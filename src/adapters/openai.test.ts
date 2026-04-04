@@ -8,9 +8,11 @@ import {
 
 describe('openaiAdapter', () => {
   describe('buildRequestBody', () => {
+    const provider = makeProvider();
+
     it('builds basic request body', () => {
       const request = makeRequest({ model: 'gpt-4', stream: false });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
 
       expect(body.model).toBe('gpt-4');
       expect(body.stream).toBe(false);
@@ -20,7 +22,7 @@ describe('openaiAdapter', () => {
 
     it('prepends system prompt as first message', () => {
       const request = makeRequest({ systemPrompt: 'You are helpful.' });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: string;
@@ -35,7 +37,7 @@ describe('openaiAdapter', () => {
 
     it('omits system prompt when empty', () => {
       const request = makeRequest({ systemPrompt: '' });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: string;
@@ -47,7 +49,7 @@ describe('openaiAdapter', () => {
 
     it('omits system prompt when undefined', () => {
       const request = makeRequest({ systemPrompt: undefined });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: string;
@@ -59,6 +61,7 @@ describe('openaiAdapter', () => {
     it('includes temperature when defined', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ temperature: 0.5 }),
+        provider,
       );
       expect(body.temperature).toBe(0.5);
     });
@@ -66,6 +69,7 @@ describe('openaiAdapter', () => {
     it('omits temperature when undefined', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ temperature: undefined }),
+        provider,
       );
       expect(body.temperature).toBeUndefined();
     });
@@ -73,6 +77,7 @@ describe('openaiAdapter', () => {
     it('includes max_tokens when defined', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ maxTokens: 1024 }),
+        provider,
       );
       expect(body.max_tokens).toBe(1024);
     });
@@ -80,6 +85,7 @@ describe('openaiAdapter', () => {
     it('omits max_tokens when undefined', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ maxTokens: undefined }),
+        provider,
       );
       expect(body.max_tokens).toBeUndefined();
     });
@@ -87,6 +93,7 @@ describe('openaiAdapter', () => {
     it('includes stream_options when streaming', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ stream: true }),
+        provider,
       );
       expect(body.stream).toBe(true);
       expect(body.stream_options).toEqual({ include_usage: true });
@@ -108,7 +115,7 @@ describe('openaiAdapter', () => {
           }),
         ],
       });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -142,7 +149,7 @@ describe('openaiAdapter', () => {
           }),
         ],
       });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -173,7 +180,7 @@ describe('openaiAdapter', () => {
           }),
         ],
       });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -210,7 +217,7 @@ describe('openaiAdapter', () => {
           }),
         ],
       });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown[];
@@ -245,7 +252,7 @@ describe('openaiAdapter', () => {
           }),
         ],
       });
-      const body = openaiAdapter.buildRequestBody(request);
+      const body = openaiAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown[];

@@ -53,7 +53,7 @@ describe('llm-client', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    vi.stubEnv('DEV', '');
+    vi.stubEnv('DEV', false);
     mockAdapter = createMockAdapter();
     vi.mocked(getAdapter).mockReturnValue(mockAdapter);
   });
@@ -372,7 +372,7 @@ describe('llm-client', () => {
 
   describe('getRequestUrl — dev proxy', () => {
     it('proxies URL when DEV is true', async () => {
-      vi.stubEnv('DEV', 'true');
+      vi.stubEnv('DEV', true);
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -391,7 +391,7 @@ describe('llm-client', () => {
     });
 
     it('does not proxy when DEV is falsy', async () => {
-      vi.stubEnv('DEV', '');
+      vi.stubEnv('DEV', false);
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,

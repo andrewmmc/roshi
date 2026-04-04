@@ -21,9 +21,11 @@ import {
 vi.mock('@base-ui/react/menu', () => {
   const make =
     (tag: string) =>
-    ({ children, ...props }: Record<string, unknown>) => {
-      const Tag = tag as keyof JSX.IntrinsicElements;
-      return <Tag {...props}>{children}</Tag>;
+    ({
+      children,
+      ...props
+    }: Record<string, unknown> & { children?: React.ReactNode }) => {
+      return React.createElement(tag, props, children);
     };
 
   return {
@@ -64,7 +66,7 @@ describe('dropdown-menu wrappers', () => {
         <DropdownMenuSubContent>Subcontent</DropdownMenuSubContent>
         <DropdownMenuCheckboxItem checked>Checked</DropdownMenuCheckboxItem>
         <DropdownMenuRadioGroup>RadioGroup</DropdownMenuRadioGroup>
-        <DropdownMenuRadioItem>RadioItem</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="one">RadioItem</DropdownMenuRadioItem>
         <DropdownMenuSeparator />
         <DropdownMenuShortcut>Cmd+K</DropdownMenuShortcut>
       </>,

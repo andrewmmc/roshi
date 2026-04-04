@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Badge } from './badge';
 
@@ -11,12 +12,9 @@ vi.mock('@base-ui/react/use-render', () => ({
     defaultTagName,
     props,
   }: {
-    defaultTagName: keyof JSX.IntrinsicElements;
+    defaultTagName: keyof React.JSX.IntrinsicElements;
     props: Record<string, unknown>;
-  }) => {
-    const Tag = defaultTagName;
-    return <Tag {...props} />;
-  },
+  }) => React.createElement(defaultTagName, props),
 }));
 
 describe('Badge', () => {

@@ -8,13 +8,15 @@ import {
 
 describe('anthropicAdapter', () => {
   describe('buildRequestBody', () => {
+    const provider = makeProvider({ type: 'anthropic' });
+
     it('builds basic request body with required max_tokens', () => {
       const request = makeRequest({
         model: 'claude-sonnet-4-20250514',
         stream: false,
         maxTokens: 1024,
       });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
 
       expect(body.model).toBe('claude-sonnet-4-20250514');
       expect(body.stream).toBe(false);
@@ -24,13 +26,13 @@ describe('anthropicAdapter', () => {
 
     it('defaults max_tokens to 4096 when not provided', () => {
       const request = makeRequest({ maxTokens: undefined });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       expect(body.max_tokens).toBe(4096);
     });
 
     it('sets system prompt as top-level field', () => {
       const request = makeRequest({ systemPrompt: 'You are helpful.' });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
 
       expect(body.system).toBe('You are helpful.');
       const messages = body.messages as Array<{
@@ -43,19 +45,20 @@ describe('anthropicAdapter', () => {
 
     it('omits system field when systemPrompt is empty', () => {
       const request = makeRequest({ systemPrompt: '' });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       expect(body.system).toBeUndefined();
     });
 
     it('omits system field when systemPrompt is undefined', () => {
       const request = makeRequest({ systemPrompt: undefined });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       expect(body.system).toBeUndefined();
     });
 
     it('includes temperature when defined', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ temperature: 0.5 }),
+        provider,
       );
       expect(body.temperature).toBe(0.5);
     });
@@ -63,6 +66,7 @@ describe('anthropicAdapter', () => {
     it('omits temperature when undefined', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ temperature: undefined }),
+        provider,
       );
       expect(body.temperature).toBeUndefined();
     });
@@ -70,6 +74,7 @@ describe('anthropicAdapter', () => {
     it('includes top_p when defined', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ topP: 0.9 }),
+        provider,
       );
       expect(body.top_p).toBe(0.9);
     });
@@ -77,24 +82,32 @@ describe('anthropicAdapter', () => {
     it('does not include frequency_penalty or presence_penalty', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ frequencyPenalty: 0.5, presencePenalty: 0.5 }),
+        provider,
       );
       expect(body.frequency_penalty).toBeUndefined();
       expect(body.presence_penalty).toBeUndefined();
     });
 
     it('includes top_k when defined and greater than 0', () => {
-      const body = anthropicAdapter.buildRequestBody(makeRequest({ topK: 5 }));
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({ topK: 5 }),
+        provider,
+      );
       expect(body.top_k).toBe(5);
     });
 
     it('omits top_k when 0', () => {
-      const body = anthropicAdapter.buildRequestBody(makeRequest({ topK: 0 }));
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({ topK: 0 }),
+        provider,
+      );
       expect(body.top_k).toBeUndefined();
     });
 
     it('omits top_k when undefined', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ topK: undefined }),
+        provider,
       );
       expect(body.top_k).toBeUndefined();
     });
@@ -104,6 +117,7 @@ describe('anthropicAdapter', () => {
         makeRequest({
           thinking: { enabled: true, budgetTokens: 10240 },
         }),
+        provider,
       );
       expect(body.thinking).toEqual({
         type: 'enabled',
@@ -116,6 +130,7 @@ describe('anthropicAdapter', () => {
         makeRequest({
           thinking: { enabled: false, budgetTokens: 10240 },
         }),
+        provider,
       );
       expect(body.thinking).toBeUndefined();
     });
@@ -123,6 +138,7 @@ describe('anthropicAdapter', () => {
     it('omits thinking when undefined', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({ thinking: undefined }),
+        provider,
       );
       expect(body.thinking).toBeUndefined();
     });
@@ -143,7 +159,7 @@ describe('anthropicAdapter', () => {
           }),
         ],
       });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -178,7 +194,7 @@ describe('anthropicAdapter', () => {
           }),
         ],
       });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -209,7 +225,7 @@ describe('anthropicAdapter', () => {
           }),
         ],
       });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown;
@@ -244,7 +260,7 @@ describe('anthropicAdapter', () => {
           }),
         ],
       });
-      const body = anthropicAdapter.buildRequestBody(request);
+      const body = anthropicAdapter.buildRequestBody(request, provider);
       const messages = body.messages as Array<{
         role: string;
         content: unknown[];

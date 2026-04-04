@@ -139,6 +139,9 @@ export function makeHistoryEntry(
       model: 'gpt-4',
       messages: [{ role: 'user', content: 'Hello' }],
     },
+    requestUrl: null,
+    requestHeaders: null,
+    responseHeaders: null,
     response: {
       id: 'chatcmpl-123',
       model: 'gpt-4',
@@ -166,6 +169,9 @@ export function makeCodeGenParams(
     systemPrompt: '',
     temperature: 1,
     maxTokens: 4096,
+    topP: 1,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
     stream: false,
     ...overrides,
   };
