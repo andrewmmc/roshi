@@ -1,0 +1,16 @@
+---
+description: Always run typecheck, tests, and lint to validate non-trivial changes
+alwaysApply: true
+---
+
+# Validate Non-Trivial Changes
+
+After making non-trivial code changes, always run the following commands to validate:
+
+```bash
+npm run typecheck   # tsc -b
+npm run test        # Vitest single run
+npm run lint        # ESLint
+```
+
+All three must pass before considering the task complete.
