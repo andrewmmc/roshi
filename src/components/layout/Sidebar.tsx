@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { FilePlus2, Sun, Moon } from 'lucide-react';
 import { emit } from '@tauri-apps/api/event';
 import { IconButton } from '@/components/ui/icon-button';
+import { KbdShortcut } from '@/components/ui/tooltip';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { ProviderManager } from '@/components/providers/ProviderManager';
 import { HistoryList } from '@/components/history/HistoryList';
@@ -11,7 +12,6 @@ import {
 } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useThemeStore } from '@/stores/theme-store';
-import { IS_MAC } from '@/lib/platform';
 
 export function Sidebar() {
   const resetComposer = useComposerStore((s) => s.resetComposer);
@@ -58,7 +58,7 @@ export function Sidebar() {
                 {theme === 'light'
                   ? 'Switch to dark mode'
                   : 'Switch to light mode'}
-                <kbd className="opacity-60">{IS_MAC ? '⌥T' : 'Alt+T'}</kbd>
+                <KbdShortcut mac="⌥T" win="Alt+T" />
               </span>
             }
           >
@@ -78,9 +78,7 @@ export function Sidebar() {
             tooltip={
               <span className="flex items-center gap-1.5">
                 New request
-                <kbd className="opacity-60">
-                  {IS_MAC ? '⌘⇧N' : 'Ctrl+Shift+N'}
-                </kbd>
+                <KbdShortcut mac="⌘⇧N" win="Ctrl+Shift+N" />
               </span>
             }
           >

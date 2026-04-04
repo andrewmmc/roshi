@@ -3,6 +3,7 @@ import { Settings, Pencil, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
+  KbdShortcut,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -20,7 +21,6 @@ import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
-import { IS_MAC } from '@/lib/platform';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit';
@@ -107,9 +107,7 @@ export function ProviderManager() {
           <TooltipContent>
             <span className="flex items-center gap-1.5">
               Provider settings
-              <kbd className="opacity-60">
-                {IS_MAC ? '⌘⇧,' : 'Ctrl+Shift+,'}
-              </kbd>
+              <KbdShortcut mac="⌘⇧," win="Ctrl+Shift+," />
             </span>
           </TooltipContent>
         </Tooltip>
