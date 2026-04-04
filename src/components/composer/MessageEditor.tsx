@@ -26,6 +26,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { useComposerStore } from '@/stores/composer-store';
 import { guessMimeType, SUPPORTED_FILE_ACCEPT } from '@/utils/mime';
@@ -246,13 +252,21 @@ export function MessageEditor() {
                 }}
               />
               <DropdownMenu>
-                <DropdownMenuTrigger
-                  aria-label="Message options"
-                  title="Message options"
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors"
-                >
-                  <Ellipsis className="h-4 w-4" />
-                </DropdownMenuTrigger>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <DropdownMenuTrigger
+                          aria-label="Message options"
+                          className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+                        />
+                      }
+                    >
+                      <Ellipsis className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent>Message options</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <DropdownMenuContent
                   align="end"
                   side="bottom"

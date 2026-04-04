@@ -9,6 +9,7 @@ import {
   DEFAULT_THINKING_BUDGET_TOKENS,
 } from '@/constants/defaults';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -156,16 +157,15 @@ export function HistoryList() {
           History
         </span>
         {entries.length > 0 && (
-          <Button
+          <IconButton
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-7 w-7"
             onClick={() => setShowConfirm(true)}
-            aria-label="Clear all history"
-            title="Clear all history"
+            tooltip="Clear all history"
           >
             <Trash2 className="h-3 w-3" />
-          </Button>
+          </IconButton>
         )}
       </div>
       {entries.length > 0 && (

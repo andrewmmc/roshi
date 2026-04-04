@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { FilePlus2, Sun, Moon } from 'lucide-react';
 import { emit } from '@tauri-apps/api/event';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { ProviderManager } from '@/components/providers/ProviderManager';
 import { HistoryList } from '@/components/history/HistoryList';
@@ -44,15 +44,12 @@ export function Sidebar() {
           Roshi
         </button>
         <div className="flex items-center gap-0.5">
-          <Button
+          <IconButton
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={toggleTheme}
-            title={
-              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
-            }
-            aria-label={
+            tooltip={
               theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
             }
           >
@@ -61,18 +58,17 @@ export function Sidebar() {
             ) : (
               <Sun className="h-3.5 w-3.5" />
             )}
-          </Button>
+          </IconButton>
           <ProviderManager />
-          <Button
+          <IconButton
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={handleNewRequest}
-            title="New request"
-            aria-label="New request"
+            tooltip="New request"
           >
             <FilePlus2 className="h-3.5 w-3.5" />
-          </Button>
+          </IconButton>
         </div>
       </div>
       <nav aria-label="Main navigation" className="flex-1 overflow-hidden">

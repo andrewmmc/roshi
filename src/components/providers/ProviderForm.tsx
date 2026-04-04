@@ -1,5 +1,6 @@
 import { useState, type Ref } from 'react';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
@@ -267,17 +268,16 @@ export function ProviderForm({
                 className="flex-1 text-sm"
               />
               {formModels.length > 1 && (
-                <Button
+                <IconButton
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0"
                   onClick={() => removeModel(i)}
-                  aria-label="Remove model"
-                  title="Remove model"
+                  tooltip="Remove model"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                </IconButton>
               )}
             </div>
           ))}

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { nanoid } from 'nanoid';
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedProvider } from '@/stores/provider-store';
@@ -88,17 +89,16 @@ export function HeaderEditor() {
             placeholder="Header value"
             className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
-          <Button
+          <IconButton
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
-            aria-label="Remove header"
-            title="Remove header"
+            tooltip="Remove header"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          </IconButton>
         </div>
       ))}
       <Button

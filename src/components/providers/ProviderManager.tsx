@@ -1,6 +1,13 @@
 import { useState, useRef } from 'react';
 import { Settings, Pencil, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -76,19 +83,27 @@ export function ProviderManager() {
         if (!val) setView('list');
       }}
     >
-      <DialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
-            aria-label="Provider settings"
-            title="Provider settings"
-          />
-        }
-      >
-        <Settings className="h-3.5 w-3.5" />
-      </DialogTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground h-7 w-7"
+                    aria-label="Provider settings"
+                  />
+                }
+              />
+            }
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </TooltipTrigger>
+          <TooltipContent>Provider settings</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent
         className="!flex max-h-[82vh] min-h-0 !max-w-xl flex-col gap-0 overflow-hidden p-0"
         showCloseButton={false}
@@ -106,7 +121,7 @@ export function ProviderManager() {
             {view === 'edit' &&
               'Update keys, headers, endpoints, and model entries without leaving the composer.'}
           </p>
-          <Button
+          <IconButton
             variant="ghost"
             size="icon-sm"
             className="absolute top-3 right-3"
@@ -117,11 +132,10 @@ export function ProviderManager() {
                 handleBackToList();
               }
             }}
-            aria-label={view === 'list' ? 'Close' : 'Back to provider list'}
-            title={view === 'list' ? 'Close' : 'Back to provider list'}
+            tooltip={view === 'list' ? 'Close' : 'Back to provider list'}
           >
             <X className="h-4 w-4" />
-          </Button>
+          </IconButton>
         </DialogHeader>
 
         {/* Scrollable content */}

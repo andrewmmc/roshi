@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 
 function PasswordInput({
@@ -18,13 +18,12 @@ function PasswordInput({
         className={cn('pr-8', className)}
         {...props}
       />
-      <Button
+      <IconButton
         type="button"
         variant="ghost"
         size="icon-sm"
         className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
-        aria-label={visible ? 'Hide password' : 'Show password'}
-        title={visible ? 'Hide password' : 'Show password'}
+        tooltip={visible ? 'Hide password' : 'Show password'}
         onClick={() => setVisible((v) => !v)}
         tabIndex={-1}
       >
@@ -33,7 +32,7 @@ function PasswordInput({
         ) : (
           <Eye className="h-3.5 w-3.5" />
         )}
-      </Button>
+      </IconButton>
     </div>
   );
 }

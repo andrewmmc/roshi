@@ -1,5 +1,5 @@
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import type { HistoryEntry } from '@/types/history';
 
 interface HistoryItemProps {
@@ -38,19 +38,18 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
           </div>
         </div>
       </button>
-      <Button
+      <IconButton
         variant="ghost"
         size="icon"
         className="text-muted-foreground hover:text-destructive absolute top-1/2 right-0.5 h-7 w-7 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
-        aria-label="Delete history entry"
-        title="Delete history entry"
+        tooltip="Delete history entry"
         onClick={(e) => {
           e.stopPropagation();
           onDelete(entry.id);
         }}
       >
         <Trash2 className="h-2.5 w-2.5" />
-      </Button>
+      </IconButton>
     </div>
   );
 }

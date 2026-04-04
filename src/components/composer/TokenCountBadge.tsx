@@ -13,7 +13,7 @@ export function TokenCountBadge() {
   if (tokenCount === null || tokenCount === 0) return null;
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delay={0}>
       <Tooltip>
         <TooltipTrigger className="text-muted-foreground hover:text-foreground cursor-default font-mono text-xs tabular-nums transition-colors">
           ~{formatCount(tokenCount)} tokens

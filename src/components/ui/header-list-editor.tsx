@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -60,16 +61,15 @@ export function HeaderListEditor({
             placeholder={placeholderValue}
             className="h-8 flex-1 font-mono text-xs"
           />
-          <Button
-            aria-label="Remove header"
-            title="Remove header"
+          <IconButton
+            tooltip="Remove header"
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0"
             onClick={() => removeHeader(index)}
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          </IconButton>
         </div>
       ))}
       <Button

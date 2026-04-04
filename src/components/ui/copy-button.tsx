@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Copy, Check } from 'lucide-react';
 
 export function CopyButton({
@@ -31,20 +31,19 @@ export function CopyButton({
   }, [text]);
 
   return (
-    <Button
+    <IconButton
       variant="ghost"
       size="icon"
       className={`text-muted-foreground hover:text-foreground h-7 w-7 ${className ?? ''}`}
       onClick={handleCopy}
       disabled={!text}
-      aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-      title={copied ? 'Copied' : 'Copy to clipboard'}
+      tooltip={copied ? 'Copied' : 'Copy to clipboard'}
     >
       {copied ? (
         <Check className="h-3 w-3 text-green-600" />
       ) : (
         <Copy className="h-3 w-3" />
       )}
-    </Button>
+    </IconButton>
   );
 }
