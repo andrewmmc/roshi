@@ -11,11 +11,13 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.ts'],
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       include: [
         'src/adapters/**/*.ts',
+        'src/components/**/*.tsx',
+        'src/components/**/*.ts',
         'src/services/**/*.ts',
         'src/stores/**/*.ts',
         'src/hooks/**/*.ts',
@@ -23,6 +25,7 @@ export default defineConfig({
       ],
       exclude: [
         'src/**/*.test.ts',
+        'src/**/*.test.tsx',
         'src/__tests__/**',
         'src/adapters/types.ts',
         'src/services/codegen/types.ts',
