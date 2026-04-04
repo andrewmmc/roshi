@@ -75,9 +75,9 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <nav aria-label="Main navigation" className="flex-1 overflow-hidden">
         <HistoryList />
-      </div>
+      </nav>
 
       <ConfirmDiscardDialog
         open={showDiscard}

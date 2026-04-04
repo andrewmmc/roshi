@@ -132,7 +132,10 @@ export function ChatView() {
             >
               err
             </div>
-            <div className="bg-destructive/5 border-destructive/15 text-destructive flex-1 rounded-md border px-3 py-2 text-[13px]">
+            <div
+              role="alert"
+              className="bg-destructive/5 border-destructive/15 text-destructive flex-1 rounded-md border px-3 py-2 text-[13px]"
+            >
               <div className="font-medium">{error}</div>
               {errorDetail && (
                 <div className="text-destructive/90 mt-1 font-mono text-[12px] break-words whitespace-pre-wrap">

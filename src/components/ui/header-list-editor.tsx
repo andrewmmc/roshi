@@ -47,18 +47,21 @@ export function HeaderListEditor({
       {headers.map((header, index) => (
         <div key={header.id} className="flex items-center gap-2">
           <Input
+            aria-label="Header name"
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder={placeholderKey}
             className="h-8 flex-1 font-mono text-xs"
           />
           <Input
+            aria-label="Header value"
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder={placeholderValue}
             className="h-8 flex-1 font-mono text-xs"
           />
           <Button
+            aria-label="Remove header"
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0"

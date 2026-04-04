@@ -35,6 +35,16 @@ export function ResponsePanel() {
 
   const hasContent = response || error || isStreaming || isLoading;
 
+  const statusText = isLoading
+    ? isStreaming
+      ? 'Streaming response...'
+      : 'Sending request...'
+    : error
+      ? `Error: ${error}`
+      : response
+        ? 'Response complete'
+        : '';
+
   return (
     <Tabs defaultValue="chat" className="flex h-full flex-col">
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between border-b px-4">
@@ -82,6 +92,10 @@ export function ResponsePanel() {
             <span className="font-mono">{durationMs}ms</span>
           )}
         </div>
+      </div>
+
+      <div className="sr-only" aria-live="polite" role="status">
+        {statusText}
       </div>
 
       <TabsContent value="chat" className="mt-0 min-h-0 flex-1 overflow-hidden">

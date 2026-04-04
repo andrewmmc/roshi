@@ -33,14 +33,17 @@ function NumberInputRow({
   decimals?: number;
   disabled?: boolean;
 }) {
+  const inputId = `param-${label.toLowerCase().replace(/\s+/g, '-')}`;
   return (
     <div className="flex items-center gap-3">
       <Label
+        htmlFor={inputId}
         className={`w-32 shrink-0 text-xs ${disabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}
       >
         {label}
       </Label>
       <Input
+        id={inputId}
         type="number"
         value={value.toFixed(decimals)}
         onChange={(e) => {
@@ -147,10 +150,14 @@ export function ParameterControls() {
       />
 
       <div className="flex items-center gap-3">
-        <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+        <Label
+          htmlFor="param-max-tokens"
+          className="text-muted-foreground w-32 shrink-0 text-xs"
+        >
           Max Tokens
         </Label>
         <Input
+          id="param-max-tokens"
           type="number"
           value={maxTokens}
           onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
@@ -161,11 +168,15 @@ export function ParameterControls() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+        <Label
+          htmlFor="param-stream"
+          className="text-muted-foreground w-32 shrink-0 text-xs"
+        >
           Stream
         </Label>
         <label className="flex cursor-pointer items-center gap-2">
           <input
+            id="param-stream"
             type="checkbox"
             checked={stream}
             onChange={(e) => setStream(e.target.checked)}
@@ -176,12 +187,14 @@ export function ParameterControls() {
 
       <div className="flex items-center gap-3">
         <Label
+          htmlFor="param-thinking"
           className={`w-32 shrink-0 text-xs ${!supportsThinking ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}
         >
           Thinking
         </Label>
         <label className="flex cursor-pointer items-center gap-2">
           <input
+            id="param-thinking"
             type="checkbox"
             checked={thinkingEnabled}
             onChange={(e) => setThinkingEnabled(e.target.checked)}
@@ -193,10 +206,14 @@ export function ParameterControls() {
 
       {supportsThinking && thinkingEnabled && (
         <div className="flex items-center gap-3">
-          <Label className="text-muted-foreground w-32 shrink-0 text-xs">
+          <Label
+            htmlFor="param-budget-tokens"
+            className="text-muted-foreground w-32 shrink-0 text-xs"
+          >
             Budget Tokens
           </Label>
           <Input
+            id="param-budget-tokens"
             type="number"
             value={thinkingBudgetTokens}
             onChange={(e) =>

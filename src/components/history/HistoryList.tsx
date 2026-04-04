@@ -170,9 +170,13 @@ export function HistoryList() {
       {entries.length > 0 && (
         <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
           <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2" />
+            <Search
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
+              aria-hidden="true"
+            />
             <Input
               placeholder="Search history..."
+              aria-label="Search history"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"

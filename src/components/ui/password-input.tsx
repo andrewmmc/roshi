@@ -23,6 +23,7 @@ function PasswordInput({
         variant="ghost"
         size="icon-sm"
         className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
+        aria-label={visible ? 'Hide password' : 'Show password'}
         onClick={() => setVisible((v) => !v)}
         tabIndex={-1}
       >

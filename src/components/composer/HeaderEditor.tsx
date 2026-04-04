@@ -65,7 +65,7 @@ export function HeaderEditor() {
                 className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
               />
               <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
-                <Lock className="h-3 w-3" />
+                <Lock className="h-3 w-3" aria-hidden="true" />
               </div>
             </div>
           ))}

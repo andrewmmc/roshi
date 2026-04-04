@@ -246,7 +246,10 @@ export function MessageEditor() {
                 }}
               />
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors">
+                <DropdownMenuTrigger
+                  aria-label="Message options"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+                >
                   <Ellipsis className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

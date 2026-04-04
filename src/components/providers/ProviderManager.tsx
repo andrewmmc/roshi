@@ -82,6 +82,8 @@ export function ProviderManager() {
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground h-7 w-7"
+            aria-label="Provider settings"
+            title="Provider settings"
           />
         }
       >
@@ -143,7 +145,10 @@ export function ProviderManager() {
                       {getProviderDetails(p)}
                     </div>
                   </div>
-                  <Pencil className="text-muted-foreground h-3.5 w-3.5" />
+                  <Pencil
+                    className="text-muted-foreground h-3.5 w-3.5"
+                    aria-hidden="true"
+                  />
                 </button>
               ))}
             </div>
