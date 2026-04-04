@@ -1,13 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
+import { KbdShortcut } from '@/components/ui/tooltip';
 import { Copy, Check } from 'lucide-react';
 
 export function CopyButton({
   text,
   className,
+  shortcut,
 }: {
   text: string;
   className?: string;
+  shortcut?: { mac: string; win: string };
 }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -30,6 +33,20 @@ export function CopyButton({
     timerRef.current = setTimeout(() => setCopied(false), 2000);
   }, [text]);
 
+  const tooltipContent =
+    copied || !shortcut ? (
+      copied ? (
+        'Copied'
+      ) : (
+        'Copy to clipboard'
+      )
+    ) : (
+      <span className="flex items-center gap-1.5">
+        Copy to clipboard
+        <KbdShortcut mac={shortcut.mac} win={shortcut.win} />
+      </span>
+    );
+
   return (
     <IconButton
       variant="ghost"
@@ -37,7 +54,7 @@ export function CopyButton({
       className={`text-muted-foreground hover:text-foreground h-7 w-7 ${className ?? ''}`}
       onClick={handleCopy}
       disabled={!text}
-      tooltip={copied ? 'Copied' : 'Copy to clipboard'}
+      tooltip={tooltipContent}
     >
       {copied ? (
         <Check className="h-3 w-3 text-green-600" />

@@ -11,6 +11,7 @@ import { Send, Square } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { useProviderStore } from '@/stores/provider-store';
+import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
 
@@ -44,9 +45,16 @@ export function MainPanel() {
             >
               <Send className="mr-1.5 h-3 w-3" />
               Send
-              <kbd className="ml-1.5 hidden text-[10px] opacity-50 sm:inline">
-                ⌘↵
-              </kbd>
+              <span className="ml-1.5 hidden items-center gap-0.5 opacity-60 sm:inline-flex">
+                {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
+                  <kbd
+                    key={i}
+                    className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide"
+                  >
+                    {k}
+                  </kbd>
+                ))}
+              </span>
             </Button>
           )}
         </div>

@@ -116,6 +116,7 @@ export function ChatView() {
                 <CopyButton
                   text={displayContent}
                   className="absolute top-1 right-1 z-10"
+                  shortcut={{ mac: '⌥C', win: 'Alt+C' }}
                 />
               )}
               <Markdown>{displayContent}</Markdown>
