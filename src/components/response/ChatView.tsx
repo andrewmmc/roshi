@@ -65,9 +65,9 @@ export function ChatView() {
               <div
                 className={`relative flex-1 rounded-md px-3 py-2 text-[13px] ${
                   msg.role === 'user'
-                    ? 'bg-foreground/[0.04]'
+                    ? 'bg-muted/25'
                     : msg.role === 'assistant'
-                      ? 'bg-muted/40'
+                      ? 'bg-muted/30'
                       : 'bg-muted/30 text-muted-foreground italic'
                 }`}
               >

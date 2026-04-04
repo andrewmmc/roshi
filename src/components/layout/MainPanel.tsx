@@ -36,7 +36,7 @@ export function MainPanel() {
       className="bg-background flex h-full flex-col"
       onKeyDown={handleKeyDown}
     >
-      <div className="flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
+      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <ProviderSelect />
         <div className="flex items-center gap-3">
           <TokenCountBadge />
@@ -53,7 +53,7 @@ export function MainPanel() {
           ) : (
             <Button
               size="sm"
-              className="h-7 text-xs"
+              className="h-7 text-xs shadow-sm"
               onClick={send}
               disabled={!hasProvider}
             >

@@ -173,7 +173,7 @@ export function HistoryList() {
               placeholder="Search history..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-sidebar-accent/50 border-sidebar-border h-7 pr-7 pl-7 text-xs"
+              className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
             />
             {searchQuery && (
               <button
@@ -192,7 +192,7 @@ export function HistoryList() {
                 onClick={() => setStatusFilter(status)}
                 className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
                   statusFilter === status
-                    ? 'bg-sidebar-accent text-foreground'
+                    ? 'bg-sidebar-accent/80 text-foreground'
                     : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
                 }`}
               >

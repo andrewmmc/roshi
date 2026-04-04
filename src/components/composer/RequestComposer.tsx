@@ -15,7 +15,7 @@ export function RequestComposer() {
 
   return (
     <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
-      <div className="flex h-10 shrink-0 items-center border-b px-3">
+      <div className="border-border/70 flex h-10 shrink-0 items-center border-b px-3">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="messages" className="px-3 text-xs">
             Messages
@@ -53,7 +53,7 @@ export function RequestComposer() {
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               placeholder="System prompt (optional)"
-              className="bg-muted/30 border-border/60 min-h-[80px] resize-y font-mono text-[13px]"
+              className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[13px]"
               rows={3}
             />
           </div>

@@ -35,9 +35,9 @@ export function Sidebar() {
 
   return (
     <div className="bg-sidebar flex h-full flex-col">
-      <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
+      <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center justify-between border-b px-3">
         <button
-          className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-semibold tracking-tight transition-colors"
+          className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-medium tracking-tight transition-colors"
           onClick={() => emit('show-about')}
           title="About Roshi"
         >

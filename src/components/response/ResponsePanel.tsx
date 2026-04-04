@@ -37,7 +37,7 @@ export function ResponsePanel() {
 
   return (
     <Tabs defaultValue="chat" className="flex h-full flex-col">
-      <div className="flex h-11 shrink-0 items-center justify-between border-b px-4">
+      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between border-b px-4">
         <TabsList className="h-7">
           <TabsTrigger value="chat" className="h-6 px-2.5 text-xs">
             Chat

@@ -18,7 +18,7 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
   return (
     <div className="group relative">
       <button
-        className="hover:bg-sidebar-accent w-full rounded px-2.5 py-1.5 pr-9 text-left transition-colors"
+        className="hover:bg-sidebar-accent/70 w-full rounded px-2.5 py-1.5 pr-9 text-left transition-colors"
         onClick={() => onSelect(entry)}
       >
         <div className="min-w-0 flex-1">
