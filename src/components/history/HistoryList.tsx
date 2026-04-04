@@ -157,7 +157,7 @@ export function HistoryList() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-destructive h-5 w-5"
+            className="text-muted-foreground hover:text-destructive h-7 w-7"
             onClick={() => setShowConfirm(true)}
             aria-label="Clear all history"
           >

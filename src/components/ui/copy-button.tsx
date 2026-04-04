@@ -34,7 +34,7 @@ export function CopyButton({
     <Button
       variant="ghost"
       size="icon"
-      className={`text-muted-foreground hover:text-foreground h-6 w-6 ${className ?? ''}`}
+      className={`text-muted-foreground hover:text-foreground h-7 w-7 ${className ?? ''}`}
       onClick={handleCopy}
       disabled={!text}
       aria-label={copied ? 'Copied' : 'Copy to clipboard'}
