@@ -126,9 +126,14 @@ export function ProviderManager() {
           {view === 'list' && (
             <div className="flex flex-col gap-2 px-3 py-3">
               {providers.map((p) => (
-                <div
+                <button
                   key={p.id}
-                  className="group border-border/60 bg-background/80 hover:border-foreground/15 hover:bg-muted/30 flex items-center justify-between rounded-xl border px-4 py-3 transition-colors"
+                  type="button"
+                  className="border-border/60 bg-background/80 hover:border-foreground/15 hover:bg-muted/30 flex w-full cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors"
+                  onClick={() => {
+                    setEditingProvider(p);
+                    setView('edit');
+                  }}
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium tracking-tight">
@@ -138,18 +143,8 @@ export function ProviderManager() {
                       {getProviderDetails(p)}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-full opacity-70 transition group-hover:opacity-100"
-                    onClick={() => {
-                      setEditingProvider(p);
-                      setView('edit');
-                    }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                  <Pencil className="text-muted-foreground h-3.5 w-3.5" />
+                </button>
               ))}
             </div>
           )}
