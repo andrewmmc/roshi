@@ -70,14 +70,16 @@ export function useGlobalShortcuts() {
       }
 
       // Alt/Opt+T — toggle theme
-      if (e.altKey && !mod && e.key === 't') {
+      // Use e.code (physical key) because on Mac, ⌥+letter produces a special
+      // character (e.g. ⌥T → '†'), so e.key !== 't'.
+      if (e.altKey && !mod && e.code === 'KeyT') {
         e.preventDefault();
         useThemeStore.getState().toggle();
         return;
       }
 
       // Alt/Opt+C — copy response to clipboard
-      if (e.altKey && !mod && e.key === 'c') {
+      if (e.altKey && !mod && e.code === 'KeyC') {
         e.preventDefault();
         const { response, streamingContent } = useResponseStore.getState();
         const text = response?.content || streamingContent;

@@ -16,6 +16,7 @@ vi.mock('@/hooks/use-send-request', () => ({
 function fireKey(
   key: string,
   opts: {
+    code?: string;
     metaKey?: boolean;
     ctrlKey?: boolean;
     shiftKey?: boolean;
@@ -160,7 +161,8 @@ describe('useGlobalShortcuts', () => {
     it('toggles the theme', () => {
       const initial = useThemeStore.getState().theme;
       renderHook(() => useGlobalShortcuts());
-      fireKey('t', { altKey: true });
+      // Simulate Mac behaviour: ⌥T produces '†' as the key value; physical code is 'KeyT'
+      fireKey('†', { altKey: true, code: 'KeyT' });
       const next = useThemeStore.getState().theme;
       expect(next).not.toBe(initial);
     });
@@ -176,7 +178,8 @@ describe('useGlobalShortcuts', () => {
       } as never);
 
       renderHook(() => useGlobalShortcuts());
-      fireKey('c', { altKey: true });
+      // Simulate Mac behaviour: ⌥C produces 'ç' as the key value; physical code is 'KeyC'
+      fireKey('ç', { altKey: true, code: 'KeyC' });
 
       await act(async () => {});
       expect(writeText).toHaveBeenCalledWith('hello world');
@@ -187,7 +190,7 @@ describe('useGlobalShortcuts', () => {
       vi.stubGlobal('navigator', { clipboard: { writeText } });
 
       renderHook(() => useGlobalShortcuts());
-      fireKey('c', { altKey: true });
+      fireKey('ç', { altKey: true, code: 'KeyC' });
 
       await act(async () => {});
       expect(writeText).not.toHaveBeenCalled();
