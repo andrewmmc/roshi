@@ -19,23 +19,8 @@ export function MainPanel() {
   const { send, cancel } = useSendRequest();
   const hasProvider = useProviderStore((s) => s.providers.length > 0);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (
-      (e.metaKey || e.ctrlKey) &&
-      e.key === 'Enter' &&
-      !isLoading &&
-      hasProvider
-    ) {
-      e.preventDefault();
-      send();
-    }
-  };
-
   return (
-    <div
-      className="bg-background flex h-full flex-col"
-      onKeyDown={handleKeyDown}
-    >
+    <div className="bg-background flex h-full flex-col">
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <ProviderSelect />
         <div className="flex items-center gap-3">

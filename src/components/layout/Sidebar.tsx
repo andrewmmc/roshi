@@ -11,6 +11,7 @@ import {
 } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { IS_MAC } from '@/lib/platform';
 
 export function Sidebar() {
   const resetComposer = useComposerStore((s) => s.resetComposer);
@@ -47,10 +48,18 @@ export function Sidebar() {
           <IconButton
             variant="ghost"
             size="icon"
+            aria-label={
+              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+            }
             className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={toggleTheme}
             tooltip={
-              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+              <span className="flex items-center gap-1.5">
+                {theme === 'light'
+                  ? 'Switch to dark mode'
+                  : 'Switch to light mode'}
+                <kbd className="opacity-60">{IS_MAC ? '⌥T' : 'Alt+T'}</kbd>
+              </span>
             }
           >
             {theme === 'light' ? (
@@ -63,9 +72,17 @@ export function Sidebar() {
           <IconButton
             variant="ghost"
             size="icon"
+            aria-label="New request"
             className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={handleNewRequest}
-            tooltip="New request"
+            tooltip={
+              <span className="flex items-center gap-1.5">
+                New request
+                <kbd className="opacity-60">
+                  {IS_MAC ? '⌘⇧N' : 'Ctrl+Shift+N'}
+                </kbd>
+              </span>
+            }
           >
             <FilePlus2 className="h-3.5 w-3.5" />
           </IconButton>

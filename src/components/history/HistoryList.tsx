@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Trash2, Search, X } from 'lucide-react';
 import {
   DEFAULT_TOP_P,
@@ -29,6 +29,7 @@ import {
 } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import type { HistoryEntry } from '@/types/history';
 
 type StatusFilter = 'all' | 'success' | 'error';
@@ -49,6 +50,14 @@ export function HistoryList() {
   const pendingEntryRef = useRef<HistoryEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const historySearchFocusGen = useUiStore((s) => s.historySearchFocusGen);
+
+  useEffect(() => {
+    if (historySearchFocusGen === 0) return;
+    searchInputRef.current?.focus();
+    searchInputRef.current?.select();
+  }, [historySearchFocusGen]);
 
   const filtered = useMemo(() => {
     let result = entries;
@@ -176,6 +185,7 @@ export function HistoryList() {
               aria-hidden="true"
             />
             <Input
+              ref={searchInputRef}
               placeholder="Search history..."
               aria-label="Search history"
               value={searchQuery}

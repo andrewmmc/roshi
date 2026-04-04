@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/tooltip';
 
 type IconButtonProps = ComponentProps<typeof Button> & {
-  tooltip: string;
+  tooltip: ReactNode;
   tooltipSide?: TooltipPrimitive.Positioner.Props['side'];
 };
 
@@ -19,11 +19,12 @@ function IconButton({
   children,
   ...buttonProps
 }: IconButtonProps) {
+  const fallbackAriaLabel = typeof tooltip === 'string' ? tooltip : undefined;
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger
-          render={<Button aria-label={tooltip} {...buttonProps} />}
+          render={<Button aria-label={fallbackAriaLabel} {...buttonProps} />}
         >
           {children}
         </TooltipTrigger>

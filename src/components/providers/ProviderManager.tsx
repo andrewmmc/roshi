@@ -18,7 +18,9 @@ import {
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
+import { IS_MAC } from '@/lib/platform';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit';
@@ -42,7 +44,8 @@ function getProviderDetails(provider: ProviderConfig): string {
 }
 
 export function ProviderManager() {
-  const [open, setOpen] = useState(false);
+  const open = useUiStore((s) => s.providerSettingsOpen);
+  const setOpen = useUiStore((s) => s.setProviderSettingsOpen);
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
     null,
@@ -101,7 +104,14 @@ export function ProviderManager() {
           >
             <Settings className="h-3.5 w-3.5" />
           </TooltipTrigger>
-          <TooltipContent>Provider settings</TooltipContent>
+          <TooltipContent>
+            <span className="flex items-center gap-1.5">
+              Provider settings
+              <kbd className="opacity-60">
+                {IS_MAC ? '⌘⇧,' : 'Ctrl+Shift+,'}
+              </kbd>
+            </span>
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <DialogContent

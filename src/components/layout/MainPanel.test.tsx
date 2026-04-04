@@ -56,18 +56,14 @@ describe('MainPanel', () => {
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
   });
 
-  it('sends on button click and keyboard shortcut when a provider exists', () => {
+  it('sends on button click when a provider exists', () => {
     useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
 
-    const { container } = render(<MainPanel />);
+    render(<MainPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
-    fireEvent.keyDown(container.firstChild as Element, {
-      key: 'Enter',
-      metaKey: true,
-    });
 
-    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).toHaveBeenCalledTimes(1);
   });
 
   it('shows the stop button while loading', () => {
