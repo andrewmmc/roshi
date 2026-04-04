@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { AttachmentChip } from './attachment-chip';
 
@@ -7,16 +6,16 @@ describe('AttachmentChip', () => {
     const onRemove = vi.fn();
 
     render(
-      React.createElement(AttachmentChip, {
-        attachment: {
+      <AttachmentChip
+        attachment={{
           id: 'att_1',
           filename: 'notes.txt',
           mimeType: 'text/plain',
           size: 128,
           dataUrl: 'data:text/plain;base64,SGVsbG8=',
-        },
-        onRemove,
-      }),
+        }}
+        onRemove={onRemove}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove notes.txt' }));
@@ -27,15 +26,15 @@ describe('AttachmentChip', () => {
 
   it('renders image attachments without a remove button when not removable', () => {
     render(
-      React.createElement(AttachmentChip, {
-        attachment: {
+      <AttachmentChip
+        attachment={{
           id: 'att_2',
           filename: 'photo.png',
           mimeType: 'image/png',
           size: 256,
           dataUrl: 'data:image/png;base64,AAAA',
-        },
-      }),
+        }}
+      />,
     );
 
     expect(screen.getByText('photo.png')).toBeInTheDocument();

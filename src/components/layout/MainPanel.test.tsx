@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MainPanel } from './MainPanel';
 import { useResponseStore } from '@/stores/response-store';
@@ -8,29 +7,29 @@ const send = vi.fn();
 const cancel = vi.fn();
 
 vi.mock('@/components/composer/RequestComposer', () => ({
-  RequestComposer: () =>
-    React.createElement('div', null, 'RequestComposer Mock'),
+  RequestComposer: () => <div>RequestComposer Mock</div>,
 }));
 
 vi.mock('@/components/response/ResponsePanel', () => ({
-  ResponsePanel: () => React.createElement('div', null, 'ResponsePanel Mock'),
+  ResponsePanel: () => <div>ResponsePanel Mock</div>,
 }));
 
 vi.mock('@/components/composer/ProviderSelect', () => ({
-  ProviderSelect: () => React.createElement('div', null, 'ProviderSelect Mock'),
+  ProviderSelect: () => <div>ProviderSelect Mock</div>,
 }));
 
 vi.mock('@/components/composer/TokenCountBadge', () => ({
-  TokenCountBadge: () =>
-    React.createElement('div', null, 'TokenCountBadge Mock'),
+  TokenCountBadge: () => <div>TokenCountBadge Mock</div>,
 }));
 
 vi.mock('@/components/ui/resizable', () => ({
-  ResizablePanelGroup: ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', null, children),
-  ResizablePanel: ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', null, children),
-  ResizableHandle: () => React.createElement('div'),
+  ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ResizablePanel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ResizableHandle: () => <div />,
 }));
 
 vi.mock('@/hooks/use-send-request', () => ({
@@ -52,7 +51,7 @@ describe('MainPanel', () => {
   });
 
   it('disables sending when no providers exist', () => {
-    render(React.createElement(MainPanel));
+    render(<MainPanel />);
 
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
   });
@@ -60,7 +59,7 @@ describe('MainPanel', () => {
   it('sends on button click and keyboard shortcut when a provider exists', () => {
     useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
 
-    const { container } = render(React.createElement(MainPanel));
+    const { container } = render(<MainPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
     fireEvent.keyDown(container.firstChild as Element, {
@@ -75,7 +74,7 @@ describe('MainPanel', () => {
     useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
     useResponseStore.setState({ isLoading: true });
 
-    render(React.createElement(MainPanel));
+    render(<MainPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: /stop/i }));
     expect(cancel).toHaveBeenCalledTimes(1);

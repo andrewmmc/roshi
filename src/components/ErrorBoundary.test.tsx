@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -19,11 +18,9 @@ describe('ErrorBoundary', () => {
 
   it('renders fallback UI when a child throws', () => {
     render(
-      React.createElement(
-        ErrorBoundary,
-        null,
-        React.createElement(ThrowOnRender),
-      ),
+      <ErrorBoundary>
+        <ThrowOnRender />
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
@@ -32,11 +29,9 @@ describe('ErrorBoundary', () => {
 
   it('uses the panel layout when rendered inside a panel', () => {
     const { container } = render(
-      React.createElement(
-        ErrorBoundary,
-        { panel: true },
-        React.createElement(ThrowOnRender),
-      ),
+      <ErrorBoundary panel>
+        <ThrowOnRender />
+      </ErrorBoundary>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));

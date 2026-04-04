@@ -21,14 +21,15 @@ import {
 vi.mock('@base-ui/react/menu', () => {
   const make =
     (tag: string) =>
-    ({ children, ...props }: Record<string, unknown>) =>
-      React.createElement(tag, props, children);
+    ({ children, ...props }: Record<string, unknown>) => {
+      const Tag = tag as keyof JSX.IntrinsicElements;
+      return <Tag {...props}>{children}</Tag>;
+    };
 
   return {
     Menu: {
       Root: make('div'),
-      Portal: ({ children }: { children: React.ReactNode }) =>
-        React.createElement(React.Fragment, null, children),
+      Portal: ({ children }: { children: React.ReactNode }) => <>{children}</>,
       Trigger: make('button'),
       Positioner: make('div'),
       Popup: make('div'),

@@ -1,4 +1,3 @@
-import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { HeadersView } from './HeadersView';
 import { useResponseStore } from '@/stores/response-store';
@@ -18,7 +17,7 @@ describe('HeadersView', () => {
       requestHeaders: { authorization: 'Bearer demo' },
     });
 
-    render(React.createElement(HeadersView));
+    render(<HeadersView />);
 
     expect(screen.getByText('content-type')).toBeInTheDocument();
     expect(screen.queryByText('authorization')).not.toBeInTheDocument();
@@ -30,7 +29,7 @@ describe('HeadersView', () => {
   });
 
   it('shows empty state text when no headers are available', () => {
-    render(React.createElement(HeadersView));
+    render(<HeadersView />);
 
     expect(screen.getByText('No headers available')).toBeInTheDocument();
   });
@@ -47,7 +46,7 @@ describe('HeadersView', () => {
       responseHeaders: { 'x-request-id': 'req_123' },
     });
 
-    render(React.createElement(HeadersView));
+    render(<HeadersView />);
 
     await act(async () => {
       fireEvent.click(screen.getByText('req_123'));

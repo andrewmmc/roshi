@@ -1,26 +1,27 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { AppLayout } from './AppLayout';
 
 vi.mock('./Sidebar', () => ({
-  Sidebar: () => React.createElement('div', null, 'Sidebar Mock'),
+  Sidebar: () => <div>Sidebar Mock</div>,
 }));
 
 vi.mock('./MainPanel', () => ({
-  MainPanel: () => React.createElement('div', null, 'MainPanel Mock'),
+  MainPanel: () => <div>MainPanel Mock</div>,
 }));
 
 vi.mock('@/components/ui/resizable', () => ({
-  ResizablePanelGroup: ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', null, children),
-  ResizablePanel: ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', null, children),
-  ResizableHandle: () => React.createElement('div'),
+  ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ResizablePanel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ResizableHandle: () => <div />,
 }));
 
 describe('AppLayout', () => {
   it('renders the skip link, sidebar, and main content regions', () => {
-    render(React.createElement(AppLayout));
+    render(<AppLayout />);
 
     expect(
       screen.getByRole('link', { name: 'Skip to main content' }),

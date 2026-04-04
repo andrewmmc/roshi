@@ -1,4 +1,3 @@
-import React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { AboutDialog } from './AboutDialog';
 import { listen } from '@tauri-apps/api/event';
@@ -19,7 +18,7 @@ describe('AboutDialog', () => {
       return Promise.resolve(unlisten);
     });
 
-    const { unmount } = render(React.createElement(AboutDialog));
+    const { unmount } = render(<AboutDialog />);
 
     expect(screen.queryByText('About Roshi')).not.toBeInTheDocument();
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { RawJsonView } from './RawJsonView';
 import { useResponseStore } from '@/stores/response-store';
@@ -15,7 +14,7 @@ describe('RawJsonView', () => {
       requestUrl: 'https://api.example.com/v1/chat/completions',
     });
 
-    render(React.createElement(RawJsonView));
+    render(<RawJsonView />);
 
     expect(screen.getByText(/"resp_1"/)).toBeInTheDocument();
     expect(screen.queryByText(/"gpt-4o-mini"/)).not.toBeInTheDocument();
@@ -30,7 +29,7 @@ describe('RawJsonView', () => {
   });
 
   it('shows the empty state when no raw payloads are available', () => {
-    render(React.createElement(RawJsonView));
+    render(<RawJsonView />);
 
     expect(screen.getByText('No response data available')).toBeInTheDocument();
 

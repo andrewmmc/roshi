@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Sidebar } from './Sidebar';
 import { emit } from '@tauri-apps/api/event';
@@ -11,12 +10,11 @@ vi.mock('@tauri-apps/api/event', () => ({
 }));
 
 vi.mock('@/components/providers/ProviderManager', () => ({
-  ProviderManager: () =>
-    React.createElement('div', null, 'ProviderManager Mock'),
+  ProviderManager: () => <div>ProviderManager Mock</div>,
 }));
 
 vi.mock('@/components/history/HistoryList', () => ({
-  HistoryList: () => React.createElement('div', null, 'HistoryList Mock'),
+  HistoryList: () => <div>HistoryList Mock</div>,
 }));
 
 describe('Sidebar', () => {
@@ -28,7 +26,7 @@ describe('Sidebar', () => {
   });
 
   it('emits the about event and toggles the theme', () => {
-    render(React.createElement(Sidebar));
+    render(<Sidebar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Roshi' }));
     fireEvent.click(
@@ -55,7 +53,7 @@ describe('Sidebar', () => {
       error: 'oops',
     });
 
-    render(React.createElement(Sidebar));
+    render(<Sidebar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'New request' }));
 
@@ -68,7 +66,7 @@ describe('Sidebar', () => {
       messages: [{ id: 'm1', role: 'user', content: 'draft' }],
     });
 
-    render(React.createElement(Sidebar));
+    render(<Sidebar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'New request' }));
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ParameterControls } from './ParameterControls';
 import { useComposerStore } from '@/stores/composer-store';
@@ -23,7 +22,7 @@ describe('ParameterControls', () => {
       selectedProviderId: 'a1',
     });
 
-    render(React.createElement(ParameterControls));
+    render(<ParameterControls />);
 
     expect(screen.getByLabelText('Top K')).toBeEnabled();
     expect(screen.getByLabelText('Frequency Penalty')).toBeDisabled();
@@ -37,7 +36,7 @@ describe('ParameterControls', () => {
       selectedProviderId: 'g1',
     });
 
-    render(React.createElement(ParameterControls));
+    render(<ParameterControls />);
 
     fireEvent.click(screen.getByLabelText('Thinking'));
     const budgetInput = screen.getByLabelText('Budget Tokens');
@@ -48,7 +47,7 @@ describe('ParameterControls', () => {
   });
 
   it('resets edited values back to defaults', () => {
-    render(React.createElement(ParameterControls));
+    render(<ParameterControls />);
 
     fireEvent.change(screen.getByLabelText('Temperature'), {
       target: { value: '1.55' },

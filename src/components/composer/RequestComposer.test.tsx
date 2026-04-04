@@ -1,19 +1,17 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { RequestComposer } from './RequestComposer';
 import { useComposerStore } from '@/stores/composer-store';
 
 vi.mock('./MessageEditor', () => ({
-  MessageEditor: () => React.createElement('div', null, 'MessageEditor Mock'),
+  MessageEditor: () => <div>MessageEditor Mock</div>,
 }));
 
 vi.mock('./HeaderEditor', () => ({
-  HeaderEditor: () => React.createElement('div', null, 'HeaderEditor Mock'),
+  HeaderEditor: () => <div>HeaderEditor Mock</div>,
 }));
 
 vi.mock('./ParameterControls', () => ({
-  ParameterControls: () =>
-    React.createElement('div', null, 'ParameterControls Mock'),
+  ParameterControls: () => <div>ParameterControls Mock</div>,
 }));
 
 describe('RequestComposer', () => {
@@ -27,7 +25,7 @@ describe('RequestComposer', () => {
       customHeaders: [{ id: 'h1', key: 'X-Test', value: '1' }],
     });
 
-    const { container } = render(React.createElement(RequestComposer));
+    const { container } = render(<RequestComposer />);
 
     expect(
       screen.getByRole('tab', { name: /system prompt/i }),
@@ -37,7 +35,7 @@ describe('RequestComposer', () => {
   });
 
   it('updates the system prompt through the textarea', () => {
-    render(React.createElement(RequestComposer));
+    render(<RequestComposer />);
 
     fireEvent.click(screen.getByRole('tab', { name: /system prompt/i }));
     fireEvent.change(screen.getByPlaceholderText('System prompt (optional)'), {
@@ -50,7 +48,7 @@ describe('RequestComposer', () => {
   });
 
   it('renders the child editors inside their tabs', () => {
-    render(React.createElement(RequestComposer));
+    render(<RequestComposer />);
 
     expect(screen.getByText('MessageEditor Mock')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: /headers/i }));

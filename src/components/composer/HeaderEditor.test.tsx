@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { HeaderEditor } from './HeaderEditor';
 import { useComposerStore } from '@/stores/composer-store';
@@ -29,7 +28,7 @@ describe('HeaderEditor', () => {
       selectedProviderId: 'p1',
     });
 
-    render(React.createElement(HeaderEditor));
+    render(<HeaderEditor />);
 
     expect(screen.getByText('From provider')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Authorization')).toBeInTheDocument();
@@ -39,7 +38,7 @@ describe('HeaderEditor', () => {
   });
 
   it('adds, edits, and removes custom headers through the composer store', () => {
-    render(React.createElement(HeaderEditor));
+    render(<HeaderEditor />);
 
     fireEvent.click(screen.getByRole('button', { name: /add header/i }));
 
@@ -60,7 +59,7 @@ describe('HeaderEditor', () => {
   });
 
   it('disables removing the final remaining header row', () => {
-    render(React.createElement(HeaderEditor));
+    render(<HeaderEditor />);
 
     expect(
       screen.getByRole('button', { name: 'Remove header' }),

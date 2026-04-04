@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { HistoryList } from './HistoryList';
 import { useHistoryStore } from '@/stores/history-store';
@@ -47,7 +46,7 @@ describe('HistoryList', () => {
 
     useHistoryStore.setState({ entries: [entry] });
 
-    render(React.createElement(HistoryList));
+    render(<HistoryList />);
 
     fireEvent.click(screen.getByRole('button', { name: /hello/i }));
 
@@ -79,7 +78,7 @@ describe('HistoryList', () => {
       clearAll,
     });
 
-    render(React.createElement(HistoryList));
+    render(<HistoryList />);
 
     fireEvent.change(screen.getByLabelText('Search history'), {
       target: { value: 'anthropic' },
@@ -108,7 +107,7 @@ describe('HistoryList', () => {
     });
     useResponseStore.setState({ sentRequest: null });
 
-    render(React.createElement(HistoryList));
+    render(<HistoryList />);
 
     fireEvent.click(screen.getByRole('button', { name: /hello/i }));
     expect(screen.getByText('Discard unsent changes?')).toBeInTheDocument();

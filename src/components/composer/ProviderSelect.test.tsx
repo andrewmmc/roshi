@@ -16,15 +16,14 @@ vi.mock('@/components/ui/select', () => {
     disabled?: boolean;
     children: React.ReactNode;
   }) {
-    return React.createElement(
-      'select',
-      {
-        value,
-        disabled,
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-          onValueChange?.(e.target.value),
-      },
-      children,
+    return (
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onValueChange?.(e.target.value)}
+      >
+        {children}
+      </select>
     );
   }
 
@@ -33,18 +32,19 @@ vi.mock('@/components/ui/select', () => {
     children,
     ...props
   }: React.HTMLAttributes<HTMLDivElement> & { ariaLabel?: string }) {
-    return React.createElement(
-      'div',
-      { 'aria-label': ariaLabel, ...props },
-      children,
+    return (
+      <div aria-label={ariaLabel} {...props}>
+        {children}
+      </div>
     );
   }
 
   return {
     Select,
     SelectTrigger,
-    SelectContent: ({ children }: { children: React.ReactNode }) =>
-      React.createElement(React.Fragment, null, children),
+    SelectContent: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
     SelectItem: ({
       value,
       children,
@@ -53,9 +53,14 @@ vi.mock('@/components/ui/select', () => {
       value: string;
       children: React.ReactNode;
       title?: string;
-    }) => React.createElement('option', { value, title }, children),
-    SelectValue: ({ children }: { children?: React.ReactNode }) =>
-      React.createElement(React.Fragment, null, children),
+    }) => (
+      <option value={value} title={title}>
+        {children}
+      </option>
+    ),
+    SelectValue: ({ children }: { children?: React.ReactNode }) => (
+      <>{children}</>
+    ),
   };
 });
 
@@ -77,7 +82,7 @@ describe('ProviderSelect', () => {
     const load = vi.fn().mockResolvedValue(undefined);
     useProviderStore.setState({ loaded: false, load });
 
-    render(React.createElement(ProviderSelect));
+    render(<ProviderSelect />);
 
     expect(load).toHaveBeenCalledTimes(1);
   });
@@ -85,7 +90,7 @@ describe('ProviderSelect', () => {
   it('shows the seeding state', () => {
     useProviderStore.setState({ seeding: true });
 
-    render(React.createElement(ProviderSelect));
+    render(<ProviderSelect />);
 
     expect(screen.getByText('Loading providers…')).toBeInTheDocument();
   });
@@ -110,7 +115,7 @@ describe('ProviderSelect', () => {
       selectModel,
     });
 
-    render(React.createElement(ProviderSelect));
+    render(<ProviderSelect />);
 
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0], { target: { value: 'p1' } });
@@ -136,7 +141,7 @@ describe('ProviderSelect', () => {
       selectedModelId: null,
     });
 
-    render(React.createElement(ProviderSelect));
+    render(<ProviderSelect />);
 
     const selects = screen.getAllByRole('combobox');
     expect(selects[1]).toBeDisabled();

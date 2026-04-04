@@ -15,8 +15,10 @@ import {
 vi.mock('@base-ui/react/select', () => {
   const make =
     (tag: string) =>
-    ({ children, render, ...props }: Record<string, unknown>) =>
-      React.createElement(tag, props, render ?? children);
+    ({ children, render, ...props }: Record<string, unknown>) => {
+      const Tag = tag as keyof JSX.IntrinsicElements;
+      return <Tag {...props}>{render ?? children}</Tag>;
+    };
 
   return {
     Select: {

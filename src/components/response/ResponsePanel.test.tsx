@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ResponsePanel } from './ResponsePanel';
 import { useResponseStore } from '@/stores/response-store';
@@ -6,19 +5,19 @@ import { useProviderStore } from '@/stores/provider-store';
 import { makeProvider } from '@/__tests__/fixtures';
 
 vi.mock('./ChatView', () => ({
-  ChatView: () => React.createElement('div', null, 'ChatView Mock'),
+  ChatView: () => <div>ChatView Mock</div>,
 }));
 
 vi.mock('./RawJsonView', () => ({
-  RawJsonView: () => React.createElement('div', null, 'RawJsonView Mock'),
+  RawJsonView: () => <div>RawJsonView Mock</div>,
 }));
 
 vi.mock('./HeadersView', () => ({
-  HeadersView: () => React.createElement('div', null, 'HeadersView Mock'),
+  HeadersView: () => <div>HeadersView Mock</div>,
 }));
 
 vi.mock('./CodeView', () => ({
-  CodeView: () => React.createElement('div', null, 'CodeView Mock'),
+  CodeView: () => <div>CodeView Mock</div>,
 }));
 
 describe('ResponsePanel', () => {
@@ -34,7 +33,7 @@ describe('ResponsePanel', () => {
   });
 
   it('shows empty states when there is no response content', () => {
-    render(React.createElement(ResponsePanel));
+    render(<ResponsePanel />);
 
     expect(
       screen.getByText('Send a request to see the response'),
@@ -52,7 +51,7 @@ describe('ResponsePanel', () => {
   it('shows loading status text while sending', () => {
     useResponseStore.setState({ isLoading: true });
 
-    render(React.createElement(ResponsePanel));
+    render(<ResponsePanel />);
 
     expect(screen.getByText('Sending...')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Sending request...');
@@ -76,7 +75,7 @@ describe('ResponsePanel', () => {
       durationMs: 321,
     });
 
-    render(React.createElement(ResponsePanel));
+    render(<ResponsePanel />);
 
     expect(await screen.findByText('ChatView Mock')).toBeInTheDocument();
     expect(screen.getByText('15 tokens')).toBeInTheDocument();

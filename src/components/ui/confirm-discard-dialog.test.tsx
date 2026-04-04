@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ConfirmDiscardDialog } from './confirm-discard-dialog';
 
@@ -8,11 +7,11 @@ describe('ConfirmDiscardDialog', () => {
     const onConfirm = vi.fn();
 
     render(
-      React.createElement(ConfirmDiscardDialog, {
-        open: true,
-        onOpenChange,
-        onConfirm,
-      }),
+      <ConfirmDiscardDialog
+        open
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -26,11 +25,11 @@ describe('ConfirmDiscardDialog', () => {
     const onConfirm = vi.fn();
 
     render(
-      React.createElement(ConfirmDiscardDialog, {
-        open: true,
-        onOpenChange,
-        onConfirm,
-      }),
+      <ConfirmDiscardDialog
+        open
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));

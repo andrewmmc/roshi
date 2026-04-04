@@ -1,10 +1,9 @@
-import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { CopyButton } from './copy-button';
 
 describe('CopyButton', () => {
   it('is disabled when text is empty', () => {
-    render(React.createElement(CopyButton, { text: '' }));
+    render(<CopyButton text="" />);
     expect(
       screen.getByRole('button', { name: /copy to clipboard/i }),
     ).toBeDisabled();
@@ -18,7 +17,7 @@ describe('CopyButton', () => {
       configurable: true,
     });
 
-    render(React.createElement(CopyButton, { text: 'Copied value' }));
+    render(<CopyButton text="Copied value" />);
 
     const button = screen.getByRole('button', { name: /copy to clipboard/i });
     await act(async () => {
