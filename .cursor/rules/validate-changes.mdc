@@ -13,4 +13,4 @@ npm run test        # Vitest single run
 npm run lint        # ESLint
 ```
 
-All three must pass before considering the task complete.
+All three must pass before considering the task complete. Once all checks pass, always create a git commit with a descriptive message summarizing the changes. Do not push to the remote.
