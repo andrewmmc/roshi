@@ -62,6 +62,7 @@ export function HeaderListEditor({
           />
           <Button
             aria-label="Remove header"
+            title="Remove header"
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0"

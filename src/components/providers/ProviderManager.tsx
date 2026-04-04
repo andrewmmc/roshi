@@ -117,9 +117,10 @@ export function ProviderManager() {
                 handleBackToList();
               }
             }}
+            aria-label={view === 'list' ? 'Close' : 'Back to provider list'}
+            title={view === 'list' ? 'Close' : 'Back to provider list'}
           >
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
           </Button>
         </DialogHeader>
 

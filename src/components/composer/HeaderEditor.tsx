@@ -95,6 +95,7 @@ export function HeaderEditor() {
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
             aria-label="Remove header"
+            title="Remove header"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

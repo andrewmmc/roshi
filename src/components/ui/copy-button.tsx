@@ -38,6 +38,7 @@ export function CopyButton({
       onClick={handleCopy}
       disabled={!text}
       aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+      title={copied ? 'Copied' : 'Copy to clipboard'}
     >
       {copied ? (
         <Check className="h-3 w-3 text-green-600" />

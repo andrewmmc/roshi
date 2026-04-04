@@ -46,6 +46,7 @@ export function ProviderSelect() {
       <Select value={selectedProviderId || ''} onValueChange={selectProvider}>
         <SelectTrigger
           aria-label="Select provider"
+          title="Select provider"
           className="h-7 w-[160px] text-xs"
         >
           <SelectValue placeholder="Provider">

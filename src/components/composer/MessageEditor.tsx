@@ -248,6 +248,7 @@ export function MessageEditor() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="Message options"
+                  title="Message options"
                   className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors"
                 >
                   <Ellipsis className="h-4 w-4" />

@@ -274,6 +274,7 @@ export function ProviderForm({
                   className="h-8 w-8 shrink-0"
                   onClick={() => removeModel(i)}
                   aria-label="Remove model"
+                  title="Remove model"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

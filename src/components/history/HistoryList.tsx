@@ -162,6 +162,7 @@ export function HistoryList() {
             className="text-muted-foreground hover:text-destructive h-7 w-7"
             onClick={() => setShowConfirm(true)}
             aria-label="Clear all history"
+            title="Clear all history"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
@@ -186,6 +187,7 @@ export function HistoryList() {
                 onClick={() => setSearchQuery('')}
                 className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
                 aria-label="Clear search"
+                title="Clear search"
               >
                 <X className="h-3 w-3" />
               </button>
