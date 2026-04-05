@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
+import { ExternalLink } from 'lucide-react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogHeader,
 } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { useUiStore } from '@/stores/ui-store';
 
 export function AboutDialog() {
@@ -30,43 +32,59 @@ export function AboutDialog() {
         <DialogHeader>
           <DialogTitle>About Roshi</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 text-sm">
-          <p>
-            <strong>Roshi v1.0.0</strong>
+        <div className="space-y-4">
+          <div className="flex flex-col items-center gap-3 py-2">
+            <img
+              src="/favicon-192.png"
+              alt="Roshi"
+              className="h-16 w-16 rounded-xl"
+            />
+            <div className="text-center">
+              <p className="text-sm font-semibold">Roshi</p>
+              <p className="text-muted-foreground text-xs">
+                v{__APP_VERSION__}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <p className="text-muted-foreground text-center text-sm">
+            MIT-licensed local-first workbench for testing LLM APIs
           </p>
-          <p>MIT-licensed local-first workbench for testing LLM APIs</p>
+
+          <Separator />
+
           <div className="space-y-2">
-            <p>
-              GitHub:{' '}
-              <a
-                href="https://github.com/andrewmmc/roshi"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                https://github.com/andrewmmc/roshi
-              </a>
-            </p>
-            <p>
-              Author:{' '}
-              <a
-                href="https://github.com/andrewmmc"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                https://github.com/andrewmmc
-              </a>
-            </p>
+            <a
+              href="https://github.com/andrewmmc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
+            >
+              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+              Author
+            </a>
+            <a
+              href="https://github.com/andrewmmc/roshi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
+            >
+              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+              GitHub
+            </a>
             <a
               href="https://github.com/andrewmmc/roshi/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary block hover:underline"
+              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
             >
+              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
               Check for Updates...
             </a>
           </div>
+
           <p className="text-muted-foreground text-xs">© 2026 Andrew Mok</p>
         </div>
       </DialogContent>

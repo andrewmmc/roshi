@@ -1,7 +1,14 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json') as { version: string };
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react',

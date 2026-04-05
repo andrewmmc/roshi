@@ -18,6 +18,10 @@ describe('AboutDialog', () => {
         'MIT-licensed local-first workbench for testing LLM APIs',
       ),
     ).toBeInTheDocument();
+    expect(screen.getByAltText('Roshi')).toBeInTheDocument();
+    expect(screen.getByText('GitHub')).toBeInTheDocument();
+    expect(screen.getByText('Author')).toBeInTheDocument();
+    expect(screen.getByText('Check for Updates...')).toBeInTheDocument();
   });
 
   it('does not render when aboutOpen is false', () => {
