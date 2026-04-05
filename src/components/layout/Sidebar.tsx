@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { FilePlus2, Sun, Moon } from 'lucide-react';
-import { emit } from '@tauri-apps/api/event';
+import { useUiStore } from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
@@ -19,6 +19,7 @@ export function Sidebar() {
   const hasUnsavedChanges = useComposerStore(selectHasUnsavedChanges);
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggle);
+  const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const [showDiscard, setShowDiscard] = useState(false);
 
   const reset = useCallback(() => {
@@ -39,7 +40,7 @@ export function Sidebar() {
       <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center justify-between border-b px-3">
         <button
           className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-medium tracking-tight transition-colors"
-          onClick={() => emit('show-about')}
+          onClick={() => setAboutOpen(true)}
           title="About Roshi"
         >
           Roshi

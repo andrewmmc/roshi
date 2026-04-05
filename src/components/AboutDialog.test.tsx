@@ -1,43 +1,28 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { AboutDialog } from './AboutDialog';
-import { listen } from '@tauri-apps/api/event';
-
-vi.mock('@tauri-apps/api/event', () => ({
-  listen: vi.fn(),
-}));
+import { useUiStore } from '@/stores/ui-store';
 
 describe('AboutDialog', () => {
-  it('opens when the show-about event is emitted and unregisters on cleanup', async () => {
-    let handler: (() => void) | undefined;
-    const unlisten = vi.fn();
+  beforeEach(() => {
+    useUiStore.setState({ aboutOpen: false });
+  });
 
-    vi.mocked(listen).mockImplementation((_event, callback) => {
-      handler = () => {
-        callback({} as never);
-      };
-      return Promise.resolve(unlisten);
-    });
+  it('renders when aboutOpen is true', () => {
+    useUiStore.setState({ aboutOpen: true });
 
-    const { unmount } = render(<AboutDialog />);
+    render(<AboutDialog />);
 
-    expect(screen.queryByText('About Roshi')).not.toBeInTheDocument();
-
-    await act(async () => {
-      handler?.();
-    });
-
-    expect(await screen.findByText('About Roshi')).toBeInTheDocument();
+    expect(screen.getByText('About Roshi')).toBeInTheDocument();
     expect(
       screen.getByText(
         'MIT-licensed local-first workbench for testing LLM APIs',
       ),
     ).toBeInTheDocument();
+  });
 
-    unmount();
-    await act(async () => {
-      await Promise.resolve();
-    });
+  it('does not render when aboutOpen is false', () => {
+    render(<AboutDialog />);
 
-    expect(unlisten).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('About Roshi')).not.toBeInTheDocument();
   });
 });

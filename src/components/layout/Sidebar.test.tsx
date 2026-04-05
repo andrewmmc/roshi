@@ -1,13 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Sidebar } from './Sidebar';
-import { emit } from '@tauri-apps/api/event';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useThemeStore } from '@/stores/theme-store';
-
-vi.mock('@tauri-apps/api/event', () => ({
-  emit: vi.fn(),
-}));
+import { useUiStore } from '@/stores/ui-store';
 
 vi.mock('@/components/providers/ProviderManager', () => ({
   ProviderManager: () => <div>ProviderManager Mock</div>,
@@ -22,10 +18,10 @@ describe('Sidebar', () => {
     useComposerStore.getState().resetComposer();
     useResponseStore.getState().resetResponse();
     useThemeStore.setState({ theme: 'light' });
-    vi.mocked(emit).mockReset();
+    useUiStore.setState({ aboutOpen: false });
   });
 
-  it('emits the about event and toggles the theme', () => {
+  it('opens the about dialog and toggles the theme', () => {
     render(<Sidebar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Roshi' }));
@@ -33,7 +29,7 @@ describe('Sidebar', () => {
       screen.getByRole('button', { name: 'Switch to dark mode' }),
     );
 
-    expect(emit).toHaveBeenCalledWith('show-about');
+    expect(useUiStore.getState().aboutOpen).toBe(true);
     expect(useThemeStore.getState().theme).toBe('dark');
   });
 
