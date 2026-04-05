@@ -42,7 +42,7 @@ export function AboutDialog() {
             <div className="text-center">
               <p className="text-sm font-semibold">Roshi</p>
               <p className="text-muted-foreground text-xs">
-                v{__APP_VERSION__}
+                v{__APP_VERSION__} ({__APP_COMMIT__})
               </p>
             </div>
           </div>
