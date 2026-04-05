@@ -1,8 +1,11 @@
 import { lazy, Suspense } from 'react';
+import { Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IconButton } from '@/components/ui/icon-button';
 import { useResponseStore } from '@/stores/response-store';
 import { useSelectedProvider } from '@/stores/provider-store';
 import { formatCount } from '@/utils/format';
+import { exportCurrentRequest } from '@/utils/export';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -24,6 +27,12 @@ export function ResponsePanel() {
   const error = useResponseStore((s) => s.error);
   const durationMs = useResponseStore((s) => s.durationMs);
   const statusCode = useResponseStore((s) => s.statusCode);
+  const sentRequest = useResponseStore((s) => s.sentRequest);
+  const rawRequest = useResponseStore((s) => s.rawRequest);
+  const rawResponse = useResponseStore((s) => s.rawResponse);
+  const requestUrl = useResponseStore((s) => s.requestUrl);
+  const requestHeaders = useResponseStore((s) => s.requestHeaders);
+  const responseHeaders = useResponseStore((s) => s.responseHeaders);
 
   const selectedProvider = useSelectedProvider();
   const isCodeTabEnabled = selectedProvider
@@ -90,6 +99,30 @@ export function ResponsePanel() {
           )}
           {durationMs !== null && !isLoading && (
             <span className="font-mono">{durationMs}ms</span>
+          )}
+          {statusCode !== null && !isLoading && (
+            <IconButton
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              tooltip="Export request and response as JSON"
+              onClick={() =>
+                exportCurrentRequest({
+                  sentRequest,
+                  response,
+                  rawRequest,
+                  rawResponse,
+                  requestUrl,
+                  requestHeaders,
+                  responseHeaders,
+                  error,
+                  durationMs,
+                  statusCode,
+                })
+              }
+            >
+              <Download className="h-3 w-3" />
+            </IconButton>
           )}
         </div>
       </div>

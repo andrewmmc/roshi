@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Trash2, Search, X } from 'lucide-react';
+import { Trash2, Search, X, Download } from 'lucide-react';
 import {
   DEFAULT_TOP_P,
   DEFAULT_TOP_K,
@@ -23,6 +23,7 @@ import {
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { HistoryItem } from './HistoryItem';
 import { useHistory } from '@/hooks/use-history';
+import { exportHistory } from '@/utils/export';
 import {
   useComposerStore,
   selectHasUnsavedChanges,
@@ -166,15 +167,26 @@ export function HistoryList() {
           History
         </span>
         {entries.length > 0 && (
-          <IconButton
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
-            onClick={() => setShowConfirm(true)}
-            tooltip="Clear all history"
-          >
-            <Trash2 className="h-3 w-3" />
-          </IconButton>
+          <div className="flex items-center">
+            <IconButton
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={() => exportHistory(entries)}
+              tooltip="Export all history as JSON"
+            >
+              <Download className="h-3 w-3" />
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive h-7 w-7"
+              onClick={() => setShowConfirm(true)}
+              tooltip="Clear all history"
+            >
+              <Trash2 className="h-3 w-3" />
+            </IconButton>
+          </div>
         )}
       </div>
       {entries.length > 0 && (

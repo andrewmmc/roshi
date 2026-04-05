@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Settings, Pencil, X, RotateCcw } from 'lucide-react';
+import { Settings, Pencil, X, RotateCcw, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
@@ -21,6 +21,7 @@ import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
+import { exportProviders } from '@/utils/export';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit';
@@ -220,9 +221,21 @@ export function ProviderManager() {
                 <RotateCcw className="mr-1 h-3 w-3" />
                 {resettingAll ? 'Resetting...' : 'Reset all to default'}
               </Button>
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Close
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground text-xs"
+                  onClick={() => exportProviders(providers)}
+                >
+                  <Download className="mr-1 h-3 w-3" />
+                  Export JSON
+                </Button>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Close
+                </Button>
+              </div>
             </>
           )}
 
