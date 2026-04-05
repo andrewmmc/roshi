@@ -5,6 +5,7 @@
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": [
+    "src/env.d.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "src/__tests__/**/*.ts",
