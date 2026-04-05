@@ -35,6 +35,27 @@ interface ResponseActions {
   setStatusCode: (code: number | null) => void;
   setSentRequest: (request: NormalizedRequest | null) => void;
   resetResponse: () => void;
+
+  /** Batch: reset + set sentRequest + loading in one set() */
+  startRequest: (sentRequest: NormalizedRequest) => void;
+  /** Batch: append stream content and mark streaming in one set() */
+  setStreamChunk: (content: string) => void;
+  /** Batch: set all completion fields in one set() */
+  completeResponse: (result: {
+    response: NormalizedResponse;
+    rawRequest: Record<string, unknown> | null;
+    rawResponse: Record<string, unknown> | null;
+    requestUrl: string;
+    requestHeaders: Record<string, string> | null;
+    responseHeaders: Record<string, string> | null;
+    durationMs: number | null;
+    statusCode: number | null;
+  }) => void;
+  /** Batch: set all error fields in one set() */
+  completeWithError: (result: Partial<ResponseState>) => void;
+  /** Batch: finalize loading/streaming flags in one set() */
+  finishRequest: () => void;
+
   loadResponseFromHistory: (data: {
     messages: { id?: string; role: string; content: string }[];
     stream: boolean;
@@ -93,6 +114,35 @@ export const useResponseStore = create<ResponseStore>((set) => ({
   setSentRequest: (sentRequest) => set({ sentRequest }),
 
   resetResponse: () => set({ ...INITIAL_RESPONSE_STATE }),
+
+  startRequest: (sentRequest) =>
+    set({
+      ...INITIAL_RESPONSE_STATE,
+      sentRequest,
+      isLoading: true,
+    }),
+
+  setStreamChunk: (content) =>
+    set((s) => ({
+      isStreaming: true,
+      streamingContent: s.streamingContent + content,
+    })),
+
+  completeResponse: (result) =>
+    set({
+      response: result.response,
+      rawRequest: result.rawRequest,
+      rawResponse: result.rawResponse,
+      requestUrl: result.requestUrl,
+      requestHeaders: result.requestHeaders,
+      responseHeaders: result.responseHeaders,
+      durationMs: result.durationMs,
+      statusCode: result.statusCode,
+    }),
+
+  completeWithError: (result) => set(result),
+
+  finishRequest: () => set({ isLoading: false, isStreaming: false }),
 
   loadResponseFromHistory: (data) =>
     set({

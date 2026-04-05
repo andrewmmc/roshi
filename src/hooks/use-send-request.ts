@@ -74,16 +74,6 @@ export function useSendRequest() {
       return;
     }
 
-    // Reset response state
-    respStore.setError(null);
-    respStore.setErrorDetail(null);
-    respStore.setResponse(null);
-    respStore.setRawRequest(null);
-    respStore.setRawResponse(null);
-    respStore.setRequestHeaders(null);
-    respStore.setResponseHeaders(null);
-    respStore.setDurationMs(null);
-    respStore.setStatusCode(null);
     const modelId = model?.id ?? selectedModelId ?? '';
     const normalizedRequest = {
       messages: nonEmptyMessages,
@@ -101,10 +91,7 @@ export function useSendRequest() {
         : undefined,
     };
 
-    respStore.setSentRequest(normalizedRequest);
-    respStore.setLoading(true);
-    respStore.setStreaming(false);
-    respStore.setStreamContent('');
+    respStore.startRequest(normalizedRequest);
 
     const abortController = new AbortController();
     abortRef.current = abortController;
@@ -133,23 +120,22 @@ export function useSendRequest() {
             : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
-          if (!useResponseStore.getState().isStreaming) {
-            respStore.setStreaming(true);
-          }
           if (chunk.content) {
-            respStore.appendStreamContent(chunk.content);
+            respStore.setStreamChunk(chunk.content);
           }
         },
       });
 
-      respStore.setResponse(result.response);
-      respStore.setRawRequest(result.rawRequest);
-      respStore.setRawResponse(result.rawResponse);
-      respStore.setRequestUrl(result.requestUrl);
-      respStore.setRequestHeaders(result.requestHeaders);
-      respStore.setResponseHeaders(result.responseHeaders);
-      respStore.setDurationMs(result.durationMs);
-      respStore.setStatusCode(result.statusCode);
+      respStore.completeResponse({
+        response: result.response,
+        rawRequest: result.rawRequest,
+        rawResponse: result.rawResponse,
+        requestUrl: result.requestUrl,
+        requestHeaders: result.requestHeaders,
+        responseHeaders: result.responseHeaders,
+        durationMs: result.durationMs,
+        statusCode: result.statusCode,
+      });
 
       // Append assistant response and new empty user message for multi-turn conversation
       const { addMessage } = useComposerStore.getState();
@@ -173,14 +159,16 @@ export function useSendRequest() {
         const detail = extractProviderErrorDetail(err.rawResponse);
         const summary = `Provider returned HTTP ${err.status}`;
 
-        respStore.setError(summary);
-        respStore.setErrorDetail(detail);
-        respStore.setRawRequest(err.rawRequest);
-        respStore.setRawResponse(err.rawResponse);
-        respStore.setRequestHeaders(err.requestHeaders);
-        respStore.setResponseHeaders(err.responseHeaders);
-        respStore.setDurationMs(err.durationMs);
-        respStore.setStatusCode(err.status);
+        respStore.completeWithError({
+          error: summary,
+          errorDetail: detail,
+          rawRequest: err.rawRequest,
+          rawResponse: err.rawResponse,
+          requestHeaders: err.requestHeaders,
+          responseHeaders: err.responseHeaders,
+          durationMs: err.durationMs,
+          statusCode: err.status,
+        });
 
         useHistoryStore.getState().addEntry({
           ...baseHistoryEntry,
@@ -195,41 +183,47 @@ export function useSendRequest() {
           statusCode: err.status,
         });
       } else if (err instanceof DOMException && err.name === 'TimeoutError') {
-        respStore.setError('Request timed out');
-        respStore.setErrorDetail(
-          'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
-        );
+        respStore.completeWithError({
+          error: 'Request timed out',
+          errorDetail:
+            'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
+        });
       } else if (err instanceof DOMException && err.name === 'AbortError') {
-        respStore.setError('Request cancelled');
-        respStore.setErrorDetail(null);
+        respStore.completeWithError({
+          error: 'Request cancelled',
+          errorDetail: null,
+        });
       } else {
         const message = err instanceof Error ? err.message : 'Unknown error';
         if (err instanceof Error && isLikelyNetworkFailure(message)) {
-          respStore.setError(
-            'Network request failed before the provider responded',
-          );
-          respStore.setErrorDetail(getNetworkErrorDetail(message));
-          respStore.setRawResponse({
-            type: 'network_error',
-            message,
-            detail: getNetworkErrorDetail(message),
+          respStore.completeWithError({
+            error: 'Network request failed before the provider responded',
+            errorDetail: getNetworkErrorDetail(message),
+            rawResponse: {
+              type: 'network_error',
+              message,
+              detail: getNetworkErrorDetail(message),
+            },
           });
         } else if (err instanceof Error) {
-          respStore.setError('Unexpected request error');
-          respStore.setErrorDetail(message);
-          respStore.setRawResponse({ type: 'unexpected_error', message });
+          respStore.completeWithError({
+            error: 'Unexpected request error',
+            errorDetail: message,
+            rawResponse: { type: 'unexpected_error', message },
+          });
         } else {
-          respStore.setError('Unknown error');
-          respStore.setErrorDetail(String(err));
-          respStore.setRawResponse({
-            type: 'unknown_error',
-            value: String(err),
+          respStore.completeWithError({
+            error: 'Unknown error',
+            errorDetail: String(err),
+            rawResponse: {
+              type: 'unknown_error',
+              value: String(err),
+            },
           });
         }
       }
     } finally {
-      respStore.setLoading(false);
-      respStore.setStreaming(false);
+      respStore.finishRequest();
       abortRef.current = null;
     }
   }, []);

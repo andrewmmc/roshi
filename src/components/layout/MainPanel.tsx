@@ -35,6 +35,9 @@ export function MainPanel() {
             >
               <Square className="mr-1.5 h-3 w-3" />
               Stop
+              <kbd className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide opacity-60">
+                Esc
+              </kbd>
             </Button>
           ) : (
             <Button
