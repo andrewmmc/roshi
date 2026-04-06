@@ -95,20 +95,6 @@ describe('ProviderForm', () => {
     );
   });
 
-  it('maps legacy custom type to openai-compatible on submit', () => {
-    const onSubmit = vi.fn();
-    const { container } = render(
-      <ProviderForm
-        onSubmit={onSubmit}
-        initialData={makeProvider({ type: 'custom' })}
-      />,
-    );
-    fireEvent.submit(container.querySelector('form')!);
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'openai-compatible' }),
-    );
-  });
-
   it('shows the auth header name field for api-key-header auth', () => {
     render(
       <ProviderForm

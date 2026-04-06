@@ -6,11 +6,7 @@ export interface ProviderModel {
   supportsStreaming: boolean;
 }
 
-export type ProviderType =
-  | 'openai-compatible'
-  | 'anthropic'
-  | 'google-gemini'
-  | 'custom';
+export type ProviderType = 'openai-compatible' | 'anthropic' | 'google-gemini';
 
 /** Whether the provider type supports user-managed model lists */
 export function supportsModelSelection(type: ProviderType): boolean {

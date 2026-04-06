@@ -81,6 +81,14 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     const providers = await db.providers.toArray();
 
+    for (const p of providers) {
+      const row = p as ProviderConfig & { type: string };
+      if (row.type === 'custom') {
+        await db.providers.update(p.id, { type: 'openai-compatible' });
+        row.type = 'openai-compatible';
+      }
+    }
+
     // Seed missing built-in providers with models fetched from API
     const needsSeed = builtinProviders.filter(
       (template) =>

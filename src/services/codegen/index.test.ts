@@ -11,8 +11,10 @@ describe('getCodeGenerators', () => {
     expect(generators[1].language).toBe('javascript');
   });
 
-  it('returns generators for custom', () => {
-    const generators = getCodeGenerators(makeProvider({ type: 'custom' }));
+  it('returns generators for openai-compatible', () => {
+    const generators = getCodeGenerators(
+      makeProvider({ type: 'openai-compatible' }),
+    );
     expect(generators).toHaveLength(2);
   });
 

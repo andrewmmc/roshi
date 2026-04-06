@@ -120,6 +120,28 @@ describe('provider-store', () => {
       expect(getState().selectedModelId).toBe('gpt-4');
     });
 
+    it('migrates stored legacy custom type to openai-compatible', async () => {
+      const legacyRow = {
+        ...makeProvider({
+          id: 'legacy-custom',
+          name: 'My API',
+          isBuiltIn: false,
+        }),
+        type: 'custom',
+      };
+      mockDb.providers.toArray.mockResolvedValue([legacyRow as never]);
+
+      await getState().load();
+
+      expect(mockDb.providers.update).toHaveBeenCalledWith('legacy-custom', {
+        type: 'openai-compatible',
+      });
+      const migrated = getState().providers.find(
+        (p) => p.id === 'legacy-custom',
+      );
+      expect(migrated?.type).toBe('openai-compatible');
+    });
+
     it('migrates selection from legacy localStorage to IndexedDB', async () => {
       const existingProvider = makeProvider({
         id: 'p1',

@@ -11,10 +11,6 @@ describe('getAdapter', () => {
     );
   });
 
-  it('returns openai adapter for custom', () => {
-    expect(getAdapter(makeProvider({ type: 'custom' }))).toBe(openaiAdapter);
-  });
-
   it('returns anthropic adapter for anthropic', () => {
     expect(getAdapter(makeProvider({ type: 'anthropic' }))).toBe(
       anthropicAdapter,

@@ -25,7 +25,6 @@ const geminiGenerators: CodeGenerator[] = [
 export function getCodeGenerators(provider: ProviderConfig): CodeGenerator[] {
   switch (provider.type) {
     case 'openai-compatible':
-    case 'custom':
       return openaiGenerators;
     case 'anthropic':
       return anthropicGenerators;

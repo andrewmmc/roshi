@@ -7,7 +7,6 @@ import { geminiAdapter } from './gemini';
 export function getAdapter(provider: ProviderConfig): ProviderAdapter {
   switch (provider.type) {
     case 'openai-compatible':
-    case 'custom':
       return openaiAdapter;
     case 'anthropic':
       return anthropicAdapter;
