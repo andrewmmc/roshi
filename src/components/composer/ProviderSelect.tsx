@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
+import { sortProvidersByName } from '@/utils/sort-providers';
 
 export function ProviderSelect() {
   const providers = useProviderStore((s) => s.providers);
@@ -54,7 +55,7 @@ export function ProviderSelect() {
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {providers.map((p) => (
+          {sortProvidersByName(providers).map((p) => (
             <SelectItem key={p.id} value={p.id}>
               {p.name}
             </SelectItem>

@@ -34,6 +34,7 @@ import {
   MAX_CUSTOM_PROVIDERS,
 } from '@/constants/providers';
 import { exportProviders } from '@/utils/export';
+import { sortProvidersByName } from '@/utils/sort-providers';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit' | 'add';
@@ -222,7 +223,7 @@ export function ProviderManager() {
                   </p>
                 )}
               </div>
-              {providers.map((p) => (
+              {sortProvidersByName(providers).map((p) => (
                 <div
                   key={p.id}
                   className="border-border/60 bg-background/80 flex w-full items-center gap-2 rounded-xl border px-2 py-2"

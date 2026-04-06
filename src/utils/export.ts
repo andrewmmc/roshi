@@ -1,5 +1,6 @@
 import type { HistoryEntry } from '@/types/history';
 import type { ProviderConfig } from '@/types/provider';
+import { sortProvidersByName } from '@/utils/sort-providers';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 
 const EXPORT_VERSION = 1;
@@ -50,9 +51,10 @@ export function exportProviders(
   options: { redactKeys?: boolean } = {},
 ): void {
   const { redactKeys = true } = options;
+  const ordered = sortProvidersByName(providers);
   const data = redactKeys
-    ? providers.map((p) => ({ ...p, apiKey: p.apiKey ? 'REDACTED' : '' }))
-    : providers;
+    ? ordered.map((p) => ({ ...p, apiKey: p.apiKey ? 'REDACTED' : '' }))
+    : ordered;
   const envelope: ExportEnvelope<typeof data> = {
     app: 'roshi',
     version: EXPORT_VERSION,
