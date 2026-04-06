@@ -1,5 +1,13 @@
 import { useState, useRef } from 'react';
-import { Settings, Pencil, X, RotateCcw, Download } from 'lucide-react';
+import {
+  Settings,
+  Pencil,
+  X,
+  RotateCcw,
+  Download,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
@@ -21,10 +29,14 @@ import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
+import {
+  createCustomProviderTemplate,
+  MAX_CUSTOM_PROVIDERS,
+} from '@/constants/providers';
 import { exportProviders } from '@/utils/export';
 import type { ProviderConfig } from '@/types/provider';
 
-type View = 'list' | 'edit';
+type View = 'list' | 'edit' | 'add';
 
 function getProviderDetails(provider: ProviderConfig): string {
   const builtin = builtinProviders.find((b) => b.name === provider.name);
@@ -56,14 +68,40 @@ export function ProviderManager() {
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { providers, updateProvider, resetProvider, resetAllProviders } =
-    useProviders();
+  const {
+    providers,
+    addProvider,
+    updateProvider,
+    deleteProvider,
+    resetProvider,
+    resetAllProviders,
+    selectProvider,
+  } = useProviders();
+
+  const customProviderCount = providers.filter((p) => !p.isBuiltIn).length;
+  const canAddCustomProvider = customProviderCount < MAX_CUSTOM_PROVIDERS;
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
       await updateProvider(editingProvider.id, data);
       setEditingProvider(null);
       setView('list');
+    }
+  };
+
+  const handleAdd = async (data: Omit<ProviderConfig, 'id'>) => {
+    try {
+      const created = await addProvider(data);
+      selectProvider(created.id);
+      setView('list');
+    } catch (e) {
+      if (e instanceof Error && e.message === 'MAX_CUSTOM_PROVIDERS') {
+        window.alert(
+          `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`,
+        );
+        return;
+      }
+      throw e;
     }
   };
 
@@ -76,6 +114,12 @@ export function ProviderManager() {
   const handleBackToList = () => {
     setEditingProvider(null);
     setView('list');
+  };
+
+  const openAddCustomProvider = () => {
+    setEditingProvider(null);
+    setFormVersion((v) => v + 1);
+    setView('add');
   };
 
   return (
@@ -123,12 +167,15 @@ export function ProviderManager() {
           <DialogTitle className="text-[15px] tracking-tight">
             {view === 'list' && 'Providers'}
             {view === 'edit' && 'Edit Provider'}
+            {view === 'add' && 'Add custom provider'}
           </DialogTitle>
           <p className="text-muted-foreground text-xs">
             {view === 'list' &&
               'Tune credentials and model options for each connected provider.'}
             {view === 'edit' &&
               'Update keys, headers, endpoints, and model entries without leaving the composer.'}
+            {view === 'add' &&
+              'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
           </p>
           <IconButton
             variant="ghost"
@@ -151,29 +198,83 @@ export function ProviderManager() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {view === 'list' && (
             <div className="flex flex-col gap-2 px-3 py-3">
-              {providers.map((p) => (
-                <button
-                  key={p.id}
+              <div className="flex flex-col gap-1.5">
+                <Button
                   type="button"
-                  className="border-border/60 bg-background/80 hover:border-foreground/15 hover:bg-muted/30 flex w-full cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors"
-                  onClick={() => {
-                    setEditingProvider(p);
-                    setView('edit');
-                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center gap-1.5"
+                  disabled={!canAddCustomProvider}
+                  onClick={openAddCustomProvider}
+                  title={
+                    canAddCustomProvider
+                      ? undefined
+                      : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
+                  }
                 >
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium tracking-tight">
-                      {p.name}
+                  <Plus className="h-3.5 w-3.5" />
+                  Add custom provider
+                </Button>
+                {!canAddCustomProvider && (
+                  <p className="text-muted-foreground px-0.5 text-center text-[11px] leading-snug">
+                    Maximum {MAX_CUSTOM_PROVIDERS} custom providers. Remove one
+                    to add another.
+                  </p>
+                )}
+              </div>
+              {providers.map((p) => (
+                <div
+                  key={p.id}
+                  className="border-border/60 bg-background/80 hover:border-foreground/15 hover:bg-muted/30 flex w-full items-center gap-2 rounded-xl border px-3 py-2 transition-colors"
+                >
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-left"
+                    onClick={() => {
+                      setEditingProvider(p);
+                      setView('edit');
+                    }}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium tracking-tight">
+                        {p.name}
+                        {!p.isBuiltIn && (
+                          <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
+                            Custom
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground mt-1 text-xs">
+                        {getProviderDetails(p)}
+                      </div>
                     </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {getProviderDetails(p)}
-                    </div>
-                  </div>
-                  <Pencil
-                    className="text-muted-foreground h-3.5 w-3.5"
-                    aria-hidden="true"
-                  />
-                </button>
+                    <Pencil
+                      className="text-muted-foreground h-3.5 w-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                  </button>
+                  {!p.isBuiltIn && (
+                    <IconButton
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="shrink-0"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            'Remove this custom provider? This cannot be undone.',
+                          )
+                        ) {
+                          void deleteProvider(p.id);
+                        }
+                      }}
+                      tooltip="Remove custom provider"
+                      aria-label={`Remove custom provider ${p.name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </IconButton>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -196,6 +297,16 @@ export function ProviderManager() {
                 const { id, ...data } = updated;
                 return data;
               }}
+            />
+          )}
+
+          {view === 'add' && (
+            <ProviderForm
+              key={`add-${formVersion}`}
+              ref={formRef}
+              initialData={createCustomProviderTemplate()}
+              onSubmit={handleAdd}
+              isBuiltIn={false}
             />
           )}
         </div>
@@ -283,6 +394,27 @@ export function ProviderManager() {
                   onClick={() => formRef.current?.requestSubmit()}
                 >
                   Update
+                </Button>
+              </div>
+            </>
+          )}
+
+          {view === 'add' && (
+            <>
+              <div />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBackToList}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => formRef.current?.requestSubmit()}
+                >
+                  Add provider
                 </Button>
               </div>
             </>

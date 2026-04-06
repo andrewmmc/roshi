@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import type { ProviderConfig } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
+import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import { fetchModelsForProvider } from '@/services/models-api';
 
 const SELECTION_KEY = 'provider-selection';
@@ -140,6 +141,11 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   },
 
   addProvider: async (provider) => {
+    const customCount = get().providers.filter((p) => !p.isBuiltIn).length;
+    if (customCount >= MAX_CUSTOM_PROVIDERS) {
+      throw new Error('MAX_CUSTOM_PROVIDERS');
+    }
+
     const newProvider: ProviderConfig = { ...provider, id: nanoid() };
     await db.providers.add(newProvider);
     let shouldPersist = false;

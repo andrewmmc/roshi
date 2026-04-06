@@ -1,10 +1,13 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ProviderManager } from './ProviderManager';
 import { makeProvider } from '@/__tests__/fixtures';
 import { useProviderStore } from '@/stores/provider-store';
 
 const updateProvider = vi.fn();
+const addProvider = vi.fn();
+const deleteProvider = vi.fn();
+const selectProvider = vi.fn();
 const resetProvider = vi.fn();
 const resetAllProviders = vi.fn();
 
@@ -25,6 +28,9 @@ vi.mock('@/hooks/use-providers', () => ({
         apiKey: '',
       }),
     ],
+    addProvider,
+    deleteProvider,
+    selectProvider,
     updateProvider,
     resetProvider,
     resetAllProviders,
@@ -80,6 +86,9 @@ vi.mock('./ProviderForm', () => ({
 describe('ProviderManager', () => {
   beforeEach(() => {
     updateProvider.mockReset();
+    addProvider.mockReset();
+    deleteProvider.mockReset();
+    selectProvider.mockReset();
     resetProvider.mockReset();
     resetAllProviders.mockReset();
     useProviderStore.setState({
@@ -116,6 +125,26 @@ describe('ProviderManager', () => {
       'builtin-openai',
       expect.objectContaining({ name: 'Updated Provider' }),
     );
+  });
+
+  it('opens add custom provider view and submits a new provider', async () => {
+    addProvider.mockResolvedValue(
+      makeProvider({ id: 'new-id', name: 'New', isBuiltIn: false }),
+    );
+
+    render(<ProviderManager />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /add custom provider/i }),
+    );
+    expect(screen.getByText('Add custom provider')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit Mock' }));
+
+    await waitFor(() => {
+      expect(addProvider).toHaveBeenCalledTimes(1);
+      expect(selectProvider).toHaveBeenCalledWith('new-id');
+    });
   });
 
   it('resets a built-in provider in edit view', async () => {

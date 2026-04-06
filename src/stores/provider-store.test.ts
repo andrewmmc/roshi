@@ -1,4 +1,5 @@
 import { useProviderStore } from './provider-store';
+import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import { makeProvider, makeModel } from '@/__tests__/fixtures';
 
 const { mockDb, mockFetchModels, nanoidCount } = vi.hoisted(() => {
@@ -213,6 +214,40 @@ describe('provider-store', () => {
 
       expect(getState().selectedProviderId).toBeTruthy();
       expect(getState().selectedModelId).toBe('new-model');
+    });
+
+    it(`rejects when there are already ${MAX_CUSTOM_PROVIDERS} custom providers`, async () => {
+      const customs = Array.from({ length: MAX_CUSTOM_PROVIDERS }, (_, i) =>
+        makeProvider({
+          id: `c${i}`,
+          name: `Custom ${i}`,
+          isBuiltIn: false,
+        }),
+      );
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({ id: 'b1', name: 'OpenAI', isBuiltIn: true }),
+          ...customs,
+        ],
+        selectedProviderId: 'b1',
+        selectedModelId: 'gpt-4',
+      });
+
+      await expect(
+        getState().addProvider({
+          name: 'One too many',
+          type: 'custom',
+          baseUrl: 'https://x',
+          auth: { type: 'none' },
+          apiKey: '',
+          endpoints: { chat: '/chat' },
+          models: [makeModel({ id: 'm' })],
+          isBuiltIn: false,
+        }),
+      ).rejects.toThrow('MAX_CUSTOM_PROVIDERS');
+
+      expect(mockDb.providers.add).not.toHaveBeenCalled();
     });
   });
 
