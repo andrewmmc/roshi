@@ -66,7 +66,9 @@ export function ProviderSelect() {
       <Select
         value={selectedModelId || ''}
         onValueChange={selectModel}
-        disabled={!supportsModelSelection(selectedProvider?.type ?? 'custom')}
+        disabled={
+          !supportsModelSelection(selectedProvider?.type ?? 'openai-compatible')
+        }
       >
         <SelectTrigger
           aria-label="Select model"

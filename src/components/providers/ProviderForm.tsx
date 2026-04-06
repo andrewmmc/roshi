@@ -25,6 +25,13 @@ import { nanoid } from 'nanoid';
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 type FormModel = ProviderModel & { _formKey: string };
 
+/** Legacy saved providers used `custom`; it is identical to OpenAI-compatible in adapters. */
+function normalizeProviderFormType(
+  type: ProviderConfig['type'],
+): ProviderConfig['type'] {
+  return type === 'custom' ? 'openai-compatible' : type;
+}
+
 interface ProviderFormProps {
   ref?: Ref<HTMLFormElement>;
   initialData?: ProviderFormData;
@@ -52,9 +59,10 @@ export function ProviderForm({
   onSubmit,
   isBuiltIn = false,
 }: ProviderFormProps) {
-  const [form, setForm] = useState<ProviderFormData>(
-    initialData || defaultFormData,
-  );
+  const [form, setForm] = useState<ProviderFormData>(() => {
+    const base = initialData || defaultFormData;
+    return { ...base, type: normalizeProviderFormType(base.type) };
+  });
 
   const toFormModels = (models: ProviderModel[]): FormModel[] =>
     models.map((m) => ({ ...m, _formKey: nanoid() }));
@@ -126,7 +134,12 @@ export function ProviderForm({
       }));
     // Convert header entries to record for submission
     const customHeaders = headersToRecord(headerEntries);
-    onSubmit({ ...form, models: cleanedModels, customHeaders });
+    onSubmit({
+      ...form,
+      type: normalizeProviderFormType(form.type),
+      models: cleanedModels,
+      customHeaders,
+    });
   };
 
   return (
@@ -162,7 +175,6 @@ export function ProviderForm({
                 </SelectItem>
                 <SelectItem value="anthropic">Anthropic</SelectItem>
                 <SelectItem value="google-gemini">Google Gemini</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
           </div>

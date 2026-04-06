@@ -177,7 +177,7 @@ describe('provider-store', () => {
 
       const result = await getState().addProvider({
         name: 'Custom',
-        type: 'custom',
+        type: 'openai-compatible',
         baseUrl: 'https://custom.api',
         auth: { type: 'bearer' },
         apiKey: 'key',
@@ -203,7 +203,7 @@ describe('provider-store', () => {
 
       await getState().addProvider({
         name: 'New',
-        type: 'custom',
+        type: 'openai-compatible',
         baseUrl: 'https://new.api',
         auth: { type: 'none' },
         apiKey: '',
@@ -237,7 +237,7 @@ describe('provider-store', () => {
       await expect(
         getState().addProvider({
           name: 'One too many',
-          type: 'custom',
+          type: 'openai-compatible',
           baseUrl: 'https://x',
           auth: { type: 'none' },
           apiKey: '',

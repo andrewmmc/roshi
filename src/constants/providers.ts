@@ -7,7 +7,7 @@ export const MAX_CUSTOM_PROVIDERS = 3;
 export function createCustomProviderTemplate(): Omit<ProviderConfig, 'id'> {
   return {
     name: '',
-    type: 'custom',
+    type: 'openai-compatible',
     baseUrl: '',
     auth: { type: 'bearer' },
     apiKey: '',
