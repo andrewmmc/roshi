@@ -90,6 +90,21 @@ function writeCache(data: FetchedModels): void {
   }
 }
 
+const OPENROUTER_HARDCODED_MODELS: ProviderModel[] = [
+  {
+    id: 'openrouter/auto',
+    name: 'openrouter/auto',
+    displayName: 'Auto (best available)',
+    supportsStreaming: true,
+  },
+  {
+    id: 'openrouter/free',
+    name: 'openrouter/free',
+    displayName: 'Free (best free)',
+    supportsStreaming: true,
+  },
+];
+
 function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   return {
     openai: data.openai?.models
@@ -104,12 +119,7 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
       : [],
     openrouter: data.openrouter?.models
       ? [
-          ...sortByReleaseDate(
-            collectModels(
-              data.openrouter.models,
-              (id, m) => id.startsWith('openrouter/') && isTextChatModel(m),
-            ),
-          ),
+          ...OPENROUTER_HARDCODED_MODELS,
           ...sortByReleaseDate(
             collectModels(
               data.openrouter.models,
@@ -123,7 +133,7 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
             ),
           ),
         ]
-      : [],
+      : OPENROUTER_HARDCODED_MODELS,
   };
 }
 
