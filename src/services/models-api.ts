@@ -137,9 +137,16 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   };
 }
 
+function ensureHardcodedModels(models: FetchedModels): FetchedModels {
+  const ids = new Set(models.openrouter.map((m) => m.id));
+  const missing = OPENROUTER_HARDCODED_MODELS.filter((m) => !ids.has(m.id));
+  if (missing.length === 0) return models;
+  return { ...models, openrouter: [...missing, ...models.openrouter] };
+}
+
 export async function fetchModelsFromApi(): Promise<FetchedModels> {
   const cached = readCache();
-  if (cached) return cached;
+  if (cached) return ensureHardcodedModels(cached);
 
   const res = await runtimeFetch(MODELS_API_URL);
   if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
