@@ -52,6 +52,12 @@ const mockModels = {
         release_date: '2024-03-04',
         modalities: { input: ['text'], output: ['text'] },
       },
+      'openrouter/free': {
+        id: 'openrouter/free',
+        name: 'OpenRouter Free',
+        release_date: '2025-01-01',
+        modalities: { input: ['text'], output: ['text'] },
+      },
       'meta/llama-3': {
         id: 'meta/llama-3',
         name: 'Llama 3 via OR',
@@ -81,7 +87,7 @@ describe('models-api', () => {
 
       expect(result.openai).toHaveLength(2); // excludes embedding
       expect(result.anthropic).toHaveLength(1);
-      expect(result.openrouter).toHaveLength(2); // only openai/ and anthropic/ prefixed
+      expect(result.openrouter).toHaveLength(3); // only openrouter/, openai/, and anthropic/ prefixed
     });
 
     it('excludes embedding models', async () => {
@@ -112,7 +118,7 @@ describe('models-api', () => {
       expect(result.openai[1].id).toBe('gpt-3.5-turbo'); // 2023-01-01
     });
 
-    it('openrouter: openai-prefixed before anthropic-prefixed', async () => {
+    it('openrouter: openrouter/-prefixed first, then openai/, then anthropic/', async () => {
       vi.stubGlobal(
         'fetch',
         vi.fn().mockResolvedValue({
@@ -122,8 +128,9 @@ describe('models-api', () => {
       );
 
       const result = await fetchModelsFromApi();
-      expect(result.openrouter[0].id).toBe('openai/gpt-4');
-      expect(result.openrouter[1].id).toBe('anthropic/claude-3');
+      expect(result.openrouter[0].id).toBe('openrouter/free');
+      expect(result.openrouter[1].id).toBe('openai/gpt-4');
+      expect(result.openrouter[2].id).toBe('anthropic/claude-3');
     });
 
     it('throws on non-ok response', async () => {
