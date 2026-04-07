@@ -39,7 +39,11 @@
     "homepage": "https://github.com/andrewmmc/roshi",
     "longDescription": "MIT-licensed local-first workbench for testing LLM APIs",
     "macOS": {
-      "minimumSystemVersion": "10.15"
-    }
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "Developer ID Application: Man Chun Mok (XKK7J9PRAG)",
+      "entitlements": "./EntitlementsDevID.plist",
+      "infoPlist": "./Info.plist"
+    },
+    "category": "DeveloperTool"
   }
 }
