@@ -27,8 +27,11 @@ dist-ssr
 src-tauri/target
 src-tauri/gen
 
-# Certs, profiles
+# Certs, profiles, signing keys
 *.provisionprofile
+*.p12
+*.p8
+*-base64.txt
 
 # Test coverage
 coverage
