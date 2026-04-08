@@ -80,13 +80,30 @@ jobs:
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           cd src-tauri && cargo generate-lockfile
 
-      - name: Verify signing identity
+      - name: Verify signing identities
         env:
           APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          MAC_INSTALLER_IDENTITY: ${{ vars.MAC_INSTALLER_IDENTITY }}
         run: |
-          echo "Looking for identity: $APPLE_SIGNING_IDENTITY"
-          security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain"
-          security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain" | grep -q "$APPLE_SIGNING_IDENTITY" || { echo "::error::Signing identity not found in keychain"; exit 1; }
+          echo "Looking for code signing identity: $APPLE_SIGNING_IDENTITY"
+          CODESIGN_IDENTITIES=$(security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain")
+          echo "$CODESIGN_IDENTITIES"
+          echo "$CODESIGN_IDENTITIES" | grep -Fq "$APPLE_SIGNING_IDENTITY" || {
+            if echo "$CODESIGN_IDENTITIES" | grep -Fq "Developer ID Application:"; then
+              echo "::error::App Store builds require an Apple Distribution certificate, but the imported APPLE_CERTIFICATE appears to be a Developer ID Application certificate."
+            else
+              echo "::error::Signing identity not found in keychain"
+            fi
+            exit 1
+          }
+
+          echo "Looking for installer identity: $MAC_INSTALLER_IDENTITY"
+          INSTALLER_IDENTITIES=$(security find-identity -v "$RUNNER_TEMP/build.keychain")
+          echo "$INSTALLER_IDENTITIES"
+          echo "$INSTALLER_IDENTITIES" | grep -Fq "$MAC_INSTALLER_IDENTITY" || {
+            echo "::error::Installer identity not found in keychain. App Store uploads require a Mac Installer Distribution identity for productbuild."
+            exit 1
+          }
 
       - name: Build universal binary (App Store config)
         env:
