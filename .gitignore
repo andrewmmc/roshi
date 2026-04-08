@@ -39,3 +39,6 @@ coverage
 # Claude Code
 .claude/settings.local.json
 .claude/plans/
+
+# App Store screenshots (generated)
+appstore-screenshots
