@@ -70,13 +70,19 @@ Real views from the actual app, so you can quickly see how Roshi feels before yo
 
 ## Download
 
-**[Download the latest release](https://github.com/andrewmmc/roshi/releases/latest)**
+**[Download on the Mac App Store](#)** _(coming soon)_
+&nbsp;&nbsp;·&nbsp;&nbsp;
+**[Download the latest release](https://github.com/andrewmmc/roshi/releases/latest)** (free, manual updates)
 
-macOS builds are available for both Apple Silicon (M1+) and Intel. Download the `.dmg` file for your architecture from the releases page.
+macOS builds are available for both Apple Silicon (M1+) and Intel.
 
-### Installation (macOS)
+### Mac App Store (recommended)
 
-1. Download the `.dmg` file from the [releases page](https://github.com/andrewmmc/roshi/releases/latest).
+The Mac App Store version is a one-time purchase that includes automatic updates and supports ongoing development. Click **[Download on the Mac App Store](#)** _(link coming soon)_ to get it.
+
+### Manual install (free, GitHub releases)
+
+1. Download the `.dmg` file from the [releases page](https://github.com/andrewmmc/roshi/releases/latest) for your architecture (Apple Silicon or Intel).
 2. Open the `.dmg` and drag **Roshi** to your **Applications** folder.
 3. On first launch, macOS may block the app. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
 4. Add your API key for any provider in the app and start testing.
