@@ -85,9 +85,8 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
           MAC_INSTALLER_IDENTITY: ${{ vars.MAC_INSTALLER_IDENTITY }}
         run: |
-          echo "Looking for code signing identity: $APPLE_SIGNING_IDENTITY"
+          echo "Looking for code signing identity..."
           CODESIGN_IDENTITIES=$(security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain")
-          echo "$CODESIGN_IDENTITIES"
           echo "$CODESIGN_IDENTITIES" | grep -Fq "$APPLE_SIGNING_IDENTITY" || {
             if echo "$CODESIGN_IDENTITIES" | grep -Fq "Developer ID Application:"; then
               echo "::error::App Store builds require an Apple Distribution certificate, but the imported APPLE_CERTIFICATE appears to be a Developer ID Application certificate."
@@ -97,9 +96,8 @@ jobs:
             exit 1
           }
 
-          echo "Looking for installer identity: $MAC_INSTALLER_IDENTITY"
+          echo "Looking for installer identity..."
           INSTALLER_IDENTITIES=$(security find-identity -v "$RUNNER_TEMP/build.keychain")
-          echo "$INSTALLER_IDENTITIES"
           echo "$INSTALLER_IDENTITIES" | grep -Fq "$MAC_INSTALLER_IDENTITY" || {
             echo "::error::Installer identity not found in keychain. App Store uploads require a Mac Installer Distribution identity for productbuild."
             exit 1

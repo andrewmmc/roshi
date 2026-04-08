@@ -27,10 +27,10 @@ INPUT_DIR="$(cd "$(dirname "$0")/../assets" && pwd)"
 OUTPUT_DIR="$(cd "$(dirname "$0")/.." && pwd)/appstore-screenshots"
 CORNER_RADIUS=16
 PADDING_BOTTOM=80
-CAPTION_FONT_SIZE=54
+CAPTION_FONT_SIZE=100
 CAPTION_COLOR="#0a0a0a"
-SUBCAPTION_FONT_SIZE=30
-SUBCAPTION_COLOR="#888888"
+SUBCAPTION_FONT_SIZE=46
+SUBCAPTION_COLOR="#8c8c8c"
 
 # Minimalist background (matches roshi.mmc.dev --bg-soft)
 BG_COLOR="#f8f8f8"
@@ -86,11 +86,11 @@ for src in "$INPUT_DIR"/screenshot-*.png; do
   # Target screenshot size: 80% of canvas width, positioned below caption area
   target_w=$(( CANVAS_W * 80 / 100 ))
   if [ -n "$caption" ]; then
-    target_h=$(( CANVAS_H * 58 / 100 ))
+    target_h=$(( CANVAS_H * 52 / 100 ))
     # Caption at top, screenshot below
-    caption_y=$(( CANVAS_H * 10 / 100 ))
-    subcaption_y=$(( caption_y + CAPTION_FONT_SIZE + 20 ))
-    screenshot_y=$(( CANVAS_H * 28 / 100 ))
+    caption_y=$(( CANVAS_H * 12 / 100 ))
+    subcaption_y=$(( caption_y + CAPTION_FONT_SIZE + 28 ))
+    screenshot_y=$(( CANVAS_H * 36 / 100 ))
   else
     target_h=$(( CANVAS_H * 75 / 100 ))
     screenshot_y=$(( CANVAS_H * 12 / 100 ))
@@ -116,7 +116,7 @@ for src in "$INPUT_DIR"/screenshot-*.png; do
   # Step 3: Add subtle drop shadow
   shadowed="/tmp/roshi_shadowed_${index}.png"
   magick "$rounded" \
-    \( +clone -background "rgba(0,0,0,0.15)" -shadow "100x20+0+8" \) \
+    \( +clone -background "rgba(0,0,0,0.03)" -shadow "40x8+0+3" \) \
     +swap -background none -layers merge +repage \
     "$shadowed"
 
@@ -130,7 +130,7 @@ for src in "$INPUT_DIR"/screenshot-*.png; do
     magick "$out" \
       -gravity north \
       -font "/System/Library/Fonts/SFNS.ttf" \
-      -weight 600 \
+      -weight 700 \
       -pointsize "$CAPTION_FONT_SIZE" \
       -fill "$CAPTION_COLOR" \
       -annotate "+0+${caption_y}" "$caption" \
