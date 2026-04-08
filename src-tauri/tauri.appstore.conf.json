@@ -2,7 +2,7 @@
   "bundle": {
     "targets": ["app"],
     "macOS": {
-      "signingIdentity": "Apple Distribution: Man Chun Mok (XKK7J9PRAG)",
+      "signingIdentity": null,
       "entitlements": "./EntitlementsAppStore.plist",
       "files": {
         "embedded.provisionprofile": "./embedded.provisionprofile"

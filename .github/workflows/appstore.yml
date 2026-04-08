@@ -80,6 +80,14 @@ jobs:
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           cd src-tauri && cargo generate-lockfile
 
+      - name: Verify signing identity
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+        run: |
+          echo "Looking for identity: $APPLE_SIGNING_IDENTITY"
+          security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain"
+          security find-identity -v -p codesigning "$RUNNER_TEMP/build.keychain" | grep -q "$APPLE_SIGNING_IDENTITY" || { echo "::error::Signing identity not found in keychain"; exit 1; }
+
       - name: Build universal binary (App Store config)
         env:
           APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
