@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/roshi-logo.png" alt="Roshi logo" width="140" />
+  <img src="./assets/roshi-logo.png" alt="Roshi logo" width="128" />
 </p>
 
 <h1 align="center">Roshi</h1>
