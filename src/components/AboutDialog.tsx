@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { ExternalLink } from 'lucide-react';
 import {
   Dialog,
@@ -8,6 +8,17 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { useUiStore } from '@/stores/ui-store';
+
+function openExternal(url: string) {
+  import('@tauri-apps/plugin-opener')
+    .then(({ openUrl }) => openUrl(url))
+    .catch(() => window.open(url, '_blank', 'noopener,noreferrer'));
+}
+
+const LINKS = [
+  { label: 'Website', url: 'https://roshi.mmc.dev' },
+  { label: 'Privacy Policy', url: 'https://roshi.mmc.dev/privacy' },
+] as const;
 
 export function AboutDialog() {
   const open = useUiStore((s) => s.aboutOpen);
@@ -25,6 +36,12 @@ export function AboutDialog() {
       });
     return () => unlisten?.();
   }, [setOpen]);
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const url = e.currentTarget.href;
+    if (url) openExternal(url);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -56,33 +73,17 @@ export function AboutDialog() {
           <Separator />
 
           <div className="space-y-2">
-            <a
-              href="https://github.com/andrewmmc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
-            >
-              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              Author
-            </a>
-            <a
-              href="https://github.com/andrewmmc/roshi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
-            >
-              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              GitHub
-            </a>
-            <a
-              href="https://roshi.mmc.dev/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
-            >
-              <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              Privacy Policy
-            </a>
+            {LINKS.map(({ label, url }) => (
+              <a
+                key={label}
+                href={url}
+                onClick={handleClick}
+                className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
+              >
+                <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                {label}
+              </a>
+            ))}
           </div>
 
           <p className="text-muted-foreground text-xs">© 2026 Andrew Mok</p>

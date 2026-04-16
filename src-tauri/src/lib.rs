@@ -2,11 +2,13 @@ use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     Emitter,
 };
+use tauri_plugin_opener::OpenerExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_opener::init())
         .menu(|app| {
             // --- App menu ---
             let about_item = MenuItem::with_id(
@@ -20,19 +22,10 @@ pub fn run() {
 
             let separator = PredefinedMenuItem::separator(app).unwrap();
 
-            let github_repo = MenuItem::with_id(
+            let website = MenuItem::with_id(
                 app,
-                "github-repo",
-                "GitHub Repository",
-                true,
-                None::<&str>,
-            )
-            .unwrap();
-
-            let author_profile = MenuItem::with_id(
-                app,
-                "author",
-                "Author Profile",
+                "website",
+                "Website",
                 true,
                 None::<&str>,
             )
@@ -50,8 +43,7 @@ pub fn run() {
                 &[
                     &about_item,
                     &separator,
-                    &github_repo,
-                    &author_profile,
+                    &website,
                     &PredefinedMenuItem::separator(app).unwrap(),
                     &hide,
                     &hide_others,
@@ -114,11 +106,8 @@ pub fn run() {
                 "about" => {
                     let _ = app.emit("show-about", ());
                 }
-                "github-repo" => {
-                    _ = open::that("https://github.com/andrewmmc/roshi");
-                }
-                "author" => {
-                    _ = open::that("https://github.com/andrewmmc");
+                "website" => {
+                    let _ = app.opener().open_url("https://roshi.mmc.dev", None::<&str>);
                 }
                 _ => {}
             }

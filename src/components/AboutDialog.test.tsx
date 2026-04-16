@@ -19,8 +19,7 @@ describe('AboutDialog', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByAltText('Roshi')).toBeInTheDocument();
-    expect(screen.getByText('GitHub')).toBeInTheDocument();
-    expect(screen.getByText('Author')).toBeInTheDocument();
+    expect(screen.getByText('Website')).toBeInTheDocument();
     expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
   });
 
