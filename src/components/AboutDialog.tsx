@@ -75,13 +75,13 @@ export function AboutDialog() {
               GitHub
             </a>
             <a
-              href="https://github.com/andrewmmc/roshi/releases/latest"
+              href="https://roshi.mmc.dev/privacy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
             >
               <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              Check for Updates...
+              Privacy Policy
             </a>
           </div>
 
