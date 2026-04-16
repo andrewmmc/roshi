@@ -90,6 +90,7 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, OpenRouter (see that
 - Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage thresholds are enforced when running `test:coverage` (85% lines/functions/statements, 80% branches).
 - ESLint may report pre-existing issues (e.g. unused variables, conditional hooks in `CodeView.tsx`, react-refresh noise in generated UI). Do not assume new edits caused all warnings.
 - Users enter API keys in the UI; secrets are stored locally in IndexedDB. No `.env` or server-side secrets are required for the app to run.
+- **Git tags:** always use non-interactive mode: `git tag -m "vX.Y.Z" vX.Y.Z`. Do not use annotated tags without `-m` as they open an interactive editor.
 - **After non-trivial changes, always run all three validation commands before considering the task complete:**
   ```bash
   npm run typecheck
