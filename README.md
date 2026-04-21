@@ -70,7 +70,7 @@ Real views from the actual app, so you can quickly see how Roshi feels before yo
 
 ## Download
 
-**[Download on the Mac App Store](macappstore://itunes.apple.com/app/6761768847)**
+**[Download on the Mac App Store](https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847)**
 &nbsp;&nbsp;·&nbsp;&nbsp;
 **[Download the latest release](https://github.com/andrewmmc/roshi/releases/latest)** (free, manual updates)
 
@@ -78,7 +78,7 @@ macOS builds are available for both Apple Silicon (M1+) and Intel.
 
 ### Mac App Store (recommended)
 
-The Mac App Store version is a one-time purchase that includes automatic updates and supports ongoing development. Click **[Download on the Mac App Store](macappstore://itunes.apple.com/app/6761768847)** to get it.
+The Mac App Store version is a one-time purchase that includes automatic updates and supports ongoing development. Click **[Download on the Mac App Store](https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847)** to get it.
 
 ### Manual install (free, GitHub releases)
 
