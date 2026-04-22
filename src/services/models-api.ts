@@ -8,6 +8,7 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 interface ApiModel {
   id: string;
   name: string;
+  status?: string;
   release_date?: string;
   modalities?: {
     input?: string[];
@@ -39,6 +40,7 @@ function toProviderModel(id: string, model: ApiModel): ProviderModel {
 }
 
 function isTextChatModel(model: ApiModel): boolean {
+  if (model.status === 'deprecated') return false;
   const output = model.modalities?.output ?? [];
   return output.includes('text') && !model.id.startsWith('text-embedding');
 }
