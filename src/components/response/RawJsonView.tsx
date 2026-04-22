@@ -4,6 +4,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
+import { toast } from '@/stores/toast-store';
 import { buildCurlCommand } from '@/utils/curl';
 
 const JsonBlock = memo(function JsonBlock({
@@ -51,6 +52,7 @@ function CurlCopyButton({ curlCommand }: { curlCommand: string | null }) {
     await navigator.clipboard.writeText(curlCommand);
     if (!mountedRef.current) return;
     setCopied(true);
+    toast('Copied as cURL');
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 2000);
   }, [curlCommand]);

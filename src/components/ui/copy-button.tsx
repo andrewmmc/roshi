@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
+import { toast } from '@/stores/toast-store';
 import { Copy, Check } from 'lucide-react';
 
 export function CopyButton({
@@ -29,6 +30,7 @@ export function CopyButton({
     await navigator.clipboard.writeText(text);
     if (!mountedRef.current) return;
     setCopied(true);
+    toast('Copied to clipboard');
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 2000);
   }, [text]);

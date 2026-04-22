@@ -7,6 +7,7 @@ import {
 } from '@/stores/composer-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { toast } from '@/stores/toast-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 
 function isDialogOpen(): boolean {
@@ -84,7 +85,10 @@ export function useGlobalShortcuts() {
         const { response, streamingContent } = useResponseStore.getState();
         const text = response?.content || streamingContent;
         if (text) {
-          navigator.clipboard.writeText(text).catch(() => {});
+          navigator.clipboard
+            .writeText(text)
+            .then(() => toast('Copied to clipboard'))
+            .catch(() => {});
         }
         return;
       }

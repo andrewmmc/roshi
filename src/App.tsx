@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AboutDialog } from '@/components/AboutDialog';
+import { ToastContainer } from '@/components/ui/toast';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { useThemeStore } from '@/stores/theme-store';
@@ -26,6 +27,7 @@ export function App() {
     <ErrorBoundary>
       <AboutDialog />
       <AppLayout />
+      <ToastContainer />
     </ErrorBoundary>
   );
 }

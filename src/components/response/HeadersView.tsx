@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, memo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useResponseStore } from '@/stores/response-store';
+import { toast } from '@/stores/toast-store';
 
 function CopyableCell({
   value,
@@ -15,6 +16,7 @@ function CopyableCell({
   const handleClick = useCallback(async () => {
     await navigator.clipboard.writeText(value);
     setCopied(true);
+    toast('Copied to clipboard');
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 1500);
   }, [value]);
