@@ -146,6 +146,10 @@ function ensureHardcodedModels(models: FetchedModels): FetchedModels {
   return { ...models, openrouter: [...missing, ...models.openrouter] };
 }
 
+export function clearModelsCache(): void {
+  localStorage.removeItem(CACHE_KEY);
+}
+
 export async function fetchModelsFromApi(): Promise<FetchedModels> {
   const cached = readCache();
   if (cached) return ensureHardcodedModels(cached);

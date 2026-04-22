@@ -4,7 +4,10 @@ import { db } from '@/db';
 import type { ProviderConfig } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
-import { fetchModelsForProvider } from '@/services/models-api';
+import {
+  fetchModelsForProvider,
+  clearModelsCache,
+} from '@/services/models-api';
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
@@ -62,6 +65,7 @@ interface ProviderStore {
   selectModel: (id: string | null) => void;
   resetProvider: (id: string) => Promise<void>;
   resetAllProviders: () => Promise<void>;
+  syncModels: () => Promise<void>;
 
   getSelectedProvider: () => ProviderConfig | null;
   getSelectedModel: () => ProviderConfig['models'][0] | null;
@@ -288,6 +292,33 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
         : null;
     await saveSelection(selectedProviderId, selectedModelId);
     set({ providers: newProviders, selectedProviderId, selectedModelId });
+  },
+
+  syncModels: async () => {
+    clearModelsCache();
+    const builtins = get().providers.filter((p) => p.isBuiltIn);
+    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[];
+    try {
+      fetchedModels = await Promise.all(
+        builtins.map((p) => fetchModelsForProvider(p.name)),
+      );
+    } catch {
+      return;
+    }
+
+    for (let i = 0; i < builtins.length; i++) {
+      const provider = builtins[i];
+      const models = fetchedModels[i];
+      await db.providers.update(provider.id, { models });
+    }
+
+    set((state) => ({
+      providers: state.providers.map((p) => {
+        if (!p.isBuiltIn) return p;
+        const idx = builtins.findIndex((b) => b.id === p.id);
+        return idx >= 0 ? { ...p, models: fetchedModels[idx] } : p;
+      }),
+    }));
   },
 
   getSelectedProvider: () => {

@@ -5,6 +5,7 @@ import {
   X,
   RotateCcw,
   Download,
+  RefreshCw,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -66,6 +67,7 @@ export function ProviderManager() {
   );
   const [resettingAll, setResettingAll] = useState(false);
   const [resettingProvider, setResettingProvider] = useState(false);
+  const [syncingModels, setSyncingModels] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -76,6 +78,7 @@ export function ProviderManager() {
     deleteProvider,
     resetProvider,
     resetAllProviders,
+    syncModels,
     selectProvider,
   } = useProviders();
 
@@ -337,6 +340,26 @@ export function ProviderManager() {
                 {resettingAll ? 'Resetting...' : 'Reset all to default'}
               </Button>
               <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground text-xs"
+                  disabled={syncingModels}
+                  onClick={async () => {
+                    setSyncingModels(true);
+                    try {
+                      await syncModels();
+                    } finally {
+                      setSyncingModels(false);
+                    }
+                  }}
+                >
+                  <RefreshCw
+                    className={`mr-1 h-3 w-3 ${syncingModels ? 'animate-spin' : ''}`}
+                  />
+                  {syncingModels ? 'Syncing...' : 'Sync models'}
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
