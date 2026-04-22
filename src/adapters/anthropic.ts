@@ -80,9 +80,15 @@ export const anthropicAdapter: ProviderAdapter = {
       body.system = request.systemPrompt;
     }
 
-    if (request.temperature !== undefined)
-      body.temperature = request.temperature;
-    if (request.topP !== undefined) body.top_p = request.topP;
+    if (request.temperature !== undefined && request.topP !== undefined) {
+      // Anthropic does not allow both temperature and top_p;
+      // when both are set, send only temperature.
+      body.temperature = Math.min(request.temperature, 1);
+    } else {
+      if (request.temperature !== undefined)
+        body.temperature = Math.min(request.temperature, 1);
+      if (request.topP !== undefined) body.top_p = request.topP;
+    }
     if (request.topK !== undefined && request.topK > 0)
       body.top_k = request.topK;
 

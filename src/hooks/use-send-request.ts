@@ -164,6 +164,7 @@ export function useSendRequest() {
           errorDetail: detail,
           rawRequest: err.rawRequest,
           rawResponse: err.rawResponse,
+          requestUrl: err.requestUrl,
           requestHeaders: err.requestHeaders,
           responseHeaders: err.responseHeaders,
           durationMs: err.durationMs,
@@ -173,7 +174,7 @@ export function useSendRequest() {
         useHistoryStore.getState().addEntry({
           ...baseHistoryEntry,
           rawRequest: err.rawRequest,
-          requestUrl: null,
+          requestUrl: err.requestUrl,
           requestHeaders: err.requestHeaders,
           responseHeaders: err.responseHeaders,
           response: null,

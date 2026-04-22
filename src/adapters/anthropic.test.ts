@@ -71,12 +71,30 @@ describe('anthropicAdapter', () => {
       expect(body.temperature).toBeUndefined();
     });
 
-    it('includes top_p when defined', () => {
+    it('includes top_p when defined and temperature is not', () => {
       const body = anthropicAdapter.buildRequestBody(
-        makeRequest({ topP: 0.9 }),
+        makeRequest({ topP: 0.9, temperature: undefined }),
         provider,
       );
       expect(body.top_p).toBe(0.9);
+      expect(body.temperature).toBeUndefined();
+    });
+
+    it('sends only temperature when both temperature and top_p are defined', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({ temperature: 0.5, topP: 0.9 }),
+        provider,
+      );
+      expect(body.temperature).toBe(0.5);
+      expect(body.top_p).toBeUndefined();
+    });
+
+    it('clamps temperature to 1.0 for Anthropic', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({ temperature: 1.5, topP: undefined }),
+        provider,
+      );
+      expect(body.temperature).toBe(1);
     });
 
     it('does not include frequency_penalty or presence_penalty', () => {

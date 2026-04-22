@@ -109,7 +109,7 @@ export function ParameterControls() {
         value={temperature}
         onChange={setTemperature}
         min={0}
-        max={2}
+        max={isAnthropic ? 1 : 2}
         step={0.01}
       />
       <NumberInputRow
@@ -119,6 +119,7 @@ export function ParameterControls() {
         min={0}
         max={1}
         step={0.01}
+        disabled={isAnthropic}
       />
       <NumberInputRow
         label="Top K"

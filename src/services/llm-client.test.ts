@@ -71,6 +71,7 @@ describe('llm-client', () => {
         { model: 'gpt-4' },
         { 'Content-Type': 'application/json' },
         { 'x-request-id': 'abc' },
+        'https://api.example.com/v1/messages',
         100,
       );
 
@@ -84,6 +85,7 @@ describe('llm-client', () => {
         'Content-Type': 'application/json',
       });
       expect(err.responseHeaders).toEqual({ 'x-request-id': 'abc' });
+      expect(err.requestUrl).toBe('https://api.example.com/v1/messages');
       expect(err.durationMs).toBe(100);
     });
   });

@@ -93,6 +93,7 @@ export async function sendRequest(
       body,
       headers,
       responseHeaders,
+      rawUrl,
       durationMs,
     );
   }
@@ -227,6 +228,7 @@ export class RequestError extends Error {
   rawRequest: Record<string, unknown>;
   requestHeaders: Record<string, string>;
   responseHeaders: Record<string, string>;
+  requestUrl: string;
   durationMs: number;
 
   constructor(
@@ -236,6 +238,7 @@ export class RequestError extends Error {
     rawRequest: Record<string, unknown>,
     requestHeaders: Record<string, string>,
     responseHeaders: Record<string, string>,
+    requestUrl: string,
     durationMs: number,
   ) {
     super(message);
@@ -245,6 +248,7 @@ export class RequestError extends Error {
     this.rawRequest = rawRequest;
     this.requestHeaders = requestHeaders;
     this.responseHeaders = responseHeaders;
+    this.requestUrl = requestUrl;
     this.durationMs = durationMs;
   }
 }
