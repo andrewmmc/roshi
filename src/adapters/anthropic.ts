@@ -11,6 +11,22 @@ import { isImageMimeType } from '@/utils/mime';
 const ANTHROPIC_VERSION = '2023-06-01';
 const DEFAULT_MAX_TOKENS = 4096;
 
+/**
+ * Claude Opus 4.7+ breaking changes:
+ * - Sampling parameters (temperature, top_p, top_k) return 400 errors.
+ * - Extended thinking budgets (`{type:"enabled", budget_tokens}`) removed;
+ *   only adaptive thinking (`{type:"adaptive"}`) is supported.
+ * - Effort is controlled via a top-level `effort` field instead.
+ *
+ * @see https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
+ */
+function isOpus47OrNewer(model: string): boolean {
+  // Match claude-opus-4-7, claude-opus-4-8, etc.
+  const match = model.match(/^claude-opus-4-(\d+)/);
+  if (!match) return false;
+  return parseInt(match[1], 10) >= 7;
+}
+
 function extractBase64(dataUri: string): {
   mediaType: string;
   data: string;
@@ -80,23 +96,37 @@ export const anthropicAdapter: ProviderAdapter = {
       body.system = request.systemPrompt;
     }
 
-    if (request.temperature !== undefined && request.topP !== undefined) {
-      // Anthropic does not allow both temperature and top_p;
-      // when both are set, send only temperature.
-      body.temperature = Math.min(request.temperature, 1);
-    } else {
-      if (request.temperature !== undefined)
+    const opus47 = isOpus47OrNewer(request.model);
+
+    // Opus 4.7+ removed support for sampling parameters (temperature,
+    // top_p, top_k); sending non-default values returns a 400 error.
+    if (!opus47) {
+      if (request.temperature !== undefined && request.topP !== undefined) {
+        // Anthropic does not allow both temperature and top_p;
+        // when both are set, send only temperature.
         body.temperature = Math.min(request.temperature, 1);
-      if (request.topP !== undefined) body.top_p = request.topP;
+      } else {
+        if (request.temperature !== undefined)
+          body.temperature = Math.min(request.temperature, 1);
+        if (request.topP !== undefined) body.top_p = request.topP;
+      }
+      if (request.topK !== undefined && request.topK > 0)
+        body.top_k = request.topK;
     }
-    if (request.topK !== undefined && request.topK > 0)
-      body.top_k = request.topK;
 
     if (request.thinking?.enabled) {
-      body.thinking = {
-        type: 'enabled',
-        budget_tokens: request.thinking.budgetTokens,
-      };
+      if (opus47) {
+        // Opus 4.7+ only supports adaptive thinking; extended thinking
+        // budgets (`{type:"enabled", budget_tokens}`) were removed.
+        // Effort is set via a top-level field (defaults to "high").
+        body.thinking = { type: 'adaptive' };
+        body.effort = 'high';
+      } else {
+        body.thinking = {
+          type: 'enabled',
+          budget_tokens: request.thinking.budgetTokens,
+        };
+      }
     }
 
     return body;

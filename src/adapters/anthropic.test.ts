@@ -161,6 +161,78 @@ describe('anthropicAdapter', () => {
       expect(body.thinking).toBeUndefined();
     });
 
+    // --- Opus 4.7+ compatibility ---
+
+    it('omits sampling params for claude-opus-4-7', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-7',
+          temperature: 0.7,
+          topP: 0.9,
+          topK: 10,
+        }),
+        provider,
+      );
+      expect(body.temperature).toBeUndefined();
+      expect(body.top_p).toBeUndefined();
+      expect(body.top_k).toBeUndefined();
+    });
+
+    it('keeps sampling params for pre-4.7 models', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-6',
+          temperature: 0.7,
+          topP: undefined,
+          topK: 10,
+        }),
+        provider,
+      );
+      expect(body.temperature).toBe(0.7);
+      expect(body.top_k).toBe(10);
+    });
+
+    it('sends adaptive thinking for claude-opus-4-7', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-7',
+          thinking: { enabled: true, budgetTokens: 10240 },
+        }),
+        provider,
+      );
+      expect(body.thinking).toEqual({ type: 'adaptive' });
+      expect(body.effort).toBe('high');
+    });
+
+    it('sends extended thinking for pre-4.7 models', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          thinking: { enabled: true, budgetTokens: 10240 },
+        }),
+        provider,
+      );
+      expect(body.thinking).toEqual({
+        type: 'enabled',
+        budget_tokens: 10240,
+      });
+      expect(body.effort).toBeUndefined();
+    });
+
+    it('handles future opus models (e.g. claude-opus-4-8)', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-8',
+          temperature: 0.5,
+          thinking: { enabled: true, budgetTokens: 5000 },
+        }),
+        provider,
+      );
+      expect(body.temperature).toBeUndefined();
+      expect(body.thinking).toEqual({ type: 'adaptive' });
+      expect(body.effort).toBe('high');
+    });
+
     it('handles base64 image attachments', () => {
       const request = makeRequest({
         messages: [
