@@ -2,6 +2,7 @@ import type { HistoryEntry } from '@/types/history';
 import type { ProviderConfig } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
+import { isTauri } from '@tauri-apps/api/core';
 
 const EXPORT_VERSION = 1;
 
@@ -13,10 +14,23 @@ interface ExportEnvelope<T> {
   data: T;
 }
 
-function downloadJson(data: unknown, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json',
-  });
+async function downloadJson(data: unknown, filename: string): Promise<void> {
+  const json = JSON.stringify(data, null, 2);
+
+  if (isTauri()) {
+    const { save } = await import('@tauri-apps/plugin-dialog');
+    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+    const filePath = await save({
+      defaultPath: filename,
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    });
+    if (filePath) {
+      await writeTextFile(filePath, json);
+    }
+    return;
+  }
+
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
