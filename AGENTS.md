@@ -6,6 +6,10 @@ Single source of truth for AI coding assistants (Cursor, Claude Code, Codex, and
 
 For **Cursor Cloud**, use the same guidance as the rest of this file: [What this project is](#what-this-project-is), [Commands](#commands), [Architecture](#architecture), [Conventions](#conventions), and [Notes for agents](#notes-for-agents). No separate Cursor-only setup, env files, or backend is required.
 
+- **Node.js via nvm:** The update script installs Node.js 20 via nvm. Source nvm before running npm commands: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`.
+- **Dev server:** `npm run dev` starts Vite on port 5173 with `--host` (accessible on all interfaces). No external services are needed.
+- **Testing without API keys:** Sending requests without provider API keys configured produces a 401 error — this is expected behavior and confirms the request pipeline is working.
+
 ## What this project is
 
 **Roshi** is a client-only React + TypeScript + Vite SPA — a Postman-like UI for calling LLM provider APIs. There is no backend service, no server database, and no Docker. Data lives in the browser (IndexedDB via Dexie.js for providers/history/settings; **localStorage** for theme preference).
