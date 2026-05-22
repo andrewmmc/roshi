@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "validate:release-notes": "./scripts/validate-release-notes.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

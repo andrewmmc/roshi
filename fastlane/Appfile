@@ -1,0 +1,4 @@
+app_identifier(ENV['APP_IDENTIFIER'] || 'com.roshi.desktop')
+apple_id(ENV['APPLE_ID']) if ENV['APPLE_ID']
+team_id(ENV['APPLE_TEAM_ID']) if ENV['APPLE_TEAM_ID']
+itc_team_id(ENV['APPLE_ASC_TEAM_ID']) if ENV['APPLE_ASC_TEAM_ID']

@@ -1,0 +1,5 @@
+Thanks for using Roshi!
+
+This update includes bug fixes, performance improvements, and small refinements to keep your LLM API workbench fast, focused, and dependable.
+
+If Roshi helps your workflow, please consider leaving a review — it really helps. Got feedback or found an issue? Open an issue on GitHub from the About menu.
