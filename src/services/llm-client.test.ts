@@ -103,7 +103,7 @@ describe('llm-client', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(rawResponse),
+          text: () => Promise.resolve(JSON.stringify(rawResponse)),
         }),
       );
       vi.spyOn(performance, 'now')
@@ -117,7 +117,7 @@ describe('llm-client', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.durationMs).toBe(150);
-      expect(result.rawResponse).toBe(rawResponse);
+      expect(result.rawResponse).toEqual(rawResponse);
       expect(result.response.content).toBe('Hello there!');
       expect(result.requestHeaders).toEqual({
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ describe('llm-client', () => {
           ok: true,
           status: 200,
           headers: new Headers(),
-          json: () => Promise.resolve({}),
+          text: () => Promise.resolve('{}'),
         }),
       );
 
@@ -166,7 +166,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -189,7 +189,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
       const controller = new AbortController();
@@ -257,6 +257,28 @@ describe('llm-client', () => {
         const reqErr = err as RequestError;
         expect(reqErr.rawResponse).toEqual({ error: 'Internal Server Error' });
       }
+    });
+
+    it('throws RequestError with malformed success JSON', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          text: () => Promise.resolve('not json'),
+        }),
+      );
+
+      await expect(
+        sendRequest({ provider: makeProvider(), request: makeRequest() }),
+      ).rejects.toMatchObject({
+        status: 200,
+        rawResponse: {
+          error: 'Provider returned invalid JSON',
+          body: 'not json',
+        },
+      });
     });
   });
 
@@ -379,7 +401,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -398,7 +420,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -418,7 +440,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -437,7 +459,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve('{}'),
       });
       vi.stubGlobal('fetch', mockFetch);
 

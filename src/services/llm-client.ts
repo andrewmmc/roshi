@@ -6,6 +6,7 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { getAdapter } from '@/adapters';
+import type { ProviderAdapter } from '@/adapters/types';
 import { DEFAULT_REQUEST_TIMEOUT_MS } from '@/constants/defaults';
 import { runtimeFetch } from './runtime-fetch';
 
@@ -77,24 +78,29 @@ export async function sendRequest(
     responseHeaders[key] = value;
   });
 
-  if (!fetchResponse.ok) {
-    const errorText = await fetchResponse.text();
-    let errorJson: Record<string, unknown> | null = null;
-    try {
-      errorJson = JSON.parse(errorText);
-    } catch {
-      // not JSON
-    }
+  const createRequestError = (
+    message: string,
+    rawResponse: Record<string, unknown>,
+  ) => {
     const durationMs = Math.round(performance.now() - startTime);
-    throw new RequestError(
-      `HTTP ${fetchResponse.status}: ${errorJson ? JSON.stringify(errorJson) : errorText}`,
+    return new RequestError(
+      message,
       fetchResponse.status,
-      errorJson || { error: errorText },
+      rawResponse,
       body,
       headers,
       responseHeaders,
       rawUrl,
       durationMs,
+    );
+  };
+
+  if (!fetchResponse.ok) {
+    const errorText = await fetchResponse.text();
+    const errorJson = parseJsonObject(errorText);
+    throw createRequestError(
+      `HTTP ${fetchResponse.status}: ${errorJson ? JSON.stringify(errorJson) : errorText}`,
+      errorJson || { error: errorText },
     );
   }
 
@@ -112,7 +118,14 @@ export async function sendRequest(
     );
   }
 
-  const rawResponse = await fetchResponse.json();
+  const responseText = await fetchResponse.text();
+  const rawResponse = parseJsonObject(responseText);
+  if (!rawResponse) {
+    throw createRequestError('Provider returned invalid JSON', {
+      error: 'Provider returned invalid JSON',
+      body: responseText,
+    });
+  }
   const durationMs = Math.round(performance.now() - startTime);
   const response = adapter.parseResponse(rawResponse);
 
@@ -126,6 +139,17 @@ export async function sendRequest(
     durationMs,
     statusCode: fetchResponse.status,
   };
+}
+
+function parseJsonObject(text: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function getRequestUrl(targetUrl: string): string {
@@ -147,7 +171,7 @@ function getRequestUrl(targetUrl: string): string {
 
 async function handleStream(
   body: ReadableStream<Uint8Array>,
-  adapter: ReturnType<typeof getAdapter>,
+  adapter: ProviderAdapter,
   rawRequest: Record<string, unknown>,
   requestHeaders: Record<string, string>,
   responseHeaders: Record<string, string>,
@@ -157,7 +181,9 @@ async function handleStream(
   onStreamChunk?: (chunk: NormalizedStreamChunk) => void,
 ): Promise<SendRequestResult> {
   const textStream = new TextDecoderStream();
-  body.pipeTo(textStream.writable as WritableStream<Uint8Array>);
+  const pipePromise = body.pipeTo(
+    textStream.writable as WritableStream<Uint8Array>,
+  );
   const stream = textStream.readable.pipeThrough(new EventSourceParserStream());
 
   const reader = stream.getReader();
@@ -168,30 +194,30 @@ async function handleStream(
   let usage: NormalizedResponse['usage'] = null;
   const allChunks: unknown[] = [];
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    const data = value.data;
-    if (!data || data === '[DONE]') continue;
+      const data = value.data;
+      if (!data || data === '[DONE]') continue;
 
-    let parsed: Record<string, unknown> | null = null;
-    try {
-      parsed = JSON.parse(data);
-    } catch {
-      // skip unparseable
+      const parsed = parseJsonObject(data);
+      if (parsed) allChunks.push(parsed);
+
+      const chunk = adapter.parseStreamChunk(data);
+      if (chunk) {
+        fullContent += chunk.content;
+        if (chunk.id) lastId = chunk.id;
+        if (chunk.model) lastModel = chunk.model;
+        if (chunk.finishReason) finishReason = chunk.finishReason;
+        if (chunk.usage) usage = chunk.usage;
+        onStreamChunk?.(chunk);
+      }
     }
-    if (parsed) allChunks.push(parsed);
-
-    const chunk = adapter.parseStreamChunk(data);
-    if (chunk) {
-      fullContent += chunk.content;
-      if (chunk.id) lastId = chunk.id;
-      if (chunk.model) lastModel = chunk.model;
-      if (chunk.finishReason) finishReason = chunk.finishReason;
-      if (chunk.usage) usage = chunk.usage;
-      onStreamChunk?.(chunk);
-    }
+  } finally {
+    reader.releaseLock();
+    await pipePromise.catch(() => undefined);
   }
 
   const durationMs = Math.round(performance.now() - startTime);
