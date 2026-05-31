@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import type { ProviderConfig } from '@/types/provider';
+import { getDefaultProtocolForProviderType } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import {
@@ -35,6 +36,24 @@ function createBuiltInProvider(
     id,
     apiKey: '',
     models,
+  };
+}
+
+function normalizeProviderConfig(provider: ProviderConfig): ProviderConfig {
+  const endpoints =
+    provider.type === 'openai-compatible'
+      ? {
+          ...provider.endpoints,
+          responses: provider.endpoints.responses ?? '/responses',
+        }
+      : provider.endpoints;
+
+  return {
+    ...provider,
+    protocol:
+      provider.protocol ??
+      getDefaultProtocolForProviderType(provider.type, provider.name),
+    endpoints,
   };
 }
 
@@ -146,10 +165,14 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       }
     }
 
+    const normalizedProviders = providers.map(normalizeProviderConfig);
+
     // Seed missing built-in providers with models fetched from API
     const needsSeed = builtinProviders.filter(
       (template) =>
-        !providers.some((p) => p.name === template.name && p.isBuiltIn),
+        !normalizedProviders.some(
+          (p) => p.name === template.name && p.isBuiltIn,
+        ),
     );
 
     if (needsSeed.length > 0) {
@@ -158,7 +181,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
         const seededProviders = await createBuiltInProviders(needsSeed);
         for (const newProvider of seededProviders) {
           await db.providers.add(newProvider);
-          providers.push(newProvider);
+          normalizedProviders.push(newProvider);
         }
       } finally {
         set({ seeding: false });
@@ -167,10 +190,15 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     const saved = await loadSelection();
     const { providerId: selectedProviderId, modelId: selectedModelId } =
-      chooseValidSelection(providers, saved);
+      chooseValidSelection(normalizedProviders, saved);
 
     await saveSelection(selectedProviderId, selectedModelId);
-    set({ providers, selectedProviderId, selectedModelId, loaded: true });
+    set({
+      providers: normalizedProviders,
+      selectedProviderId,
+      selectedModelId,
+      loaded: true,
+    });
   },
 
   addProvider: async (provider) => {
@@ -179,7 +207,10 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       throw new Error('MAX_CUSTOM_PROVIDERS');
     }
 
-    const newProvider: ProviderConfig = { ...provider, id: nanoid() };
+    const newProvider: ProviderConfig = normalizeProviderConfig({
+      ...provider,
+      id: nanoid(),
+    });
     await db.providers.add(newProvider);
     let shouldPersist = false;
     let newProviderId: string | null = null;

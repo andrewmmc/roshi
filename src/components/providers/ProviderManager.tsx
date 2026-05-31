@@ -45,7 +45,9 @@ function getProviderDetails(provider: ProviderConfig): string {
   const hasApiKey = Boolean(provider.apiKey);
   const hasCustomHeaders = Object.keys(provider.customHeaders ?? {}).length > 0;
   const hasCustomEndpoint =
-    builtin && provider.endpoints.chat !== builtin.endpoints.chat;
+    builtin &&
+    (provider.endpoints.chat !== builtin.endpoints.chat ||
+      provider.endpoints.responses !== builtin.endpoints.responses);
   const hasCustomBaseUrl = builtin && provider.baseUrl !== builtin.baseUrl;
 
   return [

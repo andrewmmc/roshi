@@ -83,6 +83,7 @@ describe('ProviderForm', () => {
       expect.objectContaining({
         name: 'OpenAI Custom',
         type: 'openai-compatible',
+        protocol: 'openai-compatible-chat',
         customHeaders: { 'X-Team': 'platform' },
         models: [
           expect.objectContaining({
@@ -161,17 +162,20 @@ describe('ProviderForm', () => {
     );
   });
 
-  it('updates auth type, endpoint, API key, and display name fields', () => {
+  it('updates auth type, endpoints, API key, and display name fields', () => {
     const onSubmit = vi.fn();
     const { container } = render(
       <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
     );
 
-    fireEvent.change(screen.getAllByLabelText('select')[1], {
+    fireEvent.change(screen.getAllByLabelText('select')[2], {
       target: { value: 'none' },
     });
     fireEvent.change(screen.getByDisplayValue('/chat/completions'), {
       target: { value: '/v1/messages' },
+    });
+    fireEvent.change(screen.getByDisplayValue('/responses'), {
+      target: { value: '/v1/responses' },
     });
     fireEvent.change(screen.getByDisplayValue('test-key'), {
       target: { value: 'new-key' },
@@ -185,9 +189,25 @@ describe('ProviderForm', () => {
       expect.objectContaining({
         auth: { type: 'none' },
         apiKey: 'new-key',
-        endpoints: { chat: '/v1/messages' },
+        endpoints: { chat: '/v1/messages', responses: '/v1/responses' },
         models: [expect.objectContaining({ displayName: 'GPT Four' })],
       }),
+    );
+  });
+
+  it('submits selected OpenAI protocol', () => {
+    const onSubmit = vi.fn();
+    const { container } = render(
+      <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
+    );
+
+    fireEvent.change(screen.getAllByLabelText('select')[1], {
+      target: { value: 'openai-responses' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ protocol: 'openai-responses' }),
     );
   });
 });

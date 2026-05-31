@@ -5,9 +5,10 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
   {
     name: 'OpenAI',
     type: 'openai-compatible',
+    protocol: 'openai-chat-completions',
     baseUrl: 'https://api.openai.com/v1',
     auth: { type: 'bearer' },
-    endpoints: { chat: '/chat/completions' },
+    endpoints: { chat: '/chat/completions', responses: '/responses' },
     models: [],
     defaults: {
       temperature: DEFAULT_TEMPERATURE,
@@ -18,6 +19,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
   {
     name: 'Anthropic',
     type: 'anthropic',
+    protocol: 'anthropic-messages',
     baseUrl: 'https://api.anthropic.com/v1',
     auth: { type: 'api-key-header', headerName: 'x-api-key' },
     endpoints: { chat: '/messages' },
@@ -28,6 +30,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
   {
     name: 'Google Gemini',
     type: 'google-gemini',
+    protocol: 'gemini-generate-content',
     baseUrl: 'https://generativelanguage.googleapis.com',
     auth: { type: 'api-key-header', headerName: 'x-goog-api-key' },
     endpoints: { chat: '/v1beta/models' },
@@ -38,6 +41,7 @@ export const builtinProviders: Omit<ProviderConfig, 'id' | 'apiKey'>[] = [
   {
     name: 'OpenRouter',
     type: 'openai-compatible',
+    protocol: 'openai-compatible-chat',
     baseUrl: 'https://openrouter.ai/api/v1',
     auth: { type: 'bearer' },
     endpoints: { chat: '/chat/completions' },

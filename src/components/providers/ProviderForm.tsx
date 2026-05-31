@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/header-list-editor';
 import { headersToRecord, recordToHeaders } from '@/utils/headers';
 import { Trash2, Plus } from 'lucide-react';
-import { supportsModelSelection } from '@/types/provider';
+import {
+  getDefaultProtocolForProviderType,
+  supportsModelSelection,
+} from '@/types/provider';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 import { nanoid } from 'nanoid';
@@ -35,6 +38,7 @@ interface ProviderFormProps {
 const defaultFormData: ProviderFormData = {
   name: '',
   type: 'openai-compatible',
+  protocol: 'openai-compatible-chat',
   baseUrl: '',
   auth: { type: 'bearer' },
   apiKey: '',
@@ -77,6 +81,14 @@ export function ProviderForm({
     value: ProviderFormData[K],
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateProviderType = (type: ProviderConfig['type']) => {
+    setForm((prev) => ({
+      ...prev,
+      type,
+      protocol: getDefaultProtocolForProviderType(type, prev.name),
+    }));
   };
 
   const updateModel = (index: number, updates: Partial<ProviderModel>) => {
@@ -148,7 +160,7 @@ export function ProviderForm({
             <Select
               value={form.type}
               onValueChange={(val) =>
-                updateField('type', val as ProviderConfig['type'])
+                updateProviderType(val as ProviderConfig['type'])
               }
               disabled={isBuiltIn}
             >
@@ -165,6 +177,36 @@ export function ProviderForm({
             </Select>
           </div>
         </div>
+
+        {form.type === 'openai-compatible' && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="provider-protocol" className="text-xs">
+              Protocol
+            </Label>
+            <Select
+              value={form.protocol ?? 'openai-compatible-chat'}
+              onValueChange={(val) =>
+                updateField('protocol', val as ProviderConfig['protocol'])
+              }
+              disabled={isBuiltIn}
+            >
+              <SelectTrigger id="provider-protocol" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="openai-compatible-chat">
+                  OpenAI-compatible Chat Completions
+                </SelectItem>
+                <SelectItem value="openai-chat-completions">
+                  OpenAI Chat Completions
+                </SelectItem>
+                <SelectItem value="openai-responses">
+                  OpenAI Responses
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="provider-base-url" className="text-xs">
@@ -256,10 +298,34 @@ export function ProviderForm({
           <Input
             id="provider-chat-endpoint"
             value={form.endpoints.chat}
-            onChange={(e) => updateField('endpoints', { chat: e.target.value })}
+            onChange={(e) =>
+              updateField('endpoints', {
+                ...form.endpoints,
+                chat: e.target.value,
+              })
+            }
             placeholder="/chat/completions"
           />
         </div>
+
+        {form.type === 'openai-compatible' && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="provider-responses-endpoint" className="text-xs">
+              Responses Endpoint
+            </Label>
+            <Input
+              id="provider-responses-endpoint"
+              value={form.endpoints.responses ?? ''}
+              onChange={(e) =>
+                updateField('endpoints', {
+                  ...form.endpoints,
+                  responses: e.target.value,
+                })
+              }
+              placeholder="/responses"
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <Label className="text-xs">Models</Label>

@@ -167,6 +167,24 @@ describe('provider-store', () => {
         (p) => p.id === 'legacy-custom',
       );
       expect(migrated?.type).toBe('openai-compatible');
+      expect(migrated?.protocol).toBe('openai-compatible-chat');
+      expect(migrated?.endpoints.responses).toBe('/responses');
+    });
+
+    it('normalizes loaded providers without protocol metadata', async () => {
+      const provider = makeProvider({
+        id: 'old-openai',
+        name: 'OpenAI',
+        protocol: undefined,
+        endpoints: { chat: '/chat/completions' },
+      });
+      mockDb.providers.toArray.mockResolvedValue([provider]);
+
+      await getState().load();
+
+      const loaded = getState().providers.find((p) => p.id === 'old-openai');
+      expect(loaded?.protocol).toBe('openai-chat-completions');
+      expect(loaded?.endpoints.responses).toBe('/responses');
     });
 
     it('migrates selection from legacy localStorage to IndexedDB', async () => {

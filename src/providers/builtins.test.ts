@@ -17,6 +17,7 @@ describe('builtinProviders', () => {
     for (const p of builtinProviders) {
       expect(p.name).toBeTruthy();
       expect(p.type).toBeTruthy();
+      expect(p.protocol).toBeTruthy();
       expect(p.baseUrl).toBeTruthy();
       expect(p.auth).toBeDefined();
       expect(p.endpoints.chat).toBeTruthy();
@@ -28,6 +29,8 @@ describe('builtinProviders', () => {
     expect(openai?.baseUrl).toBe('https://api.openai.com/v1');
     expect(openai?.auth.type).toBe('bearer');
     expect(openai?.type).toBe('openai-compatible');
+    expect(openai?.protocol).toBe('openai-chat-completions');
+    expect(openai?.endpoints.responses).toBe('/responses');
   });
 
   it('includes Anthropic with correct config', () => {
@@ -35,6 +38,7 @@ describe('builtinProviders', () => {
     expect(anthropic?.baseUrl).toBe('https://api.anthropic.com/v1');
     expect(anthropic?.auth.type).toBe('api-key-header');
     expect(anthropic?.type).toBe('anthropic');
+    expect(anthropic?.protocol).toBe('anthropic-messages');
     expect(anthropic?.endpoints.chat).toBe('/messages');
   });
 
@@ -42,5 +46,6 @@ describe('builtinProviders', () => {
     const openrouter = builtinProviders.find((p) => p.name === 'OpenRouter');
     expect(openrouter?.baseUrl).toBe('https://openrouter.ai/api/v1');
     expect(openrouter?.auth.type).toBe('bearer');
+    expect(openrouter?.protocol).toBe('openai-compatible-chat');
   });
 });

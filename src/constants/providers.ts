@@ -8,10 +8,11 @@ export function createCustomProviderTemplate(): Omit<ProviderConfig, 'id'> {
   return {
     name: '',
     type: 'openai-compatible',
+    protocol: 'openai-compatible-chat',
     baseUrl: '',
     auth: { type: 'bearer' },
     apiKey: '',
-    endpoints: { chat: '/chat/completions' },
+    endpoints: { chat: '/chat/completions', responses: '/responses' },
     models: [
       {
         id: '',
