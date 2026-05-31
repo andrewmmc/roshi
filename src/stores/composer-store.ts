@@ -11,14 +11,13 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
 } from '@/constants/defaults';
-import type { HistoryHeaderEntry } from '@/types/history';
+import {
+  createEmptyHeaderEntry,
+  historyEntriesToHeaders,
+  type HeaderEntry,
+  type HistoryHeaderEntry,
+} from '@/utils/headers';
 import { useResponseStore } from '@/stores/response-store';
-
-export interface HeaderEntry {
-  id: string;
-  key: string;
-  value: string;
-}
 
 interface ComposerState {
   messages: NormalizedMessage[];
@@ -85,7 +84,7 @@ const INITIAL_COMPOSER_STATE: ComposerState = {
   stream: true,
   thinkingEnabled: DEFAULT_THINKING_ENABLED,
   thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
-  customHeaders: [{ id: nanoid(), key: '', value: '' }],
+  customHeaders: [createEmptyHeaderEntry()],
   scrollGeneration: 0,
 };
 
@@ -180,20 +179,14 @@ export const useComposerStore = create<ComposerStore>((set) => ({
       stream: true,
       thinkingEnabled: DEFAULT_THINKING_ENABLED,
       thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
-      customHeaders: [{ id: nanoid(), key: '', value: '' }],
+      customHeaders: [createEmptyHeaderEntry()],
     }),
 
   loadComposerFromHistory: (data) =>
     set((s) => ({
       messages: data.messages.map((m) => ({ ...m, id: m.id || nanoid() })),
       systemPrompt: data.systemPrompt,
-      customHeaders:
-        (data.customHeaders ?? []).length > 0
-          ? (data.customHeaders ?? []).map((header) => ({
-              ...header,
-              id: nanoid(),
-            }))
-          : [{ id: nanoid(), key: '', value: '' }],
+      customHeaders: historyEntriesToHeaders(data.customHeaders),
       temperature: data.temperature,
       maxTokens: data.maxTokens,
       topP: data.topP,

@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  headersToHistoryEntries,
   headersToRecord,
+  historyEntriesToHeaders,
   maskHeaderValue,
   recordToHeaders,
 } from './header-utils';
-import type { HeaderEntry } from './header-list-editor';
+import type { HeaderEntry } from '@/utils/headers';
 
 describe('header-utils', () => {
   describe('headersToRecord', () => {
@@ -34,6 +36,34 @@ describe('header-utils', () => {
       expect(result).toEqual({
         'x-empty-value': '',
       });
+    });
+
+    it('trims keys before serializing', () => {
+      const headers: HeaderEntry[] = [
+        { id: '1', key: ' x-team ', value: 'core' },
+      ];
+      expect(headersToRecord(headers)).toEqual({ 'x-team': 'core' });
+    });
+  });
+
+  describe('history header conversions', () => {
+    it('serializes valid header entries for history', () => {
+      const headers: HeaderEntry[] = [
+        { id: '1', key: ' x-team ', value: 'core' },
+        { id: '2', key: '', value: 'ignored' },
+      ];
+      expect(headersToHistoryEntries(headers)).toEqual([
+        { key: 'x-team', value: 'core' },
+      ]);
+    });
+
+    it('hydrates history headers with ids and an empty fallback row', () => {
+      expect(
+        historyEntriesToHeaders([{ key: 'x-team', value: 'core' }]),
+      ).toEqual([{ id: expect.any(String), key: 'x-team', value: 'core' }]);
+      expect(historyEntriesToHeaders([])).toEqual([
+        { id: expect.any(String), key: '', value: '' },
+      ]);
     });
   });
 

@@ -15,7 +15,7 @@ import {
   HeaderListEditor,
   type HeaderEntry,
 } from '@/components/ui/header-list-editor';
-import { headersToRecord } from '@/components/ui/header-utils';
+import { headersToRecord, recordToHeaders } from '@/utils/headers';
 import { Trash2, Plus } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
@@ -65,12 +65,7 @@ export function ProviderForm({
   // Initialize header entries from initialData once, then track as separate state
   // This prevents ID regeneration on every render which causes input focus loss
   const [headerEntries, setHeaderEntries] = useState<HeaderEntry[]>(() => {
-    const record = initialData?.customHeaders ?? {};
-    return Object.entries(record).map(([key, value]) => ({
-      id: nanoid(),
-      key,
-      value,
-    }));
+    return recordToHeaders(initialData?.customHeaders);
   });
 
   const updateHeaderEntries = (entries: HeaderEntry[]) => {

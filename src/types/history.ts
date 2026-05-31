@@ -1,9 +1,7 @@
 import type { NormalizedRequest, NormalizedResponse } from './normalized';
+import type { HistoryHeaderEntry } from '@/utils/headers';
 
-export interface HistoryHeaderEntry {
-  key: string;
-  value: string;
-}
+export type { HistoryHeaderEntry } from '@/utils/headers';
 
 export interface HistoryEntry {
   id: string;

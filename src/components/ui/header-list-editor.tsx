@@ -4,12 +4,9 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { HeaderEntry } from '@/utils/headers';
 
-export interface HeaderEntry {
-  id: string;
-  key: string;
-  value: string;
-}
+export type { HeaderEntry } from '@/utils/headers';
 
 interface HeaderListEditorProps {
   headers: HeaderEntry[];

@@ -5,6 +5,7 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { sendRequest, RequestError } from '@/services/llm-client';
 import { supportsModelSelection } from '@/types/provider';
+import { headersToHistoryEntries, headersToRecord } from '@/utils/headers';
 
 function extractProviderErrorDetail(
   rawResponse: Record<string, unknown>,
@@ -96,9 +97,7 @@ export function useSendRequest() {
     const abortController = new AbortController();
     abortRef.current = abortController;
 
-    const historyHeaders = composer.customHeaders
-      .filter((header) => header.key)
-      .map(({ key, value }) => ({ key, value }));
+    const historyHeaders = headersToHistoryEntries(composer.customHeaders);
 
     const baseHistoryEntry = {
       providerId: provider.id,
@@ -114,9 +113,7 @@ export function useSendRequest() {
         request: normalizedRequest,
         customHeaders:
           historyHeaders.length > 0
-            ? Object.fromEntries(
-                historyHeaders.map((header) => [header.key, header.value]),
-              )
+            ? headersToRecord(historyHeaders)
             : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
