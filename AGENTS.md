@@ -32,7 +32,7 @@ For **Cursor Cloud**, use the same guidance as the rest of this file: [What this
 | Tauri (desktop) dev      | `npm run tauri:dev`                                    |
 | Tauri (desktop) build    | `npm run tauri:build` — platform packages (e.g. macOS) |
 
-**Pre-commit:** [Lefthook](https://github.com/evilmartians/lefthook) runs lint, typecheck, and format check in parallel (`lefthook.yml`). Run `npx lefthook install` after clone if hooks are not active.
+**Pre-commit:** [Lefthook](https://github.com/evilmartians/lefthook) runs Prettier, ESLint, and typecheck sequentially (`lefthook.yml`). Prettier and ESLint auto-fix staged files and restage fixes. Run `npx lefthook install` after clone if hooks are not active.
 
 Validate non-trivial changes with `npm run test`, `npm run build`, and `npm run lint`.
 
@@ -91,7 +91,7 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, OpenRouter (see that
 
 ## Notes for agents
 
-- Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage thresholds are enforced when running `test:coverage` (85% lines/functions/statements, 80% branches).
+- Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage is intentionally scoped to non-visual logic in `vitest.config.ts`; thresholds are enforced when running `test:coverage` (95% lines/functions/statements/branches).
 - ESLint may report pre-existing issues (e.g. unused variables, conditional hooks in `CodeView.tsx`, react-refresh noise in generated UI). Do not assume new edits caused all warnings.
 - Users enter API keys in the UI; secrets are stored locally in IndexedDB. No `.env` or server-side secrets are required for the app to run.
 - **Git workflow:** always commit your changes after completing a task (use clear, conventional commit messages), but **never push** — leave publishing to the user.

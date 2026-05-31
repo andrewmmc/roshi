@@ -1,9 +1,17 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const summaryPath = new URL(
   '../coverage/coverage-summary.json',
   import.meta.url,
 );
+
+if (!existsSync(summaryPath)) {
+  console.log('## Test Coverage');
+  console.log('');
+  console.log('Coverage summary unavailable.');
+  process.exit(0);
+}
+
 const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
 const total = summary.total;
 
