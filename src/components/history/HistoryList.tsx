@@ -30,6 +30,117 @@ import {
 } from '@/utils/history-restore';
 
 type StatusFilter = 'all' | 'success' | 'error';
+const STATUS_FILTERS = ['all', 'success', 'error'] as const;
+
+function getStatusLabel(status: StatusFilter): string {
+  if (status === 'all') return 'All';
+  if (status === 'success') return 'Success';
+  return 'Error';
+}
+
+function HistorySearchControls({
+  searchQuery,
+  statusFilter,
+  isFiltering,
+  filteredCount,
+  totalCount,
+  searchInputRef,
+  onSearchChange,
+  onStatusFilterChange,
+}: {
+  searchQuery: string;
+  statusFilter: StatusFilter;
+  isFiltering: boolean;
+  filteredCount: number;
+  totalCount: number;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  onSearchChange: (value: string) => void;
+  onStatusFilterChange: (status: StatusFilter) => void;
+}) {
+  return (
+    <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
+      <div className="relative">
+        <Search
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
+          aria-hidden="true"
+        />
+        <Input
+          ref={searchInputRef}
+          placeholder="Search history..."
+          aria-label="Search history"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => onSearchChange('')}
+            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+            aria-label="Clear search"
+            title="Clear search"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+      <div className="flex gap-1">
+        {STATUS_FILTERS.map((status) => (
+          <button
+            key={status}
+            onClick={() => onStatusFilterChange(status)}
+            aria-pressed={statusFilter === status}
+            className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
+              statusFilter === status
+                ? 'bg-sidebar-accent/80 text-foreground'
+                : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
+            }`}
+          >
+            {getStatusLabel(status)}
+          </button>
+        ))}
+        {isFiltering && (
+          <span className="text-muted-foreground/70 ml-auto self-center text-[10px]">
+            {filteredCount} of {totalCount}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DeleteAllHistoryDialog({
+  open,
+  entryCount,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  entryCount: number;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete all history?</DialogTitle>
+          <DialogDescription>
+            This will permanently remove all {entryCount} history entries. This
+            action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Delete all
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function HistoryList() {
   const { entries, deleteEntry, clearAll } = useHistory();
@@ -143,57 +254,16 @@ export function HistoryList() {
         )}
       </div>
       {entries.length > 0 && (
-        <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
-          <div className="relative">
-            <Search
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
-              aria-hidden="true"
-            />
-            <Input
-              ref={searchInputRef}
-              placeholder="Search history..."
-              aria-label="Search history"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
-                aria-label="Clear search"
-                title="Clear search"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1">
-            {(['all', 'success', 'error'] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                aria-pressed={statusFilter === status}
-                className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
-                  statusFilter === status
-                    ? 'bg-sidebar-accent/80 text-foreground'
-                    : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
-                }`}
-              >
-                {status === 'all'
-                  ? 'All'
-                  : status === 'success'
-                    ? 'Success'
-                    : 'Error'}
-              </button>
-            ))}
-            {isFiltering && (
-              <span className="text-muted-foreground/70 ml-auto self-center text-[10px]">
-                {filtered.length} of {entries.length}
-              </span>
-            )}
-          </div>
-        </div>
+        <HistorySearchControls
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          isFiltering={isFiltering}
+          filteredCount={filtered.length}
+          totalCount={entries.length}
+          searchInputRef={searchInputRef}
+          onSearchChange={setSearchQuery}
+          onStatusFilterChange={setStatusFilter}
+        />
       )}
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-px p-1">
@@ -218,31 +288,15 @@ export function HistoryList() {
         </div>
       </ScrollArea>
 
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete all history?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove all {entries.length} history entries.
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirm(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                clearAll();
-                setShowConfirm(false);
-              }}
-            >
-              Delete all
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteAllHistoryDialog
+        open={showConfirm}
+        entryCount={entries.length}
+        onOpenChange={setShowConfirm}
+        onConfirm={() => {
+          clearAll();
+          setShowConfirm(false);
+        }}
+      />
 
       <ConfirmDiscardDialog
         open={showDiscard}
