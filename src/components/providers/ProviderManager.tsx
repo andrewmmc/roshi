@@ -293,17 +293,6 @@ export function ProviderManager() {
               initialData={editingProvider}
               onSubmit={handleEdit}
               isBuiltIn={editingProvider.isBuiltIn}
-              onReset={async () => {
-                await resetProvider(editingProvider.id);
-                const updated = useProviderStore
-                  .getState()
-                  .providers.find((p) => p.id === editingProvider.id);
-                if (!updated) return null;
-                setEditingProvider(updated);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { id, ...data } = updated;
-                return data;
-              }}
             />
           )}
 

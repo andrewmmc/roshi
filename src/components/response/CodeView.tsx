@@ -113,6 +113,7 @@ export function CodeView() {
           <button
             type="button"
             onClick={toggleStream}
+            aria-pressed={stream}
             className={cn(
               'border-border h-6 cursor-pointer rounded border px-2 text-[11px] font-medium transition-colors',
               stream

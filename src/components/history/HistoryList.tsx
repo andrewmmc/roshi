@@ -3,6 +3,8 @@ import { Trash2, Search, X, Download } from 'lucide-react';
 import {
   DEFAULT_TOP_P,
   DEFAULT_TOP_K,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_MAX_TOKENS,
   DEFAULT_FREQUENCY_PENALTY,
   DEFAULT_PRESENCE_PENALTY,
   DEFAULT_THINKING_ENABLED,
@@ -100,8 +102,8 @@ export function HistoryList() {
       loadComposerFromHistory({
         messages: restoredMessages,
         systemPrompt: entry.request.systemPrompt ?? '',
-        temperature: entry.request.temperature ?? 1,
-        maxTokens: entry.request.maxTokens ?? 4096,
+        temperature: entry.request.temperature ?? DEFAULT_TEMPERATURE,
+        maxTokens: entry.request.maxTokens ?? DEFAULT_MAX_TOKENS,
         topP: entry.request.topP ?? DEFAULT_TOP_P,
         topK: entry.request.topK ?? DEFAULT_TOP_K,
         frequencyPenalty:
@@ -120,8 +122,8 @@ export function HistoryList() {
         messages: entry.request.messages,
         stream: entry.request.stream,
         systemPrompt: entry.request.systemPrompt ?? '',
-        temperature: entry.request.temperature ?? 1,
-        maxTokens: entry.request.maxTokens ?? 4096,
+        temperature: entry.request.temperature ?? DEFAULT_TEMPERATURE,
+        maxTokens: entry.request.maxTokens ?? DEFAULT_MAX_TOKENS,
         response: entry.response,
         rawRequest: entry.rawRequest,
         rawResponse: entry.rawResponse,
@@ -220,6 +222,7 @@ export function HistoryList() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
+                aria-pressed={statusFilter === status}
                 className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
                   statusFilter === status
                     ? 'bg-sidebar-accent/80 text-foreground'

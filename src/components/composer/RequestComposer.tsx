@@ -52,6 +52,7 @@ export function RequestComposer() {
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
+              aria-label="System prompt"
               placeholder="System prompt (optional)"
               className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[12px] md:text-[12px]"
               rows={3}

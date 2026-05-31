@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, memo } from 'react';
+import { useState, useCallback, useRef, memo, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useResponseStore } from '@/stores/response-store';
 import { toast } from '@/stores/toast-store';
@@ -21,13 +21,22 @@ function CopyableCell({
     timerRef.current = setTimeout(() => setCopied(false), 1500);
   }, [value]);
 
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
   return (
-    <td
-      className={`hover:bg-muted/50 cursor-pointer px-3 py-1 break-all transition-colors ${className ?? ''}`}
-      onClick={handleClick}
-      title="Click to copy"
-    >
-      {copied ? <span className="text-xs text-green-600">Copied!</span> : value}
+    <td className={`px-3 py-1 align-top ${className ?? ''}`}>
+      <button
+        type="button"
+        className="hover:bg-muted/50 -mx-1 -my-0.5 block w-[calc(100%+0.5rem)] cursor-pointer rounded px-1 py-0.5 text-left break-all transition-colors"
+        onClick={handleClick}
+        title="Click to copy"
+      >
+        {copied ? (
+          <span className="text-xs text-green-600">Copied!</span>
+        ) : (
+          value
+        )}
+      </button>
     </td>
   );
 }

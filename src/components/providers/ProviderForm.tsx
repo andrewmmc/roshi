@@ -30,7 +30,6 @@ interface ProviderFormProps {
   initialData?: ProviderFormData;
   onSubmit: (data: ProviderFormData) => void;
   isBuiltIn?: boolean;
-  onReset?: () => Promise<ProviderFormData | null>;
 }
 
 const defaultFormData: ProviderFormData = {
@@ -134,8 +133,11 @@ export function ProviderForm({
       <div className="space-y-4 px-5 py-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs">Name</Label>
+            <Label htmlFor="provider-name" className="text-xs">
+              Name
+            </Label>
             <Input
+              id="provider-name"
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
               placeholder="My Provider"
@@ -145,7 +147,9 @@ export function ProviderForm({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs">Type</Label>
+            <Label htmlFor="provider-type" className="text-xs">
+              Type
+            </Label>
             <Select
               value={form.type}
               onValueChange={(val) =>
@@ -153,7 +157,7 @@ export function ProviderForm({
               }
               disabled={isBuiltIn}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id="provider-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -168,8 +172,11 @@ export function ProviderForm({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs">Base URL</Label>
+          <Label htmlFor="provider-base-url" className="text-xs">
+            Base URL
+          </Label>
           <Input
+            id="provider-base-url"
             value={form.baseUrl}
             onChange={(e) => updateField('baseUrl', e.target.value)}
             placeholder="https://api.openai.com/v1"
@@ -179,7 +186,9 @@ export function ProviderForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs">Auth Type</Label>
+            <Label htmlFor="provider-auth-type" className="text-xs">
+              Auth Type
+            </Label>
             <Select
               value={form.auth.type}
               onValueChange={(val) =>
@@ -190,7 +199,7 @@ export function ProviderForm({
               }
               disabled={isBuiltIn}
             >
-              <SelectTrigger>
+              <SelectTrigger id="provider-auth-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -203,8 +212,11 @@ export function ProviderForm({
           </div>
           {form.auth.type === 'api-key-header' && (
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs">Header Name</Label>
+              <Label htmlFor="provider-auth-header-name" className="text-xs">
+                Header Name
+              </Label>
               <Input
+                id="provider-auth-header-name"
                 value={form.auth.headerName || ''}
                 onChange={(e) =>
                   updateField('auth', {
@@ -219,8 +231,11 @@ export function ProviderForm({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs">API Key</Label>
+          <Label htmlFor="provider-api-key" className="text-xs">
+            API Key
+          </Label>
           <PasswordInput
+            id="provider-api-key"
             value={form.apiKey}
             onChange={(e) => updateField('apiKey', e.target.value)}
             placeholder="sk-..."
@@ -240,8 +255,11 @@ export function ProviderForm({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs">Chat Endpoint</Label>
+          <Label htmlFor="provider-chat-endpoint" className="text-xs">
+            Chat Endpoint
+          </Label>
           <Input
+            id="provider-chat-endpoint"
             value={form.endpoints.chat}
             onChange={(e) => updateField('endpoints', { chat: e.target.value })}
             placeholder="/chat/completions"
@@ -253,12 +271,14 @@ export function ProviderForm({
           {formModels.map((model, i) => (
             <div key={model._formKey} className="flex items-center gap-2">
               <Input
+                aria-label={`Model ID ${i + 1}`}
                 value={model.id}
                 onChange={(e) => updateModel(i, { id: e.target.value })}
                 placeholder="model-id"
                 className="flex-1 text-sm"
               />
               <Input
+                aria-label={`Model display name ${i + 1}`}
                 value={model.displayName}
                 onChange={(e) =>
                   updateModel(i, { displayName: e.target.value })

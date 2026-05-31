@@ -176,7 +176,10 @@ export function MessageEditor() {
                 handleRoleChange(index, val as NormalizedMessage['role'])
               }
             >
-              <SelectTrigger className="h-7 w-[100px] shrink-0 text-xs capitalize">
+              <SelectTrigger
+                aria-label={`Role for message ${index + 1}`}
+                className="h-7 w-[100px] shrink-0 text-xs capitalize"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -192,6 +195,7 @@ export function MessageEditor() {
                 }}
                 value={msg.content}
                 onChange={(e) => handleContentChange(index, e.target.value)}
+                aria-label={`${msg.role} message ${index + 1}`}
                 placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
                 className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-[12px] md:text-[12px]"
                 rows={2}
@@ -244,6 +248,7 @@ export function MessageEditor() {
                 }}
                 type="file"
                 accept={SUPPORTED_FILE_ACCEPT}
+                aria-label={`Attach file to message ${index + 1}`}
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];

@@ -39,7 +39,7 @@ export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
           </div>
         </div>
       </button>
-      <div className="absolute top-1/2 right-0.5 flex -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute top-1/2 right-0.5 flex -translate-y-1/2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
         <IconButton
           variant="ghost"
           size="icon"
