@@ -72,21 +72,23 @@ interface ComposerActions {
 
 export type ComposerStore = ComposerState & ComposerActions;
 
-const INITIAL_COMPOSER_STATE: ComposerState = {
-  messages: [{ id: nanoid(), role: 'user', content: '' }],
-  systemPrompt: '',
-  temperature: DEFAULT_TEMPERATURE,
-  maxTokens: DEFAULT_MAX_TOKENS,
-  topP: DEFAULT_TOP_P,
-  topK: DEFAULT_TOP_K,
-  frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
-  presencePenalty: DEFAULT_PRESENCE_PENALTY,
-  stream: true,
-  thinkingEnabled: DEFAULT_THINKING_ENABLED,
-  thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
-  customHeaders: [createEmptyHeaderEntry()],
-  scrollGeneration: 0,
-};
+function createInitialComposerState(): ComposerState {
+  return {
+    messages: [{ id: nanoid(), role: 'user', content: '' }],
+    systemPrompt: '',
+    temperature: DEFAULT_TEMPERATURE,
+    maxTokens: DEFAULT_MAX_TOKENS,
+    topP: DEFAULT_TOP_P,
+    topK: DEFAULT_TOP_K,
+    frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
+    presencePenalty: DEFAULT_PRESENCE_PENALTY,
+    stream: true,
+    thinkingEnabled: DEFAULT_THINKING_ENABLED,
+    thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
+    customHeaders: [createEmptyHeaderEntry()],
+    scrollGeneration: 0,
+  };
+}
 
 /**
  * Returns true when the composer has user-typed content that hasn't been sent.
@@ -119,7 +121,7 @@ export function selectHasUnsavedChanges(state: ComposerState): boolean {
 }
 
 export const useComposerStore = create<ComposerStore>((set) => ({
-  ...INITIAL_COMPOSER_STATE,
+  ...createInitialComposerState(),
 
   setMessages: (messages) => set({ messages }),
   addMessage: (message) =>
@@ -166,21 +168,7 @@ export const useComposerStore = create<ComposerStore>((set) => ({
     })),
   setCustomHeaders: (customHeaders) => set({ customHeaders }),
 
-  resetComposer: () =>
-    set({
-      messages: [{ id: nanoid(), role: 'user', content: '' }],
-      systemPrompt: '',
-      temperature: DEFAULT_TEMPERATURE,
-      maxTokens: DEFAULT_MAX_TOKENS,
-      topP: DEFAULT_TOP_P,
-      topK: DEFAULT_TOP_K,
-      frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
-      presencePenalty: DEFAULT_PRESENCE_PENALTY,
-      stream: true,
-      thinkingEnabled: DEFAULT_THINKING_ENABLED,
-      thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
-      customHeaders: [createEmptyHeaderEntry()],
-    }),
+  resetComposer: () => set(createInitialComposerState()),
 
   loadComposerFromHistory: (data) =>
     set((s) => ({

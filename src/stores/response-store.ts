@@ -18,6 +18,20 @@ interface ResponseState {
   sentRequest: NormalizedRequest | null;
 }
 
+type ResponseErrorResult = Pick<ResponseState, 'error' | 'errorDetail'> &
+  Partial<
+    Pick<
+      ResponseState,
+      | 'rawRequest'
+      | 'rawResponse'
+      | 'requestUrl'
+      | 'requestHeaders'
+      | 'responseHeaders'
+      | 'durationMs'
+      | 'statusCode'
+    >
+  >;
+
 interface ResponseActions {
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
@@ -52,7 +66,7 @@ interface ResponseActions {
     statusCode: number | null;
   }) => void;
   /** Batch: set all error fields in one set() */
-  completeWithError: (result: Partial<ResponseState>) => void;
+  completeWithError: (result: ResponseErrorResult) => void;
   /** Batch: finalize loading/streaming flags in one set() */
   finishRequest: () => void;
 
