@@ -58,6 +58,212 @@ function getProviderDetails(provider: ProviderConfig): string {
     .join(' · ');
 }
 
+function ProviderList({
+  providers,
+  canAddCustomProvider,
+  onAddCustomProvider,
+  onEditProvider,
+  onDeleteProvider,
+}: {
+  providers: ProviderConfig[];
+  canAddCustomProvider: boolean;
+  onAddCustomProvider: () => void;
+  onEditProvider: (provider: ProviderConfig) => void;
+  onDeleteProvider: (provider: ProviderConfig) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2 px-3 py-3">
+      <div className="flex flex-col gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full justify-center gap-1.5"
+          disabled={!canAddCustomProvider}
+          onClick={onAddCustomProvider}
+          title={
+            canAddCustomProvider
+              ? undefined
+              : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
+          }
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add custom provider
+        </Button>
+        {!canAddCustomProvider && (
+          <p className="text-muted-foreground px-0.5 text-center text-[11px] leading-snug">
+            Maximum {MAX_CUSTOM_PROVIDERS} custom providers. Remove one to add
+            another.
+          </p>
+        )}
+      </div>
+      {sortProvidersByName(providers).map((provider) => (
+        <div
+          key={provider.id}
+          className="border-border/60 bg-background/80 flex w-full items-center gap-2 rounded-xl border px-2 py-2"
+        >
+          <div className="min-w-0 flex-1 px-1 py-0.5">
+            <div className="text-sm font-medium tracking-tight">
+              {provider.name}
+              {!provider.isBuiltIn && (
+                <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
+                  Custom
+                </span>
+              )}
+            </div>
+            <div className="text-muted-foreground mt-1 text-xs">
+              {getProviderDetails(provider)}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <IconButton
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-foreground shrink-0"
+              onClick={() => onEditProvider(provider)}
+              tooltip="Edit provider"
+              aria-label={`Edit provider ${provider.name}`}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </IconButton>
+            {!provider.isBuiltIn && (
+              <IconButton
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="text-muted-foreground hover:text-destructive shrink-0"
+                onClick={() => onDeleteProvider(provider)}
+                tooltip="Remove provider"
+                aria-label={`Remove custom provider ${provider.name}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </IconButton>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProviderManagerFooter({
+  view,
+  editingProvider,
+  resettingAll,
+  resettingProvider,
+  syncingModels,
+  providers,
+  onResetAll,
+  onSyncModels,
+  onClose,
+  onBackToList,
+  onResetProvider,
+  onSubmitForm,
+}: {
+  view: View;
+  editingProvider: ProviderConfig | null;
+  resettingAll: boolean;
+  resettingProvider: boolean;
+  syncingModels: boolean;
+  providers: ProviderConfig[];
+  onResetAll: () => void;
+  onSyncModels: () => void;
+  onClose: () => void;
+  onBackToList: () => void;
+  onResetProvider: () => void;
+  onSubmitForm: () => void;
+}) {
+  return (
+    <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
+      {view === 'list' && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive text-xs"
+            disabled={resettingAll}
+            onClick={onResetAll}
+          >
+            <RotateCcw className="mr-1 h-3 w-3" />
+            {resettingAll ? 'Resetting...' : 'Reset all to default'}
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground text-xs"
+              disabled={syncingModels}
+              onClick={onSyncModels}
+            >
+              <RefreshCw
+                className={`mr-1 h-3 w-3 ${syncingModels ? 'animate-spin' : ''}`}
+              />
+              {syncingModels ? 'Syncing...' : 'Sync models'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground text-xs"
+              onClick={() => exportProviders(providers)}
+            >
+              <Download className="mr-1 h-3 w-3" />
+              Export JSON
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        </>
+      )}
+
+      {view === 'edit' && editingProvider && (
+        <>
+          <div>
+            {editingProvider.isBuiltIn && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive text-xs"
+                disabled={resettingProvider}
+                onClick={onResetProvider}
+              >
+                <RotateCcw className="mr-1 h-3 w-3" />
+                {resettingProvider ? 'Resetting...' : 'Reset to default'}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onBackToList}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={onSubmitForm}>
+              Update
+            </Button>
+          </div>
+        </>
+      )}
+
+      {view === 'add' && (
+        <>
+          <div />
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onBackToList}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={onSubmitForm}>
+              Add provider
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function ProviderManager() {
   const open = useUiStore((s) => s.providerSettingsOpen);
   const setOpen = useUiStore((s) => s.setProviderSettingsOpen);
@@ -124,6 +330,52 @@ export function ProviderManager() {
     setEditingProvider(null);
     setFormVersion((v) => v + 1);
     setView('add');
+  };
+
+  const openEditProvider = (provider: ProviderConfig) => {
+    setEditingProvider(provider);
+    setView('edit');
+  };
+
+  const handleDeleteProvider = (provider: ProviderConfig) => {
+    if (window.confirm('Remove this custom provider? This cannot be undone.')) {
+      void deleteProvider(provider.id);
+    }
+  };
+
+  const handleResetAll = async () => {
+    setResettingAll(true);
+    try {
+      await resetAllProviders();
+    } finally {
+      setResettingAll(false);
+    }
+  };
+
+  const handleSyncModels = async () => {
+    setSyncingModels(true);
+    try {
+      await syncModels();
+    } finally {
+      setSyncingModels(false);
+    }
+  };
+
+  const handleResetProvider = async () => {
+    if (!editingProvider) return;
+    setResettingProvider(true);
+    try {
+      await resetProvider(editingProvider.id);
+      const updated = useProviderStore
+        .getState()
+        .providers.find((p) => p.id === editingProvider.id);
+      if (updated) {
+        setEditingProvider(updated);
+        setFormVersion((v) => v + 1);
+      }
+    } finally {
+      setResettingProvider(false);
+    }
   };
 
   return (
@@ -201,89 +453,13 @@ export function ProviderManager() {
         {/* Scrollable content */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           {view === 'list' && (
-            <div className="flex flex-col gap-2 px-3 py-3">
-              <div className="flex flex-col gap-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-center gap-1.5"
-                  disabled={!canAddCustomProvider}
-                  onClick={openAddCustomProvider}
-                  title={
-                    canAddCustomProvider
-                      ? undefined
-                      : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
-                  }
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Add custom provider
-                </Button>
-                {!canAddCustomProvider && (
-                  <p className="text-muted-foreground px-0.5 text-center text-[11px] leading-snug">
-                    Maximum {MAX_CUSTOM_PROVIDERS} custom providers. Remove one
-                    to add another.
-                  </p>
-                )}
-              </div>
-              {sortProvidersByName(providers).map((p) => (
-                <div
-                  key={p.id}
-                  className="border-border/60 bg-background/80 flex w-full items-center gap-2 rounded-xl border px-2 py-2"
-                >
-                  <div className="min-w-0 flex-1 px-1 py-0.5">
-                    <div className="text-sm font-medium tracking-tight">
-                      {p.name}
-                      {!p.isBuiltIn && (
-                        <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
-                          Custom
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {getProviderDetails(p)}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-0.5">
-                    <IconButton
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="text-muted-foreground hover:text-foreground shrink-0"
-                      onClick={() => {
-                        setEditingProvider(p);
-                        setView('edit');
-                      }}
-                      tooltip="Edit provider"
-                      aria-label={`Edit provider ${p.name}`}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </IconButton>
-                    {!p.isBuiltIn && (
-                      <IconButton
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-muted-foreground hover:text-destructive shrink-0"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              'Remove this custom provider? This cannot be undone.',
-                            )
-                          ) {
-                            void deleteProvider(p.id);
-                          }
-                        }}
-                        tooltip="Remove provider"
-                        aria-label={`Remove custom provider ${p.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </IconButton>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ProviderList
+              providers={providers}
+              canAddCustomProvider={canAddCustomProvider}
+              onAddCustomProvider={openAddCustomProvider}
+              onEditProvider={openEditProvider}
+              onDeleteProvider={handleDeleteProvider}
+            />
           )}
 
           {view === 'edit' && editingProvider && (
@@ -307,135 +483,20 @@ export function ProviderManager() {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
-          {view === 'list' && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive text-xs"
-                disabled={resettingAll}
-                onClick={async () => {
-                  setResettingAll(true);
-                  try {
-                    await resetAllProviders();
-                  } finally {
-                    setResettingAll(false);
-                  }
-                }}
-              >
-                <RotateCcw className="mr-1 h-3 w-3" />
-                {resettingAll ? 'Resetting...' : 'Reset all to default'}
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground text-xs"
-                  disabled={syncingModels}
-                  onClick={async () => {
-                    setSyncingModels(true);
-                    try {
-                      await syncModels();
-                    } finally {
-                      setSyncingModels(false);
-                    }
-                  }}
-                >
-                  <RefreshCw
-                    className={`mr-1 h-3 w-3 ${syncingModels ? 'animate-spin' : ''}`}
-                  />
-                  {syncingModels ? 'Syncing...' : 'Sync models'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground text-xs"
-                  onClick={() => exportProviders(providers)}
-                >
-                  <Download className="mr-1 h-3 w-3" />
-                  Export JSON
-                </Button>
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Close
-                </Button>
-              </div>
-            </>
-          )}
-
-          {view === 'edit' && editingProvider && (
-            <>
-              <div>
-                {editingProvider.isBuiltIn && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive text-xs"
-                    disabled={resettingProvider}
-                    onClick={async () => {
-                      setResettingProvider(true);
-                      try {
-                        await resetProvider(editingProvider.id);
-                        const updated = useProviderStore
-                          .getState()
-                          .providers.find((p) => p.id === editingProvider.id);
-                        if (updated) {
-                          setEditingProvider(updated);
-                          setFormVersion((v) => v + 1);
-                        }
-                      } finally {
-                        setResettingProvider(false);
-                      }
-                    }}
-                  >
-                    <RotateCcw className="mr-1 h-3 w-3" />
-                    {resettingProvider ? 'Resetting...' : 'Reset to default'}
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBackToList}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => formRef.current?.requestSubmit()}
-                >
-                  Update
-                </Button>
-              </div>
-            </>
-          )}
-
-          {view === 'add' && (
-            <>
-              <div />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBackToList}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => formRef.current?.requestSubmit()}
-                >
-                  Add provider
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+        <ProviderManagerFooter
+          view={view}
+          editingProvider={editingProvider}
+          resettingAll={resettingAll}
+          resettingProvider={resettingProvider}
+          syncingModels={syncingModels}
+          providers={providers}
+          onResetAll={() => void handleResetAll()}
+          onSyncModels={() => void handleSyncModels()}
+          onClose={handleClose}
+          onBackToList={handleBackToList}
+          onResetProvider={() => void handleResetProvider()}
+          onSubmitForm={() => formRef.current?.requestSubmit()}
+        />
       </DialogContent>
     </Dialog>
   );
