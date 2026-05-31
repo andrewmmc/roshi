@@ -45,12 +45,20 @@ describe('ParameterControls', () => {
     render(<ParameterControls />);
 
     expect(screen.getByLabelText('Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Temperature')).toHaveAttribute(
+      'title',
+      'Use reasoning effort and verbosity controls for GPT-5 models.',
+    );
     expect(screen.getByLabelText('Top P')).toBeDisabled();
     expect(screen.getByLabelText('Frequency Penalty')).toBeDisabled();
     expect(screen.getByLabelText('Presence Penalty')).toBeDisabled();
     expect(screen.getByLabelText('Max Tokens')).toBeEnabled();
     expect(screen.getByLabelText('Stream')).toBeEnabled();
     expect(screen.getByLabelText('Thinking')).toBeDisabled();
+    expect(screen.getByLabelText('Thinking')).toHaveAttribute(
+      'title',
+      'Thinking controls are not supported by the selected model.',
+    );
   });
 
   it('disables streaming when selected model capabilities do not support it', () => {
@@ -70,6 +78,10 @@ describe('ParameterControls', () => {
 
     expect(screen.getByLabelText('Stream')).toBeDisabled();
     expect(screen.getByLabelText('Stream')).not.toBeChecked();
+    expect(screen.getByLabelText('Stream')).toHaveAttribute(
+      'title',
+      'Streaming is not supported by the selected model.',
+    );
   });
 
   it('shows and clamps thinking budget when supported', () => {

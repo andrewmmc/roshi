@@ -45,6 +45,16 @@ function labelClassName(disabled: boolean): string {
   return `w-32 shrink-0 text-xs ${disabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}`;
 }
 
+function getDisabledReason(
+  support: ParamSupport | undefined,
+  disabled: boolean,
+): string | undefined {
+  if (!disabled) return undefined;
+  if (support?.supported === false) return support.reason;
+  if (support?.supported === 'default-only') return support.reason;
+  return 'This control is not supported by the selected model.';
+}
+
 function NumberInputRow({
   label,
   value,
@@ -54,6 +64,7 @@ function NumberInputRow({
   step = 0.01,
   decimals = 2,
   disabled = false,
+  disabledReason,
 }: {
   label: string;
   value: number;
@@ -63,6 +74,7 @@ function NumberInputRow({
   step?: number;
   decimals?: number;
   disabled?: boolean;
+  disabledReason?: string;
 }) {
   const inputId = `param-${label.toLowerCase().replace(/\s+/g, '-')}`;
   return (
@@ -70,6 +82,7 @@ function NumberInputRow({
       <Label
         htmlFor={inputId}
         className={`w-32 shrink-0 text-xs ${disabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}
+        title={disabledReason}
       >
         {label}
       </Label>
@@ -85,6 +98,7 @@ function NumberInputRow({
         min={min}
         max={max}
         disabled={disabled}
+        title={disabledReason}
         className="h-7 w-24 font-mono text-[12px] md:text-[12px]"
       />
     </div>
@@ -170,6 +184,10 @@ export function ParameterControls() {
         max={getParamMax(temperatureSupport, 2)}
         step={0.01}
         disabled={!canEditTemperature}
+        disabledReason={getDisabledReason(
+          temperatureSupport,
+          !canEditTemperature,
+        )}
       />
       <NumberInputRow
         label="Top P"
@@ -179,6 +197,7 @@ export function ParameterControls() {
         max={getParamMax(topPSupport, 1)}
         step={0.01}
         disabled={!canEditTopP}
+        disabledReason={getDisabledReason(topPSupport, !canEditTopP)}
       />
       <NumberInputRow
         label="Top K"
@@ -189,6 +208,7 @@ export function ParameterControls() {
         step={1}
         decimals={0}
         disabled={!canEditTopK}
+        disabledReason={getDisabledReason(topKSupport, !canEditTopK)}
       />
       <NumberInputRow
         label="Frequency Penalty"
@@ -198,6 +218,10 @@ export function ParameterControls() {
         max={getParamMax(frequencyPenaltySupport, 2)}
         step={0.01}
         disabled={!canEditFrequencyPenalty}
+        disabledReason={getDisabledReason(
+          frequencyPenaltySupport,
+          !canEditFrequencyPenalty,
+        )}
       />
       <NumberInputRow
         label="Presence Penalty"
@@ -207,12 +231,21 @@ export function ParameterControls() {
         max={getParamMax(presencePenaltySupport, 2)}
         step={0.01}
         disabled={!canEditPresencePenalty}
+        disabledReason={getDisabledReason(
+          presencePenaltySupport,
+          !canEditPresencePenalty,
+        )}
       />
 
       <div className="flex items-center gap-3">
         <Label
           htmlFor="param-max-tokens"
           className={labelClassName(!canEditMaxTokens)}
+          title={
+            !canEditMaxTokens
+              ? 'Max tokens is not supported by the selected model.'
+              : undefined
+          }
         >
           Max Tokens
         </Label>
@@ -225,6 +258,11 @@ export function ParameterControls() {
           min={1}
           max={capabilities?.tokenLimits?.output ?? 1000000}
           disabled={!canEditMaxTokens}
+          title={
+            !canEditMaxTokens
+              ? 'Max tokens is not supported by the selected model.'
+              : undefined
+          }
         />
       </div>
 
@@ -232,6 +270,11 @@ export function ParameterControls() {
         <Label
           htmlFor="param-stream"
           className={labelClassName(!supportsStreaming)}
+          title={
+            !supportsStreaming
+              ? 'Streaming is not supported by the selected model.'
+              : undefined
+          }
         >
           Stream
         </Label>
@@ -242,6 +285,11 @@ export function ParameterControls() {
             checked={stream && supportsStreaming}
             onChange={(e) => setStream(e.target.checked)}
             disabled={!supportsStreaming}
+            title={
+              !supportsStreaming
+                ? 'Streaming is not supported by the selected model.'
+                : undefined
+            }
             className="rounded"
           />
         </label>
@@ -251,6 +299,11 @@ export function ParameterControls() {
         <Label
           htmlFor="param-thinking"
           className={labelClassName(!supportsThinking)}
+          title={
+            !supportsThinking
+              ? 'Thinking controls are not supported by the selected model.'
+              : undefined
+          }
         >
           Thinking
         </Label>
@@ -261,6 +314,11 @@ export function ParameterControls() {
             checked={thinkingEnabled}
             onChange={(e) => setThinkingEnabled(e.target.checked)}
             disabled={!supportsThinking}
+            title={
+              !supportsThinking
+                ? 'Thinking controls are not supported by the selected model.'
+                : undefined
+            }
             className="rounded"
           />
         </label>
