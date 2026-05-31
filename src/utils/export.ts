@@ -3,6 +3,7 @@ import type { ProviderConfig } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 import { isTauri } from '@tauri-apps/api/core';
+import { normalizeProviderConfig } from '@/stores/provider-store';
 
 const EXPORT_VERSION = 1;
 
@@ -65,7 +66,7 @@ export function exportProviders(
   options: { redactKeys?: boolean } = {},
 ): void {
   const { redactKeys = true } = options;
-  const ordered = sortProvidersByName(providers);
+  const ordered = sortProvidersByName(providers.map(normalizeProviderConfig));
   const data = redactKeys
     ? ordered.map((p) => ({ ...p, apiKey: p.apiKey ? 'REDACTED' : '' }))
     : ordered;

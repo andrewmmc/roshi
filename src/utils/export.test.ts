@@ -124,6 +124,26 @@ describe('export', () => {
       ]);
     });
 
+    it('exportProviders normalizes legacy provider metadata', async () => {
+      const legacyProvider = makeProvider({
+        id: 'legacy-openai',
+        name: 'OpenAI',
+        protocol: undefined,
+        endpoints: { chat: '/chat/completions' },
+        models: [makeProvider().models[0]],
+      });
+      delete legacyProvider.models[0].source;
+
+      exportProviders([legacyProvider]);
+
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const text = await blob.text();
+      const envelope = JSON.parse(text);
+      expect(envelope.data[0].protocol).toBe('openai-chat-completions');
+      expect(envelope.data[0].endpoints.responses).toBe('/responses');
+      expect(envelope.data[0].models[0].source).toBe('manual');
+    });
+
     it('exportHistory redacts sensitive request headers', async () => {
       const entries = [
         makeHistoryEntry({

@@ -40,7 +40,7 @@ function createBuiltInProvider(
   };
 }
 
-function normalizeProviderModel(
+export function normalizeProviderModel(
   provider: ProviderConfig,
   model: ProviderModel,
 ): ProviderModel {
@@ -50,7 +50,9 @@ function normalizeProviderModel(
   };
 }
 
-function normalizeProviderConfig(provider: ProviderConfig): ProviderConfig {
+export function normalizeProviderConfig(
+  provider: ProviderConfig,
+): ProviderConfig {
   const endpoints =
     provider.type === 'openai-compatible'
       ? {
