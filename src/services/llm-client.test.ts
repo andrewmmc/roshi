@@ -161,6 +161,93 @@ describe('llm-client', () => {
       expect(mockAdapter.parseResponse).toHaveBeenCalled();
     });
 
+    it('filters unsupported params before calling the adapter', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          text: () => Promise.resolve('{}'),
+        }),
+      );
+
+      const provider = makeProvider({
+        models: [
+          {
+            id: 'gpt-5.5',
+            name: 'gpt-5.5',
+            displayName: 'GPT-5.5',
+            supportsStreaming: true,
+          },
+        ],
+      });
+      await sendRequest({
+        provider,
+        request: makeRequest({
+          model: 'gpt-5.5',
+          temperature: 0.7,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.3,
+          maxTokens: 2048,
+        }),
+      });
+
+      expect(mockAdapter.buildRequestUrl).toHaveBeenCalledWith(
+        provider,
+        expect.objectContaining({
+          model: 'gpt-5.5',
+          temperature: undefined,
+          topP: undefined,
+          frequencyPenalty: undefined,
+          presencePenalty: undefined,
+          maxTokens: 2048,
+        }),
+      );
+      expect(mockAdapter.buildRequestBody).toHaveBeenCalledWith(
+        expect.objectContaining({
+          temperature: undefined,
+          topP: undefined,
+          frequencyPenalty: undefined,
+          presencePenalty: undefined,
+        }),
+        provider,
+      );
+    });
+
+    it('passes filtered stream value to URL builder and stream handling', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        body: createSSEStream(['{"unused":true}']),
+        text: () => Promise.resolve('{}'),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      const provider = makeProvider({
+        models: [
+          {
+            id: 'gpt-5.5-pro',
+            name: 'gpt-5.5-pro',
+            displayName: 'GPT-5.5 Pro',
+            supportsStreaming: true,
+          },
+        ],
+      });
+      await sendRequest({
+        provider,
+        request: makeRequest({ model: 'gpt-5.5-pro', stream: true }),
+      });
+
+      expect(mockAdapter.buildRequestUrl).toHaveBeenCalledWith(
+        provider,
+        expect.objectContaining({ stream: false }),
+      );
+      expect(mockAdapter.parseStreamChunk).not.toHaveBeenCalled();
+    });
+
     it('sends POST with correct body', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,

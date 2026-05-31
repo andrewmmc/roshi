@@ -378,6 +378,59 @@ describe('useSendRequest', () => {
         }),
       );
     });
+
+    it('filters unsupported params before sending capability-specific models', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'gpt-5.5' })],
+          }),
+        ],
+        selectedProviderId: 'p1',
+        selectedModelId: 'gpt-5.5',
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        temperature: 0.7,
+        topP: 0.9,
+        frequencyPenalty: 0.5,
+        presencePenalty: 0.3,
+        maxTokens: 2048,
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'gpt-5.5',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            model: 'gpt-5.5',
+            temperature: undefined,
+            topP: undefined,
+            frequencyPenalty: undefined,
+            presencePenalty: undefined,
+            maxTokens: 2048,
+          }),
+        }),
+      );
+    });
   });
 
   describe('error handling', () => {

@@ -8,6 +8,8 @@ import type {
 import { getAdapter } from '@/adapters';
 import type { ProviderAdapter } from '@/adapters/types';
 import { DEFAULT_REQUEST_TIMEOUT_MS } from '@/constants/defaults';
+import { filterRequestByCapabilities } from '@/models/compatibility';
+import { resolveModelCapabilities } from '@/models/resolver';
 import { runtimeFetch } from './runtime-fetch';
 
 export interface SendRequestOptions {
@@ -42,8 +44,13 @@ export async function sendRequest(
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   } = options;
   const adapter = getAdapter(provider);
+  const capabilities = resolveModelCapabilities(provider, request.model);
+  const compatibleRequest = filterRequestByCapabilities(
+    request,
+    capabilities,
+  ).request;
 
-  const rawUrl = adapter.buildRequestUrl(provider, request);
+  const rawUrl = adapter.buildRequestUrl(provider, compatibleRequest);
   const url = getRequestUrl(rawUrl);
 
   if (import.meta.env.DEV) {
@@ -58,7 +65,7 @@ export async function sendRequest(
   };
 
   const headers = adapter.buildRequestHeaders(provider, mergedHeaders);
-  const body = adapter.buildRequestBody(request, provider);
+  const body = adapter.buildRequestBody(compatibleRequest, provider);
 
   const startTime = performance.now();
 
@@ -104,7 +111,7 @@ export async function sendRequest(
     );
   }
 
-  if (request.stream && fetchResponse.body) {
+  if (compatibleRequest.stream && fetchResponse.body) {
     return handleStream(
       fetchResponse.body,
       adapter,

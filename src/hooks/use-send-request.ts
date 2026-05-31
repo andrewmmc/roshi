@@ -19,6 +19,7 @@ import type { ResponseStore } from '@/stores/response-store';
 import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
 import type { NormalizedRequest } from '@/types/normalized';
 import { resolveModelCapabilities } from '@/models/resolver';
+import { filterRequestByCapabilities } from '@/models/compatibility';
 
 type BaseHistoryEntry = Pick<
   HistoryEntry,
@@ -70,7 +71,7 @@ function buildNormalizedRequest({
   const modelId = model?.id ?? selectedModelId ?? '';
   const capabilities = resolveModelCapabilities(provider, modelId);
 
-  return {
+  const request: NormalizedRequest = {
     messages,
     model: modelId,
     temperature: composer.temperature,
@@ -85,6 +86,8 @@ function buildNormalizedRequest({
       ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
       : undefined,
   };
+
+  return filterRequestByCapabilities(request, capabilities).request;
 }
 
 function createBaseHistoryEntry({
