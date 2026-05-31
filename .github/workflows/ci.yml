@@ -5,6 +5,8 @@ on:
     branches: [master]
   push:
     branches: [master]
+    tags:
+      - 'v*'
 
 jobs:
   ci:
@@ -54,8 +56,7 @@ jobs:
             exit 0
           fi
 
-          tag="$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -n 1)"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tag=" >> "$GITHUB_OUTPUT"
 
       - name: Type check and build
         run: npm run build
@@ -80,5 +81,5 @@ jobs:
     if: needs.ci.outputs.version_tag != ''
     uses: ./.github/workflows/appstore.yml
     with:
-      version: ${{ needs.ci.outputs.version_tag }}
+      ref: ${{ needs.ci.outputs.version_tag }}
     secrets: inherit

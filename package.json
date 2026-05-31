@@ -19,10 +19,10 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "bump:version": "bash ./scripts/bump-version.sh",
-    "bump:patch": "bash ./scripts/bump-version.sh patch",
-    "bump:minor": "bash ./scripts/bump-version.sh minor",
-    "bump:major": "bash ./scripts/bump-version.sh major",
+    "bump:version": "bash ./scripts/bump-version.sh --push",
+    "bump:patch": "bash ./scripts/bump-version.sh patch --push",
+    "bump:minor": "bash ./scripts/bump-version.sh minor --push",
+    "bump:major": "bash ./scripts/bump-version.sh major --push",
     "validate:release-notes": "./scripts/validate-release-notes.sh"
   },
   "dependencies": {

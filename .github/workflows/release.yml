@@ -7,9 +7,6 @@ on:
         description: Version tag to release
         required: true
         type: string
-  push:
-    tags:
-      - 'v*'
 
 permissions:
   contents: write
@@ -22,6 +19,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,6 +65,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -85,12 +86,6 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-
-      - name: Sync version from tag
-        run: |
-          VERSION="${RELEASE_TAG#v}"
-          echo "Updating version to $VERSION"
-          bash ./scripts/bump-version.sh "$VERSION"
 
       - name: Set build env vars
         run: |

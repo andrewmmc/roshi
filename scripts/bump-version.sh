@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/bump-version.sh [patch|minor|major|x.y.z|vx.y.z] [--dry-run]
+Usage: ./scripts/bump-version.sh [patch|minor|major|x.y.z|vx.y.z] [options]
 
 Updates all release version files:
   - package.json
@@ -20,14 +20,34 @@ Examples:
   ./scripts/bump-version.sh minor
   ./scripts/bump-version.sh 1.2.3
   ./scripts/bump-version.sh v1.2.3-beta
+
+Options:
+  --no-commit    Update files without creating a commit or tag
+  --no-tag       Create the version commit without a tag
+  --push         Push the version commit and tag to origin
+  --dry-run      Print the version that would be used without changing files
 EOF
 }
 
 TARGET="patch"
+COMMIT=true
+TAG=true
+PUSH=false
 DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --no-commit)
+      COMMIT=false
+      TAG=false
+      PUSH=false
+      ;;
+    --no-tag)
+      TAG=false
+      ;;
+    --push)
+      PUSH=true
+      ;;
     --dry-run)
       DRY_RUN=true
       ;;
@@ -98,6 +118,38 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
+if [[ "$PUSH" == "true" && "$COMMIT" != "true" ]]; then
+  echo "Error: --push requires committing the version bump" >&2
+  exit 1
+fi
+
+if [[ "$COMMIT" == "true" ]]; then
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Error: Commit or stash existing changes before creating a version commit" >&2
+    exit 1
+  fi
+
+  if [[ "$TAG" == "true" ]] && git rev-parse "v${next}" >/dev/null 2>&1; then
+    echo "Error: Tag v${next} already exists" >&2
+    exit 1
+  fi
+
+  if [[ "$PUSH" == "true" ]]; then
+    branch="$(git branch --show-current)"
+    branch="${branch:-${GITHUB_REF_NAME:-}}"
+
+    if [[ -z "$branch" ]]; then
+      echo "Error: Could not determine branch to push" >&2
+      exit 1
+    fi
+
+    if [[ "$TAG" == "true" ]] && git ls-remote --exit-code --tags origin "refs/tags/v${next}" >/dev/null 2>&1; then
+      echo "Error: Remote tag v${next} already exists" >&2
+      exit 1
+    fi
+  fi
+fi
+
 node - "$next" <<'NODE'
 const fs = require('node:fs');
 
@@ -143,3 +195,29 @@ fs.writeFileSync(cargoLockPath, nextCargoLock);
 NODE
 
 echo "Bumped Roshi ${current} -> ${next}"
+
+if [[ "$COMMIT" != "true" ]]; then
+  exit 0
+fi
+
+git add package.json package-lock.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+
+if git diff --cached --quiet; then
+  echo "No version file changes to commit"
+  exit 0
+fi
+
+git commit -m "chore(release): bump version to ${next}"
+
+if [[ "$TAG" == "true" ]]; then
+  git tag -a "v${next}" -m "v${next}"
+  echo "Created tag v${next}"
+fi
+
+if [[ "$PUSH" == "true" ]]; then
+  git push origin "HEAD:${branch}"
+
+  if [[ "$TAG" == "true" ]]; then
+    git push origin "v${next}"
+  fi
+fi

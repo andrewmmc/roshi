@@ -3,15 +3,15 @@ name: App Store Upload
 on:
   workflow_call:
     inputs:
-      version:
-        description: 'Version to upload (e.g., 1.0.0 or v1.0.0)'
-        required: true
+      ref:
+        description: Git ref to upload
+        required: false
         type: string
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to upload (e.g., 1.0.0 or v1.0.0)'
-        required: true
+      ref:
+        description: Git ref to upload, e.g. v1.2.3
+        required: false
         type: string
 
 permissions:
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -78,16 +80,6 @@ jobs:
       - name: Write provisioning profile
         run: |
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > src-tauri/embedded.provisionprofile
-
-      - name: Resolve App Store version
-        run: |
-          VERSION="${{ inputs.version }}"
-          echo "APPSTORE_VERSION=${VERSION#v}" >> "$GITHUB_ENV"
-
-      - name: Set version
-        run: |
-          VERSION="$APPSTORE_VERSION"
-          bash ./scripts/bump-version.sh "$VERSION"
 
       - name: Verify signing identities
         env:
