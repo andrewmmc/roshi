@@ -161,6 +161,26 @@ describe('llm-client', () => {
       expect(mockAdapter.parseResponse).toHaveBeenCalled();
     });
 
+    it('passes model to adapter selection', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          text: () => Promise.resolve('{}'),
+        }),
+      );
+
+      const provider = makeProvider({ name: 'OpenAI' });
+      await sendRequest({
+        provider,
+        request: makeRequest({ model: 'gpt-5.5' }),
+      });
+
+      expect(getAdapter).toHaveBeenCalledWith(provider, 'gpt-5.5');
+    });
+
     it('filters unsupported params before calling the adapter', async () => {
       vi.stubGlobal(
         'fetch',

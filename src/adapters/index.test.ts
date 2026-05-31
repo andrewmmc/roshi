@@ -34,6 +34,32 @@ describe('getAdapter', () => {
     ).toBe(openaiAdapter);
   });
 
+  it('uses Responses adapter for OpenAI GPT-5 family models', () => {
+    expect(
+      getAdapter(
+        makeProvider({
+          name: 'OpenAI',
+          type: 'openai-compatible',
+          protocol: 'openai-chat-completions',
+        }),
+        'gpt-5.5',
+      ),
+    ).toBe(openaiResponsesAdapter);
+  });
+
+  it('keeps chat adapter for non-OpenAI GPT-5-compatible providers', () => {
+    expect(
+      getAdapter(
+        makeProvider({
+          name: 'OpenRouter',
+          type: 'openai-compatible',
+          protocol: 'openai-compatible-chat',
+        }),
+        'gpt-5.5',
+      ),
+    ).toBe(openaiAdapter);
+  });
+
   it('returns anthropic adapter for anthropic', () => {
     expect(getAdapter(makeProvider({ type: 'anthropic' }))).toBe(
       anthropicAdapter,

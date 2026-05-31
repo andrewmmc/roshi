@@ -6,7 +6,25 @@ import { openaiResponsesAdapter } from './openai-responses';
 import { anthropicAdapter } from './anthropic';
 import { geminiAdapter } from './gemini';
 
-export function getAdapter(provider: ProviderConfig): ProviderAdapter {
+function shouldUseResponsesForModel(
+  provider: ProviderConfig,
+  model: string,
+): boolean {
+  return (
+    provider.name === 'OpenAI' &&
+    provider.type === 'openai-compatible' &&
+    /^gpt-5(?:\.|-|$)/.test(model)
+  );
+}
+
+export function getAdapter(
+  provider: ProviderConfig,
+  model?: string,
+): ProviderAdapter {
+  if (model && shouldUseResponsesForModel(provider, model)) {
+    return openaiResponsesAdapter;
+  }
+
   switch (resolveProviderProtocol(provider)) {
     case 'openai-responses':
       return openaiResponsesAdapter;

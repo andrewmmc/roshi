@@ -43,12 +43,12 @@ export async function sendRequest(
     signal,
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   } = options;
-  const adapter = getAdapter(provider);
   const capabilities = resolveModelCapabilities(provider, request.model);
   const compatibleRequest = filterRequestByCapabilities(
     request,
     capabilities,
   ).request;
+  const adapter = getAdapter(provider, compatibleRequest.model);
 
   const rawUrl = adapter.buildRequestUrl(provider, compatibleRequest);
   const url = getRequestUrl(rawUrl);
