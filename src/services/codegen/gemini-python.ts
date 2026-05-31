@@ -1,15 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-
-function escapePythonString(s: string): string {
-  if (s.includes('\n')) {
-    return 'r"""' + s.replace(/"""/g, '""\\"') + '"""';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
-}
+import { escapePythonString, getSendableMessages } from './shared';
 
 export const geminiPythonGenerator: CodeGenerator = {
   label: 'Python',
@@ -29,8 +19,7 @@ export const geminiPythonGenerator: CodeGenerator = {
     } = params;
 
     const contentLines: string[] = [];
-    for (const msg of messages) {
-      if (!msg.content.trim()) continue;
+    for (const msg of getSendableMessages(messages)) {
       if (msg.role === 'user') {
         contentLines.push(`    ${escapePythonString(msg.content)},`);
       } else {

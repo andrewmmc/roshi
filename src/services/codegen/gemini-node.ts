@@ -1,15 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-
-function escapeJSString(s: string): string {
-  if (s.includes('\n')) {
-    return '`' + s.replace(/\\/g, '\\\\').replace(/`/g, '\\`') + '`';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
-}
+import { escapeJSString, getSendableMessages } from './shared';
 
 export const geminiNodeGenerator: CodeGenerator = {
   label: 'Node.js',
@@ -29,8 +19,7 @@ export const geminiNodeGenerator: CodeGenerator = {
     } = params;
 
     const contentLines: string[] = [];
-    for (const msg of messages) {
-      if (!msg.content.trim()) continue;
+    for (const msg of getSendableMessages(messages)) {
       if (msg.role === 'user') {
         contentLines.push(`    ${escapeJSString(msg.content)},`);
       } else {

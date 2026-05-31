@@ -1,15 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-
-function escapeJSString(s: string): string {
-  if (s.includes('\n')) {
-    return '`' + s.replace(/\\/g, '\\\\').replace(/`/g, '\\`') + '`';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
-}
+import { escapeJSString, getSendableMessages } from './shared';
 
 export const openaiNodeGenerator: CodeGenerator = {
   label: 'Node.js',
@@ -49,8 +39,7 @@ export const openaiNodeGenerator: CodeGenerator = {
         `    { role: "system", content: ${escapeJSString(systemPrompt)} },`,
       );
     }
-    for (const msg of messages) {
-      if (!msg.content.trim()) continue;
+    for (const msg of getSendableMessages(messages)) {
       messageLines.push(
         `    { role: "${msg.role}", content: ${escapeJSString(msg.content)} },`,
       );

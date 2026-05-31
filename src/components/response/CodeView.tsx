@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
+import { getSendableMessages } from '@/services/codegen/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { cn } from '@/lib/utils';
@@ -41,7 +42,7 @@ export function CodeView() {
     return gen.generate({
       provider,
       model: model.id,
-      messages: messages.filter((m) => m.content.trim()),
+      messages: getSendableMessages(messages),
       systemPrompt,
       temperature,
       maxTokens,
@@ -81,7 +82,7 @@ export function CodeView() {
     );
   }
 
-  const hasMessages = messages.some((m) => m.content.trim());
+  const hasMessages = getSendableMessages(messages).length > 0;
 
   if (!hasMessages) {
     return (

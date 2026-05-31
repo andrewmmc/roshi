@@ -1,15 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-
-function escapePythonString(s: string): string {
-  if (s.includes('\n')) {
-    return 'r"""' + s.replace(/"""/g, '""\\"') + '"""';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
-}
+import { escapePythonString, getSendableMessages } from './shared';
 
 export const openaiPythonGenerator: CodeGenerator = {
   label: 'Python',
@@ -49,8 +39,7 @@ export const openaiPythonGenerator: CodeGenerator = {
         `        {"role": "system", "content": ${escapePythonString(systemPrompt)}},`,
       );
     }
-    for (const msg of messages) {
-      if (!msg.content.trim()) continue;
+    for (const msg of getSendableMessages(messages)) {
       messageLines.push(
         `        {"role": "${msg.role}", "content": ${escapePythonString(msg.content)}},`,
       );

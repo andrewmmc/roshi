@@ -1,15 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-
-function escapePythonString(s: string): string {
-  if (s.includes('\n')) {
-    return 'r"""' + s.replace(/"""/g, '""\\"') + '"""';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
-}
+import { escapePythonString, getSendableMessages } from './shared';
 
 export const anthropicPythonGenerator: CodeGenerator = {
   label: 'Python',
@@ -27,8 +17,7 @@ export const anthropicPythonGenerator: CodeGenerator = {
     } = params;
 
     const messageLines: string[] = [];
-    for (const msg of messages) {
-      if (!msg.content.trim()) continue;
+    for (const msg of getSendableMessages(messages)) {
       messageLines.push(
         `        {"role": "${msg.role}", "content": ${escapePythonString(msg.content)}},`,
       );
