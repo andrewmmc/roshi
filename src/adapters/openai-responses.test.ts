@@ -71,6 +71,20 @@ describe('openaiResponsesAdapter', () => {
         },
       ]);
     });
+
+    it('maps effort and verbosity controls', () => {
+      const body = openaiResponsesAdapter.buildRequestBody(
+        makeRequest({
+          model: 'gpt-5.5',
+          effort: 'high',
+          verbosity: 'low',
+        }),
+        provider,
+      );
+
+      expect(body.reasoning).toEqual({ effort: 'high' });
+      expect(body.text).toEqual({ verbosity: 'low' });
+    });
   });
 
   describe('buildRequestUrl', () => {

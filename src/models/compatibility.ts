@@ -17,6 +17,8 @@ const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, string>> = {
   presencePenalty: 'Presence penalty',
   maxTokens: 'Max tokens',
   thinking: 'Thinking',
+  effort: 'Effort',
+  verbosity: 'Verbosity',
 };
 
 export interface OmittedRequestParam {
@@ -130,6 +132,32 @@ export function filterRequestByCapabilities(
       reason: 'Thinking controls are not supported by this model.',
     });
     compatibleRequest.thinking = undefined;
+  }
+
+  if (
+    compatibleRequest.effort !== undefined &&
+    (!capabilities.params.effort ||
+      !capabilities.params.effort.levels.includes(compatibleRequest.effort))
+  ) {
+    omittedParams.push({
+      param: 'effort',
+      reason: 'Effort is not supported by this model.',
+    });
+    compatibleRequest.effort = undefined;
+  }
+
+  if (
+    compatibleRequest.verbosity !== undefined &&
+    (!capabilities.params.verbosity ||
+      !capabilities.params.verbosity.levels.includes(
+        compatibleRequest.verbosity,
+      ))
+  ) {
+    omittedParams.push({
+      param: 'verbosity',
+      reason: 'Verbosity is not supported by this model.',
+    });
+    compatibleRequest.verbosity = undefined;
   }
 
   return {

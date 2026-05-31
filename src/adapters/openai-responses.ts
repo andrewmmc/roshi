@@ -103,6 +103,12 @@ export const openaiResponsesAdapter: ProviderAdapter = {
     if (request.maxTokens !== undefined)
       body.max_output_tokens = request.maxTokens;
     if (request.topP !== undefined) body.top_p = request.topP;
+    if (request.effort !== undefined) {
+      body.reasoning = { effort: request.effort };
+    }
+    if (request.verbosity !== undefined) {
+      body.text = { verbosity: request.verbosity };
+    }
 
     return body;
   },

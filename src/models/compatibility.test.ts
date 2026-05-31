@@ -88,4 +88,39 @@ describe('filterRequestByCapabilities', () => {
       reason: 'Thinking controls are not supported by this model.',
     });
   });
+
+  it('keeps supported effort and verbosity values', () => {
+    const result = filterRequestByCapabilities(
+      makeRequest({
+        model: 'gpt-5.5',
+        temperature: undefined,
+        effort: 'high',
+        verbosity: 'low',
+      }),
+      gpt5FamilyCapabilities,
+    );
+
+    expect(result.request.effort).toBe('high');
+    expect(result.request.verbosity).toBe('low');
+    expect(result.omittedParams).toEqual([]);
+  });
+
+  it('omits unsupported effort and verbosity values', () => {
+    const result = filterRequestByCapabilities(
+      makeRequest({
+        model: 'gpt-5.5',
+        temperature: undefined,
+        effort: 'extreme',
+        verbosity: 'silent',
+      }),
+      gpt5FamilyCapabilities,
+    );
+
+    expect(result.request.effort).toBeUndefined();
+    expect(result.request.verbosity).toBeUndefined();
+    expect(result.warnings).toEqual([
+      'Effort was omitted: Effort is not supported by this model.',
+      'Verbosity was omitted: Verbosity is not supported by this model.',
+    ]);
+  });
 });

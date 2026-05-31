@@ -30,6 +30,8 @@ export interface NormalizedRequest {
   stream: boolean;
   systemPrompt?: string;
   thinking?: ThinkingConfig;
+  effort?: string;
+  verbosity?: string;
 }
 
 export interface NormalizedResponse {
