@@ -7,6 +7,12 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
+import {
+  buildJsonRequestHeaders,
+  extractDataUriBase64,
+  joinBaseUrlAndEndpoint,
+  mapAnthropicUsage,
+} from './shared';
 
 const ANTHROPIC_VERSION = '2023-06-01';
 const DEFAULT_MAX_TOKENS = 4096;
@@ -27,18 +33,9 @@ function isOpus47OrNewer(model: string): boolean {
   return parseInt(match[1], 10) >= 7;
 }
 
-function extractBase64(dataUri: string): {
-  mediaType: string;
-  data: string;
-} | null {
-  const match = dataUri.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) return null;
-  return { mediaType: match[1], data: match[2] };
-}
-
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
-    const parsed = extractBase64(att.data);
+    const parsed = extractDataUriBase64(att.data);
     if (parsed) {
       return {
         type: 'image',
@@ -54,7 +51,7 @@ function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
       source: { type: 'url', url: att.data },
     };
   }
-  const parsed = extractBase64(att.data);
+  const parsed = extractDataUriBase64(att.data);
   if (parsed) {
     return {
       type: 'document',
@@ -136,29 +133,13 @@ export const anthropicAdapter: ProviderAdapter = {
     provider: ProviderConfig,
     customHeaders?: Record<string, string>,
   ): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+    return buildJsonRequestHeaders(provider, customHeaders, 'x-api-key', {
       'anthropic-version': ANTHROPIC_VERSION,
-    };
-
-    if (provider.auth.type === 'api-key-header') {
-      const headerName = provider.auth.headerName || 'x-api-key';
-      headers[headerName] = provider.apiKey;
-    } else if (provider.auth.type === 'bearer') {
-      headers['Authorization'] = `Bearer ${provider.apiKey}`;
-    }
-
-    if (customHeaders) {
-      Object.assign(headers, customHeaders);
-    }
-
-    return headers;
+    });
   },
 
   buildRequestUrl(provider: ProviderConfig): string {
-    const base = provider.baseUrl.replace(/\/$/, '');
-    const endpoint = provider.endpoints.chat;
-    return `${base}${endpoint}`;
+    return joinBaseUrlAndEndpoint(provider.baseUrl, provider.endpoints.chat);
   },
 
   parseResponse(raw: Record<string, unknown>): NormalizedResponse {
@@ -182,13 +163,7 @@ export const anthropicAdapter: ProviderAdapter = {
       content,
       role: 'assistant',
       finishReason: data.stop_reason || null,
-      usage: data.usage
-        ? {
-            promptTokens: data.usage.input_tokens,
-            completionTokens: data.usage.output_tokens,
-            totalTokens: data.usage.input_tokens + data.usage.output_tokens,
-          }
-        : null,
+      usage: mapAnthropicUsage(data.usage),
     };
   },
 
@@ -218,13 +193,7 @@ export const anthropicAdapter: ProviderAdapter = {
             model: parsed.message?.model,
             id: parsed.message?.id,
             usage: parsed.message?.usage
-              ? {
-                  promptTokens: parsed.message.usage.input_tokens,
-                  completionTokens: parsed.message.usage.output_tokens,
-                  totalTokens:
-                    parsed.message.usage.input_tokens +
-                    parsed.message.usage.output_tokens,
-                }
+              ? mapAnthropicUsage(parsed.message.usage)
               : undefined,
           };
 
@@ -247,14 +216,7 @@ export const anthropicAdapter: ProviderAdapter = {
           return {
             content: '',
             finishReason: parsed.delta?.stop_reason || null,
-            usage: parsed.usage
-              ? {
-                  promptTokens: parsed.usage.input_tokens,
-                  completionTokens: parsed.usage.output_tokens,
-                  totalTokens:
-                    parsed.usage.input_tokens + parsed.usage.output_tokens,
-                }
-              : undefined,
+            usage: parsed.usage ? mapAnthropicUsage(parsed.usage) : undefined,
           };
 
         default:

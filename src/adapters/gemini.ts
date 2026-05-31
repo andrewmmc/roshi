@@ -7,19 +7,16 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
-
-function extractBase64(dataUri: string): {
-  mediaType: string;
-  data: string;
-} | null {
-  const match = dataUri.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) return null;
-  return { mediaType: match[1], data: match[2] };
-}
+import {
+  appendApiKeyQueryParam,
+  buildJsonRequestHeaders,
+  extractDataUriBase64,
+  mapGeminiUsage,
+} from './shared';
 
 function buildInlineData(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
-    const parsed = extractBase64(att.data);
+    const parsed = extractDataUriBase64(att.data);
     if (parsed) {
       return {
         inlineData: { mimeType: parsed.mediaType, data: parsed.data },
@@ -27,7 +24,7 @@ function buildInlineData(att: MessageAttachment): Record<string, unknown> {
     }
     return { text: `[attachment: ${att.filename}]` };
   }
-  const parsed = extractBase64(att.data);
+  const parsed = extractDataUriBase64(att.data);
   if (parsed) {
     return {
       inlineData: { mimeType: parsed.mediaType, data: parsed.data },
@@ -51,8 +48,7 @@ export const geminiAdapter: ProviderAdapter = {
     let url = `${base}${endpoint}${modelSegment}${action}`;
 
     if (provider.auth.type === 'query-param' && provider.apiKey) {
-      const separator = url.includes('?') ? '&' : '?';
-      url += `${separator}key=${encodeURIComponent(provider.apiKey)}`;
+      url = appendApiKeyQueryParam(url, provider.apiKey);
     }
 
     return url;
@@ -62,22 +58,7 @@ export const geminiAdapter: ProviderAdapter = {
     provider: ProviderConfig,
     customHeaders?: Record<string, string>,
   ): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (provider.auth.type === 'api-key-header') {
-      const headerName = provider.auth.headerName || 'x-goog-api-key';
-      headers[headerName] = provider.apiKey;
-    } else if (provider.auth.type === 'bearer') {
-      headers['Authorization'] = `Bearer ${provider.apiKey}`;
-    }
-
-    if (customHeaders) {
-      Object.assign(headers, customHeaders);
-    }
-
-    return headers;
+    return buildJsonRequestHeaders(provider, customHeaders, 'x-goog-api-key');
   },
 
   buildRequestBody(request: NormalizedRequest): Record<string, unknown> {
@@ -162,13 +143,7 @@ export const geminiAdapter: ProviderAdapter = {
       content,
       role: 'assistant',
       finishReason: candidate?.finishReason || null,
-      usage: data.usageMetadata
-        ? {
-            promptTokens: data.usageMetadata.promptTokenCount ?? 0,
-            completionTokens: data.usageMetadata.candidatesTokenCount ?? 0,
-            totalTokens: data.usageMetadata.totalTokenCount ?? 0,
-          }
-        : null,
+      usage: mapGeminiUsage(data.usageMetadata),
     };
   },
 
@@ -199,11 +174,7 @@ export const geminiAdapter: ProviderAdapter = {
         id: parsed.responseId,
         model: parsed.modelVersion,
         usage: parsed.usageMetadata
-          ? {
-              promptTokens: parsed.usageMetadata.promptTokenCount ?? 0,
-              completionTokens: parsed.usageMetadata.candidatesTokenCount ?? 0,
-              totalTokens: parsed.usageMetadata.totalTokenCount ?? 0,
-            }
+          ? mapGeminiUsage(parsed.usageMetadata)
           : undefined,
       };
     } catch {

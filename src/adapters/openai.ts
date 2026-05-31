@@ -7,6 +7,12 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
+import {
+  appendApiKeyQueryParam,
+  buildJsonRequestHeaders,
+  joinBaseUrlAndEndpoint,
+  mapOpenAIUsage,
+} from './shared';
 
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
@@ -68,33 +74,16 @@ export const openaiAdapter: ProviderAdapter = {
     provider: ProviderConfig,
     customHeaders?: Record<string, string>,
   ): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (provider.auth.type === 'bearer') {
-      headers['Authorization'] = `Bearer ${provider.apiKey}`;
-    } else if (provider.auth.type === 'api-key-header') {
-      const headerName = provider.auth.headerName || 'x-api-key';
-      headers[headerName] = provider.apiKey;
-    } else if (provider.auth.type === 'none') {
-      // No auth needed
-    }
-
-    if (customHeaders) {
-      Object.assign(headers, customHeaders);
-    }
-
-    return headers;
+    return buildJsonRequestHeaders(provider, customHeaders, 'x-api-key');
   },
 
   buildRequestUrl(provider: ProviderConfig): string {
-    const base = provider.baseUrl.replace(/\/$/, '');
-    const endpoint = provider.endpoints.chat;
-    const url = `${base}${endpoint}`;
+    const url = joinBaseUrlAndEndpoint(
+      provider.baseUrl,
+      provider.endpoints.chat,
+    );
     if (provider.auth.type === 'query-param' && provider.apiKey) {
-      const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}key=${encodeURIComponent(provider.apiKey)}`;
+      return appendApiKeyQueryParam(url, provider.apiKey);
     }
     return url;
   },
@@ -122,13 +111,7 @@ export const openaiAdapter: ProviderAdapter = {
       content: choice?.message?.content || '',
       role: 'assistant',
       finishReason: choice?.finish_reason || null,
-      usage: data.usage
-        ? {
-            promptTokens: data.usage.prompt_tokens,
-            completionTokens: data.usage.completion_tokens,
-            totalTokens: data.usage.total_tokens,
-          }
-        : null,
+      usage: mapOpenAIUsage(data.usage),
     };
   },
 
@@ -158,13 +141,7 @@ export const openaiAdapter: ProviderAdapter = {
         finishReason: choice?.finish_reason || null,
         model: parsed.model,
         id: parsed.id,
-        usage: parsed.usage
-          ? {
-              promptTokens: parsed.usage.prompt_tokens,
-              completionTokens: parsed.usage.completion_tokens,
-              totalTokens: parsed.usage.total_tokens,
-            }
-          : undefined,
+        usage: parsed.usage ? mapOpenAIUsage(parsed.usage) : undefined,
       };
     } catch {
       return null;
