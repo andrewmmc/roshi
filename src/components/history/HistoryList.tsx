@@ -1,15 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Trash2, Search, X, Download } from 'lucide-react';
-import {
-  DEFAULT_TOP_P,
-  DEFAULT_TOP_K,
-  DEFAULT_TEMPERATURE,
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_FREQUENCY_PENALTY,
-  DEFAULT_PRESENCE_PENALTY,
-  DEFAULT_THINKING_ENABLED,
-  DEFAULT_THINKING_BUDGET_TOKENS,
-} from '@/constants/defaults';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +24,10 @@ import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import type { HistoryEntry } from '@/types/history';
+import {
+  buildComposerHistoryRestore,
+  buildResponseHistoryRestore,
+} from '@/utils/history-restore';
 
 type StatusFilter = 'all' | 'success' | 'error';
 
@@ -89,51 +83,8 @@ export function HistoryList() {
     (entry: HistoryEntry) => {
       selectProvider(entry.providerId);
       selectModel(entry.modelId);
-      // Restore sent messages; if a response exists, also append the assistant
-      // reply and an empty user row so the composer is ready for multi-turn.
-      const restoredMessages = [...entry.request.messages];
-      if (entry.response?.content) {
-        restoredMessages.push({
-          role: 'assistant',
-          content: entry.response.content,
-        });
-        restoredMessages.push({ role: 'user', content: '' });
-      }
-      loadComposerFromHistory({
-        messages: restoredMessages,
-        systemPrompt: entry.request.systemPrompt ?? '',
-        temperature: entry.request.temperature ?? DEFAULT_TEMPERATURE,
-        maxTokens: entry.request.maxTokens ?? DEFAULT_MAX_TOKENS,
-        topP: entry.request.topP ?? DEFAULT_TOP_P,
-        topK: entry.request.topK ?? DEFAULT_TOP_K,
-        frequencyPenalty:
-          entry.request.frequencyPenalty ?? DEFAULT_FREQUENCY_PENALTY,
-        presencePenalty:
-          entry.request.presencePenalty ?? DEFAULT_PRESENCE_PENALTY,
-        stream: entry.request.stream,
-        thinkingEnabled:
-          entry.request.thinking?.enabled ?? DEFAULT_THINKING_ENABLED,
-        thinkingBudgetTokens:
-          entry.request.thinking?.budgetTokens ??
-          DEFAULT_THINKING_BUDGET_TOKENS,
-        customHeaders: entry.customHeaders ?? [],
-      });
-      loadResponseFromHistory({
-        messages: entry.request.messages,
-        stream: entry.request.stream,
-        systemPrompt: entry.request.systemPrompt ?? '',
-        temperature: entry.request.temperature ?? DEFAULT_TEMPERATURE,
-        maxTokens: entry.request.maxTokens ?? DEFAULT_MAX_TOKENS,
-        response: entry.response,
-        rawRequest: entry.rawRequest,
-        rawResponse: entry.rawResponse,
-        requestUrl: entry.requestUrl ?? null,
-        requestHeaders: entry.requestHeaders ?? null,
-        responseHeaders: entry.responseHeaders ?? null,
-        error: entry.error,
-        durationMs: entry.durationMs,
-        statusCode: entry.statusCode,
-      });
+      loadComposerFromHistory(buildComposerHistoryRestore(entry));
+      loadResponseFromHistory(buildResponseHistoryRestore(entry));
     },
     [
       selectProvider,
