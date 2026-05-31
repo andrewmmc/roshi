@@ -72,3 +72,13 @@ jobs:
     with:
       tag: ${{ needs.ci.outputs.version_tag }}
     secrets: inherit
+
+  appstore-upload:
+    needs:
+      - ci
+      - release
+    if: needs.ci.outputs.version_tag != ''
+    uses: ./.github/workflows/appstore.yml
+    with:
+      version: ${{ needs.ci.outputs.version_tag }}
+    secrets: inherit

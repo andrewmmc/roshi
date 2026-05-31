@@ -1,11 +1,18 @@
 name: App Store Upload
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to upload (e.g., 1.0.0 or v1.0.0)'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to upload (e.g., 1.0.0)'
+        description: 'Version to upload (e.g., 1.0.0 or v1.0.0)'
         required: true
+        type: string
 
 permissions:
   contents: read
@@ -72,9 +79,14 @@ jobs:
         run: |
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > src-tauri/embedded.provisionprofile
 
+      - name: Resolve App Store version
+        run: |
+          VERSION="${{ inputs.version }}"
+          echo "APPSTORE_VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+
       - name: Set version
         run: |
-          VERSION="${{ github.event.inputs.version }}"
+          VERSION="$APPSTORE_VERSION"
           npm version "$VERSION" --no-git-tag-version --allow-same-version
           jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
