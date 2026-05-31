@@ -22,7 +22,7 @@ const DEFAULT_MAX_TOKENS = 4096;
  * - Sampling parameters (temperature, top_p, top_k) return 400 errors.
  * - Extended thinking budgets (`{type:"enabled", budget_tokens}`) removed;
  *   only adaptive thinking (`{type:"adaptive"}`) is supported.
- * - Effort is controlled via a top-level `effort` field instead.
+ * - Effort is controlled via `output_config.effort` instead.
  *
  * @see https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
  */
@@ -115,9 +115,9 @@ export const anthropicAdapter: ProviderAdapter = {
       if (opus47) {
         // Opus 4.7+ only supports adaptive thinking; extended thinking
         // budgets (`{type:"enabled", budget_tokens}`) were removed.
-        // Effort is set via a top-level field (defaults to "high").
+        // Effort is set via output_config (defaults to "high").
         body.thinking = { type: 'adaptive' };
-        body.effort = 'high';
+        body.output_config = { effort: request.effort ?? 'high' };
       } else {
         body.thinking = {
           type: 'enabled',

@@ -197,11 +197,13 @@ describe('anthropicAdapter', () => {
         makeRequest({
           model: 'claude-opus-4-7',
           thinking: { enabled: true, budgetTokens: 10240 },
+          effort: 'high',
         }),
         provider,
       );
       expect(body.thinking).toEqual({ type: 'adaptive' });
-      expect(body.effort).toBe('high');
+      expect(body.output_config).toEqual({ effort: 'high' });
+      expect(body.effort).toBeUndefined();
     });
 
     it('sends extended thinking for pre-4.7 models', () => {
@@ -216,6 +218,7 @@ describe('anthropicAdapter', () => {
         type: 'enabled',
         budget_tokens: 10240,
       });
+      expect(body.output_config).toBeUndefined();
       expect(body.effort).toBeUndefined();
     });
 
@@ -225,12 +228,27 @@ describe('anthropicAdapter', () => {
           model: 'claude-opus-4-8',
           temperature: 0.5,
           thinking: { enabled: true, budgetTokens: 5000 },
+          effort: 'medium',
         }),
         provider,
       );
       expect(body.temperature).toBeUndefined();
       expect(body.thinking).toEqual({ type: 'adaptive' });
-      expect(body.effort).toBe('high');
+      expect(body.output_config).toEqual({ effort: 'medium' });
+      expect(body.effort).toBeUndefined();
+    });
+
+    it('defaults Opus 4.7+ effort to high when not provided', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-7',
+          thinking: { enabled: true, budgetTokens: 10240 },
+          effort: undefined,
+        }),
+        provider,
+      );
+
+      expect(body.output_config).toEqual({ effort: 'high' });
     });
 
     it('handles base64 image attachments', () => {

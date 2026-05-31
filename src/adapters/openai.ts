@@ -14,6 +14,10 @@ import {
   mapOpenAIUsage,
 } from './shared';
 
+function isGpt5Family(model: string): boolean {
+  return /^gpt-5(?:\.|-|$)/.test(model);
+}
+
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
     return {
@@ -54,14 +58,20 @@ export const openaiAdapter: ProviderAdapter = {
       stream: request.stream,
     };
 
-    if (request.temperature !== undefined)
-      body.temperature = request.temperature;
-    if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
-    if (request.topP !== undefined) body.top_p = request.topP;
-    if (request.frequencyPenalty !== undefined)
-      body.frequency_penalty = request.frequencyPenalty;
-    if (request.presencePenalty !== undefined)
-      body.presence_penalty = request.presencePenalty;
+    if (isGpt5Family(request.model)) {
+      if (request.maxTokens !== undefined) {
+        body.max_completion_tokens = request.maxTokens;
+      }
+    } else {
+      if (request.temperature !== undefined)
+        body.temperature = request.temperature;
+      if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
+      if (request.topP !== undefined) body.top_p = request.topP;
+      if (request.frequencyPenalty !== undefined)
+        body.frequency_penalty = request.frequencyPenalty;
+      if (request.presencePenalty !== undefined)
+        body.presence_penalty = request.presencePenalty;
+    }
 
     if (request.stream) {
       body.stream_options = { include_usage: true };

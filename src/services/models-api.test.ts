@@ -243,6 +243,43 @@ describe('models-api', () => {
       expect(result.openai.every((m) => m.supportsStreaming)).toBe(true);
     });
 
+    it('overrides OpenAI GPT-5.5 Pro streaming support', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              openai: {
+                id: 'openai',
+                name: 'OpenAI',
+                models: {
+                  'gpt-5.5': {
+                    id: 'gpt-5.5',
+                    name: 'GPT-5.5',
+                    modalities: { output: ['text'] },
+                  },
+                  'gpt-5.5-pro': {
+                    id: 'gpt-5.5-pro',
+                    name: 'GPT-5.5 Pro',
+                    modalities: { output: ['text'] },
+                  },
+                },
+              },
+            }),
+        }),
+      );
+
+      const result = await fetchModelsFromApi();
+
+      expect(
+        result.openai.find((m) => m.id === 'gpt-5.5')?.supportsStreaming,
+      ).toBe(true);
+      expect(
+        result.openai.find((m) => m.id === 'gpt-5.5-pro')?.supportsStreaming,
+      ).toBe(false);
+    });
+
     it('maps models.dev metadata onto provider model capabilities', async () => {
       vi.stubGlobal(
         'fetch',

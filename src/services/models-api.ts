@@ -33,14 +33,25 @@ interface ModelsApiResponse {
   [key: string]: ApiProvider;
 }
 
-function toProviderModel(id: string, model: ApiModel): ProviderModel {
+function supportsStreaming(providerKey: string, modelId: string): boolean {
+  if (providerKey === 'openai' && modelId.startsWith('gpt-5.5-pro')) {
+    return false;
+  }
+  return true;
+}
+
+function toProviderModel(
+  providerKey: string,
+  id: string,
+  model: ApiModel,
+): ProviderModel {
   const tokenLimits = getTokenLimits(model);
 
   return {
     id,
     name: id,
     displayName: model.name || id,
-    supportsStreaming: true,
+    supportsStreaming: supportsStreaming(providerKey, id),
     source: 'models.dev',
     lastSyncedAt: DEFAULT_SYNCED_AT,
     maxTokens: tokenLimits?.output,
@@ -113,12 +124,15 @@ function collectModels(
   return Object.entries(models).filter(([id, model]) => filter(id, model));
 }
 
-function sortByReleaseDate(models: [string, ApiModel][]): ProviderModel[] {
+function sortByReleaseDate(
+  providerKey: string,
+  models: [string, ApiModel][],
+): ProviderModel[] {
   return models
     .sort(([, a], [, b]) =>
       (b.release_date ?? '').localeCompare(a.release_date ?? ''),
     )
-    .map(([id, model]) => toProviderModel(id, model));
+    .map(([id, model]) => toProviderModel(providerKey, id, model));
 }
 
 function readCache(): FetchedModels | null {
@@ -168,11 +182,13 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   return {
     openai: data.openai?.models
       ? sortByReleaseDate(
+          'openai',
           collectModels(data.openai.models, (_id, m) => isTextChatModel(m)),
         )
       : [],
     anthropic: data.anthropic?.models
       ? sortByReleaseDate(
+          'anthropic',
           collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)),
         )
       : [],
@@ -180,12 +196,14 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
       ? [
           ...OPENROUTER_HARDCODED_MODELS,
           ...sortByReleaseDate(
+            'openrouter',
             collectModels(
               data.openrouter.models,
               (id, m) => id.startsWith('openai/') && isTextChatModel(m),
             ),
           ),
           ...sortByReleaseDate(
+            'openrouter',
             collectModels(
               data.openrouter.models,
               (id, m) => id.startsWith('anthropic/') && isTextChatModel(m),

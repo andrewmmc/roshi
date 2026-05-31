@@ -90,6 +90,54 @@ describe('openaiAdapter', () => {
       expect(body.max_tokens).toBeUndefined();
     });
 
+    it('uses max_completion_tokens for GPT-5 family chat requests', () => {
+      const body = openaiAdapter.buildRequestBody(
+        makeRequest({ model: 'gpt-5.5', maxTokens: 2048 }),
+        provider,
+      );
+
+      expect(body.max_completion_tokens).toBe(2048);
+      expect(body.max_tokens).toBeUndefined();
+    });
+
+    it('omits legacy sampling controls for GPT-5 family chat requests', () => {
+      const body = openaiAdapter.buildRequestBody(
+        makeRequest({
+          model: 'gpt-5.5',
+          temperature: 0.7,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.3,
+        }),
+        provider,
+      );
+
+      expect(body.temperature).toBeUndefined();
+      expect(body.top_p).toBeUndefined();
+      expect(body.frequency_penalty).toBeUndefined();
+      expect(body.presence_penalty).toBeUndefined();
+    });
+
+    it('preserves legacy controls for non-GPT-5 chat requests', () => {
+      const body = openaiAdapter.buildRequestBody(
+        makeRequest({
+          model: 'gpt-4.1',
+          temperature: 0.7,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.3,
+          maxTokens: 2048,
+        }),
+        provider,
+      );
+
+      expect(body.temperature).toBe(0.7);
+      expect(body.top_p).toBe(0.9);
+      expect(body.frequency_penalty).toBe(0.5);
+      expect(body.presence_penalty).toBe(0.3);
+      expect(body.max_tokens).toBe(2048);
+    });
+
     it('includes stream_options when streaming', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({ stream: true }),
