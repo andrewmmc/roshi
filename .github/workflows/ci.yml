@@ -9,9 +9,13 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    outputs:
+      version_tag: ${{ steps.version-tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,11 +32,43 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Report coverage
+        if: always()
+        run: node scripts/report-coverage.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Detect version tag
+        id: version-tag
+        run: |
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tag="$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -n 1)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Type check and build
         run: npm run build
 
       - name: Validate App Store release notes
         run: npm run validate:release-notes
+
+  release:
+    needs: ci
+    if: needs.ci.outputs.version_tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.ci.outputs.version_tag }}
+    secrets: inherit

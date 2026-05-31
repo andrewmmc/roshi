@@ -198,10 +198,12 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     await db.providers.delete(id);
     let newProviderId: string | null = null;
     let newModelId: string | null = null;
+    let selectionChanged = false;
     set((state) => {
       const providers = state.providers.filter((p) => p.id !== id);
       const updates: Partial<ProviderStore> = { providers };
       if (state.selectedProviderId === id) {
+        selectionChanged = true;
         newProviderId = providers.length > 0 ? providers[0].id : null;
         newModelId =
           providers.length > 0 && providers[0].models.length > 0
@@ -212,7 +214,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       }
       return updates;
     });
-    if (newProviderId !== null || newModelId !== null) {
+    if (selectionChanged) {
       await saveSelection(newProviderId, newModelId);
     }
   },

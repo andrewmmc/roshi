@@ -175,6 +175,83 @@ describe('geminiAdapter', () => {
         { inlineData: { mimeType: 'image/png', data: 'abc123' } },
       ]);
     });
+
+    it('falls back to text markers for URL image attachments', () => {
+      const request = makeRequest({
+        messages: [
+          makeMessage({
+            content: '',
+            attachments: [
+              {
+                id: 'a1',
+                filename: 'photo.png',
+                mimeType: 'image/png',
+                data: 'https://example.com/photo.png',
+              },
+            ],
+          }),
+        ],
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const contents = body.contents as Array<{
+        role: string;
+        parts: unknown[];
+      }>;
+
+      expect(contents[0].parts).toEqual([{ text: '[attachment: photo.png]' }]);
+    });
+
+    it('handles non-image base64 attachments as inlineData', () => {
+      const request = makeRequest({
+        messages: [
+          makeMessage({
+            content: '',
+            attachments: [
+              {
+                id: 'a1',
+                filename: 'doc.pdf',
+                mimeType: 'application/pdf',
+                data: 'data:application/pdf;base64,abc123',
+              },
+            ],
+          }),
+        ],
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const contents = body.contents as Array<{
+        role: string;
+        parts: unknown[];
+      }>;
+
+      expect(contents[0].parts).toEqual([
+        { inlineData: { mimeType: 'application/pdf', data: 'abc123' } },
+      ]);
+    });
+
+    it('falls back to text markers for non-base64 file attachments', () => {
+      const request = makeRequest({
+        messages: [
+          makeMessage({
+            content: '',
+            attachments: [
+              {
+                id: 'a1',
+                filename: 'doc.pdf',
+                mimeType: 'application/pdf',
+                data: 'https://example.com/doc.pdf',
+              },
+            ],
+          }),
+        ],
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const contents = body.contents as Array<{
+        role: string;
+        parts: unknown[];
+      }>;
+
+      expect(contents[0].parts).toEqual([{ text: '[attachment: doc.pdf]' }]);
+    });
   });
 
   describe('buildRequestHeaders', () => {
@@ -184,6 +261,15 @@ describe('geminiAdapter', () => {
 
       expect(headers['x-goog-api-key']).toBe('test-gemini-key');
       expect(headers['Content-Type']).toBe('application/json');
+    });
+
+    it('uses the default Gemini API key header name', () => {
+      const provider = geminiProvider();
+      provider.auth = { type: 'api-key-header' };
+
+      const headers = geminiAdapter.buildRequestHeaders(provider);
+
+      expect(headers['x-goog-api-key']).toBe('test-gemini-key');
     });
 
     it('supports bearer auth', () => {
@@ -274,6 +360,29 @@ describe('geminiAdapter', () => {
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
       );
     });
+
+    it('builds a URL without a model segment when no request is provided', () => {
+      const url = geminiAdapter.buildRequestUrl(geminiProvider());
+
+      expect(url).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/models:generateContent',
+      );
+    });
+
+    it('does not append an empty query-param API key', () => {
+      const provider = geminiProvider();
+      provider.auth = { type: 'query-param' };
+      provider.apiKey = '';
+
+      const url = geminiAdapter.buildRequestUrl(
+        provider,
+        makeRequest({ model: 'gemini-2.0-flash' }),
+      );
+
+      expect(url).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      );
+    });
   });
 
   describe('parseResponse', () => {
@@ -328,6 +437,18 @@ describe('geminiAdapter', () => {
       const raw = makeGeminiResponse({ usageMetadata: undefined });
       const result = geminiAdapter.parseResponse(raw);
       expect(result.usage).toBeNull();
+    });
+
+    it('defaults missing usage token counts to zero', () => {
+      const raw = makeGeminiResponse({ usageMetadata: {} });
+
+      const result = geminiAdapter.parseResponse(raw);
+
+      expect(result.usage).toEqual({
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+      });
     });
 
     it('handles empty candidates', () => {
@@ -407,6 +528,18 @@ describe('geminiAdapter', () => {
         promptTokens: 10,
         completionTokens: 5,
         totalTokens: 15,
+      });
+    });
+
+    it('defaults missing stream usage token counts to zero', () => {
+      const data = JSON.stringify({ usageMetadata: {} });
+
+      const result = geminiAdapter.parseStreamChunk(data);
+
+      expect(result?.usage).toEqual({
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
       });
     });
 

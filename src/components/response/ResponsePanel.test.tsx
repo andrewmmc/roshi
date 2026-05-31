@@ -4,6 +4,14 @@ import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { makeProvider } from '@/__tests__/fixtures';
 
+const { exportCurrentRequest } = vi.hoisted(() => ({
+  exportCurrentRequest: vi.fn(),
+}));
+
+vi.mock('@/utils/export', () => ({
+  exportCurrentRequest,
+}));
+
 vi.mock('./ChatView', () => ({
   ChatView: () => <div>ChatView Mock</div>,
 }));
@@ -23,6 +31,7 @@ vi.mock('./CodeView', () => ({
 describe('ResponsePanel', () => {
   beforeEach(() => {
     useResponseStore.getState().resetResponse();
+    exportCurrentRequest.mockReset();
     useProviderStore.setState({
       providers: [],
       selectedProviderId: null,
@@ -82,5 +91,56 @@ describe('ResponsePanel', () => {
     expect(screen.getByText('200 Success')).toBeInTheDocument();
     expect(screen.getByText('321ms')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Code' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Body' }));
+    expect(await screen.findByText('RawJsonView Mock')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Headers' }));
+    expect(await screen.findByText('HeadersView Mock')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
+    expect(await screen.findByText('CodeView Mock')).toBeInTheDocument();
+  });
+
+  it('shows streaming status text', () => {
+    useResponseStore.setState({ isLoading: true, isStreaming: true });
+
+    render(<ResponsePanel />);
+
+    expect(screen.getByText('Streaming...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Streaming response...',
+    );
+  });
+
+  it('renders error metadata and exports the current request', () => {
+    useResponseStore.setState({
+      error: 'Bad request',
+      statusCode: 400,
+      durationMs: 20,
+      rawRequest: { model: 'gpt-4' },
+      rawResponse: { error: 'bad' },
+    });
+
+    render(<ResponsePanel />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Error: Bad request');
+    expect(screen.getByText('400 Error')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /export request and response as json/i,
+      }),
+    );
+
+    expect(exportCurrentRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'Bad request', statusCode: 400 }),
+    );
+  });
+
+  it('disables the code tab without a supported provider', () => {
+    render(<ResponsePanel />);
+
+    expect(screen.getByRole('tab', { name: 'Code' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 });

@@ -334,6 +334,37 @@ describe('anthropicAdapter', () => {
       ]);
     });
 
+    it('handles URL-based document attachments', () => {
+      const request = makeRequest({
+        messages: [
+          makeMessage({
+            content: 'Read this',
+            attachments: [
+              {
+                id: 'a1',
+                filename: 'doc.pdf',
+                mimeType: 'application/pdf',
+                data: 'https://example.com/doc.pdf',
+              },
+            ],
+          }),
+        ],
+      });
+      const body = anthropicAdapter.buildRequestBody(request, provider);
+      const messages = body.messages as Array<{
+        role: string;
+        content: unknown;
+      }>;
+
+      expect(messages[0].content).toEqual([
+        { type: 'text', text: 'Read this' },
+        {
+          type: 'document',
+          source: { type: 'url', url: 'https://example.com/doc.pdf' },
+        },
+      ]);
+    });
+
     it('handles attachment with empty content', () => {
       const request = makeRequest({
         messages: [
@@ -377,6 +408,17 @@ describe('anthropicAdapter', () => {
       expect(headers['x-api-key']).toBe('sk-ant-123');
       expect(headers['anthropic-version']).toBe('2023-06-01');
       expect(headers['Content-Type']).toBe('application/json');
+    });
+
+    it('uses the default x-api-key header name', () => {
+      const provider = makeProvider({
+        type: 'anthropic',
+        auth: { type: 'api-key-header' },
+        apiKey: 'sk-ant-123',
+      });
+      const headers = anthropicAdapter.buildRequestHeaders(provider);
+
+      expect(headers['x-api-key']).toBe('sk-ant-123');
     });
 
     it('supports bearer auth', () => {

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { headersToRecord, recordToHeaders } from './header-utils';
+import {
+  headersToRecord,
+  maskHeaderValue,
+  recordToHeaders,
+} from './header-utils';
 import type { HeaderEntry } from './header-list-editor';
 
 describe('header-utils', () => {
@@ -64,6 +68,30 @@ describe('header-utils', () => {
       const result = recordToHeaders(undefined);
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ id: expect.any(String), key: '', value: '' });
+    });
+  });
+
+  describe('maskHeaderValue', () => {
+    it('hides known auth headers without an API key', () => {
+      expect(maskHeaderValue('authorization', 'Bearer secret')).toBe('');
+      expect(maskHeaderValue('x-api-key', 'secret')).toBe('');
+    });
+
+    it('masks bearer tokens and matching API keys', () => {
+      expect(
+        maskHeaderValue('authorization', 'Bearer abcdefghijkl', 'secret'),
+      ).toBe('Bearer abcd••••••••');
+      expect(maskHeaderValue('x-custom', 'short', 'short')).toBe('••••••••');
+      expect(maskHeaderValue('x-custom', 'abcdefghijkl', 'abcdefghijkl')).toBe(
+        'abcd••••••••',
+      );
+    });
+
+    it('returns safe values unchanged and preserves empty bearer prefix', () => {
+      expect(maskHeaderValue('x-custom', 'value')).toBe('value');
+      expect(maskHeaderValue('authorization', 'Bearer ', 'secret')).toBe(
+        'Bearer ',
+      );
     });
   });
 });

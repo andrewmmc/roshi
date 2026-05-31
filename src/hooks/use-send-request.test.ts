@@ -366,6 +366,85 @@ describe('useSendRequest', () => {
       expect(mockDb.history.add).toHaveBeenCalled();
     });
 
+    it('uses nested provider error messages when present', async () => {
+      mockSendRequest.mockRejectedValue(
+        new MockRequestError(
+          'HTTP 429',
+          429,
+          { error: { message: 'rate limited' } },
+          {},
+          {},
+          {},
+          50,
+        ),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().errorDetail).toBe('rate limited');
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Provider returned HTTP 429: rate limited',
+        }),
+      );
+    });
+
+    it('uses top-level provider messages when error detail is blank', async () => {
+      mockSendRequest.mockRejectedValue(
+        new MockRequestError(
+          'HTTP 400',
+          400,
+          { error: '', message: 'bad request' },
+          {},
+          {},
+          {},
+          50,
+        ),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().errorDetail).toBe('bad request');
+    });
+
+    it('handles RequestError without provider detail', async () => {
+      mockSendRequest.mockRejectedValue(
+        new MockRequestError('HTTP 500', 500, {}, {}, {}, {}, 50),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().errorDetail).toBeNull();
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Provider returned HTTP 500' }),
+      );
+    });
+
+    it('handles TimeoutError', async () => {
+      mockSendRequest.mockRejectedValue(
+        new DOMException('Timed out', 'TimeoutError'),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().error).toBe('Request timed out');
+      expect(useResponseStore.getState().errorDetail).toContain(
+        '120-second timeout',
+      );
+    });
+
     it('handles AbortError', async () => {
       mockSendRequest.mockRejectedValue(
         new DOMException('Aborted', 'AbortError'),
@@ -398,6 +477,25 @@ describe('useSendRequest', () => {
           type: 'network_error',
           message: 'Load failed',
         }),
+      );
+    });
+
+    it.each([
+      'Failed to fetch',
+      'NetworkError when attempting to fetch resource',
+      'network error',
+      'fetch failed',
+      'The network connection was lost',
+    ])('handles network-style Error: %s', async (message) => {
+      mockSendRequest.mockRejectedValue(new Error(message));
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().error).toBe(
+        'Network request failed before the provider responded',
       );
     });
 

@@ -1,4 +1,8 @@
-import { fetchModelsFromApi, fetchModelsForProvider } from './models-api';
+import {
+  clearModelsCache,
+  fetchModelsFromApi,
+  fetchModelsForProvider,
+} from './models-api';
 
 const mockModels = {
   openai: {
@@ -65,6 +69,8 @@ const mockModels = {
 describe('models-api', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
+    clearModelsCache();
   });
 
   describe('fetchModelsFromApi', () => {
@@ -226,6 +232,73 @@ describe('models-api', () => {
 
       const result = await fetchModelsFromApi();
       expect(result.openai.every((m) => m.supportsStreaming)).toBe(true);
+    });
+
+    it('uses cached models and restores missing hardcoded OpenRouter models', async () => {
+      localStorage.setItem(
+        'llm-tester-models-cache',
+        JSON.stringify({
+          timestamp: Date.now(),
+          data: {
+            openai: [],
+            anthropic: [],
+            openrouter: [
+              {
+                id: 'openrouter/auto',
+                name: 'openrouter/auto',
+                displayName: 'Auto',
+                supportsStreaming: true,
+              },
+            ],
+          },
+        }),
+      );
+      vi.stubGlobal('fetch', vi.fn());
+
+      const result = await fetchModelsFromApi();
+
+      expect(fetch).not.toHaveBeenCalled();
+      expect(result.openrouter.map((m) => m.id)).toEqual([
+        'openrouter/free',
+        'openrouter/auto',
+      ]);
+    });
+
+    it('ignores expired and invalid cache entries', async () => {
+      localStorage.setItem(
+        'llm-tester-models-cache',
+        JSON.stringify({ timestamp: 0, data: mockModels }),
+      );
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }),
+      );
+
+      await fetchModelsFromApi();
+      expect(fetch).toHaveBeenCalledTimes(1);
+
+      localStorage.setItem('llm-tester-models-cache', '{bad json');
+      await fetchModelsFromApi();
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('ignores cache write failures', async () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('full');
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
+
+      await expect(fetchModelsFromApi()).resolves.toEqual(
+        expect.objectContaining({ openai: expect.any(Array) }),
+      );
     });
   });
 

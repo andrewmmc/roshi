@@ -407,5 +407,43 @@ describe('llm-client', () => {
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toBe('https://api.test.com/v1/chat/completions');
     });
+
+    it('does not proxy non-HTTP URLs in dev', async () => {
+      vi.stubEnv('DEV', true);
+      mockAdapter = createMockAdapter({
+        buildRequestUrl: vi.fn().mockReturnValue('tauri://localhost/api'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        json: () => Promise.resolve({}),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await sendRequest({ provider: makeProvider(), request: makeRequest() });
+
+      expect(mockFetch.mock.calls[0][0]).toBe('tauri://localhost/api');
+    });
+
+    it('does not proxy invalid URLs in dev', async () => {
+      vi.stubEnv('DEV', true);
+      mockAdapter = createMockAdapter({
+        buildRequestUrl: vi.fn().mockReturnValue('not a url'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        json: () => Promise.resolve({}),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await sendRequest({ provider: makeProvider(), request: makeRequest() });
+
+      expect(mockFetch.mock.calls[0][0]).toBe('not a url');
+    });
   });
 });

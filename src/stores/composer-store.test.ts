@@ -137,6 +137,22 @@ describe('composer-store', () => {
       expect(getState().stream).toBe(false);
     });
 
+    it('sets advanced generation controls', () => {
+      getState().setTopP(0.8);
+      getState().setTopK(20);
+      getState().setFrequencyPenalty(0.2);
+      getState().setPresencePenalty(0.3);
+      getState().setThinkingEnabled(true);
+      getState().setThinkingBudgetTokens(2048);
+
+      expect(getState().topP).toBe(0.8);
+      expect(getState().topK).toBe(20);
+      expect(getState().frequencyPenalty).toBe(0.2);
+      expect(getState().presencePenalty).toBe(0.3);
+      expect(getState().thinkingEnabled).toBe(true);
+      expect(getState().thinkingBudgetTokens).toBe(2048);
+    });
+
     it('setCustomHeaders', () => {
       const headers = [{ id: '1', key: 'X-Test', value: 'val' }];
       getState().setCustomHeaders(headers);
@@ -199,6 +215,27 @@ describe('composer-store', () => {
       expect(getState().customHeaders).toEqual([
         expect.objectContaining({ key: '', value: '' }),
       ]);
+    });
+
+    it('uses default optional history fields and increments scroll generation', () => {
+      const before = getState().scrollGeneration;
+
+      getState().loadComposerFromHistory({
+        messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+        stream: true,
+        topP: 1,
+        frequencyPenalty: 0,
+        presencePenalty: 0,
+      });
+
+      expect(getState().messages[0].id).toBe('m1');
+      expect(getState().topK).toBeDefined();
+      expect(getState().thinkingEnabled).toBe(false);
+      expect(getState().thinkingBudgetTokens).toBeDefined();
+      expect(getState().scrollGeneration).toBe(before + 1);
     });
   });
 });

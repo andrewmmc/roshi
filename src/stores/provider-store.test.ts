@@ -36,6 +36,7 @@ vi.mock('nanoid', () => ({
 vi.mock('@/db', () => ({ db: mockDb }));
 vi.mock('@/services/models-api', () => ({
   fetchModelsForProvider: mockFetchModels,
+  clearModelsCache: vi.fn(),
 }));
 
 describe('provider-store', () => {
@@ -166,6 +167,22 @@ describe('provider-store', () => {
       });
     });
 
+    it('ignores invalid saved selection data', async () => {
+      const existingProvider = makeProvider({
+        id: 'p1',
+        name: 'OpenAI',
+        isBuiltIn: true,
+        models: [makeModel({ id: 'gpt-4' })],
+      });
+      mockDb.providers.toArray.mockResolvedValue([existingProvider]);
+      mockDb.settings.get.mockRejectedValueOnce(new Error('db unavailable'));
+
+      await getState().load();
+
+      expect(getState().selectedProviderId).toBe('p1');
+      expect(getState().selectedModelId).toBe('gpt-4');
+    });
+
     it('falls back to first provider when saved selection is invalid', async () => {
       mockDb.settings._store.set('provider-selection', {
         providerId: 'nonexistent',
@@ -236,6 +253,29 @@ describe('provider-store', () => {
 
       expect(getState().selectedProviderId).toBeTruthy();
       expect(getState().selectedModelId).toBe('new-model');
+    });
+
+    it('auto-selects a provider with no models', async () => {
+      useProviderStore.setState({
+        loaded: true,
+        providers: [],
+        selectedProviderId: null,
+        selectedModelId: null,
+      });
+
+      const result = await getState().addProvider({
+        name: 'New',
+        type: 'openai-compatible',
+        baseUrl: 'https://new.api',
+        auth: { type: 'none' },
+        apiKey: '',
+        endpoints: { chat: '/chat' },
+        models: [],
+        isBuiltIn: false,
+      });
+
+      expect(getState().selectedProviderId).toBe(result.id);
+      expect(getState().selectedModelId).toBeNull();
     });
 
     it(`rejects when there are already ${MAX_CUSTOM_PROVIDERS} custom providers`, async () => {
@@ -343,6 +383,40 @@ describe('provider-store', () => {
       expect(saved.providerId).toBe('p2');
       expect(saved.modelId).toBe('m2');
     });
+
+    it('clears selection when deleting the last selected provider', async () => {
+      useProviderStore.setState({
+        loaded: true,
+        providers: [makeProvider({ id: 'p1', isBuiltIn: false })],
+        selectedProviderId: 'p1',
+        selectedModelId: 'gpt-4',
+      });
+
+      await getState().deleteProvider('p1');
+
+      expect(getState().selectedProviderId).toBeNull();
+      expect(getState().selectedModelId).toBeNull();
+      expect(mockDb.settings._store.get('provider-selection')).toEqual({
+        providerId: null,
+        modelId: null,
+      });
+    });
+
+    it('does not persist selection when deleting an unselected provider', async () => {
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({ id: 'p1', isBuiltIn: false }),
+          makeProvider({ id: 'p2', isBuiltIn: false }),
+        ],
+        selectedProviderId: 'p2',
+        selectedModelId: 'gpt-4',
+      });
+
+      await getState().deleteProvider('p1');
+
+      expect(mockDb.settings.put).not.toHaveBeenCalled();
+    });
   });
 
   describe('selectProvider', () => {
@@ -449,6 +523,19 @@ describe('provider-store', () => {
 
       expect(getState().providers[0].models).toEqual([]);
     });
+
+    it('skips unknown built-in templates', async () => {
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({ id: 'p1', name: 'Unknown', isBuiltIn: true }),
+        ],
+      });
+
+      await getState().resetProvider('p1');
+
+      expect(mockDb.providers.put).not.toHaveBeenCalled();
+    });
   });
 
   describe('resetAllProviders', () => {
@@ -476,6 +563,58 @@ describe('provider-store', () => {
       expect(getState().providers.some((p) => p.id === 'custom')).toBe(false);
       expect(getState().providers).toHaveLength(4);
       expect(getState().providers[0].models).toEqual(freshModels);
+    });
+
+    it('uses empty models when fetching defaults fails', async () => {
+      mockFetchModels.mockRejectedValue(new Error('network'));
+
+      await getState().resetAllProviders();
+
+      expect(getState().providers).toHaveLength(4);
+      expect(getState().providers.every((p) => p.models.length === 0)).toBe(
+        true,
+      );
+    });
+  });
+
+  describe('syncModels', () => {
+    it('updates only built-in providers with fetched models', async () => {
+      const freshModels = [makeModel({ id: 'fresh' })];
+      mockFetchModels.mockResolvedValue(freshModels);
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({ id: 'b1', name: 'OpenAI', isBuiltIn: true }),
+          makeProvider({ id: 'c1', name: 'Custom', isBuiltIn: false }),
+        ],
+      });
+
+      await getState().syncModels();
+
+      expect(mockDb.providers.update).toHaveBeenCalledWith('b1', {
+        models: freshModels,
+      });
+      expect(getState().providers.find((p) => p.id === 'b1')?.models).toEqual(
+        freshModels,
+      );
+      expect(getState().providers.find((p) => p.id === 'c1')?.models).toEqual([
+        makeModel(),
+      ]);
+    });
+
+    it('leaves providers unchanged when syncing models fails', async () => {
+      const provider = makeProvider({
+        id: 'b1',
+        name: 'OpenAI',
+        isBuiltIn: true,
+      });
+      mockFetchModels.mockRejectedValue(new Error('network'));
+      useProviderStore.setState({ loaded: true, providers: [provider] });
+
+      await getState().syncModels();
+
+      expect(mockDb.providers.update).not.toHaveBeenCalled();
+      expect(getState().providers).toEqual([provider]);
     });
   });
 

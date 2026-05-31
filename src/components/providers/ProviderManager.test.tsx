@@ -4,37 +4,43 @@ import { ProviderManager } from './ProviderManager';
 import { makeProvider } from '@/__tests__/fixtures';
 import { useProviderStore } from '@/stores/provider-store';
 
-const updateProvider = vi.fn();
-const addProvider = vi.fn();
-const deleteProvider = vi.fn();
-const selectProvider = vi.fn();
-const resetProvider = vi.fn();
-const resetAllProviders = vi.fn();
+const {
+  updateProvider,
+  addProvider,
+  deleteProvider,
+  selectProvider,
+  resetProvider,
+  resetAllProviders,
+  syncModels,
+  exportProviders,
+  mockProviders,
+} = vi.hoisted(() => ({
+  updateProvider: vi.fn(),
+  addProvider: vi.fn(),
+  deleteProvider: vi.fn(),
+  selectProvider: vi.fn(),
+  resetProvider: vi.fn(),
+  resetAllProviders: vi.fn(),
+  syncModels: vi.fn(),
+  exportProviders: vi.fn(),
+  mockProviders: { value: [] as ReturnType<typeof makeProvider>[] },
+}));
 
 vi.mock('@/hooks/use-providers', () => ({
   useProviders: () => ({
-    providers: [
-      makeProvider({
-        id: 'builtin-openai',
-        name: 'OpenAI',
-        isBuiltIn: true,
-        apiKey: 'secret',
-        customHeaders: { 'X-Team': 'core' },
-      }),
-      makeProvider({
-        id: 'custom-provider',
-        name: 'My Custom',
-        isBuiltIn: false,
-        apiKey: '',
-      }),
-    ],
+    providers: mockProviders.value,
     addProvider,
     deleteProvider,
     selectProvider,
     updateProvider,
     resetProvider,
     resetAllProviders,
+    syncModels,
   }),
+}));
+
+vi.mock('@/utils/export', () => ({
+  exportProviders,
 }));
 
 vi.mock('@/components/ui/dialog', () => ({
@@ -91,6 +97,23 @@ describe('ProviderManager', () => {
     selectProvider.mockReset();
     resetProvider.mockReset();
     resetAllProviders.mockReset();
+    syncModels.mockReset();
+    exportProviders.mockReset();
+    mockProviders.value = [
+      makeProvider({
+        id: 'builtin-openai',
+        name: 'OpenAI',
+        isBuiltIn: true,
+        apiKey: 'secret',
+        customHeaders: { 'X-Team': 'core' },
+      }),
+      makeProvider({
+        id: 'custom-provider',
+        name: 'My Custom',
+        isBuiltIn: false,
+        apiKey: '',
+      }),
+    ];
     useProviderStore.setState({
       providers: [
         makeProvider({ id: 'builtin-openai', name: 'OpenAI', isBuiltIn: true }),
@@ -165,5 +188,57 @@ describe('ProviderManager', () => {
     fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
 
     expect(resetProvider).toHaveBeenCalledWith('builtin-openai');
+  });
+
+  it('syncs models, exports providers, closes, and removes custom providers', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<ProviderManager />);
+
+    fireEvent.click(screen.getByRole('button', { name: /sync models/i }));
+    fireEvent.click(screen.getByRole('button', { name: /export json/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /remove custom provider my custom/i }),
+    );
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /^close$/i }).at(-1)!,
+    );
+
+    await waitFor(() => expect(syncModels).toHaveBeenCalledTimes(1));
+    expect(exportProviders).toHaveBeenCalledWith(mockProviders.value);
+    expect(confirm).toHaveBeenCalledWith(
+      'Remove this custom provider? This cannot be undone.',
+    );
+    expect(deleteProvider).toHaveBeenCalledWith('custom-provider');
+  });
+
+  it('shows add limit messaging and alerts when the store rejects an add', async () => {
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    mockProviders.value = Array.from({ length: 3 }, (_, i) =>
+      makeProvider({
+        id: `custom-${i}`,
+        name: `Custom ${i}`,
+        isBuiltIn: false,
+      }),
+    );
+    render(<ProviderManager />);
+
+    expect(
+      screen.getByRole('button', { name: /add custom provider/i }),
+    ).toBeDisabled();
+    expect(screen.getByText(/Maximum 3 custom providers/)).toBeInTheDocument();
+
+    mockProviders.value = [];
+    addProvider.mockRejectedValue(new Error('MAX_CUSTOM_PROVIDERS'));
+    render(<ProviderManager />);
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /add custom provider/i })[1],
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Submit Mock' }));
+
+    await waitFor(() => {
+      expect(alert).toHaveBeenCalledWith(
+        'You can add up to 3 custom providers.',
+      );
+    });
   });
 });

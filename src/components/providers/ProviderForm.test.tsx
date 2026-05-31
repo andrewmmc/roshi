@@ -96,9 +96,10 @@ describe('ProviderForm', () => {
   });
 
   it('shows the auth header name field for api-key-header auth', () => {
-    render(
+    const onSubmit = vi.fn();
+    const { container } = render(
       <ProviderForm
-        onSubmit={() => undefined}
+        onSubmit={onSubmit}
         initialData={makeProvider({
           auth: { type: 'api-key-header', headerName: 'x-api-key' },
         })}
@@ -106,6 +107,17 @@ describe('ProviderForm', () => {
     );
 
     expect(screen.getByDisplayValue('x-api-key')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByDisplayValue('x-api-key'), {
+      target: { value: 'x-new-key' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        auth: expect.objectContaining({ headerName: 'x-new-key' }),
+      }),
+    );
   });
 
   it('disables model management for google gemini and built-in name/type edits', () => {
@@ -122,5 +134,60 @@ describe('ProviderForm', () => {
 
     expect(screen.getByDisplayValue('TestProvider')).toBeDisabled();
     expect(screen.getByRole('button', { name: /add model/i })).toBeDisabled();
+  });
+
+  it('adds and removes model rows', () => {
+    const onSubmit = vi.fn();
+    const { container } = render(
+      <ProviderForm
+        onSubmit={onSubmit}
+        initialData={makeProvider({ models: [makeModel({ id: 'one' })] })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /add model/i }));
+    fireEvent.change(screen.getAllByPlaceholderText('model-id')[1], {
+      target: { value: 'two' },
+    });
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /remove model/i })[0],
+    );
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        models: [expect.objectContaining({ id: 'two', name: 'two' })],
+      }),
+    );
+  });
+
+  it('updates auth type, endpoint, API key, and display name fields', () => {
+    const onSubmit = vi.fn();
+    const { container } = render(
+      <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
+    );
+
+    fireEvent.change(screen.getAllByLabelText('select')[1], {
+      target: { value: 'none' },
+    });
+    fireEvent.change(screen.getByDisplayValue('/chat/completions'), {
+      target: { value: '/v1/messages' },
+    });
+    fireEvent.change(screen.getByDisplayValue('test-key'), {
+      target: { value: 'new-key' },
+    });
+    fireEvent.change(screen.getByDisplayValue('GPT-4'), {
+      target: { value: 'GPT Four' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        auth: { type: 'none' },
+        apiKey: 'new-key',
+        endpoints: { chat: '/v1/messages' },
+        models: [expect.objectContaining({ displayName: 'GPT Four' })],
+      }),
+    );
   });
 });

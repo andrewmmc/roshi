@@ -74,6 +74,10 @@ describe('MessageEditor', () => {
     HTMLElement.prototype.focus = vi.fn();
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('adds a new message with alternating role', () => {
     render(<MessageEditor />);
 
@@ -119,6 +123,131 @@ describe('MessageEditor', () => {
     ]);
   });
 
+  it('cancels URL entry with Escape and cancel button', () => {
+    render(<MessageEditor />);
+
+    fireEvent.click(screen.getByRole('button', { name: /attach url/i }));
+    fireEvent.change(
+      screen.getByPlaceholderText('https://example.com/image.png'),
+      {
+        target: { value: 'https://example.com/photo.png' },
+      },
+    );
+    fireEvent.keyDown(
+      screen.getByPlaceholderText('https://example.com/image.png'),
+      {
+        key: 'Escape',
+      },
+    );
+
+    expect(
+      screen.queryByPlaceholderText('https://example.com/image.png'),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /attach url/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(useComposerStore.getState().messages[0].attachments).toBeUndefined();
+  });
+
+  it('attaches a URL with Enter and falls back to file filename', () => {
+    render(<MessageEditor />);
+
+    fireEvent.click(screen.getByRole('button', { name: /attach url/i }));
+    fireEvent.change(
+      screen.getByPlaceholderText('https://example.com/image.png'),
+      {
+        target: { value: 'https://example.com/download?x=1' },
+      },
+    );
+    fireEvent.keyDown(
+      screen.getByPlaceholderText('https://example.com/image.png'),
+      {
+        key: 'Enter',
+      },
+    );
+
+    expect(useComposerStore.getState().messages[0].attachments).toEqual([
+      expect.objectContaining({ filename: 'download' }),
+    ]);
+  });
+
+  it('ignores blank URL submissions', () => {
+    render(<MessageEditor />);
+
+    fireEvent.click(screen.getByRole('button', { name: /attach url/i }));
+    fireEvent.keyDown(
+      screen.getByPlaceholderText('https://example.com/image.png'),
+      {
+        key: 'Enter',
+      },
+    );
+
+    expect(useComposerStore.getState().messages[0].attachments).toBeUndefined();
+  });
+
+  it('attaches a selected file and clears the input', () => {
+    const readAsDataURL = vi.fn(function (this: FileReader) {
+      Object.defineProperty(this, 'result', {
+        configurable: true,
+        value: 'data:text/plain;base64,aGVsbG8=',
+      });
+      this.onload?.({} as ProgressEvent<FileReader>);
+    });
+    vi.stubGlobal(
+      'FileReader',
+      vi.fn(function () {
+        return { readAsDataURL };
+      }) as unknown as typeof FileReader,
+    );
+
+    const { container } = render(<MessageEditor />);
+    const input = container.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(readAsDataURL).toHaveBeenCalledWith(file);
+    expect(useComposerStore.getState().messages[0].attachments).toEqual([
+      expect.objectContaining({
+        filename: 'hello.txt',
+        mimeType: 'text/plain',
+        data: 'data:text/plain;base64,aGVsbG8=',
+      }),
+    ]);
+    expect(input.value).toBe('');
+  });
+
+  it('uses guessed MIME type when selected files do not provide one', () => {
+    const readAsDataURL = vi.fn(function (this: FileReader) {
+      Object.defineProperty(this, 'result', {
+        configurable: true,
+        value: 'data:application/pdf;base64,aaa=',
+      });
+      this.onload?.({} as ProgressEvent<FileReader>);
+    });
+    vi.stubGlobal(
+      'FileReader',
+      vi.fn(function () {
+        return { readAsDataURL };
+      }) as unknown as typeof FileReader,
+    );
+
+    const { container } = render(<MessageEditor />);
+    const input = container.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const file = new File(['pdf'], 'doc.pdf', { type: '' });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(
+      useComposerStore.getState().messages[0].attachments?.[0].mimeType,
+    ).toBe('application/pdf');
+  });
+
   it('clears a message after confirmation', () => {
     useComposerStore.setState({
       messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
@@ -130,6 +259,64 @@ describe('MessageEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
 
     expect(useComposerStore.getState().messages[0].content).toBe('');
+  });
+
+  it('cancels clear confirmation without changing the message', () => {
+    useComposerStore.setState({
+      messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
+    });
+
+    render(<MessageEditor />);
+
+    fireEvent.click(screen.getByRole('button', { name: /clear message/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(useComposerStore.getState().messages[0].content).toBe('Hello');
+  });
+
+  it('deletes a message with content after confirmation', () => {
+    useComposerStore.setState({
+      messages: [
+        { id: 'm1', role: 'user', content: 'Hello' },
+        { id: 'm2', role: 'assistant', content: '' },
+      ],
+    });
+
+    render(<MessageEditor />);
+
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /delete message/i })[0],
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(useComposerStore.getState().messages).toHaveLength(1);
+    expect(useComposerStore.getState().messages[0].id).toBe('m2');
+  });
+
+  it('removes attachments from chips', () => {
+    useComposerStore.setState({
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: '',
+          attachments: [
+            {
+              id: 'a1',
+              filename: 'photo.png',
+              mimeType: 'image/png',
+              data: 'x',
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<MessageEditor />);
+
+    fireEvent.click(screen.getByRole('button', { name: /remove photo.png/i }));
+
+    expect(useComposerStore.getState().messages[0].attachments).toEqual([]);
   });
 
   it('deletes a message immediately when it is empty', () => {

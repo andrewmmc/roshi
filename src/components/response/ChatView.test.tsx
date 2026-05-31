@@ -73,6 +73,47 @@ describe('ChatView', () => {
     expect(container.querySelector('.animate-spin')).toBeNull();
   });
 
+  it('shows a loader while waiting for the first response token', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [],
+        model: 'gpt-4',
+        stream: true,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+      isLoading: true,
+      isStreaming: false,
+      streamingContent: '',
+    });
+
+    const { container } = render(<ChatView />);
+
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('renders assistant and system messages with fallback keys', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [
+          { role: 'assistant', content: 'Assistant draft' },
+          { role: 'system', content: 'System context' },
+        ],
+        model: 'gpt-4',
+        stream: false,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+    });
+
+    render(<ChatView />);
+
+    expect(screen.getByText('Assistant draft')).toBeInTheDocument();
+    expect(screen.getByText('System context')).toBeInTheDocument();
+  });
+
   it('shows error details and raw response payload', () => {
     useResponseStore.setState({
       sentRequest: {

@@ -9,6 +9,15 @@ import {
   makeModel,
   makeProvider,
 } from '@/__tests__/fixtures';
+import { useUiStore } from '@/stores/ui-store';
+
+const { exportHistory } = vi.hoisted(() => ({
+  exportHistory: vi.fn(),
+}));
+
+vi.mock('@/utils/export', () => ({
+  exportHistory,
+}));
 
 describe('HistoryList', () => {
   beforeEach(() => {
@@ -32,6 +41,8 @@ describe('HistoryList', () => {
 
     useComposerStore.getState().resetComposer();
     useResponseStore.getState().resetResponse();
+    useUiStore.setState({ historySearchFocusGen: 0 });
+    exportHistory.mockReset();
   });
 
   it('restores custom headers when selecting a history entry', () => {
@@ -89,11 +100,52 @@ describe('HistoryList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Error' }));
     expect(screen.getByText(/anthropic/i)).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+    expect(screen.getByLabelText('Search history')).toHaveValue('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Success' }));
+    expect(screen.getByText(/openai/i)).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'Clear all history' }));
     expect(screen.getByText('Delete all history?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(clearAll).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all history' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete all' }));
 
     expect(clearAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('exports history and shows no matching entries', () => {
+    const entries = [
+      makeHistoryEntry({ id: 'ok-1', providerName: 'OpenAI', error: null }),
+    ];
+    useHistoryStore.setState({ entries });
+
+    render(<HistoryList />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Export all history as JSON' }),
+    );
+    expect(exportHistory).toHaveBeenCalledWith(entries);
+
+    fireEvent.change(screen.getByLabelText('Search history'), {
+      target: { value: 'missing' },
+    });
+    expect(screen.getByText('No matching entries')).toBeInTheDocument();
+  });
+
+  it('focuses the search input when focus generation changes', () => {
+    useHistoryStore.setState({ entries: [makeHistoryEntry()] });
+    useUiStore.setState({ historySearchFocusGen: 1 });
+    const focus = vi.spyOn(HTMLInputElement.prototype, 'focus');
+    const select = vi.spyOn(HTMLInputElement.prototype, 'select');
+
+    render(<HistoryList />);
+
+    expect(focus).toHaveBeenCalled();
+    expect(select).toHaveBeenCalled();
   });
 
   it('shows discard confirmation before replacing unsaved composer content', () => {
