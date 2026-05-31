@@ -3,9 +3,141 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
-import { sendRequest, RequestError } from '@/services/llm-client';
-import { supportsModelSelection } from '@/types/provider';
+import {
+  sendRequest,
+  RequestError,
+  type SendRequestResult,
+} from '@/services/llm-client';
+import {
+  supportsModelSelection,
+  type ProviderConfig,
+  type ProviderModel,
+} from '@/types/provider';
 import { headersToHistoryEntries, headersToRecord } from '@/utils/headers';
+import type { ComposerStore } from '@/stores/composer-store';
+import type { ResponseStore } from '@/stores/response-store';
+import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
+import type { NormalizedRequest } from '@/types/normalized';
+
+type BaseHistoryEntry = Pick<
+  HistoryEntry,
+  'providerId' | 'providerName' | 'modelId' | 'request'
+> & { customHeaders: HistoryHeaderEntry[] };
+
+type RequestValidationResult =
+  | {
+      ok: true;
+      provider: ProviderConfig;
+      model: ProviderModel | null;
+      messages: ComposerStore['messages'];
+    }
+  | { ok: false; error: string };
+
+function validateRequestInputs(
+  provider: ProviderConfig | null,
+  model: ProviderModel | null,
+  composer: ComposerStore,
+): RequestValidationResult {
+  const needsModel = provider ? supportsModelSelection(provider.type) : true;
+  if (!provider || (needsModel && !model)) {
+    return { ok: false, error: 'Please select a provider and model' };
+  }
+
+  const messages = composer.messages.filter(
+    (m) => m.content.trim() || (m.attachments && m.attachments.length > 0),
+  );
+  if (messages.length === 0) {
+    return { ok: false, error: 'Please enter at least one message' };
+  }
+
+  return { ok: true, provider, model, messages };
+}
+
+function buildNormalizedRequest({
+  composer,
+  messages,
+  model,
+  selectedModelId,
+}: {
+  composer: ComposerStore;
+  messages: ComposerStore['messages'];
+  model: ProviderModel | null;
+  selectedModelId: string | null;
+}): NormalizedRequest {
+  return {
+    messages,
+    model: model?.id ?? selectedModelId ?? '',
+    temperature: composer.temperature,
+    maxTokens: composer.maxTokens,
+    topP: composer.topP,
+    topK: composer.topK || undefined,
+    frequencyPenalty: composer.frequencyPenalty,
+    presencePenalty: composer.presencePenalty,
+    stream: composer.stream && (model?.supportsStreaming ?? true),
+    systemPrompt: composer.systemPrompt || undefined,
+    thinking: composer.thinkingEnabled
+      ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
+      : undefined,
+  };
+}
+
+function createBaseHistoryEntry({
+  provider,
+  request,
+  composerStream,
+  customHeaders,
+}: {
+  provider: ProviderConfig;
+  request: NormalizedRequest;
+  composerStream: boolean;
+  customHeaders: ComposerStore['customHeaders'];
+}): BaseHistoryEntry {
+  return {
+    providerId: provider.id,
+    providerName: provider.name,
+    modelId: request.model,
+    request: { ...request, stream: composerStream },
+    customHeaders: headersToHistoryEntries(customHeaders),
+  };
+}
+
+function completeSuccessfulRequest(
+  respStore: ResponseStore,
+  result: SendRequestResult,
+): void {
+  respStore.completeResponse({
+    response: result.response,
+    rawRequest: result.rawRequest,
+    rawResponse: result.rawResponse,
+    requestUrl: result.requestUrl,
+    requestHeaders: result.requestHeaders,
+    responseHeaders: result.responseHeaders,
+    durationMs: result.durationMs,
+    statusCode: result.statusCode,
+  });
+}
+
+function completeRequestError(
+  respStore: ResponseStore,
+  err: RequestError,
+): { summary: string; detail: string | null } {
+  const detail = extractProviderErrorDetail(err.rawResponse);
+  const summary = `Provider returned HTTP ${err.status}`;
+
+  respStore.completeWithError({
+    error: summary,
+    errorDetail: detail,
+    rawRequest: err.rawRequest,
+    rawResponse: err.rawResponse,
+    requestUrl: err.requestUrl,
+    requestHeaders: err.requestHeaders,
+    responseHeaders: err.responseHeaders,
+    durationMs: err.durationMs,
+    statusCode: err.status,
+  });
+
+  return { summary, detail };
+}
 
 function extractProviderErrorDetail(
   rawResponse: Record<string, unknown>,
@@ -49,6 +181,37 @@ function getNetworkErrorDetail(message: string): string {
   ].join(' ');
 }
 
+function completeUnknownError(respStore: ResponseStore, err: unknown): void {
+  const message = err instanceof Error ? err.message : 'Unknown error';
+  if (err instanceof Error && isLikelyNetworkFailure(message)) {
+    const detail = getNetworkErrorDetail(message);
+    respStore.completeWithError({
+      error: 'Network request failed before the provider responded',
+      errorDetail: detail,
+      rawResponse: {
+        type: 'network_error',
+        message,
+        detail,
+      },
+    });
+  } else if (err instanceof Error) {
+    respStore.completeWithError({
+      error: 'Unexpected request error',
+      errorDetail: message,
+      rawResponse: { type: 'unexpected_error', message },
+    });
+  } else {
+    respStore.completeWithError({
+      error: 'Unknown error',
+      errorDetail: String(err),
+      rawResponse: {
+        type: 'unknown_error',
+        value: String(err),
+      },
+    });
+  }
+}
+
 export function useSendRequest() {
   const abortRef = useRef<AbortController | null>(null);
 
@@ -59,61 +222,39 @@ export function useSendRequest() {
     const composer = useComposerStore.getState();
     const respStore = useResponseStore.getState();
 
-    const needsModel = provider ? supportsModelSelection(provider.type) : true;
-    if (!provider || (needsModel && !model)) {
-      respStore.setError('Please select a provider and model');
+    const validation = validateRequestInputs(provider, model, composer);
+    if (!validation.ok) {
+      respStore.setError(validation.error);
       respStore.setErrorDetail(null);
       return;
     }
 
-    const nonEmptyMessages = composer.messages.filter(
-      (m) => m.content.trim() || (m.attachments && m.attachments.length > 0),
-    );
-    if (nonEmptyMessages.length === 0) {
-      respStore.setError('Please enter at least one message');
-      respStore.setErrorDetail(null);
-      return;
-    }
-
-    const modelId = model?.id ?? selectedModelId ?? '';
-    const normalizedRequest = {
-      messages: nonEmptyMessages,
-      model: modelId,
-      temperature: composer.temperature,
-      maxTokens: composer.maxTokens,
-      topP: composer.topP,
-      topK: composer.topK || undefined,
-      frequencyPenalty: composer.frequencyPenalty,
-      presencePenalty: composer.presencePenalty,
-      stream: composer.stream && (model?.supportsStreaming ?? true),
-      systemPrompt: composer.systemPrompt || undefined,
-      thinking: composer.thinkingEnabled
-        ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
-        : undefined,
-    };
+    const normalizedRequest = buildNormalizedRequest({
+      composer,
+      messages: validation.messages,
+      model: validation.model,
+      selectedModelId,
+    });
 
     respStore.startRequest(normalizedRequest);
 
     const abortController = new AbortController();
     abortRef.current = abortController;
 
-    const historyHeaders = headersToHistoryEntries(composer.customHeaders);
-
-    const baseHistoryEntry = {
-      providerId: provider.id,
-      providerName: provider.name,
-      modelId: modelId,
-      request: { ...normalizedRequest, stream: composer.stream },
-      customHeaders: historyHeaders,
-    };
+    const baseHistoryEntry = createBaseHistoryEntry({
+      provider: validation.provider,
+      request: normalizedRequest,
+      composerStream: composer.stream,
+      customHeaders: composer.customHeaders,
+    });
 
     try {
       const result = await sendRequest({
-        provider,
+        provider: validation.provider,
         request: normalizedRequest,
         customHeaders:
-          historyHeaders.length > 0
-            ? headersToRecord(historyHeaders)
+          baseHistoryEntry.customHeaders.length > 0
+            ? headersToRecord(baseHistoryEntry.customHeaders)
             : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
@@ -123,16 +264,7 @@ export function useSendRequest() {
         },
       });
 
-      respStore.completeResponse({
-        response: result.response,
-        rawRequest: result.rawRequest,
-        rawResponse: result.rawResponse,
-        requestUrl: result.requestUrl,
-        requestHeaders: result.requestHeaders,
-        responseHeaders: result.responseHeaders,
-        durationMs: result.durationMs,
-        statusCode: result.statusCode,
-      });
+      completeSuccessfulRequest(respStore, result);
 
       // Append assistant response and new empty user message for multi-turn conversation
       const { addMessage } = useComposerStore.getState();
@@ -153,20 +285,7 @@ export function useSendRequest() {
       });
     } catch (err) {
       if (err instanceof RequestError) {
-        const detail = extractProviderErrorDetail(err.rawResponse);
-        const summary = `Provider returned HTTP ${err.status}`;
-
-        respStore.completeWithError({
-          error: summary,
-          errorDetail: detail,
-          rawRequest: err.rawRequest,
-          rawResponse: err.rawResponse,
-          requestUrl: err.requestUrl,
-          requestHeaders: err.requestHeaders,
-          responseHeaders: err.responseHeaders,
-          durationMs: err.durationMs,
-          statusCode: err.status,
-        });
+        const { summary, detail } = completeRequestError(respStore, err);
 
         useHistoryStore.getState().addEntry({
           ...baseHistoryEntry,
@@ -192,33 +311,7 @@ export function useSendRequest() {
           errorDetail: null,
         });
       } else {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        if (err instanceof Error && isLikelyNetworkFailure(message)) {
-          respStore.completeWithError({
-            error: 'Network request failed before the provider responded',
-            errorDetail: getNetworkErrorDetail(message),
-            rawResponse: {
-              type: 'network_error',
-              message,
-              detail: getNetworkErrorDetail(message),
-            },
-          });
-        } else if (err instanceof Error) {
-          respStore.completeWithError({
-            error: 'Unexpected request error',
-            errorDetail: message,
-            rawResponse: { type: 'unexpected_error', message },
-          });
-        } else {
-          respStore.completeWithError({
-            error: 'Unknown error',
-            errorDetail: String(err),
-            rawResponse: {
-              type: 'unknown_error',
-              value: String(err),
-            },
-          });
-        }
+        completeUnknownError(respStore, err);
       }
     } finally {
       respStore.finishRequest();
