@@ -102,6 +102,32 @@ describe('provider-store', () => {
       expect(getState().providers[0].models).toEqual([]);
     });
 
+    it('keeps partial built-in model fetch successes when seeding', async () => {
+      const openAiModels = [makeModel({ id: 'gpt-4' })];
+      mockFetchModels.mockImplementation((name: string) =>
+        name === 'OpenAI'
+          ? Promise.resolve(openAiModels)
+          : Promise.reject(new Error('network')),
+      );
+
+      await getState().load();
+
+      expect(
+        getState().providers.find((p) => p.name === 'OpenAI')?.models,
+      ).toEqual(openAiModels);
+      expect(
+        getState().providers.find((p) => p.name === 'Anthropic')?.models,
+      ).toEqual([]);
+    });
+
+    it('does not mark loaded when provider load fails', async () => {
+      mockDb.providers.toArray.mockRejectedValueOnce(new Error('db failed'));
+
+      await expect(getState().load()).rejects.toThrow('db failed');
+
+      expect(getState().loaded).toBe(false);
+    });
+
     it('restores valid selection from IndexedDB settings', async () => {
       const existingProvider = makeProvider({
         id: 'p1',
@@ -602,7 +628,7 @@ describe('provider-store', () => {
       ]);
     });
 
-    it('leaves providers unchanged when syncing models fails', async () => {
+    it('leaves providers unchanged when all model syncs fail', async () => {
       const provider = makeProvider({
         id: 'b1',
         name: 'OpenAI',
@@ -615,6 +641,35 @@ describe('provider-store', () => {
 
       expect(mockDb.providers.update).not.toHaveBeenCalled();
       expect(getState().providers).toEqual([provider]);
+    });
+
+    it('keeps partial model sync successes', async () => {
+      const freshModels = [makeModel({ id: 'fresh-openai' })];
+      mockFetchModels.mockImplementation((name: string) =>
+        name === 'OpenAI'
+          ? Promise.resolve(freshModels)
+          : Promise.reject(new Error('network')),
+      );
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({ id: 'b1', name: 'OpenAI', isBuiltIn: true }),
+          makeProvider({ id: 'b2', name: 'Anthropic', isBuiltIn: true }),
+        ],
+      });
+
+      await getState().syncModels();
+
+      expect(mockDb.providers.update).toHaveBeenCalledTimes(1);
+      expect(mockDb.providers.update).toHaveBeenCalledWith('b1', {
+        models: freshModels,
+      });
+      expect(getState().providers.find((p) => p.id === 'b1')?.models).toEqual(
+        freshModels,
+      );
+      expect(getState().providers.find((p) => p.id === 'b2')?.models).toEqual([
+        makeModel(),
+      ]);
     });
   });
 

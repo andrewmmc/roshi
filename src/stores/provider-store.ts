@@ -11,6 +11,60 @@ import {
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
+type BuiltInProviderTemplate = (typeof builtinProviders)[number];
+
+async function fetchModelsForTemplates(
+  templates: readonly BuiltInProviderTemplate[],
+): Promise<ProviderConfig['models'][]> {
+  const results = await Promise.allSettled(
+    templates.map((template) => fetchModelsForProvider(template.name)),
+  );
+  return results.map((result, index) =>
+    result.status === 'fulfilled' ? result.value : templates[index].models,
+  );
+}
+
+function createBuiltInProvider(
+  template: BuiltInProviderTemplate,
+  models: ProviderConfig['models'],
+  id = nanoid(),
+): ProviderConfig {
+  return {
+    ...template,
+    id,
+    apiKey: '',
+    models,
+  };
+}
+
+async function createBuiltInProviders(
+  templates: readonly BuiltInProviderTemplate[],
+): Promise<ProviderConfig[]> {
+  const fetchedModels = await fetchModelsForTemplates(templates);
+  return templates.map((template, index) =>
+    createBuiltInProvider(template, fetchedModels[index]),
+  );
+}
+
+function chooseValidSelection(
+  providers: ProviderConfig[],
+  saved: { providerId: string | null; modelId: string | null },
+): { providerId: string | null; modelId: string | null } {
+  const savedProvider = saved.providerId
+    ? providers.find((p) => p.id === saved.providerId)
+    : null;
+  const provider = savedProvider ?? providers[0] ?? null;
+  const savedModelValid = Boolean(
+    savedProvider?.models.some((m) => m.id === saved.modelId),
+  );
+
+  return {
+    providerId: provider?.id ?? null,
+    modelId: savedModelValid
+      ? saved.modelId
+      : (provider?.models[0]?.id ?? null),
+  };
+}
 
 async function saveSelection(
   providerId: string | null,
@@ -80,8 +134,6 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
   load: async () => {
     if (get().loaded) return;
-    // Set loaded early to prevent concurrent calls from duplicating seeds
-    set({ loaded: true });
 
     const providers = await db.providers.toArray();
 
@@ -101,55 +153,23 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
     if (needsSeed.length > 0) {
       set({ seeding: true });
-      let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] =
-        [];
       try {
-        fetchedModels = await Promise.all(
-          needsSeed.map((t) => fetchModelsForProvider(t.name)),
-        );
-      } catch {
-        // Graceful degradation: seed with empty models if API fails
-        fetchedModels = needsSeed.map(() => []);
+        const seededProviders = await createBuiltInProviders(needsSeed);
+        for (const newProvider of seededProviders) {
+          await db.providers.add(newProvider);
+          providers.push(newProvider);
+        }
+      } finally {
+        set({ seeding: false });
       }
-
-      for (let i = 0; i < needsSeed.length; i++) {
-        const template = needsSeed[i];
-        const models = fetchedModels[i];
-        const newProvider: ProviderConfig = {
-          ...template,
-          id: nanoid(),
-          apiKey: '',
-          models,
-        };
-        await db.providers.add(newProvider);
-        providers.push(newProvider);
-      }
-      set({ seeding: false });
     }
 
     const saved = await loadSelection();
-    const savedProviderValid =
-      saved.providerId && providers.some((p) => p.id === saved.providerId);
-    const savedProviderObj = savedProviderValid
-      ? providers.find((p) => p.id === saved.providerId)
-      : null;
-    const savedModelValid =
-      savedProviderObj &&
-      saved.modelId &&
-      savedProviderObj.models.some((m) => m.id === saved.modelId);
-
-    const selectedProviderId = savedProviderValid
-      ? saved.providerId
-      : providers.length > 0
-        ? providers[0].id
-        : null;
-    const fallbackProvider = providers.find((p) => p.id === selectedProviderId);
-    const selectedModelId = savedModelValid
-      ? saved.modelId
-      : fallbackProvider?.models?.[0]?.id || null;
+    const { providerId: selectedProviderId, modelId: selectedModelId } =
+      chooseValidSelection(providers, saved);
 
     await saveSelection(selectedProviderId, selectedModelId);
-    set({ providers, selectedProviderId, selectedModelId });
+    set({ providers, selectedProviderId, selectedModelId, loaded: true });
   },
 
   addProvider: async (provider) => {
@@ -238,19 +258,8 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     const template = builtinProviders.find((b) => b.name === provider.name);
     if (!template) return;
 
-    let models = template.models;
-    try {
-      models = await fetchModelsForProvider(template.name);
-    } catch {
-      // Keep empty models on fetch failure
-    }
-
-    const reset: ProviderConfig = {
-      ...template,
-      id: provider.id,
-      apiKey: '',
-      models,
-    };
+    const [models] = await fetchModelsForTemplates([template]);
+    const reset = createBuiltInProvider(template, models, provider.id);
     await db.providers.put(reset);
     set((state) => ({
       providers: state.providers.map((p) => (p.id === id ? reset : p)),
@@ -261,37 +270,13 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     // Delete all providers from DB (both built-in and custom)
     await db.providers.clear();
 
-    // Re-seed from builtin templates with fresh models from API
-    const newProviders: ProviderConfig[] = [];
-    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[] =
-      [];
-    try {
-      fetchedModels = await Promise.all(
-        builtinProviders.map((t) => fetchModelsForProvider(t.name)),
-      );
-    } catch {
-      fetchedModels = builtinProviders.map(() => []);
-    }
-
-    for (let i = 0; i < builtinProviders.length; i++) {
-      const template = builtinProviders[i];
-      const models = fetchedModels[i];
-      const newProvider: ProviderConfig = {
-        ...template,
-        id: nanoid(),
-        apiKey: '',
-        models,
-      };
+    const newProviders = await createBuiltInProviders(builtinProviders);
+    for (const newProvider of newProviders) {
       await db.providers.add(newProvider);
-      newProviders.push(newProvider);
     }
 
-    const selectedProviderId =
-      newProviders.length > 0 ? newProviders[0].id : null;
-    const selectedModelId =
-      selectedProviderId && newProviders[0].models.length > 0
-        ? newProviders[0].models[0].id
-        : null;
+    const { providerId: selectedProviderId, modelId: selectedModelId } =
+      chooseValidSelection(newProviders, { providerId: null, modelId: null });
     await saveSelection(selectedProviderId, selectedModelId);
     set({ providers: newProviders, selectedProviderId, selectedModelId });
   },
@@ -299,26 +284,25 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   syncModels: async () => {
     clearModelsCache();
     const builtins = get().providers.filter((p) => p.isBuiltIn);
-    let fetchedModels: Awaited<ReturnType<typeof fetchModelsForProvider>>[];
-    try {
-      fetchedModels = await Promise.all(
-        builtins.map((p) => fetchModelsForProvider(p.name)),
-      );
-    } catch {
-      return;
-    }
+    const results = await Promise.allSettled(
+      builtins.map((p) => fetchModelsForProvider(p.name)),
+    );
+    const fetchedModelsById = new Map<string, ProviderConfig['models']>();
 
     for (let i = 0; i < builtins.length; i++) {
       const provider = builtins[i];
-      const models = fetchedModels[i];
+      const result = results[i];
+      if (result.status !== 'fulfilled') continue;
+      const models = result.value;
+      fetchedModelsById.set(provider.id, models);
       await db.providers.update(provider.id, { models });
     }
 
     set((state) => ({
       providers: state.providers.map((p) => {
         if (!p.isBuiltIn) return p;
-        const idx = builtins.findIndex((b) => b.id === p.id);
-        return idx >= 0 ? { ...p, models: fetchedModels[idx] } : p;
+        const models = fetchedModelsById.get(p.id);
+        return models ? { ...p, models } : p;
       }),
     }));
   },
