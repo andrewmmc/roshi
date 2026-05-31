@@ -87,10 +87,7 @@ jobs:
       - name: Set version
         run: |
           VERSION="$APPSTORE_VERSION"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tmp.json && mv tmp.json src-tauri/tauri.conf.json
-          sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
-          cd src-tauri && cargo generate-lockfile
+          bash ./scripts/bump-version.sh "$VERSION"
 
       - name: Verify signing identities
         env:
