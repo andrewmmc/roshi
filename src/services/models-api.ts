@@ -1,9 +1,12 @@
+import type { ModelModality } from '@/models/capabilities';
+import type { ModelCapabilityOverrides } from '@/types/provider';
 import type { ProviderModel } from '@/types/provider';
 import { runtimeFetch } from './runtime-fetch';
 
 const MODELS_API_URL = 'https://models.dev/api.json';
 const CACHE_KEY = 'llm-tester-models-cache';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const DEFAULT_SYNCED_AT = 0;
 
 interface ApiModel {
   id: string;
@@ -31,12 +34,64 @@ interface ModelsApiResponse {
 }
 
 function toProviderModel(id: string, model: ApiModel): ProviderModel {
+  const tokenLimits = getTokenLimits(model);
+
   return {
     id,
     name: id,
     displayName: model.name || id,
     supportsStreaming: true,
+    source: 'models.dev',
+    lastSyncedAt: DEFAULT_SYNCED_AT,
+    maxTokens: tokenLimits?.output,
+    capabilities: getModelCapabilities(model),
   };
+}
+
+function toModelModality(value: string): ModelModality | null {
+  return value === 'text' ||
+    value === 'image' ||
+    value === 'pdf' ||
+    value === 'audio' ||
+    value === 'video'
+    ? value
+    : null;
+}
+
+function getModalities(values: string[] | undefined): ModelModality[] {
+  return (values ?? [])
+    .map(toModelModality)
+    .filter((value): value is ModelModality => value !== null);
+}
+
+function getTokenLimits(
+  model: ApiModel,
+): ModelCapabilityOverrides['tokenLimits'] {
+  if (model.limit?.context === undefined && model.limit?.output === undefined) {
+    return undefined;
+  }
+
+  return {
+    context: model.limit.context,
+    output: model.limit.output,
+  };
+}
+
+function getModelCapabilities(
+  model: ApiModel,
+): ModelCapabilityOverrides | undefined {
+  const inputModalities = getModalities(model.modalities?.input);
+  const outputModalities = getModalities(model.modalities?.output);
+  const tokenLimits = getTokenLimits(model);
+  const capabilities: ModelCapabilityOverrides = {};
+
+  if (inputModalities.length > 0)
+    capabilities.inputModalities = inputModalities;
+  if (outputModalities.length > 0)
+    capabilities.outputModalities = outputModalities;
+  if (tokenLimits) capabilities.tokenLimits = tokenLimits;
+
+  return Object.keys(capabilities).length > 0 ? capabilities : undefined;
 }
 
 function isTextChatModel(model: ApiModel): boolean {
@@ -98,12 +153,14 @@ const OPENROUTER_HARDCODED_MODELS: ProviderModel[] = [
     name: 'openrouter/auto',
     displayName: 'Auto (best available)',
     supportsStreaming: true,
+    source: 'builtin-override',
   },
   {
     id: 'openrouter/free',
     name: 'openrouter/free',
     displayName: 'Free (best free)',
     supportsStreaming: true,
+    source: 'builtin-override',
   },
 ];
 
@@ -157,9 +214,30 @@ export async function fetchModelsFromApi(): Promise<FetchedModels> {
   const res = await runtimeFetch(MODELS_API_URL);
   if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
   const data: ModelsApiResponse = await res.json();
-  const result = parseModelsResponse(data);
+  const syncedAt = Date.now();
+  const result = withSyncedAt(parseModelsResponse(data), syncedAt);
   writeCache(result);
   return result;
+}
+
+function withSyncedAt(models: FetchedModels, syncedAt: number): FetchedModels {
+  return {
+    openai: models.openai.map((model) =>
+      model.source === 'models.dev'
+        ? { ...model, lastSyncedAt: syncedAt }
+        : model,
+    ),
+    anthropic: models.anthropic.map((model) =>
+      model.source === 'models.dev'
+        ? { ...model, lastSyncedAt: syncedAt }
+        : model,
+    ),
+    openrouter: models.openrouter.map((model) =>
+      model.source === 'models.dev'
+        ? { ...model, lastSyncedAt: syncedAt }
+        : model,
+    ),
+  };
 }
 
 export async function fetchModelsForProvider(

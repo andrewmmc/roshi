@@ -43,7 +43,15 @@ const defaultFormData: ProviderFormData = {
   auth: { type: 'bearer' },
   apiKey: '',
   endpoints: { chat: '/chat/completions' },
-  models: [{ id: '', name: '', displayName: '', supportsStreaming: true }],
+  models: [
+    {
+      id: '',
+      name: '',
+      displayName: '',
+      supportsStreaming: true,
+      source: 'manual',
+    },
+  ],
   defaults: { temperature: DEFAULT_TEMPERATURE, maxTokens: DEFAULT_MAX_TOKENS },
   isBuiltIn: false,
   customHeaders: {},
@@ -110,6 +118,7 @@ export function ProviderForm({
         name: '',
         displayName: '',
         supportsStreaming: true,
+        source: 'manual',
         _formKey: nanoid(),
       },
     ]);
@@ -129,6 +138,7 @@ export function ProviderForm({
         ...m,
         name: m.name || m.id,
         displayName: m.displayName || m.id,
+        source: m.source ?? 'manual',
       }));
     // Convert header entries to record for submission
     const customHeaders = headersToRecord(headerEntries);

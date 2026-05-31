@@ -14,6 +14,7 @@ const mockModels = {
         name: 'GPT-4',
         release_date: '2023-03-14',
         modalities: { input: ['text'], output: ['text'] },
+        limit: { context: 8192, output: 4096 },
       },
       'gpt-3.5-turbo': {
         id: 'gpt-3.5-turbo',
@@ -74,6 +75,14 @@ describe('models-api', () => {
   });
 
   describe('fetchModelsFromApi', () => {
+    beforeEach(() => {
+      vi.setSystemTime(new Date('2026-01-02T03:04:05Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('fetches and returns models for all providers', async () => {
       vi.stubGlobal(
         'fetch',
@@ -232,6 +241,51 @@ describe('models-api', () => {
 
       const result = await fetchModelsFromApi();
       expect(result.openai.every((m) => m.supportsStreaming)).toBe(true);
+    });
+
+    it('maps models.dev metadata onto provider model capabilities', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
+
+      const result = await fetchModelsFromApi();
+      const model = result.openai.find((m) => m.id === 'gpt-4');
+
+      expect(model).toEqual(
+        expect.objectContaining({
+          source: 'models.dev',
+          lastSyncedAt: new Date('2026-01-02T03:04:05Z').getTime(),
+          maxTokens: 4096,
+          capabilities: expect.objectContaining({
+            inputModalities: ['text'],
+            outputModalities: ['text'],
+            tokenLimits: { context: 8192, output: 4096 },
+          }),
+        }),
+      );
+    });
+
+    it('marks OpenRouter hardcoded models as built-in overrides', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
+
+      const result = await fetchModelsFromApi();
+
+      expect(result.openrouter[0]).toEqual(
+        expect.objectContaining({ source: 'builtin-override' }),
+      );
+      expect(result.openrouter[1]).toEqual(
+        expect.objectContaining({ source: 'builtin-override' }),
+      );
     });
 
     it('uses cached models and restores missing hardcoded OpenRouter models', async () => {

@@ -9,6 +9,7 @@ export function makeModel(overrides?: Partial<ProviderModel>): ProviderModel {
     name: 'gpt-4',
     displayName: 'GPT-4',
     supportsStreaming: true,
+    source: 'manual',
     ...overrides,
   };
 }

@@ -1,9 +1,22 @@
+import type { ModelCapabilities } from '@/models/capabilities';
+
+export type ProviderModelSource = 'models.dev' | 'manual' | 'builtin-override';
+
+export type ModelCapabilityOverrides = Partial<
+  Omit<ModelCapabilities, 'params'>
+> & {
+  params?: Partial<ModelCapabilities['params']>;
+};
+
 export interface ProviderModel {
   id: string;
   name: string;
   displayName: string;
   maxTokens?: number;
   supportsStreaming: boolean;
+  source?: ProviderModelSource;
+  capabilities?: ModelCapabilityOverrides;
+  lastSyncedAt?: number;
 }
 
 export type ProviderType = 'openai-compatible' | 'anthropic' | 'google-gemini';

@@ -19,6 +19,7 @@ export function createCustomProviderTemplate(): Omit<ProviderConfig, 'id'> {
         name: '',
         displayName: '',
         supportsStreaming: true,
+        source: 'manual',
       },
     ],
     defaults: {

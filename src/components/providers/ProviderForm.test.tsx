@@ -90,6 +90,7 @@ describe('ProviderForm', () => {
             id: 'gpt-4o',
             name: 'gpt-4',
             displayName: 'GPT-4.1',
+            source: 'manual',
           }),
         ],
       }),

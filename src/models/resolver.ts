@@ -6,6 +6,22 @@ import {
   MODEL_CAPABILITY_PATTERNS,
 } from './registry';
 
+function mergeCapabilities(
+  base: ModelCapabilities,
+  overrides: ProviderConfig['models'][0]['capabilities'] | undefined,
+): ModelCapabilities {
+  if (!overrides) return base;
+
+  return {
+    ...base,
+    ...overrides,
+    params: {
+      ...base.params,
+      ...overrides.params,
+    },
+  };
+}
+
 export function resolveModelCapabilities(
   provider: ProviderConfig,
   modelId: string,
@@ -13,15 +29,19 @@ export function resolveModelCapabilities(
   const exact = MODEL_CAPABILITY_OVERRIDES[modelId];
   if (exact) return exact;
 
+  const model = provider.models.find((m) => m.id === modelId);
+
   const match = MODEL_CAPABILITY_PATTERNS.find(({ pattern }) =>
     pattern.test(modelId),
   );
-  if (match) return match.capabilities;
+  if (match) return mergeCapabilities(match.capabilities, model?.capabilities);
 
-  const model = provider.models.find((m) => m.id === modelId);
   if (model) {
     return {
-      ...defaultCapabilitiesForProviderType(provider.type),
+      ...mergeCapabilities(
+        defaultCapabilitiesForProviderType(provider.type),
+        model.capabilities,
+      ),
       streaming: model.supportsStreaming,
     };
   }

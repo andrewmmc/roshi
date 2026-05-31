@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import type { ProviderConfig } from '@/types/provider';
+import type { ProviderModel } from '@/types/provider';
 import { getDefaultProtocolForProviderType } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
@@ -39,6 +40,16 @@ function createBuiltInProvider(
   };
 }
 
+function normalizeProviderModel(
+  provider: ProviderConfig,
+  model: ProviderModel,
+): ProviderModel {
+  return {
+    ...model,
+    source: model.source ?? (provider.isBuiltIn ? 'models.dev' : 'manual'),
+  };
+}
+
 function normalizeProviderConfig(provider: ProviderConfig): ProviderConfig {
   const endpoints =
     provider.type === 'openai-compatible'
@@ -54,7 +65,22 @@ function normalizeProviderConfig(provider: ProviderConfig): ProviderConfig {
       provider.protocol ??
       getDefaultProtocolForProviderType(provider.type, provider.name),
     endpoints,
+    models: provider.models.map((model) =>
+      normalizeProviderModel(provider, model),
+    ),
   };
+}
+
+function mergeSyncedModels(
+  existingModels: ProviderModel[],
+  syncedModels: ProviderModel[],
+): ProviderModel[] {
+  const syncedIds = new Set(syncedModels.map((model) => model.id));
+  const manualModels = existingModels.filter(
+    (model) => model.source === 'manual' && !syncedIds.has(model.id),
+  );
+
+  return [...syncedModels, ...manualModels];
 }
 
 async function createBuiltInProviders(
@@ -325,7 +351,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       const provider = builtins[i];
       const result = results[i];
       if (result.status !== 'fulfilled') continue;
-      const models = result.value;
+      const models = mergeSyncedModels(provider.models, result.value);
       fetchedModelsById.set(provider.id, models);
       await db.providers.update(provider.id, { models });
     }

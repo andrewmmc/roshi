@@ -169,6 +169,7 @@ describe('provider-store', () => {
       expect(migrated?.type).toBe('openai-compatible');
       expect(migrated?.protocol).toBe('openai-compatible-chat');
       expect(migrated?.endpoints.responses).toBe('/responses');
+      expect(migrated?.models[0].source).toBe('manual');
     });
 
     it('normalizes loaded providers without protocol metadata', async () => {
@@ -628,7 +629,12 @@ describe('provider-store', () => {
       useProviderStore.setState({
         loaded: true,
         providers: [
-          makeProvider({ id: 'b1', name: 'OpenAI', isBuiltIn: true }),
+          makeProvider({
+            id: 'b1',
+            name: 'OpenAI',
+            isBuiltIn: true,
+            models: [makeModel({ source: 'models.dev' })],
+          }),
           makeProvider({ id: 'c1', name: 'Custom', isBuiltIn: false }),
         ],
       });
@@ -644,6 +650,33 @@ describe('provider-store', () => {
       expect(getState().providers.find((p) => p.id === 'c1')?.models).toEqual([
         makeModel(),
       ]);
+    });
+
+    it('preserves manual models added to built-in providers during sync', async () => {
+      const freshModels = [makeModel({ id: 'fresh', source: 'models.dev' })];
+      const manualModel = makeModel({ id: 'manual-model', source: 'manual' });
+      mockFetchModels.mockResolvedValue(freshModels);
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({
+            id: 'b1',
+            name: 'OpenAI',
+            isBuiltIn: true,
+            models: [manualModel],
+          }),
+        ],
+      });
+
+      await getState().syncModels();
+
+      expect(getState().providers[0].models).toEqual([
+        freshModels[0],
+        manualModel,
+      ]);
+      expect(mockDb.providers.update).toHaveBeenCalledWith('b1', {
+        models: [freshModels[0], manualModel],
+      });
     });
 
     it('leaves providers unchanged when all model syncs fail', async () => {
@@ -671,8 +704,18 @@ describe('provider-store', () => {
       useProviderStore.setState({
         loaded: true,
         providers: [
-          makeProvider({ id: 'b1', name: 'OpenAI', isBuiltIn: true }),
-          makeProvider({ id: 'b2', name: 'Anthropic', isBuiltIn: true }),
+          makeProvider({
+            id: 'b1',
+            name: 'OpenAI',
+            isBuiltIn: true,
+            models: [makeModel({ source: 'models.dev' })],
+          }),
+          makeProvider({
+            id: 'b2',
+            name: 'Anthropic',
+            isBuiltIn: true,
+            models: [makeModel({ source: 'models.dev' })],
+          }),
         ],
       });
 
@@ -686,7 +729,7 @@ describe('provider-store', () => {
         freshModels,
       );
       expect(getState().providers.find((p) => p.id === 'b2')?.models).toEqual([
-        makeModel(),
+        makeModel({ source: 'models.dev' }),
       ]);
     });
   });
