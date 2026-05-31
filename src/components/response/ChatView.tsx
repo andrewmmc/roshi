@@ -19,6 +19,9 @@ export function ChatView() {
   const error = useResponseStore((s) => s.error);
   const errorDetail = useResponseStore((s) => s.errorDetail);
   const rawResponse = useResponseStore((s) => s.rawResponse);
+  const compatibilityWarnings = useResponseStore(
+    (s) => s.compatibilityWarnings,
+  );
 
   const displayContent = isStreaming ? streamingContent : response?.content;
   const showLoading = isLoading && !displayContent;
@@ -88,6 +91,27 @@ export function ChatView() {
               </div>
             </div>
           ))}
+
+        {compatibilityWarnings.length > 0 && (
+          <div className="flex gap-3">
+            <div
+              aria-label="Warning"
+              className="w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide text-amber-600 uppercase dark:text-amber-400"
+            >
+              warn
+            </div>
+            <div className="flex-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100">
+              <div className="font-medium">
+                Request adjusted for model compatibility
+              </div>
+              <ul className="mt-1 list-disc space-y-1 pl-4">
+                {compatibilityWarnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {showLoading && (
           <div className="flex gap-3">

@@ -28,6 +28,12 @@ describe('filterRequestByCapabilities', () => {
       'frequencyPenalty',
       'presencePenalty',
     ]);
+    expect(result.warnings).toEqual([
+      'Temperature was omitted: Use reasoning effort and verbosity controls for GPT-5 models.',
+      'Top P was omitted: Use reasoning effort and verbosity controls for GPT-5 models.',
+      'Frequency penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
+      'Presence penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
+    ]);
   });
 
   it('disables streaming when the model does not support it', () => {

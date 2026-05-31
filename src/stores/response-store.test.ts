@@ -18,6 +18,7 @@ describe('response-store', () => {
       durationMs: null,
       statusCode: null,
       sentRequest: null,
+      compatibilityWarnings: [],
     });
   });
 
@@ -96,6 +97,13 @@ describe('response-store', () => {
       expect(getState().sentRequest).toEqual(req);
     });
 
+    it('setCompatibilityWarnings', () => {
+      getState().setCompatibilityWarnings(['Temperature was omitted']);
+      expect(getState().compatibilityWarnings).toEqual([
+        'Temperature was omitted',
+      ]);
+    });
+
     it('setRawRequest', () => {
       getState().setRawRequest({ model: 'test' });
       expect(getState().rawRequest).toEqual({ model: 'test' });
@@ -128,11 +136,30 @@ describe('response-store', () => {
       getState().setError('err');
       getState().setErrorDetail('detail');
       getState().setLoading(true);
+      getState().setCompatibilityWarnings(['warning']);
       getState().resetResponse();
 
       expect(getState().error).toBeNull();
       expect(getState().errorDetail).toBeNull();
       expect(getState().isLoading).toBe(false);
+      expect(getState().compatibilityWarnings).toEqual([]);
+    });
+  });
+
+  describe('startRequest', () => {
+    it('stores compatibility warnings', () => {
+      const req = {
+        messages: [],
+        model: 'gpt-5.5',
+        stream: false,
+      };
+
+      getState().startRequest(req, ['Temperature was omitted']);
+
+      expect(getState().sentRequest).toEqual(req);
+      expect(getState().compatibilityWarnings).toEqual([
+        'Temperature was omitted',
+      ]);
     });
   });
 

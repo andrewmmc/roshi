@@ -20,6 +20,7 @@ import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
 import type { NormalizedRequest } from '@/types/normalized';
 import { resolveModelCapabilities } from '@/models/resolver';
 import { filterRequestByCapabilities } from '@/models/compatibility';
+import type { RequestCompatibilityResult } from '@/models/compatibility';
 
 type BaseHistoryEntry = Pick<
   HistoryEntry,
@@ -55,7 +56,7 @@ function validateRequestInputs(
   return { ok: true, provider, model, messages };
 }
 
-function buildNormalizedRequest({
+function buildCompatibleRequest({
   composer,
   messages,
   model,
@@ -67,10 +68,9 @@ function buildNormalizedRequest({
   model: ProviderModel | null;
   provider: ProviderConfig;
   selectedModelId: string | null;
-}): NormalizedRequest {
+}): RequestCompatibilityResult {
   const modelId = model?.id ?? selectedModelId ?? '';
   const capabilities = resolveModelCapabilities(provider, modelId);
-
   const request: NormalizedRequest = {
     messages,
     model: modelId,
@@ -87,7 +87,7 @@ function buildNormalizedRequest({
       : undefined,
   };
 
-  return filterRequestByCapabilities(request, capabilities).request;
+  return filterRequestByCapabilities(request, capabilities);
 }
 
 function createBaseHistoryEntry({
@@ -238,15 +238,16 @@ export function useSendRequest() {
       return;
     }
 
-    const normalizedRequest = buildNormalizedRequest({
+    const compatibility = buildCompatibleRequest({
       composer,
       messages: validation.messages,
       model: validation.model,
       provider: validation.provider,
       selectedModelId,
     });
+    const normalizedRequest = compatibility.request;
 
-    respStore.startRequest(normalizedRequest);
+    respStore.startRequest(normalizedRequest, compatibility.warnings);
 
     const abortController = new AbortController();
     abortRef.current = abortController;

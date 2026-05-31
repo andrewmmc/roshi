@@ -8,6 +8,17 @@ type FilterableRequestParam =
   | 'frequencyPenalty'
   | 'presencePenalty';
 
+const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, string>> = {
+  stream: 'Streaming',
+  temperature: 'Temperature',
+  topP: 'Top P',
+  topK: 'Top K',
+  frequencyPenalty: 'Frequency penalty',
+  presencePenalty: 'Presence penalty',
+  maxTokens: 'Max tokens',
+  thinking: 'Thinking',
+};
+
 export interface OmittedRequestParam {
   param: keyof NormalizedRequest;
   reason: string;
@@ -44,6 +55,13 @@ function applyParamSupport(
 
   omittedParams.push({ param, reason: getUnsupportedReason(support) });
   request[param] = undefined;
+}
+
+function getWarnings(omittedParams: OmittedRequestParam[]): string[] {
+  return omittedParams.map(({ param, reason }) => {
+    const label = PARAM_LABELS[param] ?? param;
+    return `${label} was omitted: ${reason}`;
+  });
 }
 
 export function filterRequestByCapabilities(
@@ -117,7 +135,7 @@ export function filterRequestByCapabilities(
   return {
     request: compatibleRequest,
     omittedParams,
-    warnings: [],
+    warnings: getWarnings(omittedParams),
     blockingErrors: [],
   };
 }

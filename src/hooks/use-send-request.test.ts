@@ -377,6 +377,9 @@ describe('useSendRequest', () => {
           }),
         }),
       );
+      expect(useResponseStore.getState().compatibilityWarnings).toContain(
+        'Temperature was omitted: Use reasoning effort and verbosity controls for GPT-5 models.',
+      );
     });
 
     it('filters unsupported params before sending capability-specific models', async () => {

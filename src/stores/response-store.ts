@@ -16,6 +16,7 @@ interface ResponseState {
   durationMs: number | null;
   statusCode: number | null;
   sentRequest: NormalizedRequest | null;
+  compatibilityWarnings: string[];
 }
 
 type ResponseErrorResult = Pick<ResponseState, 'error' | 'errorDetail'> &
@@ -48,10 +49,14 @@ interface ResponseActions {
   setDurationMs: (ms: number | null) => void;
   setStatusCode: (code: number | null) => void;
   setSentRequest: (request: NormalizedRequest | null) => void;
+  setCompatibilityWarnings: (warnings: string[]) => void;
   resetResponse: () => void;
 
   /** Batch: reset + set sentRequest + loading in one set() */
-  startRequest: (sentRequest: NormalizedRequest) => void;
+  startRequest: (
+    sentRequest: NormalizedRequest,
+    compatibilityWarnings?: string[],
+  ) => void;
   /** Batch: append stream content and mark streaming in one set() */
   setStreamChunk: (content: string) => void;
   /** Batch: set all completion fields in one set() */
@@ -105,6 +110,7 @@ const INITIAL_RESPONSE_STATE: ResponseState = {
   durationMs: null,
   statusCode: null,
   sentRequest: null,
+  compatibilityWarnings: [],
 };
 
 export const useResponseStore = create<ResponseStore>((set) => ({
@@ -126,13 +132,16 @@ export const useResponseStore = create<ResponseStore>((set) => ({
   setDurationMs: (durationMs) => set({ durationMs }),
   setStatusCode: (statusCode) => set({ statusCode }),
   setSentRequest: (sentRequest) => set({ sentRequest }),
+  setCompatibilityWarnings: (compatibilityWarnings) =>
+    set({ compatibilityWarnings }),
 
   resetResponse: () => set({ ...INITIAL_RESPONSE_STATE }),
 
-  startRequest: (sentRequest) =>
+  startRequest: (sentRequest, compatibilityWarnings = []) =>
     set({
       ...INITIAL_RESPONSE_STATE,
       sentRequest,
+      compatibilityWarnings,
       isLoading: true,
     }),
 
@@ -173,6 +182,7 @@ export const useResponseStore = create<ResponseStore>((set) => ({
       errorDetail: null,
       durationMs: data.durationMs,
       statusCode: data.statusCode ?? null,
+      compatibilityWarnings: [],
       sentRequest: {
         messages: data.messages.map((m) => ({
           ...m,
