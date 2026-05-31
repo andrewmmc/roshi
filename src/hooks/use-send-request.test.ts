@@ -333,6 +333,51 @@ describe('useSendRequest', () => {
         }),
       );
     });
+
+    it('disables stream for models marked non-streaming by capabilities', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'gpt-5.5-pro' })],
+          }),
+        ],
+        selectedProviderId: 'p1',
+        selectedModelId: 'gpt-5.5-pro',
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        stream: true,
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'gpt-5.5-pro',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            model: 'gpt-5.5-pro',
+            stream: false,
+          }),
+        }),
+      );
+    });
   });
 
   describe('error handling', () => {

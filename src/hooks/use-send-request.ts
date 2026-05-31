@@ -18,6 +18,7 @@ import type { ComposerStore } from '@/stores/composer-store';
 import type { ResponseStore } from '@/stores/response-store';
 import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
 import type { NormalizedRequest } from '@/types/normalized';
+import { resolveModelCapabilities } from '@/models/resolver';
 
 type BaseHistoryEntry = Pick<
   HistoryEntry,
@@ -57,23 +58,28 @@ function buildNormalizedRequest({
   composer,
   messages,
   model,
+  provider,
   selectedModelId,
 }: {
   composer: ComposerStore;
   messages: ComposerStore['messages'];
   model: ProviderModel | null;
+  provider: ProviderConfig;
   selectedModelId: string | null;
 }): NormalizedRequest {
+  const modelId = model?.id ?? selectedModelId ?? '';
+  const capabilities = resolveModelCapabilities(provider, modelId);
+
   return {
     messages,
-    model: model?.id ?? selectedModelId ?? '',
+    model: modelId,
     temperature: composer.temperature,
     maxTokens: composer.maxTokens,
     topP: composer.topP,
     topK: composer.topK || undefined,
     frequencyPenalty: composer.frequencyPenalty,
     presencePenalty: composer.presencePenalty,
-    stream: composer.stream && (model?.supportsStreaming ?? true),
+    stream: composer.stream && capabilities.streaming,
     systemPrompt: composer.systemPrompt || undefined,
     thinking: composer.thinkingEnabled
       ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
@@ -233,6 +239,7 @@ export function useSendRequest() {
       composer,
       messages: validation.messages,
       model: validation.model,
+      provider: validation.provider,
       selectedModelId,
     });
 
