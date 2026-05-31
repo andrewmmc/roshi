@@ -18,6 +18,8 @@ export function CodeView() {
   const topP = useComposerStore((s) => s.topP);
   const frequencyPenalty = useComposerStore((s) => s.frequencyPenalty);
   const presencePenalty = useComposerStore((s) => s.presencePenalty);
+  const effort = useComposerStore((s) => s.effort);
+  const verbosity = useComposerStore((s) => s.verbosity);
   const streamDefault = useComposerStore((s) => s.stream);
   const [overrideStream, setOverrideStream] = useState<boolean | null>(null);
   const stream = overrideStream ?? streamDefault;
@@ -50,6 +52,8 @@ export function CodeView() {
       frequencyPenalty,
       presencePenalty,
       stream,
+      effort,
+      verbosity,
     });
   }, [
     provider,
@@ -62,6 +66,8 @@ export function CodeView() {
     topP,
     frequencyPenalty,
     presencePenalty,
+    effort,
+    verbosity,
     stream,
     generators,
   ]);

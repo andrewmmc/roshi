@@ -91,6 +91,44 @@ describe('openaiNodeGenerator', () => {
       expect(code).toContain('for await (const chunk of stream)');
     });
 
+    it('generates responses code for responses protocol', () => {
+      const params = makeCodeGenParams({
+        provider: makeProvider({ protocol: 'openai-responses' }),
+        systemPrompt: 'Be concise',
+        maxTokens: 2048,
+        effort: 'high',
+        verbosity: 'low',
+      });
+      const code = openaiNodeGenerator.generate(params);
+
+      expect(code).toContain('client.responses.create({');
+      expect(code).toContain('instructions: "Be concise"');
+      expect(code).toContain('max_output_tokens: 2048');
+      expect(code).toContain('input: [');
+      expect(code).toContain('reasoning: { effort: "high" }');
+      expect(code).toContain('text: { verbosity: "low" }');
+      expect(code).toContain('const content = response.output_text');
+      expect(code).not.toContain('client.chat.completions.create');
+      expect(code).not.toContain('temperature:');
+    });
+
+    it('generates responses streaming code for OpenAI GPT-5 models', () => {
+      const params = makeCodeGenParams({
+        provider: makeProvider({
+          name: 'OpenAI',
+          baseUrl: 'https://api.openai.com/v1',
+        }),
+        model: 'gpt-5.5',
+        stream: true,
+      });
+      const code = openaiNodeGenerator.generate(params);
+
+      expect(code).toContain('const stream = await client.responses.create({');
+      expect(code).toContain('for await (const event of stream)');
+      expect(code).toContain('event.type === "response.output_text.delta"');
+      expect(code).not.toContain('client.chat.completions.create');
+    });
+
     it('includes temperature and max_tokens', () => {
       const params = makeCodeGenParams({ temperature: 0.7, maxTokens: 2048 });
       const code = openaiNodeGenerator.generate(params);

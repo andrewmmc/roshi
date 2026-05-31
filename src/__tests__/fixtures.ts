@@ -175,6 +175,8 @@ export function makeCodeGenParams(
     frequencyPenalty: 0,
     presencePenalty: 0,
     stream: false,
+    effort: 'medium',
+    verbosity: 'medium',
     ...overrides,
   };
 }

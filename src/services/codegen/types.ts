@@ -12,6 +12,8 @@ export interface CodeGenParams {
   frequencyPenalty: number;
   presencePenalty: number;
   stream: boolean;
+  effort?: string;
+  verbosity?: string;
 }
 
 export interface CodeGenerator {
