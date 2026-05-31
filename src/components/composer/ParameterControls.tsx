@@ -1,6 +1,13 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedModelCapabilities } from '@/stores/provider-store';
 import type { ParamSupport } from '@/models/capabilities';
@@ -13,6 +20,8 @@ import {
   DEFAULT_PRESENCE_PENALTY,
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
+  DEFAULT_EFFORT,
+  DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 
 function isParamEditable(
@@ -105,6 +114,58 @@ function NumberInputRow({
   );
 }
 
+function SelectRow({
+  label,
+  value,
+  values,
+  onChange,
+  disabled = false,
+  disabledReason,
+}: {
+  label: string;
+  value: string;
+  values: string[];
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  disabledReason?: string;
+}) {
+  const inputId = `param-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  return (
+    <div className="flex items-center gap-3">
+      <Label
+        htmlFor={inputId}
+        className={labelClassName(disabled)}
+        title={disabledReason}
+      >
+        {label}
+      </Label>
+      <Select
+        value={value}
+        onValueChange={(nextValue) => {
+          if (nextValue !== null) onChange(nextValue);
+        }}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          id={inputId}
+          size="sm"
+          className="h-7 w-28 font-mono text-[12px] md:text-[12px]"
+          title={disabledReason}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {values.map((item) => (
+            <SelectItem key={item} value={item}>
+              {item}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function ParameterControls() {
   const temperature = useComposerStore((s) => s.temperature);
   const maxTokens = useComposerStore((s) => s.maxTokens);
@@ -115,6 +176,8 @@ export function ParameterControls() {
   const stream = useComposerStore((s) => s.stream);
   const thinkingEnabled = useComposerStore((s) => s.thinkingEnabled);
   const thinkingBudgetTokens = useComposerStore((s) => s.thinkingBudgetTokens);
+  const effort = useComposerStore((s) => s.effort);
+  const verbosity = useComposerStore((s) => s.verbosity);
   const setTemperature = useComposerStore((s) => s.setTemperature);
   const setMaxTokens = useComposerStore((s) => s.setMaxTokens);
   const setTopP = useComposerStore((s) => s.setTopP);
@@ -126,6 +189,8 @@ export function ParameterControls() {
   const setThinkingBudgetTokens = useComposerStore(
     (s) => s.setThinkingBudgetTokens,
   );
+  const setEffort = useComposerStore((s) => s.setEffort);
+  const setVerbosity = useComposerStore((s) => s.setVerbosity);
 
   const capabilities = useSelectedModelCapabilities();
   const temperatureSupport = capabilities?.params.temperature;
@@ -135,6 +200,8 @@ export function ParameterControls() {
   const presencePenaltySupport = capabilities?.params.presencePenalty;
   const maxTokensSupport = capabilities?.params.maxTokens;
   const thinkingSupport = capabilities?.params.thinking;
+  const effortSupport = capabilities?.params.effort;
+  const verbositySupport = capabilities?.params.verbosity;
   const hasCapabilities = Boolean(capabilities);
 
   const canEditTemperature = isParamEditable(
@@ -161,7 +228,6 @@ export function ParameterControls() {
   const supportsThinking = Boolean(thinkingSupport);
   const supportsThinkingBudget =
     thinkingSupport?.modes.includes('enabled') ?? false;
-
   const reset = () => {
     setTemperature(DEFAULT_TEMPERATURE);
     setMaxTokens(DEFAULT_MAX_TOKENS);
@@ -172,6 +238,8 @@ export function ParameterControls() {
     setStream(true);
     setThinkingEnabled(DEFAULT_THINKING_ENABLED);
     setThinkingBudgetTokens(DEFAULT_THINKING_BUDGET_TOKENS);
+    setEffort(effortSupport?.defaultLevel ?? DEFAULT_EFFORT);
+    setVerbosity(verbositySupport?.defaultLevel ?? DEFAULT_VERBOSITY);
   };
 
   return (
@@ -347,6 +415,32 @@ export function ParameterControls() {
             step={1024}
           />
         </div>
+      )}
+
+      {effortSupport && (
+        <SelectRow
+          label="Effort"
+          value={
+            effortSupport.levels.includes(effort)
+              ? effort
+              : effortSupport.defaultLevel
+          }
+          values={effortSupport.levels}
+          onChange={setEffort}
+        />
+      )}
+
+      {verbositySupport && (
+        <SelectRow
+          label="Verbosity"
+          value={
+            verbositySupport.levels.includes(verbosity)
+              ? verbosity
+              : verbositySupport.defaultLevel
+          }
+          values={verbositySupport.levels}
+          onChange={setVerbosity}
+        />
       )}
 
       <div className="flex justify-end pt-1">

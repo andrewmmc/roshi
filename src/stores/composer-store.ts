@@ -10,6 +10,8 @@ import {
   DEFAULT_PRESENCE_PENALTY,
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
+  DEFAULT_EFFORT,
+  DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import {
   createEmptyHeaderEntry,
@@ -31,6 +33,8 @@ interface ComposerState {
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
+  effort: string;
+  verbosity: string;
   customHeaders: HeaderEntry[];
   scrollGeneration: number;
 }
@@ -50,6 +54,8 @@ interface ComposerActions {
   setStream: (stream: boolean) => void;
   setThinkingEnabled: (enabled: boolean) => void;
   setThinkingBudgetTokens: (tokens: number) => void;
+  setEffort: (effort: string) => void;
+  setVerbosity: (verbosity: string) => void;
   addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
   removeAttachment: (messageIndex: number, attachmentId: string) => void;
   setCustomHeaders: (headers: HeaderEntry[]) => void;
@@ -66,6 +72,8 @@ interface ComposerActions {
     stream: boolean;
     thinkingEnabled?: boolean;
     thinkingBudgetTokens?: number;
+    effort?: string;
+    verbosity?: string;
     customHeaders?: HistoryHeaderEntry[];
   }) => void;
 }
@@ -85,6 +93,8 @@ function createInitialComposerState(): ComposerState {
     stream: true,
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
+    effort: DEFAULT_EFFORT,
+    verbosity: DEFAULT_VERBOSITY,
     customHeaders: [createEmptyHeaderEntry()],
     scrollGeneration: 0,
   };
@@ -145,6 +155,8 @@ export const useComposerStore = create<ComposerStore>((set) => ({
   setThinkingEnabled: (thinkingEnabled) => set({ thinkingEnabled }),
   setThinkingBudgetTokens: (thinkingBudgetTokens) =>
     set({ thinkingBudgetTokens }),
+  setEffort: (effort) => set({ effort }),
+  setVerbosity: (verbosity) => set({ verbosity }),
   addAttachment: (messageIndex, attachment) =>
     set((s) => ({
       messages: s.messages.map((m, i) =>
@@ -185,6 +197,8 @@ export const useComposerStore = create<ComposerStore>((set) => ({
       thinkingEnabled: data.thinkingEnabled ?? DEFAULT_THINKING_ENABLED,
       thinkingBudgetTokens:
         data.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
+      effort: data.effort ?? DEFAULT_EFFORT,
+      verbosity: data.verbosity ?? DEFAULT_VERBOSITY,
       scrollGeneration: s.scrollGeneration + 1,
     })),
 }));

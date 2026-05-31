@@ -1,8 +1,58 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 import { ParameterControls } from './ParameterControls';
 import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
+
+vi.mock('@/components/ui/select', () => {
+  function getTriggerId(children: React.ReactNode): string | undefined {
+    const childArray = React.Children.toArray(children);
+    const trigger = childArray.find(
+      (child) => React.isValidElement<{ id?: string }>(child) && child.props.id,
+    );
+    return React.isValidElement<{ id?: string }>(trigger)
+      ? trigger.props.id
+      : undefined;
+  }
+
+  function Select({
+    value,
+    onValueChange,
+    disabled,
+    children,
+  }: {
+    value: string;
+    onValueChange?: (value: string) => void;
+    disabled?: boolean;
+    children: React.ReactNode;
+  }) {
+    return (
+      <select
+        id={getTriggerId(children)}
+        value={value}
+        onChange={(event) => onValueChange?.(event.target.value)}
+        disabled={disabled}
+      >
+        {children}
+      </select>
+    );
+  }
+
+  return {
+    Select,
+    SelectTrigger: ({ children }: { children: React.ReactNode }) => children,
+    SelectContent: ({ children }: { children: React.ReactNode }) => children,
+    SelectItem: ({
+      value,
+      children,
+    }: {
+      value: string;
+      children: React.ReactNode;
+    }) => <option value={value}>{children}</option>,
+    SelectValue: () => null,
+  };
+});
 
 describe('ParameterControls', () => {
   beforeEach(() => {
@@ -59,6 +109,33 @@ describe('ParameterControls', () => {
       'title',
       'Thinking controls are not supported by the selected model.',
     );
+    expect(screen.getByLabelText('Effort')).toBeEnabled();
+    expect(screen.getByLabelText('Verbosity')).toBeEnabled();
+  });
+
+  it('updates GPT-5 effort and verbosity controls', () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'o1',
+          models: [makeModel({ id: 'gpt-5.5' })],
+        }),
+      ],
+      selectedProviderId: 'o1',
+      selectedModelId: 'gpt-5.5',
+    });
+
+    render(<ParameterControls />);
+
+    fireEvent.change(screen.getByLabelText('Effort'), {
+      target: { value: 'high' },
+    });
+    fireEvent.change(screen.getByLabelText('Verbosity'), {
+      target: { value: 'low' },
+    });
+
+    expect(useComposerStore.getState().effort).toBe('high');
+    expect(useComposerStore.getState().verbosity).toBe('low');
   });
 
   it('disables streaming when selected model capabilities do not support it', () => {
@@ -129,6 +206,8 @@ describe('ParameterControls', () => {
     fireEvent.change(screen.getByLabelText('Max Tokens'), {
       target: { value: '123' },
     });
+    useComposerStore.getState().setEffort('high');
+    useComposerStore.getState().setVerbosity('low');
     fireEvent.click(screen.getByLabelText('Stream'));
 
     fireEvent.click(screen.getByRole('button', { name: /reset to defaults/i }));
@@ -137,5 +216,7 @@ describe('ParameterControls', () => {
     expect(state.temperature).toBe(1);
     expect(state.maxTokens).toBe(4096);
     expect(state.stream).toBe(true);
+    expect(state.effort).toBe('medium');
+    expect(state.verbosity).toBe('medium');
   });
 });

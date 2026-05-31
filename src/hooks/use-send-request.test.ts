@@ -90,6 +90,8 @@ describe('useSendRequest', () => {
       systemPrompt: '',
       temperature: 1,
       maxTokens: 4096,
+      effort: 'medium',
+      verbosity: 'medium',
       stream: false,
       customHeaders: [],
     });
@@ -430,6 +432,53 @@ describe('useSendRequest', () => {
             frequencyPenalty: undefined,
             presencePenalty: undefined,
             maxTokens: 2048,
+          }),
+        }),
+      );
+    });
+
+    it('sends effort and verbosity for models that support them', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'gpt-5.5' })],
+          }),
+        ],
+        selectedProviderId: 'p1',
+        selectedModelId: 'gpt-5.5',
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        effort: 'high',
+        verbosity: 'low',
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'gpt-5.5',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            model: 'gpt-5.5',
+            effort: 'high',
+            verbosity: 'low',
           }),
         }),
       );

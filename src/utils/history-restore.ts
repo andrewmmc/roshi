@@ -7,6 +7,8 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
+  DEFAULT_EFFORT,
+  DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import type { HistoryEntry } from '@/types/history';
 
@@ -32,6 +34,8 @@ export function buildComposerHistoryRestore(entry: HistoryEntry) {
       entry.request.thinking?.enabled ?? DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens:
       entry.request.thinking?.budgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
+    effort: entry.request.effort ?? DEFAULT_EFFORT,
+    verbosity: entry.request.verbosity ?? DEFAULT_VERBOSITY,
     customHeaders: entry.customHeaders ?? [],
   };
 }

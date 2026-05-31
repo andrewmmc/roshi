@@ -10,6 +10,8 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
+  DEFAULT_EFFORT,
+  DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 
 describe('history-restore', () => {
@@ -19,6 +21,8 @@ describe('history-restore', () => {
         messages: [{ role: 'user', content: 'Hello' }],
         systemPrompt: 'Be helpful',
         thinking: { enabled: true, budgetTokens: 1234 },
+        effort: 'high',
+        verbosity: 'low',
       }),
       customHeaders: [{ key: 'X-Team', value: 'core' }],
     });
@@ -33,6 +37,8 @@ describe('history-restore', () => {
         systemPrompt: 'Be helpful',
         thinkingEnabled: true,
         thinkingBudgetTokens: 1234,
+        effort: 'high',
+        verbosity: 'low',
         customHeaders: [{ key: 'X-Team', value: 'core' }],
       }),
     );
@@ -46,6 +52,8 @@ describe('history-restore', () => {
         topP: undefined,
         topK: undefined,
         thinking: undefined,
+        effort: undefined,
+        verbosity: undefined,
       }),
       response: null,
     });
@@ -58,6 +66,8 @@ describe('history-restore', () => {
         topK: DEFAULT_TOP_K,
         thinkingEnabled: DEFAULT_THINKING_ENABLED,
         thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
+        effort: DEFAULT_EFFORT,
+        verbosity: DEFAULT_VERBOSITY,
       }),
     );
   });

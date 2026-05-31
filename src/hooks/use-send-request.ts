@@ -82,6 +82,8 @@ function buildCompatibleRequest({
     presencePenalty: composer.presencePenalty,
     stream: composer.stream && capabilities.streaming,
     systemPrompt: composer.systemPrompt || undefined,
+    effort: capabilities.params.effort ? composer.effort : undefined,
+    verbosity: capabilities.params.verbosity ? composer.verbosity : undefined,
     thinking: composer.thinkingEnabled
       ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
       : undefined,

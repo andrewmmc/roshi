@@ -1,6 +1,11 @@
 import { useComposerStore } from './composer-store';
 import { useResponseStore } from './response-store';
-import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
+import {
+  DEFAULT_TEMPERATURE,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_EFFORT,
+  DEFAULT_VERBOSITY,
+} from '@/constants/defaults';
 
 vi.mock('nanoid', () => {
   let count = 0;
@@ -16,6 +21,8 @@ describe('composer-store', () => {
       systemPrompt: '',
       temperature: DEFAULT_TEMPERATURE,
       maxTokens: DEFAULT_MAX_TOKENS,
+      effort: DEFAULT_EFFORT,
+      verbosity: DEFAULT_VERBOSITY,
       stream: true,
       customHeaders: [{ id: 'hdr-1', key: '', value: '' }],
     });
@@ -144,6 +151,8 @@ describe('composer-store', () => {
       getState().setPresencePenalty(0.3);
       getState().setThinkingEnabled(true);
       getState().setThinkingBudgetTokens(2048);
+      getState().setEffort('high');
+      getState().setVerbosity('low');
 
       expect(getState().topP).toBe(0.8);
       expect(getState().topK).toBe(20);
@@ -151,6 +160,8 @@ describe('composer-store', () => {
       expect(getState().presencePenalty).toBe(0.3);
       expect(getState().thinkingEnabled).toBe(true);
       expect(getState().thinkingBudgetTokens).toBe(2048);
+      expect(getState().effort).toBe('high');
+      expect(getState().verbosity).toBe('low');
     });
 
     it('setCustomHeaders', () => {
@@ -182,6 +193,8 @@ describe('composer-store', () => {
         temperature: 0.7,
         maxTokens: 2048,
         stream: false,
+        effort: 'high',
+        verbosity: 'low',
         topP: 0.9,
         frequencyPenalty: 0.1,
         presencePenalty: 0.2,
@@ -194,6 +207,8 @@ describe('composer-store', () => {
       expect(getState().temperature).toBe(0.7);
       expect(getState().maxTokens).toBe(2048);
       expect(getState().stream).toBe(false);
+      expect(getState().effort).toBe('high');
+      expect(getState().verbosity).toBe('low');
       expect(getState().customHeaders).toEqual([
         expect.objectContaining({ key: 'X-Test', value: 'abc' }),
       ]);
@@ -235,6 +250,8 @@ describe('composer-store', () => {
       expect(getState().topK).toBeDefined();
       expect(getState().thinkingEnabled).toBe(false);
       expect(getState().thinkingBudgetTokens).toBeDefined();
+      expect(getState().effort).toBe(DEFAULT_EFFORT);
+      expect(getState().verbosity).toBe(DEFAULT_VERBOSITY);
       expect(getState().scrollGeneration).toBe(before + 1);
     });
   });

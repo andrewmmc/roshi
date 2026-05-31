@@ -6,6 +6,8 @@ export const DEFAULT_FREQUENCY_PENALTY = 0;
 export const DEFAULT_PRESENCE_PENALTY = 0;
 export const DEFAULT_THINKING_ENABLED = false;
 export const DEFAULT_THINKING_BUDGET_TOKENS = 10240;
+export const DEFAULT_EFFORT = 'medium';
+export const DEFAULT_VERBOSITY = 'medium';
 
 export const TEMPERATURE_MIN = 0;
 export const TEMPERATURE_MAX = 2;
