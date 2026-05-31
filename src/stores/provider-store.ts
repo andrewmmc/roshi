@@ -8,6 +8,7 @@ import {
   fetchModelsForProvider,
   clearModelsCache,
 } from '@/services/models-api';
+import { resolveModelCapabilities } from '@/models/resolver';
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
@@ -332,3 +333,15 @@ export const useSelectedModel = () =>
       : null;
     return provider?.models.find((m) => m.id === s.selectedModelId) || null;
   });
+
+export const useSelectedModelCapabilities = () => {
+  const provider = useSelectedProvider();
+  const selectedModelId = useProviderStore((s) => s.selectedModelId);
+
+  if (!provider) return null;
+
+  return resolveModelCapabilities(
+    provider,
+    selectedModelId ?? provider.models[0]?.id ?? '',
+  );
+};

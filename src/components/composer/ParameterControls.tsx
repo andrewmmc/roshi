@@ -2,7 +2,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useComposerStore } from '@/stores/composer-store';
-import { useSelectedProvider } from '@/stores/provider-store';
+import { useSelectedModelCapabilities } from '@/stores/provider-store';
+import type { ParamSupport } from '@/models/capabilities';
 import {
   DEFAULT_TEMPERATURE,
   DEFAULT_MAX_TOKENS,
@@ -13,6 +14,36 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
 } from '@/constants/defaults';
+
+function isParamEditable(
+  support: ParamSupport | undefined,
+  hasCapabilities: boolean,
+  fallback: boolean,
+): boolean {
+  return hasCapabilities ? support?.supported === true : fallback;
+}
+
+function getParamMin(
+  support: ParamSupport | undefined,
+  fallback: number,
+): number {
+  return support && support.supported === true && support.min !== undefined
+    ? support.min
+    : fallback;
+}
+
+function getParamMax(
+  support: ParamSupport | undefined,
+  fallback: number,
+): number {
+  return support && support.supported === true && support.max !== undefined
+    ? support.max
+    : fallback;
+}
+
+function labelClassName(disabled: boolean): string {
+  return `w-32 shrink-0 text-xs ${disabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}`;
+}
 
 function NumberInputRow({
   label,
@@ -82,13 +113,40 @@ export function ParameterControls() {
     (s) => s.setThinkingBudgetTokens,
   );
 
-  const selectedProvider = useSelectedProvider();
-  const providerType = selectedProvider?.type;
-  const isAnthropic = providerType === 'anthropic';
-  const supportsTopK =
-    providerType === 'anthropic' || providerType === 'google-gemini';
-  const supportsThinking =
-    providerType === 'anthropic' || providerType === 'google-gemini';
+  const capabilities = useSelectedModelCapabilities();
+  const temperatureSupport = capabilities?.params.temperature;
+  const topPSupport = capabilities?.params.topP;
+  const topKSupport = capabilities?.params.topK;
+  const frequencyPenaltySupport = capabilities?.params.frequencyPenalty;
+  const presencePenaltySupport = capabilities?.params.presencePenalty;
+  const maxTokensSupport = capabilities?.params.maxTokens;
+  const thinkingSupport = capabilities?.params.thinking;
+  const hasCapabilities = Boolean(capabilities);
+
+  const canEditTemperature = isParamEditable(
+    temperatureSupport,
+    hasCapabilities,
+    true,
+  );
+  const canEditTopP = isParamEditable(topPSupport, hasCapabilities, true);
+  const canEditTopK = isParamEditable(topKSupport, hasCapabilities, false);
+  const canEditFrequencyPenalty = isParamEditable(
+    frequencyPenaltySupport,
+    hasCapabilities,
+    true,
+  );
+  const canEditPresencePenalty = isParamEditable(
+    presencePenaltySupport,
+    hasCapabilities,
+    true,
+  );
+  const canEditMaxTokens = capabilities
+    ? maxTokensSupport?.supported === true
+    : true;
+  const supportsStreaming = capabilities?.streaming ?? true;
+  const supportsThinking = Boolean(thinkingSupport);
+  const supportsThinkingBudget =
+    thinkingSupport?.modes.includes('enabled') ?? false;
 
   const reset = () => {
     setTemperature(DEFAULT_TEMPERATURE);
@@ -108,52 +166,53 @@ export function ParameterControls() {
         label="Temperature"
         value={temperature}
         onChange={setTemperature}
-        min={0}
-        max={isAnthropic ? 1 : 2}
+        min={getParamMin(temperatureSupport, 0)}
+        max={getParamMax(temperatureSupport, 2)}
         step={0.01}
+        disabled={!canEditTemperature}
       />
       <NumberInputRow
         label="Top P"
         value={topP}
         onChange={setTopP}
-        min={0}
-        max={1}
+        min={getParamMin(topPSupport, 0)}
+        max={getParamMax(topPSupport, 1)}
         step={0.01}
-        disabled={isAnthropic}
+        disabled={!canEditTopP}
       />
       <NumberInputRow
         label="Top K"
         value={topK}
         onChange={setTopK}
-        min={0}
-        max={500}
+        min={getParamMin(topKSupport, 0)}
+        max={getParamMax(topKSupport, 500)}
         step={1}
         decimals={0}
-        disabled={!supportsTopK}
+        disabled={!canEditTopK}
       />
       <NumberInputRow
         label="Frequency Penalty"
         value={frequencyPenalty}
         onChange={setFrequencyPenalty}
-        min={0}
-        max={2}
+        min={getParamMin(frequencyPenaltySupport, 0)}
+        max={getParamMax(frequencyPenaltySupport, 2)}
         step={0.01}
-        disabled={isAnthropic}
+        disabled={!canEditFrequencyPenalty}
       />
       <NumberInputRow
         label="Presence Penalty"
         value={presencePenalty}
         onChange={setPresencePenalty}
-        min={0}
-        max={2}
+        min={getParamMin(presencePenaltySupport, 0)}
+        max={getParamMax(presencePenaltySupport, 2)}
         step={0.01}
-        disabled={isAnthropic}
+        disabled={!canEditPresencePenalty}
       />
 
       <div className="flex items-center gap-3">
         <Label
           htmlFor="param-max-tokens"
-          className="text-muted-foreground w-32 shrink-0 text-xs"
+          className={labelClassName(!canEditMaxTokens)}
         >
           Max Tokens
         </Label>
@@ -164,14 +223,15 @@ export function ParameterControls() {
           onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
           className="h-7 w-24 font-mono text-[12px] md:text-[12px]"
           min={1}
-          max={1000000}
+          max={capabilities?.tokenLimits?.output ?? 1000000}
+          disabled={!canEditMaxTokens}
         />
       </div>
 
       <div className="flex items-center gap-3">
         <Label
           htmlFor="param-stream"
-          className="text-muted-foreground w-32 shrink-0 text-xs"
+          className={labelClassName(!supportsStreaming)}
         >
           Stream
         </Label>
@@ -179,8 +239,9 @@ export function ParameterControls() {
           <input
             id="param-stream"
             type="checkbox"
-            checked={stream}
+            checked={stream && supportsStreaming}
             onChange={(e) => setStream(e.target.checked)}
+            disabled={!supportsStreaming}
             className="rounded"
           />
         </label>
@@ -189,7 +250,7 @@ export function ParameterControls() {
       <div className="flex items-center gap-3">
         <Label
           htmlFor="param-thinking"
-          className={`w-32 shrink-0 text-xs ${!supportsThinking ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}
+          className={labelClassName(!supportsThinking)}
         >
           Thinking
         </Label>
@@ -205,7 +266,7 @@ export function ParameterControls() {
         </label>
       </div>
 
-      {supportsThinking && thinkingEnabled && (
+      {supportsThinking && supportsThinkingBudget && thinkingEnabled && (
         <div className="flex items-center gap-3">
           <Label
             htmlFor="param-budget-tokens"
