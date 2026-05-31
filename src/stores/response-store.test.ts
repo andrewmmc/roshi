@@ -105,6 +105,22 @@ describe('response-store', () => {
       getState().setRawResponse({ id: 'test' });
       expect(getState().rawResponse).toEqual({ id: 'test' });
     });
+
+    it('sets request and response metadata', () => {
+      getState().setRequestUrl('https://api.test.com/v1/chat/completions');
+      getState().setRequestHeaders({ Authorization: 'Bearer test' });
+      getState().setResponseHeaders({ 'content-type': 'application/json' });
+
+      expect(getState().requestUrl).toBe(
+        'https://api.test.com/v1/chat/completions',
+      );
+      expect(getState().requestHeaders).toEqual({
+        Authorization: 'Bearer test',
+      });
+      expect(getState().responseHeaders).toEqual({
+        'content-type': 'application/json',
+      });
+    });
   });
 
   describe('resetResponse', () => {
