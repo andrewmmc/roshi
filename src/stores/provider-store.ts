@@ -71,6 +71,10 @@ function normalizeProviderConfig(provider: ProviderConfig): ProviderConfig {
   };
 }
 
+function providerConfigsEqual(a: ProviderConfig, b: ProviderConfig): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 function mergeSyncedModels(
   existingModels: ProviderModel[],
   syncedModels: ProviderModel[],
@@ -191,7 +195,13 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       }
     }
 
-    const normalizedProviders = providers.map(normalizeProviderConfig);
+    const normalizedProviders = providers.map((provider) => {
+      const normalized = normalizeProviderConfig(provider);
+      if (!providerConfigsEqual(provider, normalized)) {
+        void db.providers.put(normalized);
+      }
+      return normalized;
+    });
 
     // Seed missing built-in providers with models fetched from API
     const needsSeed = builtinProviders.filter(

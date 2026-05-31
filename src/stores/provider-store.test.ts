@@ -186,6 +186,22 @@ describe('provider-store', () => {
       const loaded = getState().providers.find((p) => p.id === 'old-openai');
       expect(loaded?.protocol).toBe('openai-chat-completions');
       expect(loaded?.endpoints.responses).toBe('/responses');
+      expect(mockDb.providers.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'old-openai',
+          protocol: 'openai-chat-completions',
+          endpoints: expect.objectContaining({ responses: '/responses' }),
+        }),
+      );
+    });
+
+    it('does not rewrite already-normalized providers on load', async () => {
+      const provider = makeProvider({ id: 'p1' });
+      mockDb.providers.toArray.mockResolvedValue([provider]);
+
+      await getState().load();
+
+      expect(mockDb.providers.put).not.toHaveBeenCalled();
     });
 
     it('migrates selection from legacy localStorage to IndexedDB', async () => {
