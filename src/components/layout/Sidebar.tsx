@@ -43,7 +43,7 @@ export function Sidebar() {
         defaultValue="history"
         className="flex h-full min-h-0 flex-col gap-0"
       >
-        <div className="border-sidebar-border/70 flex h-10 shrink-0 items-center gap-1 border-b px-3">
+        <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center gap-1 border-b px-3">
           <button
             className="text-foreground/80 hover:text-foreground inline-flex h-7 shrink-0 items-center rounded-none px-3 text-[13px] font-medium tracking-tight whitespace-nowrap transition-colors"
             onClick={() => setAboutOpen(true)}
