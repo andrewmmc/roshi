@@ -43,9 +43,9 @@ export function Sidebar() {
         defaultValue="history"
         className="flex h-full min-h-0 flex-col gap-0"
       >
-        <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center gap-2 border-b px-3">
+        <div className="border-sidebar-border/70 flex h-10 shrink-0 items-center gap-1 border-b px-3">
           <button
-            className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-medium tracking-tight transition-colors"
+            className="text-foreground/80 hover:text-foreground inline-flex h-7 shrink-0 items-center rounded-none px-3 text-[13px] font-medium tracking-tight whitespace-nowrap transition-colors"
             onClick={() => setAboutOpen(true)}
             title="About Roshi"
           >
@@ -53,12 +53,18 @@ export function Sidebar() {
           </button>
           <TabsList
             variant="line"
-            className="h-7 shrink-0 justify-start rounded-none px-0"
+            className="h-7 shrink-0 justify-start gap-0 rounded-none px-0"
           >
-            <TabsTrigger value="history" className="px-3 text-xs">
+            <TabsTrigger
+              value="history"
+              className="px-3 text-xs after:bottom-[-1px]"
+            >
               History
             </TabsTrigger>
-            <TabsTrigger value="collections" className="px-3 text-xs">
+            <TabsTrigger
+              value="collections"
+              className="px-3 text-xs after:bottom-[-1px]"
+            >
               Collections
             </TabsTrigger>
           </TabsList>

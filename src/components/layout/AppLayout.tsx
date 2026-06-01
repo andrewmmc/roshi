@@ -17,7 +17,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       <ResizablePanelGroup orientation="horizontal">
-        <ResizablePanel defaultSize="24%" minSize="18%" maxSize="32%">
+        <ResizablePanel defaultSize="25%" minSize="20%" maxSize="32%">
           <aside className="h-full">
             <ErrorBoundary panel>
               <Sidebar />
