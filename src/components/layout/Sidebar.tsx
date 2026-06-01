@@ -39,61 +39,21 @@ export function Sidebar() {
 
   return (
     <div className="bg-sidebar flex h-full flex-col">
-      <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center justify-between border-b px-3">
-        <button
-          className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-medium tracking-tight transition-colors"
-          onClick={() => setAboutOpen(true)}
-          title="About Roshi"
-        >
-          Roshi
-        </button>
-        <div className="flex items-center gap-0.5">
-          <IconButton
-            variant="ghost"
-            size="icon"
-            aria-label={
-              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
-            }
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
-            onClick={toggleTheme}
-            tooltip={
-              <span className="flex items-center gap-1.5">
-                {theme === 'light'
-                  ? 'Switch to dark mode'
-                  : 'Switch to light mode'}
-                <KbdShortcut mac="⌥T" win="Alt+T" />
-              </span>
-            }
+      <Tabs
+        defaultValue="history"
+        className="flex h-full min-h-0 flex-col gap-0"
+      >
+        <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center gap-2 border-b px-3">
+          <button
+            className="text-foreground/80 hover:text-foreground cursor-pointer text-[13px] font-medium tracking-tight transition-colors"
+            onClick={() => setAboutOpen(true)}
+            title="About Roshi"
           >
-            {theme === 'light' ? (
-              <Moon className="h-3.5 w-3.5" />
-            ) : (
-              <Sun className="h-3.5 w-3.5" />
-            )}
-          </IconButton>
-          <ProviderManager />
-          <IconButton
-            variant="ghost"
-            size="icon"
-            aria-label="New request"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
-            onClick={handleNewRequest}
-            tooltip={
-              <span className="flex items-center gap-1.5">
-                New request
-                <KbdShortcut mac="⌘⇧N" win="Ctrl+Shift+N" />
-              </span>
-            }
-          >
-            <FilePlus2 className="h-3.5 w-3.5" />
-          </IconButton>
-        </div>
-      </div>
-      <nav aria-label="Main navigation" className="flex-1 overflow-hidden">
-        <Tabs defaultValue="history" className="flex h-full flex-col gap-0">
+            Roshi
+          </button>
           <TabsList
             variant="line"
-            className="border-sidebar-border/70 h-9 shrink-0 justify-start rounded-none border-b px-2"
+            className="h-7 shrink-0 justify-start rounded-none px-0"
           >
             <TabsTrigger value="history" className="px-3 text-xs">
               History
@@ -102,6 +62,54 @@ export function Sidebar() {
               Collections
             </TabsTrigger>
           </TabsList>
+          <div className="ml-auto flex items-center gap-0.5">
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label={
+                theme === 'light'
+                  ? 'Switch to dark mode'
+                  : 'Switch to light mode'
+              }
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={toggleTheme}
+              tooltip={
+                <span className="flex items-center gap-1.5">
+                  {theme === 'light'
+                    ? 'Switch to dark mode'
+                    : 'Switch to light mode'}
+                  <KbdShortcut mac="⌥T" win="Alt+T" />
+                </span>
+              }
+            >
+              {theme === 'light' ? (
+                <Moon className="h-3.5 w-3.5" />
+              ) : (
+                <Sun className="h-3.5 w-3.5" />
+              )}
+            </IconButton>
+            <ProviderManager />
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label="New request"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={handleNewRequest}
+              tooltip={
+                <span className="flex items-center gap-1.5">
+                  New request
+                  <KbdShortcut mac="⌘⇧N" win="Ctrl+Shift+N" />
+                </span>
+              }
+            >
+              <FilePlus2 className="h-3.5 w-3.5" />
+            </IconButton>
+          </div>
+        </div>
+        <nav
+          aria-label="Main navigation"
+          className="min-h-0 flex-1 overflow-hidden"
+        >
           <TabsContent
             value="history"
             className="min-h-0 flex-1 overflow-hidden"
@@ -114,8 +122,8 @@ export function Sidebar() {
           >
             <CollectionsList />
           </TabsContent>
-        </Tabs>
-      </nav>
+        </nav>
+      </Tabs>
 
       <ConfirmDiscardDialog
         open={showDiscard}
