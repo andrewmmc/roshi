@@ -36,6 +36,8 @@ interface ComposerState {
   effort: string;
   verbosity: string;
   customHeaders: HeaderEntry[];
+  activeCollectionId: string | null;
+  activeSavedRequestId: string | null;
   scrollGeneration: number;
 }
 
@@ -59,6 +61,10 @@ interface ComposerActions {
   addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
   removeAttachment: (messageIndex: number, attachmentId: string) => void;
   setCustomHeaders: (headers: HeaderEntry[]) => void;
+  setSavedRequestContext: (
+    collectionId: string | null,
+    savedRequestId: string | null,
+  ) => void;
   resetComposer: () => void;
   loadComposerFromHistory: (data: {
     messages: NormalizedMessage[];
@@ -96,6 +102,8 @@ function createInitialComposerState(): ComposerState {
     effort: DEFAULT_EFFORT,
     verbosity: DEFAULT_VERBOSITY,
     customHeaders: [createEmptyHeaderEntry()],
+    activeCollectionId: null,
+    activeSavedRequestId: null,
     scrollGeneration: 0,
   };
 }
@@ -179,6 +187,8 @@ export const useComposerStore = create<ComposerStore>((set) => ({
       ),
     })),
   setCustomHeaders: (customHeaders) => set({ customHeaders }),
+  setSavedRequestContext: (activeCollectionId, activeSavedRequestId) =>
+    set({ activeCollectionId, activeSavedRequestId }),
 
   resetComposer: () => set(createInitialComposerState()),
 
@@ -199,6 +209,8 @@ export const useComposerStore = create<ComposerStore>((set) => ({
         data.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
       effort: data.effort ?? DEFAULT_EFFORT,
       verbosity: data.verbosity ?? DEFAULT_VERBOSITY,
+      activeCollectionId: null,
+      activeSavedRequestId: null,
       scrollGeneration: s.scrollGeneration + 1,
     })),
 }));

@@ -4,6 +4,7 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
+import { useEnvironmentStore } from '@/stores/environment-store';
 import { makeProvider, makeModel, makeMessage } from '@/__tests__/fixtures';
 
 const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
@@ -62,6 +63,16 @@ const { mockDb } = vi.hoisted(() => ({
       delete: vi.fn().mockResolvedValue(undefined),
       clear: vi.fn().mockResolvedValue(undefined),
     },
+    environments: {
+      toArray: vi.fn().mockResolvedValue([]),
+      add: vi.fn().mockResolvedValue(undefined),
+      update: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    },
+    settings: {
+      get: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+    },
   },
 }));
 vi.mock('@/db', () => ({ db: mockDb }));
@@ -113,6 +124,11 @@ describe('useSendRequest', () => {
     });
     // Reset history store
     useHistoryStore.setState({ entries: [], loaded: true });
+    useEnvironmentStore.setState({
+      environments: [],
+      selectedEnvironmentId: null,
+      loaded: true,
+    });
   });
 
   describe('validation', () => {
@@ -291,6 +307,74 @@ describe('useSendRequest', () => {
         expect.objectContaining({
           customHeaders: { 'X-Valid': 'yes' },
         }),
+      );
+    });
+
+    it('interpolates selected environment variables before sending', async () => {
+      useEnvironmentStore.setState({
+        environments: [
+          {
+            id: 'env-1',
+            name: 'Local',
+            variables: [{ id: 'v1', key: 'customer', value: 'Acme' }],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        selectedEnvironmentId: 'env-1',
+        loaded: true,
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        messages: [makeMessage({ content: 'Hello {{customer}}' })],
+        systemPrompt: 'Support {{customer}}',
+        customHeaders: [{ id: '1', key: 'X-Customer', value: '{{customer}}' }],
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'm1',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            messages: [expect.objectContaining({ content: 'Hello Acme' })],
+            systemPrompt: 'Support Acme',
+          }),
+          customHeaders: { 'X-Customer': 'Acme' },
+        }),
+      );
+    });
+
+    it('stops before sending when variables are missing', async () => {
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        messages: [makeMessage({ content: 'Hello {{customer}}' })],
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).not.toHaveBeenCalled();
+      expect(useResponseStore.getState().error).toBe(
+        'Missing environment variables: customer',
       );
     });
 

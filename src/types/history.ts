@@ -1,4 +1,8 @@
-import type { NormalizedRequest, NormalizedResponse } from './normalized';
+import type {
+  NormalizedMessage,
+  NormalizedRequest,
+  NormalizedResponse,
+} from './normalized';
 import type { HistoryHeaderEntry } from '@/utils/headers';
 
 export type { HistoryHeaderEntry } from '@/utils/headers';
@@ -9,6 +13,7 @@ export interface HistoryEntry {
   providerName: string;
   modelId: string;
   collectionId?: string;
+  savedRequestId?: string;
   request: NormalizedRequest;
   customHeaders?: HistoryHeaderEntry[];
   rawRequest: Record<string, unknown>;
@@ -29,4 +34,47 @@ export interface Collection {
   parentId?: string;
   sortOrder: number;
   createdAt: Date;
+}
+
+export interface SavedRequestSnapshot {
+  messages: NormalizedMessage[];
+  systemPrompt: string;
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+  topK?: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  stream: boolean;
+  thinkingEnabled?: boolean;
+  thinkingBudgetTokens?: number;
+  effort?: string;
+  verbosity?: string;
+  customHeaders?: HistoryHeaderEntry[];
+}
+
+export interface SavedRequest {
+  id: string;
+  collectionId: string;
+  name: string;
+  providerId: string;
+  providerName: string;
+  modelId: string;
+  request: SavedRequestSnapshot;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface EnvironmentVariable {
+  id: string;
+  key: string;
+  value: string;
+}
+
+export interface Environment {
+  id: string;
+  name: string;
+  variables: EnvironmentVariable[];
+  createdAt: Date;
+  updatedAt: Date;
 }

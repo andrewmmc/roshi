@@ -2,10 +2,12 @@ import { useState, useCallback } from 'react';
 import { FilePlus2, Sun, Moon } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { ProviderManager } from '@/components/providers/ProviderManager';
 import { HistoryList } from '@/components/history/HistoryList';
+import { CollectionsList } from '@/components/collections/CollectionsList';
 import {
   useComposerStore,
   selectHasUnsavedChanges,
@@ -88,7 +90,31 @@ export function Sidebar() {
         </div>
       </div>
       <nav aria-label="Main navigation" className="flex-1 overflow-hidden">
-        <HistoryList />
+        <Tabs defaultValue="history" className="flex h-full flex-col gap-0">
+          <TabsList
+            variant="line"
+            className="border-sidebar-border/70 h-9 shrink-0 justify-start rounded-none border-b px-2"
+          >
+            <TabsTrigger value="history" className="px-3 text-xs">
+              History
+            </TabsTrigger>
+            <TabsTrigger value="collections" className="px-3 text-xs">
+              Collections
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="history"
+            className="min-h-0 flex-1 overflow-hidden"
+          >
+            <HistoryList />
+          </TabsContent>
+          <TabsContent
+            value="collections"
+            className="min-h-0 flex-1 overflow-hidden"
+          >
+            <CollectionsList />
+          </TabsContent>
+        </Tabs>
       </nav>
 
       <ConfirmDiscardDialog

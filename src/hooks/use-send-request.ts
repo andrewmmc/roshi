@@ -3,6 +3,7 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
+import { useEnvironmentStore } from '@/stores/environment-store';
 import {
   sendRequest,
   RequestError,
@@ -21,10 +22,16 @@ import type { NormalizedRequest } from '@/types/normalized';
 import { resolveModelCapabilities } from '@/models/resolver';
 import { filterRequestByCapabilities } from '@/models/compatibility';
 import type { RequestCompatibilityResult } from '@/models/compatibility';
+import { interpolateComposerFields } from '@/utils/variables';
 
 type BaseHistoryEntry = Pick<
   HistoryEntry,
-  'providerId' | 'providerName' | 'modelId' | 'request'
+  | 'providerId'
+  | 'providerName'
+  | 'modelId'
+  | 'collectionId'
+  | 'savedRequestId'
+  | 'request'
 > & { customHeaders: HistoryHeaderEntry[] };
 
 type RequestValidationResult =
@@ -97,16 +104,22 @@ function createBaseHistoryEntry({
   request,
   composerStream,
   customHeaders,
+  collectionId,
+  savedRequestId,
 }: {
   provider: ProviderConfig;
   request: NormalizedRequest;
   composerStream: boolean;
   customHeaders: ComposerStore['customHeaders'];
+  collectionId: string | null;
+  savedRequestId: string | null;
 }): BaseHistoryEntry {
   return {
     providerId: provider.id,
     providerName: provider.name,
     modelId: request.model,
+    collectionId: collectionId ?? undefined,
+    savedRequestId: savedRequestId ?? undefined,
     request: { ...request, stream: composerStream },
     customHeaders: headersToHistoryEntries(customHeaders),
   };
@@ -232,8 +245,35 @@ export function useSendRequest() {
     const selectedModelId = useProviderStore.getState().selectedModelId;
     const composer = useComposerStore.getState();
     const respStore = useResponseStore.getState();
+    const environment = useEnvironmentStore.getState().getSelectedEnvironment();
 
-    const validation = validateRequestInputs(provider, model, composer);
+    const interpolated = interpolateComposerFields({
+      messages: composer.messages,
+      systemPrompt: composer.systemPrompt,
+      customHeaders: composer.customHeaders,
+      environment,
+    });
+
+    if (interpolated.missingVariables.length > 0) {
+      respStore.setError(
+        `Missing environment variables: ${interpolated.missingVariables.join(', ')}`,
+      );
+      respStore.setErrorDetail(
+        environment
+          ? 'Add these variables to the selected environment or remove the placeholders before sending.'
+          : 'Select an environment with these variables or remove the placeholders before sending.',
+      );
+      return;
+    }
+
+    const requestComposer: ComposerStore = {
+      ...composer,
+      messages: interpolated.messages,
+      systemPrompt: interpolated.systemPrompt,
+      customHeaders: interpolated.customHeaders,
+    };
+
+    const validation = validateRequestInputs(provider, model, requestComposer);
     if (!validation.ok) {
       respStore.setError(validation.error);
       respStore.setErrorDetail(null);
@@ -241,7 +281,7 @@ export function useSendRequest() {
     }
 
     const compatibility = buildCompatibleRequest({
-      composer,
+      composer: requestComposer,
       messages: validation.messages,
       model: validation.model,
       provider: validation.provider,
@@ -258,7 +298,9 @@ export function useSendRequest() {
       provider: validation.provider,
       request: normalizedRequest,
       composerStream: composer.stream,
-      customHeaders: composer.customHeaders,
+      customHeaders: requestComposer.customHeaders,
+      collectionId: composer.activeCollectionId,
+      savedRequestId: composer.activeSavedRequestId,
     });
 
     try {

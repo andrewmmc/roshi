@@ -5,6 +5,13 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,40 +30,92 @@ import {
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useCollections } from '@/hooks/use-collections';
 import type { HistoryEntry } from '@/types/history';
 import {
   buildComposerHistoryRestore,
   buildResponseHistoryRestore,
 } from '@/utils/history-restore';
+import {
+  DEFAULT_HISTORY_FILTERS,
+  filterHistoryEntries,
+  isDefaultHistoryFilters,
+  type HistoryFilters,
+  type HistoryStatusFilter,
+} from '@/utils/history-filter';
 
-type StatusFilter = 'all' | 'success' | 'error';
 const STATUS_FILTERS = ['all', 'success', 'error'] as const;
+const STATUS_CODE_FILTERS = [
+  'all',
+  '2xx',
+  '3xx',
+  '4xx',
+  '5xx',
+  'none',
+] as const;
+const DATE_FILTERS = ['all', 'today', '7d', '30d'] as const;
 
-function getStatusLabel(status: StatusFilter): string {
+function getStatusLabel(status: HistoryStatusFilter): string {
   if (status === 'all') return 'All';
   if (status === 'success') return 'Success';
   return 'Error';
 }
 
+function getDateLabel(value: string): string {
+  if (value === 'today') return 'Today';
+  if (value === '7d') return 'Last 7 days';
+  if (value === '30d') return 'Last 30 days';
+  return 'Any time';
+}
+
 function HistorySearchControls({
   searchQuery,
-  statusFilter,
+  filters,
   isFiltering,
   filteredCount,
   totalCount,
   searchInputRef,
+  providerOptions,
+  modelOptions,
+  collectionOptions,
+  savedRequestOptions,
   onSearchChange,
-  onStatusFilterChange,
+  onFilterChange,
+  onClearFilters,
 }: {
   searchQuery: string;
-  statusFilter: StatusFilter;
+  filters: HistoryFilters;
   isFiltering: boolean;
   filteredCount: number;
   totalCount: number;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
+  providerOptions: { id: string; name: string }[];
+  modelOptions: string[];
+  collectionOptions: { id: string; name: string }[];
+  savedRequestOptions: { id: string; name: string }[];
   onSearchChange: (value: string) => void;
-  onStatusFilterChange: (status: StatusFilter) => void;
+  onFilterChange: (updates: Partial<HistoryFilters>) => void;
+  onClearFilters: () => void;
 }) {
+  const providerLabel =
+    filters.providerId === 'all'
+      ? 'All providers'
+      : (providerOptions.find((provider) => provider.id === filters.providerId)
+          ?.name ?? 'Provider');
+  const modelLabel = filters.modelId === 'all' ? 'All models' : filters.modelId;
+  const collectionLabel =
+    filters.collectionId === 'all'
+      ? 'All collections'
+      : (collectionOptions.find(
+          (collection) => collection.id === filters.collectionId,
+        )?.name ?? 'Collection');
+  const savedRequestLabel =
+    filters.savedRequestId === 'all'
+      ? 'All requests'
+      : (savedRequestOptions.find(
+          (request) => request.id === filters.savedRequestId,
+        )?.name ?? 'Request');
+
   return (
     <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
       <div className="relative">
@@ -87,10 +146,10 @@ function HistorySearchControls({
         {STATUS_FILTERS.map((status) => (
           <button
             key={status}
-            onClick={() => onStatusFilterChange(status)}
-            aria-pressed={statusFilter === status}
+            onClick={() => onFilterChange({ status })}
+            aria-pressed={filters.status === status}
             className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
-              statusFilter === status
+              filters.status === status
                 ? 'bg-sidebar-accent/80 text-foreground'
                 : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
             }`}
@@ -104,6 +163,161 @@ function HistorySearchControls({
           </span>
         )}
       </div>
+      <div className="grid grid-cols-2 gap-1">
+        <Select
+          value={filters.providerId}
+          onValueChange={(providerId) =>
+            onFilterChange({ providerId: providerId ?? 'all' })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by provider"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>{providerLabel}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All providers</SelectItem>
+            {providerOptions.map((provider) => (
+              <SelectItem key={provider.id} value={provider.id}>
+                {provider.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.modelId}
+          onValueChange={(modelId) =>
+            onFilterChange({ modelId: modelId ?? 'all' })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by model"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>{modelLabel}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All models</SelectItem>
+            {modelOptions.map((modelId) => (
+              <SelectItem key={modelId} value={modelId}>
+                {modelId}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.dateRange}
+          onValueChange={(dateRange) =>
+            onFilterChange({
+              dateRange: (dateRange ?? 'all') as HistoryFilters['dateRange'],
+            })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by date"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>{getDateLabel(filters.dateRange)}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {DATE_FILTERS.map((dateRange) => (
+              <SelectItem key={dateRange} value={dateRange}>
+                {getDateLabel(dateRange)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.statusCodeClass}
+          onValueChange={(statusCodeClass) =>
+            onFilterChange({
+              statusCodeClass: (statusCodeClass ??
+                'all') as HistoryFilters['statusCodeClass'],
+            })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by status code"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>
+              {filters.statusCodeClass === 'all'
+                ? 'Any HTTP'
+                : filters.statusCodeClass === 'none'
+                  ? 'No status'
+                  : filters.statusCodeClass}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_CODE_FILTERS.map((statusCodeClass) => (
+              <SelectItem key={statusCodeClass} value={statusCodeClass}>
+                {statusCodeClass === 'all'
+                  ? 'Any HTTP status'
+                  : statusCodeClass === 'none'
+                    ? 'No status'
+                    : statusCodeClass}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.collectionId}
+          onValueChange={(collectionId) =>
+            onFilterChange({ collectionId: collectionId ?? 'all' })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by collection"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>{collectionLabel}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All collections</SelectItem>
+            {collectionOptions.map((collection) => (
+              <SelectItem key={collection.id} value={collection.id}>
+                {collection.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.savedRequestId}
+          onValueChange={(savedRequestId) =>
+            onFilterChange({ savedRequestId: savedRequestId ?? 'all' })
+          }
+        >
+          <SelectTrigger
+            aria-label="Filter by saved request"
+            className="h-7 w-full text-xs"
+          >
+            <SelectValue>{savedRequestLabel}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All requests</SelectItem>
+            {savedRequestOptions.map((request) => (
+              <SelectItem key={request.id} value={request.id}>
+                {request.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {isFiltering && (
+        <div className="flex flex-wrap items-center gap-1 pt-0.5">
+          <span className="bg-sidebar-accent/70 text-muted-foreground rounded-full px-2 py-0.5 text-[10px]">
+            Filters active
+          </span>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 hover:underline"
+            onClick={onClearFilters}
+          >
+            Clear all
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -144,6 +358,7 @@ function DeleteAllHistoryDialog({
 
 export function HistoryList() {
   const { entries, deleteEntry, clearAll } = useHistory();
+  const { collections, savedRequests } = useCollections();
   const loadComposerFromHistory = useComposerStore(
     (s) => s.loadComposerFromHistory,
   );
@@ -156,8 +371,9 @@ export function HistoryList() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const pendingEntryRef = useRef<HistoryEntry | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [filters, setFilters] = useState<HistoryFilters>(
+    DEFAULT_HISTORY_FILTERS,
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   const historySearchFocusGen = useUiStore((s) => s.historySearchFocusGen);
 
@@ -167,28 +383,33 @@ export function HistoryList() {
     searchInputRef.current?.select();
   }, [historySearchFocusGen]);
 
-  const filtered = useMemo(() => {
-    let result = entries;
-    if (statusFilter === 'error')
-      result = result.filter((e) => e.error !== null);
-    if (statusFilter === 'success')
-      result = result.filter((e) => e.error === null);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((e) => {
-        const msg =
-          e.request.messages.find((m) => m.role === 'user')?.content ?? '';
-        return (
-          e.providerName.toLowerCase().includes(q) ||
-          e.modelId.toLowerCase().includes(q) ||
-          msg.toLowerCase().includes(q)
-        );
-      });
-    }
-    return result;
-  }, [entries, searchQuery, statusFilter]);
+  const providerOptions = useMemo(() => {
+    const providers = new Map<string, string>();
+    for (const entry of entries)
+      providers.set(entry.providerId, entry.providerName);
+    return [...providers.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [entries]);
 
-  const isFiltering = searchQuery.trim() !== '' || statusFilter !== 'all';
+  const modelOptions = useMemo(
+    () =>
+      [
+        ...new Set(entries.map((entry) => entry.modelId).filter(Boolean)),
+      ].sort(),
+    [entries],
+  );
+
+  const filtered = useMemo(
+    () => filterHistoryEntries(entries, filters),
+    [entries, filters],
+  );
+
+  const isFiltering = !isDefaultHistoryFilters(filters);
+
+  const handleFilterChange = useCallback((updates: Partial<HistoryFilters>) => {
+    setFilters((current) => ({ ...current, ...updates }));
+  }, []);
 
   const applyHistoryEntry = useCallback(
     (entry: HistoryEntry) => {
@@ -255,14 +476,19 @@ export function HistoryList() {
       </div>
       {entries.length > 0 && (
         <HistorySearchControls
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
+          searchQuery={filters.searchQuery}
+          filters={filters}
           isFiltering={isFiltering}
           filteredCount={filtered.length}
           totalCount={entries.length}
           searchInputRef={searchInputRef}
-          onSearchChange={setSearchQuery}
-          onStatusFilterChange={setStatusFilter}
+          providerOptions={providerOptions}
+          modelOptions={modelOptions}
+          collectionOptions={collections}
+          savedRequestOptions={savedRequests}
+          onSearchChange={(searchQuery) => handleFilterChange({ searchQuery })}
+          onFilterChange={handleFilterChange}
+          onClearFilters={() => setFilters(DEFAULT_HISTORY_FILTERS)}
         />
       )}
       <ScrollArea className="flex-1">
