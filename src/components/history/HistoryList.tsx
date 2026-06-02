@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Trash2, Search, X, Download } from 'lucide-react';
+import { Trash2, Search, X, Download, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { HistoryItem } from './HistoryItem';
 import { useHistory } from '@/hooks/use-history';
@@ -75,13 +83,8 @@ function HistorySearchControls({
   filteredCount,
   totalCount,
   searchInputRef,
-  providerOptions,
-  modelOptions,
-  collectionOptions,
-  savedRequestOptions,
   onSearchChange,
   onFilterChange,
-  onClearFilters,
 }: {
   searchQuery: string;
   filters: HistoryFilters;
@@ -89,33 +92,9 @@ function HistorySearchControls({
   filteredCount: number;
   totalCount: number;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
-  providerOptions: { id: string; name: string }[];
-  modelOptions: string[];
-  collectionOptions: { id: string; name: string }[];
-  savedRequestOptions: { id: string; name: string }[];
   onSearchChange: (value: string) => void;
   onFilterChange: (updates: Partial<HistoryFilters>) => void;
-  onClearFilters: () => void;
 }) {
-  const providerLabel =
-    filters.providerId === 'all'
-      ? 'All providers'
-      : (providerOptions.find((provider) => provider.id === filters.providerId)
-          ?.name ?? 'Provider');
-  const modelLabel = filters.modelId === 'all' ? 'All models' : filters.modelId;
-  const collectionLabel =
-    filters.collectionId === 'all'
-      ? 'All collections'
-      : (collectionOptions.find(
-          (collection) => collection.id === filters.collectionId,
-        )?.name ?? 'Collection');
-  const savedRequestLabel =
-    filters.savedRequestId === 'all'
-      ? 'All requests'
-      : (savedRequestOptions.find(
-          (request) => request.id === filters.savedRequestId,
-        )?.name ?? 'Request');
-
   return (
     <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
       <div className="relative">
@@ -142,7 +121,7 @@ function HistorySearchControls({
           </button>
         )}
       </div>
-      <div className="flex gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         {STATUS_FILTERS.map((status) => (
           <button
             key={status}
@@ -158,167 +137,259 @@ function HistorySearchControls({
           </button>
         ))}
         {isFiltering && (
-          <span className="text-muted-foreground/70 ml-auto self-center text-[10px]">
-            {filteredCount} of {totalCount}
+          <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[10px]">
+            Filters active ·{' '}
+            <span>
+              {filteredCount} of {totalCount}
+            </span>
           </span>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-1">
-        <Select
-          value={filters.providerId}
-          onValueChange={(providerId) =>
-            onFilterChange({ providerId: providerId ?? 'all' })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by provider"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>{providerLabel}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All providers</SelectItem>
-            {providerOptions.map((provider) => (
-              <SelectItem key={provider.id} value={provider.id}>
-                {provider.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.modelId}
-          onValueChange={(modelId) =>
-            onFilterChange({ modelId: modelId ?? 'all' })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by model"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>{modelLabel}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All models</SelectItem>
-            {modelOptions.map((modelId) => (
-              <SelectItem key={modelId} value={modelId}>
-                {modelId}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.dateRange}
-          onValueChange={(dateRange) =>
-            onFilterChange({
-              dateRange: (dateRange ?? 'all') as HistoryFilters['dateRange'],
-            })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by date"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>{getDateLabel(filters.dateRange)}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {DATE_FILTERS.map((dateRange) => (
-              <SelectItem key={dateRange} value={dateRange}>
-                {getDateLabel(dateRange)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.statusCodeClass}
-          onValueChange={(statusCodeClass) =>
-            onFilterChange({
-              statusCodeClass: (statusCodeClass ??
-                'all') as HistoryFilters['statusCodeClass'],
-            })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by status code"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>
-              {filters.statusCodeClass === 'all'
-                ? 'Any HTTP'
-                : filters.statusCodeClass === 'none'
-                  ? 'No status'
-                  : filters.statusCodeClass}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_CODE_FILTERS.map((statusCodeClass) => (
-              <SelectItem key={statusCodeClass} value={statusCodeClass}>
-                {statusCodeClass === 'all'
-                  ? 'Any HTTP status'
-                  : statusCodeClass === 'none'
-                    ? 'No status'
-                    : statusCodeClass}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.collectionId}
-          onValueChange={(collectionId) =>
-            onFilterChange({ collectionId: collectionId ?? 'all' })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by collection"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>{collectionLabel}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All collections</SelectItem>
-            {collectionOptions.map((collection) => (
-              <SelectItem key={collection.id} value={collection.id}>
-                {collection.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.savedRequestId}
-          onValueChange={(savedRequestId) =>
-            onFilterChange({ savedRequestId: savedRequestId ?? 'all' })
-          }
-        >
-          <SelectTrigger
-            aria-label="Filter by saved request"
-            className="h-7 w-full text-xs"
-          >
-            <SelectValue>{savedRequestLabel}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All requests</SelectItem>
-            {savedRequestOptions.map((request) => (
-              <SelectItem key={request.id} value={request.id}>
-                {request.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {isFiltering && (
-        <div className="flex flex-wrap items-center gap-1 pt-0.5">
-          <span className="bg-sidebar-accent/70 text-muted-foreground rounded-full px-2 py-0.5 text-[10px]">
-            Filters active
-          </span>
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 hover:underline"
-            onClick={onClearFilters}
-          >
-            Clear all
-          </button>
-        </div>
-      )}
     </div>
+  );
+}
+
+function HistoryFiltersSheet({
+  open,
+  filters,
+  isFiltering,
+  providerOptions,
+  modelOptions,
+  collectionOptions,
+  savedRequestOptions,
+  onOpenChange,
+  onFilterChange,
+  onClearFilters,
+}: {
+  open: boolean;
+  filters: HistoryFilters;
+  isFiltering: boolean;
+  providerOptions: { id: string; name: string }[];
+  modelOptions: string[];
+  collectionOptions: { id: string; name: string }[];
+  savedRequestOptions: { id: string; name: string }[];
+  onOpenChange: (open: boolean) => void;
+  onFilterChange: (updates: Partial<HistoryFilters>) => void;
+  onClearFilters: () => void;
+}) {
+  const providerLabel =
+    filters.providerId === 'all'
+      ? 'All providers'
+      : (providerOptions.find((provider) => provider.id === filters.providerId)
+          ?.name ?? 'Provider');
+  const modelLabel = filters.modelId === 'all' ? 'All models' : filters.modelId;
+  const collectionLabel =
+    filters.collectionId === 'all'
+      ? 'All collections'
+      : (collectionOptions.find(
+          (collection) => collection.id === filters.collectionId,
+        )?.name ?? 'Collection');
+  const savedRequestLabel =
+    filters.savedRequestId === 'all'
+      ? 'All requests'
+      : (savedRequestOptions.find(
+          (request) => request.id === filters.savedRequestId,
+        )?.name ?? 'Request');
+
+  const handleClearFilters = () => {
+    onClearFilters();
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent aria-describedby="history-filters-description">
+        <SheetHeader className="pr-12">
+          <SheetTitle>History filters</SheetTitle>
+          <SheetDescription id="history-filters-description">
+            Narrow history by provider, model, date, response, collection, or
+            saved request.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Provider
+            </span>
+            <Select
+              value={filters.providerId}
+              onValueChange={(providerId) =>
+                onFilterChange({ providerId: providerId ?? 'all' })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by provider"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>{providerLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All providers</SelectItem>
+                {providerOptions.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.id}>
+                    {provider.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Model
+            </span>
+            <Select
+              value={filters.modelId}
+              onValueChange={(modelId) =>
+                onFilterChange({ modelId: modelId ?? 'all' })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by model"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>{modelLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All models</SelectItem>
+                {modelOptions.map((modelId) => (
+                  <SelectItem key={modelId} value={modelId}>
+                    {modelId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Date range
+            </span>
+            <Select
+              value={filters.dateRange}
+              onValueChange={(dateRange) =>
+                onFilterChange({
+                  dateRange: (dateRange ??
+                    'all') as HistoryFilters['dateRange'],
+                })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by date"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>{getDateLabel(filters.dateRange)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_FILTERS.map((dateRange) => (
+                  <SelectItem key={dateRange} value={dateRange}>
+                    {getDateLabel(dateRange)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Status code
+            </span>
+            <Select
+              value={filters.statusCodeClass}
+              onValueChange={(statusCodeClass) =>
+                onFilterChange({
+                  statusCodeClass: (statusCodeClass ??
+                    'all') as HistoryFilters['statusCodeClass'],
+                })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by status code"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>
+                  {filters.statusCodeClass === 'all'
+                    ? 'Any HTTP'
+                    : filters.statusCodeClass === 'none'
+                      ? 'No status'
+                      : filters.statusCodeClass}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_CODE_FILTERS.map((statusCodeClass) => (
+                  <SelectItem key={statusCodeClass} value={statusCodeClass}>
+                    {statusCodeClass === 'all'
+                      ? 'Any HTTP status'
+                      : statusCodeClass === 'none'
+                        ? 'No status'
+                        : statusCodeClass}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Collection
+            </span>
+            <Select
+              value={filters.collectionId}
+              onValueChange={(collectionId) =>
+                onFilterChange({ collectionId: collectionId ?? 'all' })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by collection"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>{collectionLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All collections</SelectItem>
+                {collectionOptions.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Saved request
+            </span>
+            <Select
+              value={filters.savedRequestId}
+              onValueChange={(savedRequestId) =>
+                onFilterChange({ savedRequestId: savedRequestId ?? 'all' })
+              }
+            >
+              <SelectTrigger
+                aria-label="Filter by saved request"
+                className="h-8 w-full text-xs"
+              >
+                <SelectValue>{savedRequestLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All requests</SelectItem>
+                {savedRequestOptions.map((request) => (
+                  <SelectItem key={request.id} value={request.id}>
+                    {request.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <SheetFooter>
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={!isFiltering}
+            onClick={handleClearFilters}
+          >
+            Clear all filters
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -370,6 +441,7 @@ export function HistoryList() {
   const selectModel = useProviderStore((s) => s.selectModel);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const pendingEntryRef = useRef<HistoryEntry | null>(null);
   const [filters, setFilters] = useState<HistoryFilters>(
     DEFAULT_HISTORY_FILTERS,
@@ -456,6 +528,22 @@ export function HistoryList() {
             <IconButton
               variant="ghost"
               size="icon"
+              className={`relative h-7 w-7 ${
+                isFiltering
+                  ? 'bg-sidebar-accent text-primary hover:text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setShowFilters(true)}
+              tooltip="Filter history"
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              {isFiltering && (
+                <span className="bg-primary absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
+              )}
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="icon"
               className="text-muted-foreground hover:text-foreground h-7 w-7"
               onClick={() => exportHistory(entries)}
               tooltip="Export all history as JSON"
@@ -482,13 +570,8 @@ export function HistoryList() {
           filteredCount={filtered.length}
           totalCount={entries.length}
           searchInputRef={searchInputRef}
-          providerOptions={providerOptions}
-          modelOptions={modelOptions}
-          collectionOptions={collections}
-          savedRequestOptions={savedRequests}
           onSearchChange={(searchQuery) => handleFilterChange({ searchQuery })}
           onFilterChange={handleFilterChange}
-          onClearFilters={() => setFilters(DEFAULT_HISTORY_FILTERS)}
         />
       )}
       <ScrollArea className="flex-1">
@@ -522,6 +605,19 @@ export function HistoryList() {
           clearAll();
           setShowConfirm(false);
         }}
+      />
+
+      <HistoryFiltersSheet
+        open={showFilters}
+        filters={filters}
+        isFiltering={isFiltering}
+        providerOptions={providerOptions}
+        modelOptions={modelOptions}
+        collectionOptions={collections}
+        savedRequestOptions={savedRequests}
+        onOpenChange={setShowFilters}
+        onFilterChange={handleFilterChange}
+        onClearFilters={() => setFilters(DEFAULT_HISTORY_FILTERS)}
       />
 
       <ConfirmDiscardDialog
