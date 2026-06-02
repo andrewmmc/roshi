@@ -5,8 +5,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
-import { ProviderManager } from '@/components/providers/ProviderManager';
-import { EnvironmentManager } from '@/components/environments/EnvironmentManager';
+import { SettingsDialog } from '@/components/settings';
 import { HistoryList } from '@/components/history/HistoryList';
 import { CollectionsList } from '@/components/collections/CollectionsList';
 import {
@@ -100,8 +99,7 @@ export function Sidebar() {
                 <Sun className="h-3.5 w-3.5" />
               )}
             </IconButton>
-            <ProviderManager />
-            <EnvironmentManager showSelector={false} />
+            <SettingsDialog />
             <IconButton
               variant="ghost"
               size="icon"

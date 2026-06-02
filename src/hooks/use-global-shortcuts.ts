@@ -63,10 +63,10 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      // Cmd/Ctrl+Shift+, — open provider settings
+      // Cmd/Ctrl+Shift+, — open settings
       if (mod && e.shiftKey && e.key === ',') {
         e.preventDefault();
-        useUiStore.getState().setProviderSettingsOpen(true);
+        useUiStore.getState().setSettingsOpen(true, 'providers');
         return;
       }
 

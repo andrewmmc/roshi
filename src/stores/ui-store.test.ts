@@ -5,26 +5,39 @@ describe('ui-store', () => {
 
   beforeEach(() => {
     useUiStore.setState({
-      providerSettingsOpen: false,
+      settingsOpen: false,
+      settingsPage: 'providers',
       historySearchFocusGen: 0,
       aboutOpen: false,
     });
   });
 
-  describe('providerSettingsOpen', () => {
+  describe('settingsOpen', () => {
     it('defaults to false', () => {
-      expect(getState().providerSettingsOpen).toBe(false);
+      expect(getState().settingsOpen).toBe(false);
     });
 
-    it('sets providerSettingsOpen to true', () => {
-      getState().setProviderSettingsOpen(true);
-      expect(getState().providerSettingsOpen).toBe(true);
+    it('defaults settingsPage to providers', () => {
+      expect(getState().settingsPage).toBe('providers');
     });
 
-    it('sets providerSettingsOpen back to false', () => {
-      getState().setProviderSettingsOpen(true);
-      getState().setProviderSettingsOpen(false);
-      expect(getState().providerSettingsOpen).toBe(false);
+    it('opens settings and preserves the current page when page is omitted', () => {
+      useUiStore.setState({ settingsPage: 'environments' });
+      getState().setSettingsOpen(true);
+      expect(getState().settingsOpen).toBe(true);
+      expect(getState().settingsPage).toBe('environments');
+    });
+
+    it('opens settings to a specific page', () => {
+      getState().setSettingsOpen(true, 'environments');
+      expect(getState().settingsOpen).toBe(true);
+      expect(getState().settingsPage).toBe('environments');
+    });
+
+    it('closes settings', () => {
+      getState().setSettingsOpen(true);
+      getState().setSettingsOpen(false);
+      expect(getState().settingsOpen).toBe(false);
     });
   });
 

@@ -5,12 +5,8 @@ import { useResponseStore } from '@/stores/response-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useUiStore } from '@/stores/ui-store';
 
-vi.mock('@/components/providers/ProviderManager', () => ({
-  ProviderManager: () => <div>ProviderManager Mock</div>,
-}));
-
-vi.mock('@/components/environments/EnvironmentManager', () => ({
-  EnvironmentManager: () => <div>EnvironmentManager Mock</div>,
+vi.mock('@/components/settings', () => ({
+  SettingsDialog: () => <div>SettingsDialog Mock</div>,
 }));
 
 vi.mock('@/components/history/HistoryList', () => ({

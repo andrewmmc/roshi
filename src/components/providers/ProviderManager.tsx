@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import {
-  Settings,
   Pencil,
   X,
   RotateCcw,
@@ -11,24 +10,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import {
-  KbdShortcut,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
-import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
 import {
   createCustomProviderTemplate,
@@ -149,7 +133,7 @@ function ProviderList({
   );
 }
 
-function ProviderManagerFooter({
+export function ProviderSettingsFooter({
   view,
   editingProvider,
   resettingAll,
@@ -266,9 +250,7 @@ function ProviderManagerFooter({
   );
 }
 
-export function ProviderManager() {
-  const open = useUiStore((s) => s.providerSettingsOpen);
-  const setOpen = useUiStore((s) => s.setProviderSettingsOpen);
+export function ProviderSettings({ onClose }: { onClose: () => void }) {
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
     null,
@@ -315,12 +297,6 @@ export function ProviderManager() {
       }
       throw e;
     }
-  };
-
-  const handleClose = () => {
-    setEditingProvider(null);
-    setView('list');
-    setOpen(false);
   };
 
   const handleBackToList = () => {
@@ -380,126 +356,89 @@ export function ProviderManager() {
     }
   };
 
+  const handleClose = () => {
+    setEditingProvider(null);
+    setView('list');
+    onClose();
+  };
+
   return (
-    <Dialog
-      modal={false}
-      open={open}
-      onOpenChange={(val) => {
-        setOpen(val);
-        if (!val) setView('list');
-      }}
-    >
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DialogTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground h-7 w-7"
-                    aria-label="Provider settings"
-                  />
-                }
-              />
-            }
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <span className="flex items-center gap-1.5">
-              Provider settings
-              <KbdShortcut mac="⌘⇧," win="Ctrl+Shift+," />
-            </span>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <DialogContent
-        className="!flex max-h-[82vh] min-h-0 !max-w-xl flex-col gap-0 overflow-hidden p-0"
-        showCloseButton={false}
-        showOverlay={false}
-      >
-        {/* Header */}
-        <DialogHeader className="bg-muted/20 relative shrink-0 border-b px-5 py-4 pr-14">
-          <DialogTitle className="text-[15px] tracking-tight">
-            {view === 'list' && 'Providers'}
-            {view === 'edit' && 'Edit Provider'}
-            {view === 'add' && 'Add custom provider'}
-          </DialogTitle>
-          <p className="text-muted-foreground text-xs">
-            {view === 'list' &&
-              'Tune credentials and model options for each connected provider.'}
-            {view === 'edit' &&
-              'Update keys, headers, endpoints, and model entries without leaving the composer.'}
-            {view === 'add' &&
-              'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
-          </p>
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Subheader */}
+      <div className="bg-muted/20 relative shrink-0 border-b px-5 py-4">
+        <h2 className="text-[15px] font-medium tracking-tight">
+          {view === 'list' && 'Providers'}
+          {view === 'edit' && 'Edit Provider'}
+          {view === 'add' && 'Add custom provider'}
+        </h2>
+        <p className="text-muted-foreground mt-0.5 text-xs">
+          {view === 'list' &&
+            'Tune credentials and model options for each connected provider.'}
+          {view === 'edit' &&
+            'Update keys, headers, endpoints, and model entries without leaving the composer.'}
+          {view === 'add' &&
+            'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
+        </p>
+        {view !== 'list' && (
           <IconButton
             variant="ghost"
             size="icon-sm"
             className="absolute top-3 right-3"
-            onClick={() => {
-              if (view === 'list') {
-                handleClose();
-              } else {
-                handleBackToList();
-              }
-            }}
-            tooltip={view === 'list' ? 'Close' : 'Back to provider list'}
+            onClick={handleBackToList}
+            tooltip="Back to provider list"
           >
             <X className="h-4 w-4" />
           </IconButton>
-        </DialogHeader>
+        )}
+      </div>
 
-        {/* Scrollable content */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {view === 'list' && (
-            <ProviderList
-              providers={providers}
-              canAddCustomProvider={canAddCustomProvider}
-              onAddCustomProvider={openAddCustomProvider}
-              onEditProvider={openEditProvider}
-              onDeleteProvider={handleDeleteProvider}
-            />
-          )}
+      {/* Scrollable content */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {view === 'list' && (
+          <ProviderList
+            providers={providers}
+            canAddCustomProvider={canAddCustomProvider}
+            onAddCustomProvider={openAddCustomProvider}
+            onEditProvider={openEditProvider}
+            onDeleteProvider={handleDeleteProvider}
+          />
+        )}
 
-          {view === 'edit' && editingProvider && (
-            <ProviderForm
-              key={`${editingProvider.id}-${formVersion}`}
-              ref={formRef}
-              initialData={editingProvider}
-              onSubmit={handleEdit}
-              isBuiltIn={editingProvider.isBuiltIn}
-            />
-          )}
+        {view === 'edit' && editingProvider && (
+          <ProviderForm
+            key={`${editingProvider.id}-${formVersion}`}
+            ref={formRef}
+            initialData={editingProvider}
+            onSubmit={handleEdit}
+            isBuiltIn={editingProvider.isBuiltIn}
+          />
+        )}
 
-          {view === 'add' && (
-            <ProviderForm
-              key={`add-${formVersion}`}
-              ref={formRef}
-              initialData={createCustomProviderTemplate()}
-              onSubmit={handleAdd}
-              isBuiltIn={false}
-            />
-          )}
-        </div>
+        {view === 'add' && (
+          <ProviderForm
+            key={`add-${formVersion}`}
+            ref={formRef}
+            initialData={createCustomProviderTemplate()}
+            onSubmit={handleAdd}
+            isBuiltIn={false}
+          />
+        )}
+      </div>
 
-        <ProviderManagerFooter
-          view={view}
-          editingProvider={editingProvider}
-          resettingAll={resettingAll}
-          resettingProvider={resettingProvider}
-          syncingModels={syncingModels}
-          providers={providers}
-          onResetAll={() => void handleResetAll()}
-          onSyncModels={() => void handleSyncModels()}
-          onClose={handleClose}
-          onBackToList={handleBackToList}
-          onResetProvider={() => void handleResetProvider()}
-          onSubmitForm={() => formRef.current?.requestSubmit()}
-        />
-      </DialogContent>
-    </Dialog>
+      <ProviderSettingsFooter
+        view={view}
+        editingProvider={editingProvider}
+        resettingAll={resettingAll}
+        resettingProvider={resettingProvider}
+        syncingModels={syncingModels}
+        providers={providers}
+        onResetAll={() => void handleResetAll()}
+        onSyncModels={() => void handleSyncModels()}
+        onClose={handleClose}
+        onBackToList={handleBackToList}
+        onResetProvider={() => void handleResetProvider()}
+        onSubmitForm={() => formRef.current?.requestSubmit()}
+      />
+    </div>
   );
 }

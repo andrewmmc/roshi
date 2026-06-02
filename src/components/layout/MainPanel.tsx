@@ -6,7 +6,7 @@ import {
 import { RequestComposer } from '@/components/composer/RequestComposer';
 import { ResponsePanel } from '@/components/response/ResponsePanel';
 import { ProviderSelect } from '@/components/composer/ProviderSelect';
-import { EnvironmentManager } from '@/components/environments/EnvironmentManager';
+import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
 import { Button } from '@/components/ui/button';
 import { Send, Square } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
@@ -26,7 +26,7 @@ export function MainPanel() {
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <div className="flex min-w-0 items-center gap-2">
           <ProviderSelect />
-          <EnvironmentManager showManageButton={false} />
+          <EnvironmentSelector />
         </div>
         <div className="flex items-center gap-3">
           <TokenCountBadge />

@@ -1,17 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
-import { Settings2, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -146,31 +138,15 @@ function EnvironmentEditor({
   );
 }
 
-export function EnvironmentManager({
-  showSelector = true,
-  showManageButton = true,
-}: {
-  showSelector?: boolean;
-  showManageButton?: boolean;
-}) {
+export function EnvironmentSettings() {
   const {
     environments,
-    selectedEnvironmentId,
     addEnvironment,
     updateEnvironment,
     deleteEnvironment,
     selectEnvironment,
   } = useEnvironments();
-  const [open, setOpen] = useState(false);
   const [draftName, setDraftName] = useState('');
-
-  const selectedEnvironment = useMemo(
-    () =>
-      environments.find(
-        (environment) => environment.id === selectedEnvironmentId,
-      ) ?? null,
-    [environments, selectedEnvironmentId],
-  );
 
   const handleAdd = useCallback(async () => {
     const environment = await addEnvironment(draftName || 'Local');
@@ -180,96 +156,102 @@ export function EnvironmentManager({
   }, [addEnvironment, draftName, selectEnvironment]);
 
   return (
-    <div className="flex items-center gap-1.5">
-      {showSelector && (
-        <Select
-          value={selectedEnvironmentId ?? 'none'}
-          onValueChange={(value) =>
-            selectEnvironment(value === 'none' ? null : value)
-          }
-        >
-          <SelectTrigger
-            aria-label="Select environment"
-            title="Select environment"
-            className="h-7 w-[150px] text-xs"
-          >
-            <SelectValue placeholder="Environment">
-              {selectedEnvironment?.name ?? 'No environment'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No environment</SelectItem>
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Subheader */}
+      <div className="bg-muted/20 shrink-0 border-b px-5 py-4">
+        <h2 className="text-[15px] font-medium tracking-tight">Environments</h2>
+        <p className="text-muted-foreground mt-0.5 text-xs">
+          Define variables and reference them in prompts or headers with{' '}
+          {'{{variableName}}'}.
+        </p>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <div className="mb-3 flex gap-2">
+          <Input
+            value={draftName}
+            onChange={(event) => setDraftName(event.target.value)}
+            placeholder="Environment name"
+            className="h-8 text-sm"
+          />
+          <Button size="sm" onClick={handleAdd}>
+            <Plus className="h-3 w-3" />
+            Add
+          </Button>
+        </div>
+
+        {environments.length === 0 ? (
+          <div className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
+            No environments yet. Create one to start using variables.
+          </div>
+        ) : (
+          <div className="space-y-3">
             {environments.map((environment) => (
-              <SelectItem key={environment.id} value={environment.id}>
-                {environment.name}
-              </SelectItem>
+              <EnvironmentEditor
+                key={environment.id}
+                environment={environment}
+                onSave={updateEnvironment}
+                onDelete={deleteEnvironment}
+              />
             ))}
-          </SelectContent>
-        </Select>
-      )}
-      {showManageButton && (
-        <IconButton
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground h-7 w-7"
-          tooltip="Manage environments"
-          onClick={() => setOpen(true)}
-        >
-          <Settings2 className="h-3.5 w-3.5" />
-        </IconButton>
-      )}
-
-      {showManageButton && (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Environments</DialogTitle>
-              <DialogDescription>
-                Define variables and reference them in prompts or headers with
-                {' {{variableName}}'}.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-3">
-              <div className="flex gap-2">
-                <Input
-                  value={draftName}
-                  onChange={(event) => setDraftName(event.target.value)}
-                  placeholder="Environment name"
-                  className="h-8 text-sm"
-                />
-                <Button size="sm" onClick={handleAdd}>
-                  <Plus className="h-3 w-3" />
-                  Add
-                </Button>
-              </div>
-
-              {environments.length === 0 ? (
-                <div className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
-                  No environments yet. Create one to start using variables.
-                </div>
-              ) : (
-                <div className="max-h-[52vh] space-y-3 overflow-y-auto pr-1">
-                  {environments.map((environment) => (
-                    <EnvironmentEditor
-                      key={environment.id}
-                      environment={environment}
-                      onSave={updateEnvironment}
-                      onDelete={deleteEnvironment}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Done
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+export function EnvironmentSettingsFooter({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  return (
+    <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
+      <Button type="button" variant="outline" onClick={onClose}>
+        Done
+      </Button>
+    </div>
+  );
+}
+
+export function EnvironmentSelector() {
+  const { environments, selectedEnvironmentId, selectEnvironment } =
+    useEnvironments();
+
+  const selectedEnvironment = useMemo(
+    () =>
+      environments.find(
+        (environment) => environment.id === selectedEnvironmentId,
+      ) ?? null,
+    [environments, selectedEnvironmentId],
+  );
+
+  return (
+    <Select
+      value={selectedEnvironmentId ?? 'none'}
+      onValueChange={(value) =>
+        selectEnvironment(value === 'none' ? null : value)
+      }
+    >
+      <SelectTrigger
+        aria-label="Select environment"
+        title="Select environment"
+        className="h-7 w-[150px] text-xs"
+      >
+        <SelectValue placeholder="Environment">
+          {selectedEnvironment?.name ?? 'No environment'}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">No environment</SelectItem>
+        {environments.map((environment) => (
+          <SelectItem key={environment.id} value={environment.id}>
+            {environment.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

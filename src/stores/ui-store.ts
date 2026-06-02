@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 
+export type SettingsPage = 'providers' | 'environments';
+
 interface UiStore {
-  providerSettingsOpen: boolean;
-  setProviderSettingsOpen: (open: boolean) => void;
+  settingsOpen: boolean;
+  settingsPage: SettingsPage;
+  setSettingsOpen: (open: boolean, page?: SettingsPage) => void;
   historySearchFocusGen: number;
   focusHistorySearch: () => void;
   aboutOpen: boolean;
@@ -10,8 +13,13 @@ interface UiStore {
 }
 
 export const useUiStore = create<UiStore>((set) => ({
-  providerSettingsOpen: false,
-  setProviderSettingsOpen: (open) => set({ providerSettingsOpen: open }),
+  settingsOpen: false,
+  settingsPage: 'providers',
+  setSettingsOpen: (open, page) =>
+    set((s) => ({
+      settingsOpen: open,
+      settingsPage: page ?? s.settingsPage,
+    })),
   historySearchFocusGen: 0,
   focusHistorySearch: () =>
     set((s) => ({ historySearchFocusGen: s.historySearchFocusGen + 1 })),

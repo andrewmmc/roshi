@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { ProviderManager } from './ProviderManager';
+import { ProviderSettings } from './ProviderManager';
 import { makeProvider } from '@/__tests__/fixtures';
 import { useProviderStore } from '@/stores/provider-store';
 
@@ -89,7 +89,13 @@ vi.mock('./ProviderForm', () => ({
   }),
 }));
 
-describe('ProviderManager', () => {
+function renderProviderSettings() {
+  const onClose = vi.fn();
+  render(<ProviderSettings onClose={onClose} />);
+  return { onClose };
+}
+
+describe('ProviderSettings', () => {
   beforeEach(() => {
     updateProvider.mockReset();
     addProvider.mockReset();
@@ -122,7 +128,7 @@ describe('ProviderManager', () => {
   });
 
   it('renders provider details in list view and resets all providers', async () => {
-    render(<ProviderManager />);
+    renderProviderSettings();
 
     expect(screen.getByText('Providers')).toBeInTheDocument();
     expect(
@@ -136,7 +142,7 @@ describe('ProviderManager', () => {
   });
 
   it('switches to edit view and updates a provider through the form', async () => {
-    render(<ProviderManager />);
+    renderProviderSettings();
 
     fireEvent.click(screen.getByRole('button', { name: /openai/i }));
 
@@ -155,7 +161,7 @@ describe('ProviderManager', () => {
       makeProvider({ id: 'new-id', name: 'New', isBuiltIn: false }),
     );
 
-    render(<ProviderManager />);
+    renderProviderSettings();
 
     fireEvent.click(
       screen.getByRole('button', { name: /add custom provider/i }),
@@ -182,7 +188,7 @@ describe('ProviderManager', () => {
       ],
     });
 
-    render(<ProviderManager />);
+    renderProviderSettings();
 
     fireEvent.click(screen.getByRole('button', { name: /openai/i }));
     fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
@@ -192,7 +198,7 @@ describe('ProviderManager', () => {
 
   it('syncs models, exports providers, closes, and removes custom providers', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    render(<ProviderManager />);
+    const { onClose } = renderProviderSettings();
 
     fireEvent.click(screen.getByRole('button', { name: /sync models/i }));
     fireEvent.click(screen.getByRole('button', { name: /export json/i }));
@@ -209,6 +215,7 @@ describe('ProviderManager', () => {
       'Remove this custom provider? This cannot be undone.',
     );
     expect(deleteProvider).toHaveBeenCalledWith('custom-provider');
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('shows add limit messaging and alerts when the store rejects an add', async () => {
@@ -220,7 +227,7 @@ describe('ProviderManager', () => {
         isBuiltIn: false,
       }),
     );
-    render(<ProviderManager />);
+    renderProviderSettings();
 
     expect(
       screen.getByRole('button', { name: /add custom provider/i }),
@@ -229,7 +236,7 @@ describe('ProviderManager', () => {
 
     mockProviders.value = [];
     addProvider.mockRejectedValue(new Error('MAX_CUSTOM_PROVIDERS'));
-    render(<ProviderManager />);
+    renderProviderSettings();
     fireEvent.click(
       screen.getAllByRole('button', { name: /add custom provider/i })[1],
     );
