@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { ProviderManager } from '@/components/providers/ProviderManager';
+import { EnvironmentManager } from '@/components/environments/EnvironmentManager';
 import { HistoryList } from '@/components/history/HistoryList';
 import { CollectionsList } from '@/components/collections/CollectionsList';
 import {
@@ -100,6 +101,7 @@ export function Sidebar() {
               )}
             </IconButton>
             <ProviderManager />
+            <EnvironmentManager showSelector={false} />
             <IconButton
               variant="ghost"
               size="icon"

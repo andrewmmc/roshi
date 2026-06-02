@@ -146,7 +146,13 @@ function EnvironmentEditor({
   );
 }
 
-export function EnvironmentManager() {
+export function EnvironmentManager({
+  showSelector = true,
+  showManageButton = true,
+}: {
+  showSelector?: boolean;
+  showManageButton?: boolean;
+}) {
   const {
     environments,
     selectedEnvironmentId,
@@ -175,89 +181,95 @@ export function EnvironmentManager() {
 
   return (
     <div className="flex items-center gap-1.5">
-      <Select
-        value={selectedEnvironmentId ?? 'none'}
-        onValueChange={(value) =>
-          selectEnvironment(value === 'none' ? null : value)
-        }
-      >
-        <SelectTrigger
-          aria-label="Select environment"
-          title="Select environment"
-          className="h-7 w-[150px] text-xs"
+      {showSelector && (
+        <Select
+          value={selectedEnvironmentId ?? 'none'}
+          onValueChange={(value) =>
+            selectEnvironment(value === 'none' ? null : value)
+          }
         >
-          <SelectValue placeholder="Environment">
-            {selectedEnvironment?.name ?? 'No environment'}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">No environment</SelectItem>
-          {environments.map((environment) => (
-            <SelectItem key={environment.id} value={environment.id}>
-              {environment.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <IconButton
-        variant="ghost"
-        size="icon"
-        className="text-muted-foreground hover:text-foreground h-7 w-7"
-        tooltip="Manage environments"
-        onClick={() => setOpen(true)}
-      >
-        <Settings2 className="h-3.5 w-3.5" />
-      </IconButton>
+          <SelectTrigger
+            aria-label="Select environment"
+            title="Select environment"
+            className="h-7 w-[150px] text-xs"
+          >
+            <SelectValue placeholder="Environment">
+              {selectedEnvironment?.name ?? 'No environment'}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No environment</SelectItem>
+            {environments.map((environment) => (
+              <SelectItem key={environment.id} value={environment.id}>
+                {environment.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {showManageButton && (
+        <IconButton
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground h-7 w-7"
+          tooltip="Manage environments"
+          onClick={() => setOpen(true)}
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+        </IconButton>
+      )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Environments</DialogTitle>
-            <DialogDescription>
-              Define variables and reference them in prompts or headers with
-              {' {{variableName}}'}.
-            </DialogDescription>
-          </DialogHeader>
+      {showManageButton && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Environments</DialogTitle>
+              <DialogDescription>
+                Define variables and reference them in prompts or headers with
+                {' {{variableName}}'}.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="grid gap-3">
-            <div className="flex gap-2">
-              <Input
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-                placeholder="Environment name"
-                className="h-8 text-sm"
-              />
-              <Button size="sm" onClick={handleAdd}>
-                <Plus className="h-3 w-3" />
-                Add
-              </Button>
+            <div className="grid gap-3">
+              <div className="flex gap-2">
+                <Input
+                  value={draftName}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  placeholder="Environment name"
+                  className="h-8 text-sm"
+                />
+                <Button size="sm" onClick={handleAdd}>
+                  <Plus className="h-3 w-3" />
+                  Add
+                </Button>
+              </div>
+
+              {environments.length === 0 ? (
+                <div className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
+                  No environments yet. Create one to start using variables.
+                </div>
+              ) : (
+                <div className="max-h-[52vh] space-y-3 overflow-y-auto pr-1">
+                  {environments.map((environment) => (
+                    <EnvironmentEditor
+                      key={environment.id}
+                      environment={environment}
+                      onSave={updateEnvironment}
+                      onDelete={deleteEnvironment}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {environments.length === 0 ? (
-              <div className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
-                No environments yet. Create one to start using variables.
-              </div>
-            ) : (
-              <div className="max-h-[52vh] space-y-3 overflow-y-auto pr-1">
-                {environments.map((environment) => (
-                  <EnvironmentEditor
-                    key={environment.id}
-                    environment={environment}
-                    onSave={updateEnvironment}
-                    onDelete={deleteEnvironment}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Done
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Done
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

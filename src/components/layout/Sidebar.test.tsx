@@ -9,6 +9,10 @@ vi.mock('@/components/providers/ProviderManager', () => ({
   ProviderManager: () => <div>ProviderManager Mock</div>,
 }));
 
+vi.mock('@/components/environments/EnvironmentManager', () => ({
+  EnvironmentManager: () => <div>EnvironmentManager Mock</div>,
+}));
+
 vi.mock('@/components/history/HistoryList', () => ({
   HistoryList: () => <div>HistoryList Mock</div>,
 }));
