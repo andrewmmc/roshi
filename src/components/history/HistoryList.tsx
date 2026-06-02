@@ -49,10 +49,8 @@ import {
   filterHistoryEntries,
   isDefaultHistoryFilters,
   type HistoryFilters,
-  type HistoryStatusFilter,
 } from '@/utils/history-filter';
 
-const STATUS_FILTERS = ['all', 'success', 'error'] as const;
 const STATUS_CODE_FILTERS = [
   'all',
   '2xx',
@@ -63,12 +61,6 @@ const STATUS_CODE_FILTERS = [
 ] as const;
 const DATE_FILTERS = ['all', 'today', '7d', '30d'] as const;
 
-function getStatusLabel(status: HistoryStatusFilter): string {
-  if (status === 'all') return 'All';
-  if (status === 'success') return 'Success';
-  return 'Error';
-}
-
 function getDateLabel(value: string): string {
   if (value === 'today') return 'Today';
   if (value === '7d') return 'Last 7 days';
@@ -78,22 +70,18 @@ function getDateLabel(value: string): string {
 
 function HistorySearchControls({
   searchQuery,
-  filters,
   isFiltering,
   filteredCount,
   totalCount,
   searchInputRef,
   onSearchChange,
-  onFilterChange,
 }: {
   searchQuery: string;
-  filters: HistoryFilters;
   isFiltering: boolean;
   filteredCount: number;
   totalCount: number;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   onSearchChange: (value: string) => void;
-  onFilterChange: (updates: Partial<HistoryFilters>) => void;
 }) {
   return (
     <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
@@ -121,21 +109,7 @@ function HistorySearchControls({
           </button>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-1">
-        {STATUS_FILTERS.map((status) => (
-          <button
-            key={status}
-            onClick={() => onFilterChange({ status })}
-            aria-pressed={filters.status === status}
-            className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
-              filters.status === status
-                ? 'bg-sidebar-accent/80 text-foreground'
-                : 'text-muted-foreground hover:text-foreground/80 hover:bg-sidebar-accent/50'
-            }`}
-          >
-            {getStatusLabel(status)}
-          </button>
-        ))}
+      <div className="flex min-h-5 items-center">
         {isFiltering && (
           <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[10px]">
             Filters active ·{' '}
@@ -565,13 +539,11 @@ export function HistoryList() {
       {entries.length > 0 && (
         <HistorySearchControls
           searchQuery={filters.searchQuery}
-          filters={filters}
           isFiltering={isFiltering}
           filteredCount={filtered.length}
           totalCount={entries.length}
           searchInputRef={searchInputRef}
           onSearchChange={(searchQuery) => handleFilterChange({ searchQuery })}
-          onFilterChange={handleFilterChange}
         />
       )}
       <ScrollArea className="flex-1">

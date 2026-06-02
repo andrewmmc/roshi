@@ -69,7 +69,7 @@ describe('HistoryList', () => {
     expect(useProviderStore.getState().selectedModelId).toBe('m1');
   });
 
-  it('filters entries by search and status and clears all history after confirmation', () => {
+  it('filters entries by search and clears all history after confirmation', () => {
     const clearAll = vi.fn().mockResolvedValue(undefined);
     useHistoryStore.setState({
       entries: [
@@ -97,14 +97,10 @@ describe('HistoryList', () => {
     expect(screen.getByText('1 of 2')).toBeInTheDocument();
     expect(screen.getByText(/anthropic/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Error' }));
-    expect(screen.getByText(/anthropic/i)).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
     expect(screen.getByLabelText('Search history')).toHaveValue('');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Success' }));
     expect(screen.getByText(/openai/i)).toBeInTheDocument();
+    expect(screen.getByText(/anthropic/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear all history' }));
     expect(screen.getByText('Delete all history?')).toBeInTheDocument();
