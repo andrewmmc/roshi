@@ -23,13 +23,13 @@ function SidebarSectionTabs() {
     >
       <TabsTrigger
         value="history"
-        className="px-2.5 text-xs after:bottom-[-7px]"
+        className="px-2.5 text-xs after:bottom-[-5px]"
       >
         History
       </TabsTrigger>
       <TabsTrigger
         value="collections"
-        className="px-2.5 text-xs after:bottom-[-7px]"
+        className="px-2.5 text-xs after:bottom-[-5px]"
       >
         Collections
       </TabsTrigger>

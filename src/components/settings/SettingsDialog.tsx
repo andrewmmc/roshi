@@ -52,11 +52,11 @@ export function SettingsDialog() {
         onOpenChange={(nextOpen) => setSettingsOpen(nextOpen)}
       >
         <DialogContent
-          className="!flex max-h-[82vh] min-h-0 !max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
+          className="border-border !flex max-h-[82vh] min-h-0 !max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border p-0 shadow-none ring-0 sm:max-w-3xl"
           showCloseButton={false}
           showOverlay={false}
         >
-          <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-3">
+          <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-2.5">
             <DialogTitle className="text-[15px] tracking-tight">
               Settings
             </DialogTitle>
@@ -74,7 +74,7 @@ export function SettingsDialog() {
           <div className="flex min-h-0 flex-1">
             <nav
               aria-label="Settings sections"
-              className="bg-muted/10 flex w-36 shrink-0 flex-col gap-0.5 border-r p-2"
+              className="border-border flex w-32 shrink-0 flex-col gap-0.5 border-r p-1.5"
             >
               {SECTIONS.map(({ id, label, icon: Icon }) => (
                 <button
@@ -82,10 +82,10 @@ export function SettingsDialog() {
                   type="button"
                   onClick={() => setSettingsOpen(true, id)}
                   className={cn(
-                    'flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-colors',
+                    'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors',
                     settingsPage === id
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
+                      ? 'bg-muted/50 text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
                   )}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />

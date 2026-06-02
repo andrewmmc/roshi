@@ -85,7 +85,7 @@ function HistorySearchControls({
   onSearchChange: (value: string) => void;
 }) {
   return (
-    <div className="shrink-0 space-y-1.5 px-2 pt-2 pb-1">
+    <div className="shrink-0 px-3 pt-2.5 pb-1.5">
       <div className="relative">
         <Search
           className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
@@ -110,16 +110,16 @@ function HistorySearchControls({
           </button>
         )}
       </div>
-      <div className="flex min-h-5 items-center">
-        {isFiltering && (
+      {isFiltering && (
+        <div className="flex items-center pt-1">
           <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[10px]">
             Filters active ·{' '}
             <span>
               {filteredCount} of {totalCount}
             </span>
           </span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -494,7 +494,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-sidebar-border flex h-10 shrink-0 items-center justify-between border-b px-3">
+      <div className="border-sidebar-border flex h-9 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
             History
