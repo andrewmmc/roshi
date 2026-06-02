@@ -15,6 +15,28 @@ import {
 import { useResponseStore } from '@/stores/response-store';
 import { useThemeStore } from '@/stores/theme-store';
 
+function SidebarSectionTabs() {
+  return (
+    <TabsList
+      variant="line"
+      className="h-7 shrink-0 justify-start gap-0 rounded-none px-0"
+    >
+      <TabsTrigger
+        value="history"
+        className="px-2.5 text-xs after:bottom-[-7px]"
+      >
+        History
+      </TabsTrigger>
+      <TabsTrigger
+        value="collections"
+        className="px-2.5 text-xs after:bottom-[-7px]"
+      >
+        Collections
+      </TabsTrigger>
+    </TabsList>
+  );
+}
+
 export function Sidebar() {
   const resetComposer = useComposerStore((s) => s.resetComposer);
   const resetResponse = useResponseStore((s) => s.resetResponse);
@@ -51,23 +73,6 @@ export function Sidebar() {
           >
             Roshi
           </button>
-          <TabsList
-            variant="line"
-            className="h-7 shrink-0 justify-start gap-0 rounded-none px-0"
-          >
-            <TabsTrigger
-              value="history"
-              className="px-3 text-xs after:bottom-[-1px]"
-            >
-              History
-            </TabsTrigger>
-            <TabsTrigger
-              value="collections"
-              className="px-3 text-xs after:bottom-[-1px]"
-            >
-              Collections
-            </TabsTrigger>
-          </TabsList>
           <div className="ml-auto flex items-center gap-0.5">
             <IconButton
               variant="ghost"
@@ -120,13 +125,13 @@ export function Sidebar() {
             value="history"
             className="min-h-0 flex-1 overflow-hidden"
           >
-            <HistoryList />
+            <HistoryList headerSlot={<SidebarSectionTabs />} />
           </TabsContent>
           <TabsContent
             value="collections"
             className="min-h-0 flex-1 overflow-hidden"
           >
-            <CollectionsList />
+            <CollectionsList headerSlot={<SidebarSectionTabs />} />
           </TabsContent>
         </nav>
       </Tabs>

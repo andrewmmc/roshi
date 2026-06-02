@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Folder, Plus, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -214,7 +215,7 @@ function SavedRequestItem({
   );
 }
 
-export function CollectionsList() {
+export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const {
     collections,
     savedRequests,
@@ -314,9 +315,11 @@ export function CollectionsList() {
   return (
     <div className="flex h-full flex-col">
       <div className="border-sidebar-border flex h-10 shrink-0 items-center justify-between border-b px-3">
-        <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-          Collections
-        </span>
+        {headerSlot ?? (
+          <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+            Collections
+          </span>
+        )}
         <div className="flex items-center">
           <IconButton
             variant="ghost"
