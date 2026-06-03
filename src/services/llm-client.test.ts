@@ -521,6 +521,41 @@ describe('llm-client', () => {
       );
     });
 
+    it('redacts query-param API keys in dev request logs', async () => {
+      vi.stubEnv('DEV', true);
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      mockAdapter = createMockAdapter({
+        buildRequestUrl: vi
+          .fn()
+          .mockReturnValue('https://api.test.com/v1/chat?key=secret%2Fkey'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        text: () => Promise.resolve('{}'),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await sendRequest({
+        provider: makeProvider({
+          auth: { type: 'query-param' },
+          apiKey: 'secret/key',
+        }),
+        request: makeRequest(),
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[LLM Request]',
+        'https://api.test.com/v1/chat?key=[REDACTED]',
+      );
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('secret'),
+      );
+    });
+
     it('does not proxy when DEV is falsy', async () => {
       vi.stubEnv('DEV', false);
       const mockFetch = vi.fn().mockResolvedValue({

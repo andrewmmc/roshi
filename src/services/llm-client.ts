@@ -54,7 +54,7 @@ export async function sendRequest(
   const url = getRequestUrl(rawUrl);
 
   if (import.meta.env.DEV) {
-    console.log('[LLM Request]', rawUrl);
+    console.log('[LLM Request]', getLogSafeRequestUrl(provider, rawUrl));
   }
 
   // Merge provider-level headers with request-level headers
@@ -157,6 +157,19 @@ function parseJsonObject(text: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+function getLogSafeRequestUrl(
+  provider: ProviderConfig,
+  requestUrl: string,
+): string {
+  if (provider.auth.type !== 'query-param' || !provider.apiKey) {
+    return requestUrl;
+  }
+
+  return requestUrl
+    .replaceAll(provider.apiKey, '[REDACTED]')
+    .replaceAll(encodeURIComponent(provider.apiKey), '[REDACTED]');
 }
 
 function getRequestUrl(targetUrl: string): string {
