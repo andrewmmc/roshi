@@ -122,7 +122,7 @@ describe('ProviderForm', () => {
     );
   });
 
-  it('disables model management for google gemini and built-in name/type edits', () => {
+  it('enables model management for google gemini and disables built-in name/type edits', () => {
     render(
       <ProviderForm
         onSubmit={() => undefined}
@@ -135,7 +135,7 @@ describe('ProviderForm', () => {
     );
 
     expect(screen.getByDisplayValue('TestProvider')).toBeDisabled();
-    expect(screen.getByRole('button', { name: /add model/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /add model/i })).toBeEnabled();
   });
 
   it('adds and removes model rows', () => {

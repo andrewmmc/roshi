@@ -74,6 +74,10 @@ describe('provider-store', () => {
       expect(getState().providers[0].name).toBe('OpenAI');
       expect(getState().providers[0].isBuiltIn).toBe(true);
       expect(getState().providers[0].models).toEqual(mockModels);
+      expect(mockFetchModels).toHaveBeenCalledWith('Google Gemini');
+      expect(
+        getState().providers.find((p) => p.name === 'Google Gemini')?.models,
+      ).toEqual(mockModels);
       expect(mockDb.providers.add).toHaveBeenCalledTimes(4);
     });
 
@@ -602,7 +606,12 @@ describe('provider-store', () => {
   describe('resetAllProviders', () => {
     it('removes all providers and re-seeds only builtins', async () => {
       const freshModels = [makeModel({ id: 'new-model' })];
-      mockFetchModels.mockResolvedValue(freshModels);
+      const geminiModels = [makeModel({ id: 'gemini-2.5-pro' })];
+      mockFetchModels.mockImplementation((name: string) =>
+        name === 'Google Gemini'
+          ? Promise.resolve(geminiModels)
+          : Promise.resolve(freshModels),
+      );
 
       useProviderStore.setState({
         loaded: true,
@@ -624,6 +633,9 @@ describe('provider-store', () => {
       expect(getState().providers.some((p) => p.id === 'custom')).toBe(false);
       expect(getState().providers).toHaveLength(4);
       expect(getState().providers[0].models).toEqual(freshModels);
+      expect(
+        getState().providers.find((p) => p.name === 'Google Gemini')?.models,
+      ).toEqual(geminiModels);
     });
 
     it('uses empty models when fetching defaults fails', async () => {
@@ -666,6 +678,35 @@ describe('provider-store', () => {
       expect(getState().providers.find((p) => p.id === 'c1')?.models).toEqual([
         makeModel(),
       ]);
+    });
+
+    it('syncs Google Gemini built-in models', async () => {
+      const geminiModels = [makeModel({ id: 'gemini-2.5-pro' })];
+      mockFetchModels.mockImplementation((name: string) =>
+        name === 'Google Gemini'
+          ? Promise.resolve(geminiModels)
+          : Promise.resolve([]),
+      );
+      useProviderStore.setState({
+        loaded: true,
+        providers: [
+          makeProvider({
+            id: 'g1',
+            name: 'Google Gemini',
+            type: 'google-gemini',
+            isBuiltIn: true,
+            models: [],
+          }),
+        ],
+      });
+
+      await getState().syncModels();
+
+      expect(mockFetchModels).toHaveBeenCalledWith('Google Gemini');
+      expect(mockDb.providers.update).toHaveBeenCalledWith('g1', {
+        models: geminiModels,
+      });
+      expect(getState().providers[0].models).toEqual(geminiModels);
     });
 
     it('preserves manual models added to built-in providers during sync', async () => {

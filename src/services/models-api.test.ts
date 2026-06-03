@@ -41,6 +41,41 @@ const mockModels = {
       },
     },
   },
+  google: {
+    id: 'google',
+    name: 'Google Gemini',
+    models: {
+      'gemini-2.5-pro': {
+        id: 'gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro',
+        release_date: '2025-06-17',
+        modalities: { input: ['text', 'image'], output: ['text'] },
+      },
+      'gemini-2.0-flash': {
+        id: 'gemini-2.0-flash',
+        name: 'Gemini 2.0 Flash',
+        release_date: '2025-02-05',
+        modalities: { input: ['text'], output: ['text'] },
+      },
+      'gemini-embedding-001': {
+        id: 'gemini-embedding-001',
+        name: 'Gemini Embedding',
+        release_date: '2025-03-07',
+        modalities: { input: ['text'], output: ['text'] },
+      },
+      'gemini-old': {
+        id: 'gemini-old',
+        name: 'Old Gemini',
+        status: 'deprecated',
+        modalities: { input: ['text'], output: ['text'] },
+      },
+      'gemini-image-only': {
+        id: 'gemini-image-only',
+        name: 'Gemini Image Only',
+        modalities: { input: ['text'], output: ['image'] },
+      },
+    },
+  },
   openrouter: {
     id: 'openrouter',
     name: 'OpenRouter',
@@ -96,6 +131,7 @@ describe('models-api', () => {
 
       expect(result.openai).toHaveLength(2); // excludes embedding
       expect(result.anthropic).toHaveLength(1);
+      expect(result.google).toHaveLength(2); // excludes embedding, deprecated, and non-text-output models
       expect(result.openrouter).toHaveLength(4); // hardcoded (auto, free) + openai/ + anthropic/
     });
 
@@ -111,6 +147,24 @@ describe('models-api', () => {
       const result = await fetchModelsFromApi();
       const ids = result.openai.map((m) => m.id);
       expect(ids).not.toContain('text-embedding-ada-002');
+    });
+
+    it('excludes Gemini embedding, deprecated, and non-text-output models', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
+
+      const result = await fetchModelsFromApi();
+      const ids = result.google.map((m) => m.id);
+
+      expect(ids).toEqual(['gemini-2.5-pro', 'gemini-2.0-flash']);
+      expect(ids).not.toContain('gemini-embedding-001');
+      expect(ids).not.toContain('gemini-old');
+      expect(ids).not.toContain('gemini-image-only');
     });
 
     it('sorts by release_date descending', async () => {
@@ -165,6 +219,7 @@ describe('models-api', () => {
       const result = await fetchModelsFromApi();
       expect(result.openai).toEqual([]);
       expect(result.anthropic).toEqual([]);
+      expect(result.google).toEqual([]);
       expect(result.openrouter).toHaveLength(2); // hardcoded auto + free
       expect(result.openrouter[0].id).toBe('openrouter/auto');
       expect(result.openrouter[1].id).toBe('openrouter/free');
@@ -349,6 +404,7 @@ describe('models-api', () => {
       const result = await fetchModelsFromApi();
 
       expect(fetch).not.toHaveBeenCalled();
+      expect(result.google).toEqual([]);
       expect(result.openrouter.map((m) => m.id)).toEqual([
         'openrouter/free',
         'openrouter/auto',
@@ -431,6 +487,22 @@ describe('models-api', () => {
 
       const models = await fetchModelsForProvider('unknown');
       expect(models).toEqual([]);
+    });
+
+    it('maps the Google Gemini built-in provider to google models', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockModels),
+        }),
+      );
+
+      const models = await fetchModelsForProvider('Google Gemini');
+      expect(models.map((m) => m.id)).toEqual([
+        'gemini-2.5-pro',
+        'gemini-2.0-flash',
+      ]);
     });
   });
 });

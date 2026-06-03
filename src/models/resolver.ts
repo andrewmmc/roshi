@@ -22,19 +22,31 @@ function mergeCapabilities(
   };
 }
 
+function applyModelMetadata(
+  capabilities: ModelCapabilities,
+  model: ProviderConfig['models'][0] | undefined,
+): ModelCapabilities {
+  const merged = {
+    ...mergeCapabilities(capabilities, model?.capabilities),
+    streaming: capabilities.streaming,
+  };
+  return model?.supportsStreaming === false
+    ? { ...merged, streaming: false }
+    : merged;
+}
+
 export function resolveModelCapabilities(
   provider: ProviderConfig,
   modelId: string,
 ): ModelCapabilities {
-  const exact = MODEL_CAPABILITY_OVERRIDES[modelId];
-  if (exact) return exact;
-
   const model = provider.models.find((m) => m.id === modelId);
+  const exact = MODEL_CAPABILITY_OVERRIDES[modelId];
+  if (exact) return applyModelMetadata(exact, model);
 
   const match = MODEL_CAPABILITY_PATTERNS.find(({ pattern }) =>
     pattern.test(modelId),
   );
-  if (match) return mergeCapabilities(match.capabilities, model?.capabilities);
+  if (match) return applyModelMetadata(match.capabilities, model);
 
   if (model) {
     return {

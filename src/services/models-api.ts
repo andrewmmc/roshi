@@ -111,10 +111,24 @@ function isTextChatModel(model: ApiModel): boolean {
   return output.includes('text') && !model.id.startsWith('text-embedding');
 }
 
+function isGeminiTextGenerationModel(id: string, model: ApiModel): boolean {
+  return isTextChatModel(model) && !id.includes('embedding');
+}
+
 export interface FetchedModels {
   openai: ProviderModel[];
   anthropic: ProviderModel[];
+  google: ProviderModel[];
   openrouter: ProviderModel[];
+}
+
+function normalizeFetchedModels(data: Partial<FetchedModels>): FetchedModels {
+  return {
+    openai: data.openai ?? [],
+    anthropic: data.anthropic ?? [],
+    google: data.google ?? [],
+    openrouter: data.openrouter ?? OPENROUTER_HARDCODED_MODELS,
+  };
 }
 
 function collectModels(
@@ -192,6 +206,14 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
           collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)),
         )
       : [],
+    google: data.google?.models
+      ? sortByReleaseDate(
+          'google',
+          collectModels(data.google.models, (id, m) =>
+            isGeminiTextGenerationModel(id, m),
+          ),
+        )
+      : [],
     openrouter: data.openrouter?.models
       ? [
           ...OPENROUTER_HARDCODED_MODELS,
@@ -215,10 +237,11 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
 }
 
 function ensureHardcodedModels(models: FetchedModels): FetchedModels {
-  const ids = new Set(models.openrouter.map((m) => m.id));
+  const normalized = normalizeFetchedModels(models);
+  const ids = new Set(normalized.openrouter.map((m) => m.id));
   const missing = OPENROUTER_HARDCODED_MODELS.filter((m) => !ids.has(m.id));
-  if (missing.length === 0) return models;
-  return { ...models, openrouter: [...missing, ...models.openrouter] };
+  if (missing.length === 0) return normalized;
+  return { ...normalized, openrouter: [...missing, ...normalized.openrouter] };
 }
 
 export function clearModelsCache(): void {
@@ -250,6 +273,11 @@ function withSyncedAt(models: FetchedModels, syncedAt: number): FetchedModels {
         ? { ...model, lastSyncedAt: syncedAt }
         : model,
     ),
+    google: models.google.map((model) =>
+      model.source === 'models.dev'
+        ? { ...model, lastSyncedAt: syncedAt }
+        : model,
+    ),
     openrouter: models.openrouter.map((model) =>
       model.source === 'models.dev'
         ? { ...model, lastSyncedAt: syncedAt }
@@ -258,10 +286,28 @@ function withSyncedAt(models: FetchedModels, syncedAt: number): FetchedModels {
   };
 }
 
+function getProviderModelsKey(
+  providerName: string,
+): keyof FetchedModels | null {
+  switch (providerName.toLowerCase()) {
+    case 'openai':
+      return 'openai';
+    case 'anthropic':
+      return 'anthropic';
+    case 'openrouter':
+      return 'openrouter';
+    case 'google gemini':
+    case 'google':
+      return 'google';
+    default:
+      return null;
+  }
+}
+
 export async function fetchModelsForProvider(
   providerName: string,
 ): Promise<ProviderModel[]> {
   const models = await fetchModelsFromApi();
-  const key = providerName.toLowerCase() as keyof FetchedModels;
-  return models[key] ?? [];
+  const key = getProviderModelsKey(providerName);
+  return key ? models[key] : [];
 }

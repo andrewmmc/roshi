@@ -371,7 +371,6 @@ export function ProviderForm({
               )}
             </div>
           ))}
-          {/* TODO: Support model management for Google Gemini */}
           <Button
             type="button"
             variant="outline"

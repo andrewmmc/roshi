@@ -162,6 +162,30 @@ describe('useSendRequest', () => {
       );
     });
 
+    it('sets error when google gemini has no model selected', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'gemini-provider',
+            type: 'google-gemini',
+            models: [makeModel({ id: 'gemini-2.5-pro' })],
+          }),
+        ],
+        selectedProviderId: 'gemini-provider',
+        selectedModelId: null,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().error).toBe(
+        'Please select a provider and model',
+      );
+      expect(mockSendRequest).not.toHaveBeenCalled();
+    });
+
     it('sets error when all messages are empty', async () => {
       useComposerStore.setState({ messages: [makeMessage({ content: '' })] });
       const { result } = renderHook(() => useSendRequest());
@@ -375,6 +399,99 @@ describe('useSendRequest', () => {
       expect(mockSendRequest).not.toHaveBeenCalled();
       expect(useResponseStore.getState().error).toBe(
         'Missing environment variables: customer',
+      );
+    });
+
+    it('sends google gemini requests with the selected model id', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'gemini-provider',
+            type: 'google-gemini',
+            models: [makeModel({ id: 'gemini-2.5-pro' })],
+          }),
+        ],
+        selectedProviderId: 'gemini-provider',
+        selectedModelId: 'gemini-2.5-pro',
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'gemini-2.5-pro',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({ model: 'gemini-2.5-pro' }),
+        }),
+      );
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({ modelId: 'gemini-2.5-pro' }),
+      );
+    });
+
+    it('disables google gemini streaming when the selected model does not support it', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'gemini-provider',
+            type: 'google-gemini',
+            models: [
+              makeModel({
+                id: 'gemini-2.5-pro-preview',
+                supportsStreaming: false,
+              }),
+            ],
+          }),
+        ],
+        selectedProviderId: 'gemini-provider',
+        selectedModelId: 'gemini-2.5-pro-preview',
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        stream: true,
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'gemini-2.5-pro-preview',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            model: 'gemini-2.5-pro-preview',
+            stream: false,
+          }),
+        }),
       );
     });
 

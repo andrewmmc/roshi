@@ -63,7 +63,6 @@ export function ProviderSelect() {
         </SelectContent>
       </Select>
 
-      {/* TODO: Support model selection for Google Gemini (currently uses model ID in URL path) */}
       <Select
         value={selectedModelId || ''}
         onValueChange={selectModel}

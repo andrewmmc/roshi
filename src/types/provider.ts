@@ -30,7 +30,11 @@ export type ProviderProtocol =
 
 /** Whether the provider type supports user-managed model lists */
 export function supportsModelSelection(type: ProviderType): boolean {
-  return type !== 'google-gemini';
+  return (
+    type === 'openai-compatible' ||
+    type === 'anthropic' ||
+    type === 'google-gemini'
+  );
 }
 
 export interface ProviderConfig {

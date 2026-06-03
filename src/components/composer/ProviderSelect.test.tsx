@@ -127,24 +127,40 @@ describe('ProviderSelect', () => {
     expect(selectModel).toHaveBeenCalledWith('m2');
   });
 
-  it('disables model selection for google gemini and shows empty model text', () => {
+  it('enables model selection for google gemini and displays available models', () => {
+    const selectModel = vi.fn();
     useProviderStore.setState({
       providers: [
         makeProvider({
           id: 'g1',
           type: 'google-gemini',
           name: 'Gemini',
-          models: [],
+          models: [
+            makeModel({
+              id: 'gemini-2.5-pro',
+              displayName: 'Gemini 2.5 Pro',
+            }),
+            makeModel({
+              id: 'gemini-2.0-flash',
+              displayName: 'Gemini 2.0 Flash',
+            }),
+          ],
         }),
       ],
       selectedProviderId: 'g1',
-      selectedModelId: null,
+      selectedModelId: 'gemini-2.5-pro',
+      selectModel,
     });
 
     render(<ProviderSelect />);
 
     const selects = screen.getAllByRole('combobox');
-    expect(selects[1]).toBeDisabled();
-    expect(screen.getByText('No models available.')).toBeInTheDocument();
+    expect(selects[1]).not.toBeDisabled();
+
+    fireEvent.change(selects[1], { target: { value: 'gemini-2.0-flash' } });
+
+    expect(screen.getAllByText('Gemini 2.5 Pro').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Gemini 2.0 Flash').length).toBeGreaterThan(0);
+    expect(selectModel).toHaveBeenCalledWith('gemini-2.0-flash');
   });
 });

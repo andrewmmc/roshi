@@ -111,4 +111,19 @@ describe('resolveModelCapabilities', () => {
     expect(capabilities.params.maxTokens?.wireName).toBe('maxOutputTokens');
     expect(capabilities.inputModalities).toContain('video');
   });
+
+  it('respects selected model streaming metadata for Gemini model IDs', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({
+        type: 'google-gemini',
+        models: [
+          makeModel({ id: 'gemini-2.5-pro-preview', supportsStreaming: false }),
+        ],
+      }),
+      'gemini-2.5-pro-preview',
+    );
+
+    expect(capabilities.streaming).toBe(false);
+    expect(capabilities.params.maxTokens?.wireName).toBe('maxOutputTokens');
+  });
 });
