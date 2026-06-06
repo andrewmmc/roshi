@@ -33,6 +33,7 @@ export function RunnerPicker() {
 
   const selectedProvider = sortedProviders.find((p) => p.id === providerId);
   const availableModels = selectedProvider?.models ?? [];
+  const selectedModel = availableModels.find((m) => m.id === modelId);
 
   const handleAdd = () => {
     if (!providerId || !modelId) return;
@@ -63,7 +64,9 @@ export function RunnerPicker() {
             disabled={isRunning}
           >
             <SelectTrigger className="h-7 w-[160px] text-xs">
-              <SelectValue placeholder="Provider" />
+              <SelectValue placeholder="Provider">
+                {selectedProvider?.name ?? 'Provider'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {sortedProviders.map((p) => (
@@ -85,7 +88,9 @@ export function RunnerPicker() {
             disabled={isRunning || availableModels.length === 0}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
-              <SelectValue placeholder="Model" />
+              <SelectValue placeholder="Model">
+                {selectedModel?.displayName ?? 'Model'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {availableModels.map((m) => (

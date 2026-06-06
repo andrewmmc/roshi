@@ -29,4 +29,14 @@ describe('model-search', () => {
     expect(filterModelsBySearch(models, 'claude')).toEqual([models[1]]);
     expect(filterModelsBySearch(models, 'missing')).toEqual([]);
   });
+
+  it('handles models with missing optional name fields', () => {
+    const sparse = makeModel({
+      id: 'sparse-model',
+      displayName: '',
+      name: '',
+    });
+    expect(matchesModelSearch(sparse, 'sparse')).toBe(true);
+    expect(matchesModelSearch(sparse, 'missing')).toBe(false);
+  });
 });

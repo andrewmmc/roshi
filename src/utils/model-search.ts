@@ -6,10 +6,13 @@ export function matchesModelSearch(
 ): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
+  const id = model.id.toLowerCase();
+  const displayName = (model.displayName ?? '').toLowerCase();
+  const name = (model.name ?? '').toLowerCase();
   return (
-    model.id.toLowerCase().includes(normalized) ||
-    model.displayName.toLowerCase().includes(normalized) ||
-    model.name.toLowerCase().includes(normalized)
+    id.includes(normalized) ||
+    displayName.includes(normalized) ||
+    name.includes(normalized)
   );
 }
 

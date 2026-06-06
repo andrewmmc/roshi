@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { RefreshCw, RotateCcw, Search, X } from 'lucide-react';
+import { Loader2, RefreshCw, RotateCcw, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { BuiltInProviderSection } from '@/components/models/built-in-provider-se
 import { CustomProviderSection } from '@/components/models/custom-provider-section';
 import { ProviderFilterChips } from '@/components/models/provider-filter-chips';
 import { ResetModelsDialog } from '@/components/models/reset-models-dialog';
-import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
 import { useModelCatalogStore } from '@/stores/model-catalog-store';
 import { useUiStore } from '@/stores/ui-store';
@@ -72,7 +71,12 @@ export function ModelMarket({
   onClose: () => void;
   onEditProvider: (provider: ProviderConfig) => void;
 }) {
-  const { providers, resetAllProviders, refreshModelCatalog } = useProviders();
+  const providers = useProviderStore((s) => s.providers);
+  const loaded = useProviderStore((s) => s.loaded);
+  const seeding = useProviderStore((s) => s.seeding);
+  const loadProviders = useProviderStore((s) => s.load);
+  const resetAllProviders = useProviderStore((s) => s.resetAllProviders);
+  const refreshModelCatalog = useProviderStore((s) => s.refreshModelCatalog);
   const refreshing = useProviderStore((s) => s.refreshingCatalog);
   const catalogStatus = useModelCatalogStore((s) => s.status);
   const loadCatalog = useModelCatalogStore((s) => s.load);
@@ -82,6 +86,12 @@ export function ModelMarket({
   const [search, setSearch] = useState('');
   const [resettingAll, setResettingAll] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+
+  useEffect(() => {
+    if (!loaded) {
+      void loadProviders();
+    }
+  }, [loaded, loadProviders]);
 
   useEffect(() => {
     if (catalogStatus === 'idle') {
@@ -117,6 +127,15 @@ export function ModelMarket({
       setResettingAll(false);
     }
   };
+
+  if (!loaded || seeding) {
+    return (
+      <div className="text-muted-foreground flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-5 py-8 text-xs">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading providers…
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -191,12 +210,14 @@ export function ModelMarket({
         onClose={onClose}
       />
 
-      <ResetModelsDialog
-        open={showResetDialog}
-        resetting={resettingAll}
-        onOpenChange={setShowResetDialog}
-        onConfirm={() => void handleResetAll()}
-      />
+      {showResetDialog ? (
+        <ResetModelsDialog
+          open={showResetDialog}
+          resetting={resettingAll}
+          onOpenChange={setShowResetDialog}
+          onConfirm={() => void handleResetAll()}
+        />
+      ) : null}
     </div>
   );
 }
