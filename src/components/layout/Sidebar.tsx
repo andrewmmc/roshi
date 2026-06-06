@@ -8,6 +8,7 @@ import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { SettingsDialog } from '@/components/settings';
 import { HistoryList } from '@/components/history/HistoryList';
 import { CollectionsList } from '@/components/collections/CollectionsList';
+import { EvalRunsList } from '@/components/eval/EvalRunsList';
 import {
   useComposerStore,
   selectHasUnsavedChanges,
@@ -32,6 +33,9 @@ function SidebarSectionTabs() {
         className="px-2.5 text-xs after:bottom-[-5px]"
       >
         Collections
+      </TabsTrigger>
+      <TabsTrigger value="evals" className="px-2.5 text-xs after:bottom-[-5px]">
+        Evals
       </TabsTrigger>
     </TabsList>
   );
@@ -132,6 +136,9 @@ export function Sidebar() {
             className="min-h-0 flex-1 overflow-hidden"
           >
             <CollectionsList headerSlot={<SidebarSectionTabs />} />
+          </TabsContent>
+          <TabsContent value="evals" className="min-h-0 flex-1 overflow-hidden">
+            <EvalRunsList headerSlot={<SidebarSectionTabs />} />
           </TabsContent>
         </nav>
       </Tabs>

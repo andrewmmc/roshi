@@ -8,6 +8,13 @@ export type ModelCapabilityOverrides = Partial<
   params?: Partial<ModelCapabilities['params']>;
 };
 
+export interface ModelPricing {
+  /** USD per 1 million input tokens */
+  inputPerMTokens: number;
+  /** USD per 1 million output tokens */
+  outputPerMTokens: number;
+}
+
 export interface ProviderModel {
   id: string;
   name: string;
@@ -17,6 +24,7 @@ export interface ProviderModel {
   source?: ProviderModelSource;
   capabilities?: ModelCapabilityOverrides;
   lastSyncedAt?: number;
+  pricing?: ModelPricing;
 }
 
 export type ProviderType = 'openai-compatible' | 'anthropic' | 'google-gemini';
