@@ -1,7 +1,11 @@
 import {
+  buildEnvironmentPreview,
+  collectComposerVariableReferences,
   environmentToVariableMap,
   interpolateComposerFields,
   interpolateVariables,
+  isSecretVariableKey,
+  maskSecretValue,
 } from './variables';
 import type { Environment } from '@/types/history';
 
@@ -53,5 +57,70 @@ describe('variables', () => {
       value: 'warm',
     });
     expect(result.missingVariables).toEqual([]);
+  });
+
+  it('detects secret-like variable keys', () => {
+    expect(isSecretVariableKey('API_KEY')).toBe(true);
+    expect(isSecretVariableKey('openai-token')).toBe(true);
+    expect(isSecretVariableKey('customer')).toBe(false);
+  });
+
+  it('masks secret values for preview', () => {
+    expect(maskSecretValue('super-secret')).toMatch(/^•+$/);
+  });
+
+  it('collects variable references from composer fields', () => {
+    expect(
+      collectComposerVariableReferences({
+        messages: [{ id: 'm1', role: 'user', content: 'Hi {{customer}}' }],
+        systemPrompt: 'Tone: {{tone}}',
+        customHeaders: [{ id: 'h1', key: 'X-Key', value: '{{api_key}}' }],
+      }),
+    ).toEqual(['customer', 'tone', 'api_key']);
+  });
+
+  it('builds an environment preview with resolved, missing, and unused vars', () => {
+    const preview = buildEnvironmentPreview({
+      environment: {
+        ...makeEnvironment(),
+        variables: [
+          { id: 'v1', key: 'customer', value: 'Acme' },
+          { id: 'v2', key: 'tone', value: 'warm' },
+          { id: 'v3', key: 'API_KEY', value: 'sk-test' },
+          { id: 'v4', key: 'unused', value: 'value' },
+        ],
+      },
+      messages: [
+        { id: 'm1', role: 'user', content: 'Hello {{customer}} {{missing}}' },
+      ],
+      systemPrompt: 'Use {{API_KEY}}',
+      customHeaders: [],
+    });
+
+    expect(preview.missingVariables).toEqual(['missing']);
+    expect(preview.variables).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'customer',
+          status: 'resolved',
+          resolvedValue: 'Acme',
+          masked: false,
+        }),
+        expect.objectContaining({
+          key: 'missing',
+          status: 'missing',
+          resolvedValue: null,
+        }),
+        expect.objectContaining({
+          key: 'API_KEY',
+          status: 'resolved',
+          masked: true,
+        }),
+        expect.objectContaining({
+          key: 'unused',
+          status: 'unused',
+        }),
+      ]),
+    );
   });
 });

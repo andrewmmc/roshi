@@ -8,6 +8,7 @@ import { RequestComposer } from '@/components/composer/RequestComposer';
 import { ResponsePanel } from '@/components/response/ResponsePanel';
 import { ProviderSelect } from '@/components/composer/ProviderSelect';
 import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
+import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentPreviewSheet';
 import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
 import { RequestCompatibilityWarning } from '@/components/composer/RequestCompatibilityWarning';
 import { Button } from '@/components/ui/button';
@@ -67,6 +68,7 @@ function RequestView() {
           <ViewToggle />
           <ProviderSelect />
           <EnvironmentSelector />
+          <EnvironmentPreviewButton />
         </div>
         <div className="flex items-center gap-3">
           <TokenCountBadge />

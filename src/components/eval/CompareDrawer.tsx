@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEvalStore } from '@/stores/eval-store';
+import { DiffText } from '@/components/ui/diff-text';
 import { diffWords, jaccardSimilarity } from '@/utils/diff';
-import { cn } from '@/lib/utils';
 
 export function CompareDrawer() {
   const compareSelection = useEvalStore((s) => s.compareSelection);
@@ -56,21 +56,7 @@ export function CompareDrawer() {
           <div className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wider uppercase">
             Differences
           </div>
-          <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
-            {diff.map((segment, index) => (
-              <span
-                key={index}
-                className={cn(
-                  segment.op === 'insert' &&
-                    'bg-green-500/15 text-green-700 dark:text-green-300',
-                  segment.op === 'delete' &&
-                    'bg-red-500/15 text-red-700 line-through dark:text-red-300',
-                )}
-              >
-                {segment.value}
-              </span>
-            ))}
-          </pre>
+          <DiffText segments={diff} />
         </div>
         <div className="max-h-72 overflow-auto p-3">
           <div className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wider uppercase">

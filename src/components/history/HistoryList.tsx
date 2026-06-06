@@ -1,6 +1,13 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { Trash2, Search, X, Download, SlidersHorizontal } from 'lucide-react';
+import {
+  Trash2,
+  Search,
+  X,
+  Download,
+  SlidersHorizontal,
+  GitCompare,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { HistoryItem } from './HistoryItem';
+import { HistoryCompareDrawer } from './HistoryCompareDrawer';
 import { HistoryFiltersSheet } from './HistoryFiltersSheet';
 import { useHistory } from '@/hooks/use-history';
 import { exportHistory } from '@/utils/export';
@@ -149,6 +157,8 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSelection, setCompareSelection] = useState<string[]>([]);
   const pendingEntryRef = useRef<HistoryEntry | null>(null);
   const [filters, setFilters] = useState<HistoryFilters>(
     DEFAULT_HISTORY_FILTERS,
@@ -241,6 +251,31 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
     }
   }, [applyHistoryEntry]);
 
+  const handleToggleCompare = useCallback((entryId: string) => {
+    setCompareSelection((current) => {
+      if (current.includes(entryId)) {
+        return current.filter((id) => id !== entryId);
+      }
+      if (current.length >= 2) {
+        return [current[1], entryId];
+      }
+      return [...current, entryId];
+    });
+  }, []);
+
+  const compareEntries = useMemo(() => {
+    if (compareSelection.length !== 2) return null;
+    const first = entries.find((entry) => entry.id === compareSelection[0]);
+    const second = entries.find((entry) => entry.id === compareSelection[1]);
+    if (!first || !second) return null;
+    return [first, second] as [HistoryEntry, HistoryEntry];
+  }, [compareSelection, entries]);
+
+  const handleExitCompareMode = useCallback(() => {
+    setCompareMode(false);
+    setCompareSelection([]);
+  }, []);
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-sidebar-border flex h-9 shrink-0 items-center justify-between border-b px-3">
@@ -251,6 +286,27 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
         )}
         {entries.length > 0 && (
           <div className="flex items-center">
+            <IconButton
+              variant="ghost"
+              size="icon"
+              className={`relative h-7 w-7 ${
+                compareMode
+                  ? 'bg-sidebar-accent text-primary hover:text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => {
+                if (compareMode) {
+                  handleExitCompareMode();
+                  return;
+                }
+                setCompareMode(true);
+              }}
+              tooltip={
+                compareMode ? 'Exit prompt compare' : 'Compare prompt diffs'
+              }
+            >
+              <GitCompare className="h-3 w-3" />
+            </IconButton>
             <IconButton
               variant="ghost"
               size="icon"
@@ -342,10 +398,20 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
               entry={entry}
               onSelect={handleSelect}
               onDelete={deleteEntry}
+              compareMode={compareMode}
+              compareSelected={compareSelection.includes(entry.id)}
+              onToggleCompare={handleToggleCompare}
             />
           ))}
         </div>
       </ScrollArea>
+
+      {compareEntries && (
+        <HistoryCompareDrawer
+          entries={compareEntries}
+          onClose={handleExitCompareMode}
+        />
+      )}
 
       <DeleteAllHistoryDialog
         open={showConfirm}

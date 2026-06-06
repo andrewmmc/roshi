@@ -1,27 +1,62 @@
-import { Trash2, Download } from 'lucide-react';
+import { Trash2, Download, Check } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { exportHistoryEntry } from '@/utils/export';
+import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/history';
 
 interface HistoryItemProps {
   entry: HistoryEntry;
   onSelect: (entry: HistoryEntry) => void;
   onDelete: (id: string) => void;
+  compareMode?: boolean;
+  compareSelected?: boolean;
+  onToggleCompare?: (id: string) => void;
 }
 
-export function HistoryItem({ entry, onSelect, onDelete }: HistoryItemProps) {
+export function HistoryItem({
+  entry,
+  onSelect,
+  onDelete,
+  compareMode = false,
+  compareSelected = false,
+  onToggleCompare,
+}: HistoryItemProps) {
   const lastUserMessage = [...entry.request.messages]
     .reverse()
     .find((m) => m.role === 'user' && m.content.trim());
   const preview = lastUserMessage?.content.slice(0, 80) || 'No message';
   const hasError = !!entry.error;
 
+  const handleClick = () => {
+    if (compareMode) {
+      onToggleCompare?.(entry.id);
+      return;
+    }
+    onSelect(entry);
+  };
+
   return (
     <div className="group relative">
       <button
-        className="hover:bg-sidebar-accent/70 w-full cursor-pointer rounded px-2.5 py-1.5 pr-16 text-left transition-colors"
-        onClick={() => onSelect(entry)}
+        className={cn(
+          'hover:bg-sidebar-accent/70 w-full cursor-pointer rounded px-2.5 py-1.5 text-left transition-colors',
+          compareMode ? 'pr-20 pl-8' : 'pr-16',
+          compareSelected && 'bg-sidebar-accent/80',
+        )}
+        onClick={handleClick}
       >
+        {compareMode && (
+          <span
+            className={cn(
+              'border-border/70 absolute top-1/2 left-2 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded border',
+              compareSelected &&
+                'bg-primary border-primary text-primary-foreground',
+            )}
+            aria-hidden="true"
+          >
+            {compareSelected ? <Check className="h-2.5 w-2.5" /> : null}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="text-muted-foreground flex items-center gap-1 text-[11px]">
             <span className="truncate">{entry.providerName}</span>

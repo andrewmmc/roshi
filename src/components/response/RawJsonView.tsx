@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
 import { toast } from '@/stores/toast-store';
+import { JsonHighlight } from '@/components/ui/json-highlight';
 import { buildCurlCommand } from '@/utils/curl';
 import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
 
@@ -28,11 +29,7 @@ const JsonBlock = memo(function JsonBlock({
     );
   }
 
-  return (
-    <pre className="p-4 font-mono text-[13px] break-words whitespace-pre-wrap">
-      {jsonStr}
-    </pre>
-  );
+  return <JsonHighlight json={jsonStr} />;
 });
 
 function CurlCopyButton({ curlCommand }: { curlCommand: string | null }) {
