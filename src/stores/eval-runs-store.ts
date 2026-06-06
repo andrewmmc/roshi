@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { db } from '@/db';
+import { removeById, replaceById } from '@/stores/store-helpers';
 import type { EvalRunRecord } from '@/types/eval';
 
 interface EvalRunsStore {
@@ -30,10 +31,9 @@ export const useEvalRunsStore = create<EvalRunsStore>((set) => ({
 
   save: async (record) => {
     await db.evalRuns.put(record);
-    set((state) => {
-      const others = state.records.filter((r) => r.id !== record.id);
-      return { records: sortRecords([record, ...others]) };
-    });
+    set((state) => ({
+      records: sortRecords([record, ...removeById(state.records, record.id)]),
+    }));
     return record;
   },
 
@@ -41,15 +41,15 @@ export const useEvalRunsStore = create<EvalRunsStore>((set) => ({
     const trimmed = name.trim();
     await db.evalRuns.update(id, { name: trimmed || undefined });
     set((state) => ({
-      records: state.records.map((r) =>
-        r.id === id ? { ...r, name: trimmed || undefined } : r,
-      ),
+      records: replaceById(state.records, id, {
+        name: trimmed || undefined,
+      }),
     }));
   },
 
   remove: async (id) => {
     await db.evalRuns.delete(id);
-    set((state) => ({ records: state.records.filter((r) => r.id !== id) }));
+    set((state) => ({ records: removeById(state.records, id) }));
   },
 
   clearAll: async () => {

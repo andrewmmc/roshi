@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
+import { removeById } from '@/stores/store-helpers';
 import type { HistoryEntry } from '@/types/history';
 
 interface HistoryStore {
@@ -45,7 +46,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const prevEntries = get().entries;
     try {
       await db.history.delete(id);
-      set((state) => ({ entries: state.entries.filter((e) => e.id !== id) }));
+      set((state) => ({ entries: removeById(state.entries, id) }));
     } catch (error) {
       set({ entries: prevEntries });
       throw error;

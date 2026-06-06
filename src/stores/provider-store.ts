@@ -9,6 +9,12 @@ import { getDefaultProtocolForProviderType } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import { resolveModelCapabilities } from '@/models/resolver';
+import {
+  loadSetting,
+  persistSetting,
+  removeById,
+  replaceById,
+} from '@/stores/store-helpers';
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
@@ -94,18 +100,11 @@ function chooseValidSelection(
   };
 }
 
-let lastSavePromise: Promise<void> = Promise.resolve();
-
 async function saveSelection(
   providerId: string | null,
   modelId: string | null,
 ) {
-  lastSavePromise = lastSavePromise.then(() =>
-    db.settings
-      .put({ key: SELECTION_KEY, value: { providerId, modelId } })
-      .then(() => undefined),
-  );
-  await lastSavePromise;
+  await persistSetting(SELECTION_KEY, { providerId, modelId });
 }
 
 async function loadSelection(): Promise<{
@@ -113,19 +112,19 @@ async function loadSelection(): Promise<{
   modelId: string | null;
 }> {
   try {
-    const setting = await db.settings.get(SELECTION_KEY);
-    if (setting?.value) {
-      return setting.value as {
-        providerId: string | null;
-        modelId: string | null;
-      };
+    const saved = await loadSetting<{
+      providerId: string | null;
+      modelId: string | null;
+    }>(SELECTION_KEY);
+    if (saved) {
+      return saved;
     }
     // Migrate from legacy localStorage if present
     const raw = localStorage.getItem(LEGACY_LS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       localStorage.removeItem(LEGACY_LS_KEY);
-      await db.settings.put({ key: SELECTION_KEY, value: parsed });
+      await persistSetting(SELECTION_KEY, parsed);
       return parsed;
     }
   } catch {
@@ -136,8 +135,7 @@ async function loadSelection(): Promise<{
 
 async function hasMigratedToMarket(): Promise<boolean> {
   try {
-    const setting = await db.settings.get(MARKET_MIGRATION_KEY);
-    return Boolean(setting?.value);
+    return Boolean(await loadSetting<boolean>(MARKET_MIGRATION_KEY));
   } catch {
     return false;
   }
@@ -145,7 +143,7 @@ async function hasMigratedToMarket(): Promise<boolean> {
 
 async function markMarketMigrationComplete(): Promise<void> {
   try {
-    await db.settings.put({ key: MARKET_MIGRATION_KEY, value: true });
+    await persistSetting(MARKET_MIGRATION_KEY, true);
   } catch {
     /* ignore */
   }
@@ -300,9 +298,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   updateProvider: async (id, updates) => {
     await db.providers.update(id, updates);
     set((state) => ({
-      providers: state.providers.map((p) =>
-        p.id === id ? { ...p, ...updates } : p,
-      ),
+      providers: replaceById(state.providers, id, updates),
     }));
   },
 
@@ -315,7 +311,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     let newModelId: string | null = null;
     let selectionChanged = false;
     set((state) => {
-      const providers = state.providers.filter((p) => p.id !== id);
+      const providers = removeById(state.providers, id);
       const updates: Partial<ProviderStore> = { providers };
       if (state.selectedProviderId === id) {
         selectionChanged = true;
@@ -359,7 +355,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     let newProviderId: string | null = null;
     let newModelId: string | null = null;
     set((state) => {
-      const providers = state.providers.map((p) => (p.id === id ? reset : p));
+      const providers = replaceById(state.providers, id, reset);
       const updates: Partial<ProviderStore> = { providers };
       if (state.selectedProviderId === id) {
         selectionChanged = true;
@@ -412,9 +408,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     let newSelectedProviderId: string | null = null;
     let newSelectedModelId: string | null = null;
     set((state) => {
-      const providers = state.providers.map((p) =>
-        p.id === providerId ? { ...p, models } : p,
-      );
+      const providers = replaceById(state.providers, providerId, { models });
       const updates: Partial<ProviderStore> = { providers };
       const noProviderSelected = !state.selectedProviderId;
       const sameProviderNoModel =
@@ -444,9 +438,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     let shouldPersistSelection = false;
     let newSelectedModelId: string | null = null;
     set((state) => {
-      const providers = state.providers.map((p) =>
-        p.id === providerId ? { ...p, models } : p,
-      );
+      const providers = replaceById(state.providers, providerId, { models });
       const updates: Partial<ProviderStore> = { providers };
       if (
         state.selectedProviderId === providerId &&

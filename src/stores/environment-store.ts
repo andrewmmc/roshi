@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import { AppError } from '@/lib/errors';
+import {
+  loadSetting,
+  persistSetting,
+  removeById,
+  replaceById,
+} from '@/stores/store-helpers';
 import type { Environment, EnvironmentVariable } from '@/types/history';
 
 const ENVIRONMENT_SELECTION_KEY = 'environment-selection';
@@ -38,20 +44,13 @@ function normalizeVariables(
     .filter((variable) => variable.key);
 }
 
-let lastSavePromise: Promise<void> = Promise.resolve();
-
 async function saveSelection(id: string | null) {
-  lastSavePromise = lastSavePromise.then(() =>
-    db.settings
-      .put({ key: ENVIRONMENT_SELECTION_KEY, value: id })
-      .then(() => undefined),
-  );
-  await lastSavePromise;
+  await persistSetting(ENVIRONMENT_SELECTION_KEY, id);
 }
 
 async function loadSelection(): Promise<string | null> {
-  const setting = await db.settings.get(ENVIRONMENT_SELECTION_KEY);
-  return typeof setting?.value === 'string' ? setting.value : null;
+  const value = await loadSetting<string | null>(ENVIRONMENT_SELECTION_KEY);
+  return typeof value === 'string' ? value : null;
 }
 
 export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
@@ -137,11 +136,10 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
       await db.environments.update(id, nextUpdates);
       set((state) => ({
         environments: sortEnvironments(
-          state.environments.map((environment) =>
-            environment.id === id
-              ? { ...environment, ...nextUpdates }
-              : environment,
-          ),
+          replaceById(state.environments, id, (environment) => ({
+            ...environment,
+            ...nextUpdates,
+          })),
         ),
       }));
     } catch (error) {
@@ -158,9 +156,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
 
       let nextSelection: string | null = null;
       set((state) => {
-        const environments = state.environments.filter(
-          (environment) => environment.id !== id,
-        );
+        const environments = removeById(state.environments, id);
         nextSelection =
           state.selectedEnvironmentId === id
             ? (environments[0]?.id ?? null)

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import { AppError } from '@/lib/errors';
+import { removeById, replaceById } from '@/stores/store-helpers';
 import { useComposerStore, type ComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { headersToHistoryEntries } from '@/utils/headers';
@@ -115,11 +116,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       await db.collections.update(id, { name: trimmedName });
       set((state) => ({
         collections: sortedCollections(
-          state.collections.map((collection) =>
-            collection.id === id
-              ? { ...collection, name: trimmedName }
-              : collection,
-          ),
+          replaceById(state.collections, id, { name: trimmedName }),
         ),
       }));
     } catch (error) {
@@ -138,9 +135,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       });
 
       set((state) => ({
-        collections: state.collections.filter(
-          (collection) => collection.id !== id,
-        ),
+        collections: removeById(state.collections, id),
         savedRequests: state.savedRequests.filter(
           (request) => request.collectionId !== id,
         ),
@@ -242,9 +237,10 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
         .setSavedRequestContext(existing.collectionId, existing.id);
       set((state) => ({
         savedRequests: sortedSavedRequests(
-          state.savedRequests.map((request) =>
-            request.id === id ? { ...request, ...updates } : request,
-          ),
+          replaceById(state.savedRequests, id, (request) => ({
+            ...request,
+            ...updates,
+          })),
         ),
       }));
     } catch (error) {
@@ -269,9 +265,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
     try {
       await db.savedRequests.delete(id);
       set((state) => ({
-        savedRequests: state.savedRequests.filter(
-          (request) => request.id !== id,
-        ),
+        savedRequests: removeById(state.savedRequests, id),
       }));
 
       if (composer.activeSavedRequestId === id) {
