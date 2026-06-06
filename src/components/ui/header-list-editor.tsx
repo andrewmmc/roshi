@@ -45,14 +45,14 @@ export function HeaderListEditor({
       {headers.map((header, index) => (
         <div key={header.id} className="flex items-center gap-2">
           <Input
-            aria-label="Header name"
+            aria-label={`Header ${index + 1} name`}
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder={placeholderKey}
             className="h-8 flex-1 font-mono text-xs"
           />
           <Input
-            aria-label="Header value"
+            aria-label={`Header ${index + 1} value`}
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder={placeholderValue}

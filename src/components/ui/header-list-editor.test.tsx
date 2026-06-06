@@ -12,10 +12,10 @@ describe('HeaderListEditor', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Header name'), {
+    fireEvent.change(screen.getByLabelText('Header 1 name'), {
       target: { value: 'X-Test' },
     });
-    fireEvent.change(screen.getByLabelText('Header value'), {
+    fireEvent.change(screen.getByLabelText('Header 1 value'), {
       target: { value: 'demo' },
     });
 
