@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
+import { AppError } from '@/lib/errors';
 import type { ProviderConfig } from '@/types/provider';
 import type { ProviderModel } from '@/types/provider';
 import { getDefaultProtocolForProviderType } from '@/types/provider';
@@ -265,7 +267,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   addProvider: async (provider) => {
     const customCount = get().providers.filter((p) => !p.isBuiltIn).length;
     if (customCount >= MAX_CUSTOM_PROVIDERS) {
-      throw new Error('MAX_CUSTOM_PROVIDERS');
+      throw new AppError('MAX_CUSTOM_PROVIDERS');
     }
 
     const newProvider: ProviderConfig = normalizeProviderConfig({
@@ -474,18 +476,22 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 }));
 
 export const useSelectedProvider = () =>
-  useProviderStore((s) => {
-    const id = s.selectedProviderId;
-    return id ? s.providers.find((p) => p.id === id) || null : null;
-  });
+  useProviderStore(
+    useShallow((s) => {
+      const id = s.selectedProviderId;
+      return id ? s.providers.find((p) => p.id === id) || null : null;
+    }),
+  );
 
 export const useSelectedModel = () =>
-  useProviderStore((s) => {
-    const provider = s.selectedProviderId
-      ? s.providers.find((p) => p.id === s.selectedProviderId)
-      : null;
-    return provider?.models.find((m) => m.id === s.selectedModelId) || null;
-  });
+  useProviderStore(
+    useShallow((s) => {
+      const provider = s.selectedProviderId
+        ? s.providers.find((p) => p.id === s.selectedProviderId)
+        : null;
+      return provider?.models.find((m) => m.id === s.selectedModelId) || null;
+    }),
+  );
 
 export const useSelectedModelCapabilities = () => {
   const provider = useSelectedProvider();
