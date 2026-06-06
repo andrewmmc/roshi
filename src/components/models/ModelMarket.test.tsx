@@ -9,14 +9,17 @@ const {
   removeModelFromProvider,
   resetAllProviders,
   refreshModelCatalog,
+  loadProviders,
   loadCatalog,
   catalogState,
   mockProviders,
+  providerStoreState,
 } = vi.hoisted(() => ({
   addModelToProvider: vi.fn().mockResolvedValue(undefined),
   removeModelFromProvider: vi.fn().mockResolvedValue(undefined),
   resetAllProviders: vi.fn().mockResolvedValue(undefined),
   refreshModelCatalog: vi.fn().mockResolvedValue(undefined),
+  loadProviders: vi.fn().mockResolvedValue(undefined),
   loadCatalog: vi.fn().mockResolvedValue(undefined),
   catalogState: {
     models: {} as Record<string, ProviderModel[]>,
@@ -24,28 +27,37 @@ const {
     error: null as string | null,
   },
   mockProviders: { value: [] as ReturnType<typeof makeProvider>[] },
-}));
-
-vi.mock('@/hooks/use-providers', () => ({
-  useProviders: () => ({
-    providers: mockProviders.value,
-    resetAllProviders,
-    refreshModelCatalog,
-  }),
+  providerStoreState: {
+    loaded: true,
+    seeding: false,
+    refreshingCatalog: false,
+  },
 }));
 
 vi.mock('@/stores/provider-store', () => {
   type ProviderStoreLike = {
+    providers: ReturnType<typeof makeProvider>[];
+    loaded: boolean;
+    seeding: boolean;
+    load: typeof loadProviders;
     addModelToProvider: typeof addModelToProvider;
     removeModelFromProvider: typeof removeModelFromProvider;
+    resetAllProviders: typeof resetAllProviders;
+    refreshModelCatalog: typeof refreshModelCatalog;
     refreshingCatalog: boolean;
   };
   return {
     useProviderStore: (selector: (state: ProviderStoreLike) => unknown) =>
       selector({
+        providers: mockProviders.value,
+        loaded: providerStoreState.loaded,
+        seeding: providerStoreState.seeding,
+        load: loadProviders,
         addModelToProvider,
         removeModelFromProvider,
-        refreshingCatalog: false,
+        resetAllProviders,
+        refreshModelCatalog,
+        refreshingCatalog: providerStoreState.refreshingCatalog,
       }),
   };
 });
@@ -78,6 +90,9 @@ function renderMarket() {
 describe('ModelMarket', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    providerStoreState.loaded = true;
+    providerStoreState.seeding = false;
+    providerStoreState.refreshingCatalog = false;
     useUiStore.setState({ settingsModelsProviderId: null });
     catalogState.status = 'ready';
     catalogState.error = null;
@@ -194,5 +209,21 @@ describe('ModelMarket', () => {
     catalogState.models = {};
     renderMarket();
     expect(loadCatalog).toHaveBeenCalled();
+  });
+
+  it('shows a loading state until providers are ready', () => {
+    providerStoreState.loaded = false;
+    renderMarket();
+    expect(screen.getByText(/loading providers/i)).toBeInTheDocument();
+    expect(loadProviders).toHaveBeenCalled();
+  });
+
+  it('does not mount the reset dialog until reset is requested', () => {
+    renderMarket();
+    expect(
+      screen.queryByText('Reset all model picks?'),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /reset picks/i }));
+    expect(screen.getByText('Reset all model picks?')).toBeInTheDocument();
   });
 });

@@ -28,6 +28,9 @@ export function JudgeConfig() {
     (p) => p.id === judgeConfig.runner?.providerId,
   );
   const models = selectedProvider?.models ?? [];
+  const selectedModel = models.find(
+    (m) => m.id === judgeConfig.runner?.modelId,
+  );
 
   const handleProviderChange = (providerId: string | null) => {
     const id = providerId ?? '';
@@ -70,7 +73,9 @@ export function JudgeConfig() {
             disabled={!judgeConfig.enabled || isRunning}
           >
             <SelectTrigger className="h-7 w-[160px] text-xs">
-              <SelectValue placeholder="Provider" />
+              <SelectValue placeholder="Provider">
+                {selectedProvider?.name ?? 'Provider'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {sortedProviders.map((p) => (
@@ -91,7 +96,9 @@ export function JudgeConfig() {
             disabled={!judgeConfig.enabled || isRunning || models.length === 0}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
-              <SelectValue placeholder="Model" />
+              <SelectValue placeholder="Model">
+                {selectedModel?.displayName ?? 'Model'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {models.map((m) => (
