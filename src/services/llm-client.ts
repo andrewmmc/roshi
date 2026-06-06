@@ -214,6 +214,7 @@ async function handleStream(
   let usage: NormalizedResponse['usage'] = null;
   const allChunks: unknown[] = [];
 
+  let pipeError: unknown;
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -237,7 +238,13 @@ async function handleStream(
     }
   } finally {
     reader.releaseLock();
-    await pipePromise.catch(() => undefined);
+    await pipePromise.catch((error) => {
+      pipeError = error;
+    });
+  }
+
+  if (pipeError) {
+    throw pipeError;
   }
 
   const durationMs = Math.round(performance.now() - startTime);
