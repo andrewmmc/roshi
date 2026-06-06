@@ -1,6 +1,8 @@
 import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
-import { Readable } from 'node:stream';
+
+const PROXY_TIMEOUT_MS = 30_000;
+const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
 
 const SKIP_REQUEST_HEADERS = new Set([
   'host',
@@ -59,6 +61,12 @@ export function devProxyPlugin() {
           );
         }
 
+        let timedOut = false;
+        const timeoutId = setTimeout(() => {
+          timedOut = true;
+          abortController.abort();
+        }, PROXY_TIMEOUT_MS);
+
         try {
           let requestBody: Uint8Array | undefined;
           if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -78,6 +86,22 @@ export function devProxyPlugin() {
             signal: abortController.signal,
           });
 
+          const contentLength = upstreamResponse.headers.get('content-length');
+          if (
+            contentLength &&
+            Number.parseInt(contentLength, 10) > MAX_RESPONSE_BYTES
+          ) {
+            abortController.abort();
+            res.statusCode = 413;
+            res.setHeader('content-type', 'application/json');
+            res.end(
+              JSON.stringify({
+                error: `Response exceeds ${MAX_RESPONSE_BYTES} byte limit`,
+              }),
+            );
+            return;
+          }
+
           res.statusCode = upstreamResponse.status;
           upstreamResponse.headers.forEach((value, key) => {
             if (SKIP_RESPONSE_HEADERS.has(key)) return;
@@ -89,12 +113,39 @@ export function devProxyPlugin() {
             return;
           }
 
-          Readable.fromWeb(
-            upstreamResponse.body as import('stream/web').ReadableStream,
-          ).pipe(res);
+          let bytesRead = 0;
+          const reader = upstreamResponse.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            bytesRead += value.byteLength;
+            if (bytesRead > MAX_RESPONSE_BYTES) {
+              reader.cancel();
+              abortController.abort();
+              if (!res.headersSent) {
+                res.statusCode = 413;
+                res.setHeader('content-type', 'application/json');
+              }
+              res.end(
+                JSON.stringify({
+                  error: `Response exceeds ${MAX_RESPONSE_BYTES} byte limit`,
+                }),
+              );
+              return;
+            }
+            res.write(value);
+          }
+          res.end();
         } catch (error) {
-          if (abortController.signal.aborted) {
+          if (abortController.signal.aborted && !timedOut) {
             res.end();
+            return;
+          }
+
+          if (timedOut) {
+            res.statusCode = 504;
+            res.setHeader('content-type', 'application/json');
+            res.end(JSON.stringify({ error: 'Proxy request timed out' }));
             return;
           }
 
@@ -103,6 +154,8 @@ export function devProxyPlugin() {
           res.statusCode = 502;
           res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify({ error: message }));
+        } finally {
+          clearTimeout(timeoutId);
         }
       });
     },
