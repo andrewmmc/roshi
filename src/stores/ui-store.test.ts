@@ -77,6 +77,17 @@ describe('ui-store', () => {
     });
   });
 
+  describe('mainView', () => {
+    it('defaults to request', () => {
+      expect(getState().mainView).toBe('request');
+    });
+
+    it('switches to eval view', () => {
+      getState().setMainView('eval');
+      expect(getState().mainView).toBe('eval');
+    });
+  });
+
   describe('aboutOpen', () => {
     it('defaults to false', () => {
       expect(getState().aboutOpen).toBe(false);

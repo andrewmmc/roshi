@@ -40,6 +40,16 @@ describe('parameter-control-utils', () => {
     );
   });
 
+  it('returns default-only disabled reasons', () => {
+    const support = {
+      supported: 'default-only' as const,
+      default: 1,
+      reason: 'Temperature is fixed for this model.',
+    };
+
+    expect(getDisabledReason(support, true)).toBe(support.reason);
+  });
+
   it('builds capability-aware parameter defaults', () => {
     const capabilities =
       defaultCapabilitiesForProviderType('openai-compatible');

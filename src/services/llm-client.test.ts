@@ -577,6 +577,117 @@ describe('llm-client', () => {
       ).rejects.toMatchObject({ name: 'AbortError' });
     });
 
+    it('ignores non-object stream JSON payloads', async () => {
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValue(null),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream(['"not-an-object"', '[1,2,3]', '[DONE]']),
+        }),
+      );
+
+      const result = await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+      });
+
+      expect(result.response.content).toBe('');
+      expect(result.rawResponse).toMatchObject({ chunks: [] });
+      expect(mockAdapter.parseStreamChunk).toHaveBeenCalledTimes(2);
+    });
+
+    it('continues when parseStreamChunk returns null for valid JSON', async () => {
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce({
+            content: 'Hi',
+            finishReason: 'stop',
+            model: 'gpt-4',
+            id: '1',
+          }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      const chunk = JSON.stringify({
+        id: '1',
+        choices: [{ delta: { content: 'Hi' }, finish_reason: 'stop' }],
+      });
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream([chunk, chunk]),
+        }),
+      );
+
+      const result = await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+      });
+
+      expect(result.response.content).toBe('Hi');
+      expect(result.rawResponse.chunks).toHaveLength(2);
+      expect(mockAdapter.parseStreamChunk).toHaveBeenCalledTimes(2);
+    });
+
+    it('wraps non-Error stream failures with a generic message', async () => {
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValue({
+          content: 'Partial',
+          finishReason: null,
+          model: 'gpt-4',
+          id: 'chatcmpl-1',
+        }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createFailingSSEStream(
+            [
+              JSON.stringify({
+                id: 'chatcmpl-1',
+                choices: [
+                  { delta: { content: 'Partial' }, finish_reason: null },
+                ],
+              }),
+            ],
+            'connection reset' as never,
+          ),
+        }),
+      );
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(120);
+
+      await expect(
+        sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        }),
+      ).rejects.toMatchObject({
+        name: 'StreamError',
+        message: 'Stream interrupted',
+        partialResponse: { content: 'Partial' },
+      });
+    });
+
     it('skips [DONE] and empty data events', async () => {
       mockAdapter = createMockAdapter({
         parseStreamChunk: vi.fn().mockReturnValue({
