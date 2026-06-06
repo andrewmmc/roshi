@@ -22,6 +22,8 @@ function statusBadgeClass(status: EvalRunResult['status']): string {
       return 'bg-muted text-muted-foreground';
     case 'cancelled':
       return 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300';
+    case 'partial':
+      return 'bg-amber-500/15 text-amber-700 dark:text-amber-300';
     case 'error':
       return 'bg-destructive/15 text-destructive';
   }
@@ -93,14 +95,21 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
       </div>
 
       <div className="flex-1 overflow-auto px-3 py-2">
-        {result.error ? (
+        {result.error && result.status !== 'partial' ? (
           <pre className="text-destructive text-[12px] whitespace-pre-wrap">
             {result.error}
           </pre>
         ) : result.content ? (
-          <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
-            {result.content}
-          </pre>
+          <>
+            {result.status === 'partial' && result.error && (
+              <p className="mb-2 text-[12px] font-medium text-amber-700 dark:text-amber-300">
+                {result.error}
+              </p>
+            )}
+            <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
+              {result.content}
+            </pre>
+          </>
         ) : (
           <p className="text-muted-foreground text-[12px] italic">
             Waiting for response…

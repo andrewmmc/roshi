@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
 import { getSendableMessages } from '@/services/codegen/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
+import { IconButton } from '@/components/ui/icon-button';
+import { exportCodeSnippet } from '@/utils/export';
 import { cn } from '@/lib/utils';
 
 export function CodeView() {
@@ -131,7 +134,19 @@ export function CodeView() {
             {stream ? 'stream' : 'sync'}
           </button>
         </div>
-        <CopyButton text={activeCode} />
+        <div className="flex items-center">
+          <IconButton
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            tooltip="Export code snippet"
+            disabled={!activeCode}
+            onClick={() => exportCodeSnippet(activeCode, activeTab)}
+          >
+            <Download className="h-3 w-3" />
+          </IconButton>
+          <CopyButton text={activeCode} />
+        </div>
       </div>
       {generators.map((gen) => (
         <TabsContent

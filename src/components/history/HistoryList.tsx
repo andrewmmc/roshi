@@ -30,7 +30,10 @@ import type { HistoryEntry } from '@/types/history';
 import {
   buildComposerHistoryRestore,
   buildResponseHistoryRestore,
+  buildHistoryRestoreWarning,
+  resolveHistorySelection,
 } from '@/utils/history-restore';
+import { toast } from '@/stores/toast-store';
 import {
   DEFAULT_HISTORY_FILTERS,
   buildHistoryModelOptions,
@@ -139,8 +142,10 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
     (s) => s.loadResponseFromHistory,
   );
   const hasUnsavedChanges = useComposerStore(selectHasUnsavedChanges);
+  const providers = useProviderStore((s) => s.providers);
   const selectProvider = useProviderStore((s) => s.selectProvider);
   const selectModel = useProviderStore((s) => s.selectModel);
+  const addModelToProvider = useProviderStore((s) => s.addModelToProvider);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -179,15 +184,39 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
   }, []);
 
   const applyHistoryEntry = useCallback(
-    (entry: HistoryEntry) => {
-      selectProvider(entry.providerId);
-      selectModel(entry.modelId);
+    async (entry: HistoryEntry) => {
+      const selection = resolveHistorySelection(entry, providers);
+      const warning = buildHistoryRestoreWarning(selection);
+
+      if (selection.providerId) {
+        selectProvider(selection.providerId);
+      }
+
+      if (selection.restoredModel) {
+        await addModelToProvider(
+          selection.providerId!,
+          selection.restoredModel,
+        );
+        selectModel(selection.restoredModel.id);
+        toast(
+          `Added "${selection.originalModelId}" back to ${selection.originalProviderName}.`,
+        );
+      } else if (selection.modelId) {
+        selectModel(selection.modelId);
+      }
+
       loadComposerFromHistory(buildComposerHistoryRestore(entry));
       loadResponseFromHistory(buildResponseHistoryRestore(entry));
+
+      if (warning) {
+        toast(warning, 4000);
+      }
     },
     [
+      providers,
       selectProvider,
       selectModel,
+      addModelToProvider,
       loadComposerFromHistory,
       loadResponseFromHistory,
     ],

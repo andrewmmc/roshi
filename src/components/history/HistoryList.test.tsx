@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HistoryList } from './HistoryList';
 import { useHistoryStore } from '@/stores/history-store';
 import { useComposerStore } from '@/stores/composer-store';
@@ -10,6 +10,7 @@ import {
   makeProvider,
 } from '@/__tests__/fixtures';
 import { useUiStore } from '@/stores/ui-store';
+import { useToastStore } from '@/stores/toast-store';
 
 const { exportHistory } = vi.hoisted(() => ({
   exportHistory: vi.fn(),
@@ -18,6 +19,29 @@ const { exportHistory } = vi.hoisted(() => ({
 vi.mock('@/utils/export', () => ({
   exportHistory,
 }));
+
+const { mockDb } = vi.hoisted(() => ({
+  mockDb: {
+    providers: {
+      toArray: vi.fn().mockResolvedValue([]),
+      add: vi.fn().mockResolvedValue(undefined),
+      update: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    },
+    collections: {
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+    savedRequests: {
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+    settings: {
+      get: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+    },
+  },
+}));
+vi.mock('@/db', () => ({ db: mockDb }));
 
 describe('HistoryList', () => {
   beforeEach(() => {
@@ -42,7 +66,9 @@ describe('HistoryList', () => {
     useComposerStore.getState().resetComposer();
     useResponseStore.getState().resetResponse();
     useUiStore.setState({ historySearchFocusGen: 0 });
+    useToastStore.setState({ toasts: [] });
     exportHistory.mockReset();
+    mockDb.providers.update.mockClear();
   });
 
   it('restores custom headers when selecting a history entry', () => {
@@ -142,6 +168,61 @@ describe('HistoryList', () => {
 
     expect(focus).toHaveBeenCalled();
     expect(select).toHaveBeenCalled();
+  });
+
+  it('warns when restoring history with a deleted provider', () => {
+    const entry = makeHistoryEntry({
+      providerId: 'missing-provider',
+      modelId: 'missing-model',
+      providerName: 'Old Provider',
+    });
+    useHistoryStore.setState({ entries: [entry] });
+
+    render(<HistoryList />);
+    fireEvent.click(screen.getByRole('button', { name: /hello/i }));
+
+    expect(useProviderStore.getState().selectedProviderId).toBeNull();
+    expect(useComposerStore.getState().messages.length).toBeGreaterThan(0);
+    expect(useToastStore.getState().toasts[0]?.message).toBe(
+      'Original provider/model is no longer configured.',
+    );
+  });
+
+  it('restores missing model to provider and warns when only model was deleted', async () => {
+    const entry = makeHistoryEntry({
+      providerId: 'p1',
+      modelId: 'custom-model',
+      providerName: 'OpenAI',
+    });
+    useHistoryStore.setState({ entries: [entry] });
+
+    render(<HistoryList />);
+    fireEvent.click(screen.getByRole('button', { name: /hello/i }));
+
+    await waitFor(() => {
+      expect(mockDb.providers.update).toHaveBeenCalledWith(
+        'p1',
+        expect.objectContaining({
+          models: expect.arrayContaining([
+            expect.objectContaining({ id: 'custom-model', source: 'manual' }),
+          ]),
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(useProviderStore.getState().selectedModelId).toBe('custom-model');
+    });
+    expect(useToastStore.getState().toasts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: 'Added "custom-model" back to OpenAI.',
+        }),
+        expect.objectContaining({
+          message:
+            'Original model "custom-model" is no longer configured for OpenAI.',
+        }),
+      ]),
+    );
   });
 
   it('shows discard confirmation before replacing unsaved composer content', () => {

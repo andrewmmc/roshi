@@ -7,6 +7,7 @@ import { useEnvironmentStore } from '@/stores/environment-store';
 import {
   sendRequest,
   RequestError,
+  StreamError,
   type SendRequestResult,
 } from '@/services/llm-client';
 import {
@@ -139,6 +140,30 @@ function completeSuccessfulRequest(
     durationMs: result.durationMs,
     statusCode: result.statusCode,
   });
+}
+
+const STREAM_INTERRUPTED_SUMMARY = 'Response interrupted';
+
+function completeInterruptedStream(
+  respStore: ResponseStore,
+  err: StreamError,
+): { summary: string; detail: string } {
+  const detail = err.message;
+
+  respStore.completeResponse({
+    response: err.partialResponse,
+    rawRequest: err.rawRequest,
+    rawResponse: err.rawResponse,
+    requestUrl: err.requestUrl,
+    requestHeaders: err.requestHeaders,
+    responseHeaders: err.responseHeaders,
+    durationMs: err.durationMs,
+    statusCode: err.status,
+  });
+  respStore.setError(STREAM_INTERRUPTED_SUMMARY);
+  respStore.setErrorDetail(detail);
+
+  return { summary: STREAM_INTERRUPTED_SUMMARY, detail };
 }
 
 function completeRequestError(
@@ -339,7 +364,31 @@ export function useSendRequest() {
         statusCode: result.statusCode,
       });
     } catch (err) {
-      if (err instanceof RequestError) {
+      if (err instanceof StreamError) {
+        const { summary, detail } = completeInterruptedStream(respStore, err);
+
+        const { addMessage } = useComposerStore.getState();
+        if (err.partialResponse.content) {
+          addMessage({
+            role: 'assistant',
+            content: err.partialResponse.content,
+          });
+          addMessage({ role: 'user', content: '' });
+        }
+
+        useHistoryStore.getState().addEntry({
+          ...baseHistoryEntry,
+          rawRequest: err.rawRequest,
+          requestUrl: err.requestUrl,
+          requestHeaders: err.requestHeaders,
+          responseHeaders: err.responseHeaders,
+          response: err.partialResponse,
+          rawResponse: err.rawResponse,
+          error: `${summary}: ${detail}`,
+          durationMs: err.durationMs,
+          statusCode: err.status,
+        });
+      } else if (err instanceof RequestError) {
         const { summary, detail } = completeRequestError(respStore, err);
 
         useHistoryStore.getState().addEntry({

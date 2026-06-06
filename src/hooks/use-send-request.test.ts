@@ -7,40 +7,80 @@ import { useHistoryStore } from '@/stores/history-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
 import { makeProvider, makeModel, makeMessage } from '@/__tests__/fixtures';
 
-const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
-  const mockSendRequest = vi.fn();
-  class MockRequestError extends Error {
-    status: number;
-    rawResponse: Record<string, unknown>;
-    rawRequest: Record<string, unknown>;
-    requestHeaders: Record<string, string>;
-    responseHeaders: Record<string, string>;
-    durationMs: number;
-    constructor(
-      message: string,
-      status: number,
-      rawResponse: Record<string, unknown>,
-      rawRequest: Record<string, unknown>,
-      requestHeaders: Record<string, string>,
-      responseHeaders: Record<string, string>,
-      durationMs: number,
-    ) {
-      super(message);
-      this.name = 'RequestError';
-      this.status = status;
-      this.rawResponse = rawResponse;
-      this.rawRequest = rawRequest;
-      this.requestHeaders = requestHeaders;
-      this.responseHeaders = responseHeaders;
-      this.durationMs = durationMs;
+const { mockSendRequest, MockRequestError, MockStreamError } = vi.hoisted(
+  () => {
+    const mockSendRequest = vi.fn();
+    class MockRequestError extends Error {
+      status: number;
+      rawResponse: Record<string, unknown>;
+      rawRequest: Record<string, unknown>;
+      requestHeaders: Record<string, string>;
+      responseHeaders: Record<string, string>;
+      requestUrl: string;
+      durationMs: number;
+      constructor(
+        message: string,
+        status: number,
+        rawResponse: Record<string, unknown>,
+        rawRequest: Record<string, unknown>,
+        requestHeaders: Record<string, string>,
+        responseHeaders: Record<string, string>,
+        requestUrl: string,
+        durationMs: number,
+      ) {
+        super(message);
+        this.name = 'RequestError';
+        this.status = status;
+        this.rawResponse = rawResponse;
+        this.rawRequest = rawRequest;
+        this.requestHeaders = requestHeaders;
+        this.responseHeaders = responseHeaders;
+        this.requestUrl = requestUrl;
+        this.durationMs = durationMs;
+      }
     }
-  }
-  return { mockSendRequest, MockRequestError };
-});
+    class MockStreamError extends MockRequestError {
+      partialResponse: {
+        id: string;
+        model: string;
+        content: string;
+        role: 'assistant';
+        finishReason: string | null;
+        usage: null;
+      };
+      constructor(
+        message: string,
+        status: number,
+        rawResponse: Record<string, unknown>,
+        rawRequest: Record<string, unknown>,
+        requestHeaders: Record<string, string>,
+        responseHeaders: Record<string, string>,
+        requestUrl: string,
+        durationMs: number,
+        partialResponse: MockStreamError['partialResponse'],
+      ) {
+        super(
+          message,
+          status,
+          rawResponse,
+          rawRequest,
+          requestHeaders,
+          responseHeaders,
+          requestUrl,
+          durationMs,
+        );
+        this.name = 'StreamError';
+        this.partialResponse = partialResponse;
+      }
+    }
+    return { mockSendRequest, MockRequestError, MockStreamError };
+  },
+);
 
 vi.mock('@/services/llm-client', () => ({
   sendRequest: mockSendRequest,
   RequestError: MockRequestError,
+  StreamError: MockStreamError,
 }));
 
 // Mock db for the stores that import it
@@ -687,6 +727,52 @@ describe('useSendRequest', () => {
   });
 
   describe('error handling', () => {
+    it('handles StreamError with partial content and history details', async () => {
+      mockSendRequest.mockRejectedValue(
+        new MockStreamError(
+          'connection reset',
+          200,
+          {
+            interrupted: true,
+            streamError: 'connection reset',
+            chunks: [{ id: '1' }],
+          },
+          { model: 'm1' },
+          { Authorization: 'Bearer token' },
+          { 'content-type': 'text/event-stream' },
+          'https://api.example.com/v1/chat',
+          180,
+          {
+            id: '1',
+            model: 'm1',
+            content: 'Partial answer',
+            role: 'assistant',
+            finishReason: null,
+            usage: null,
+          },
+        ),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      const state = useResponseStore.getState();
+      expect(state.error).toBe('Response interrupted');
+      expect(state.errorDetail).toBe('connection reset');
+      expect(state.response?.content).toBe('Partial answer');
+      expect(state.rawResponse).toMatchObject({ interrupted: true });
+      expect(state.statusCode).toBe(200);
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          response: expect.objectContaining({ content: 'Partial answer' }),
+          error: 'Response interrupted: connection reset',
+          rawResponse: expect.objectContaining({ interrupted: true }),
+        }),
+      );
+    });
+
     it('handles RequestError', async () => {
       mockSendRequest.mockRejectedValue(
         new MockRequestError(
@@ -696,6 +782,7 @@ describe('useSendRequest', () => {
           { model: 'm1' },
           { Authorization: 'Bearer token' },
           { 'x-request-id': 'abc' },
+          'https://api.example.com/v1/chat',
           100,
         ),
       );
@@ -726,6 +813,7 @@ describe('useSendRequest', () => {
           {},
           {},
           {},
+          'https://api.example.com/v1/chat',
           50,
         ),
       );
@@ -752,6 +840,7 @@ describe('useSendRequest', () => {
           {},
           {},
           {},
+          'https://api.example.com/v1/chat',
           50,
         ),
       );
@@ -766,7 +855,16 @@ describe('useSendRequest', () => {
 
     it('handles RequestError without provider detail', async () => {
       mockSendRequest.mockRejectedValue(
-        new MockRequestError('HTTP 500', 500, {}, {}, {}, {}, 50),
+        new MockRequestError(
+          'HTTP 500',
+          500,
+          {},
+          {},
+          {},
+          {},
+          'https://api.example.com/v1/chat',
+          50,
+        ),
       );
       const { result } = renderHook(() => useSendRequest());
 

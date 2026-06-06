@@ -11,6 +11,65 @@ import {
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import type { HistoryEntry } from '@/types/history';
+import type { ProviderConfig, ProviderModel } from '@/types/provider';
+
+export interface HistoryRestoreSelection {
+  providerId: string | null;
+  modelId: string | null;
+  providerMissing: boolean;
+  modelMissing: boolean;
+  originalProviderId: string;
+  originalModelId: string;
+  originalProviderName: string;
+  restoredModel: ProviderModel | null;
+}
+
+export function buildRestoredModel(modelId: string): ProviderModel {
+  return {
+    id: modelId,
+    name: modelId,
+    displayName: modelId,
+    supportsStreaming: true,
+    source: 'manual',
+  };
+}
+
+export function resolveHistorySelection(
+  entry: HistoryEntry,
+  providers: ProviderConfig[],
+): HistoryRestoreSelection {
+  const provider = providers.find((p) => p.id === entry.providerId);
+  const providerMissing = !provider;
+  const modelMissing = Boolean(
+    provider && !provider.models.some((m) => m.id === entry.modelId),
+  );
+
+  return {
+    providerId: provider?.id ?? null,
+    modelId: provider?.models.some((m) => m.id === entry.modelId)
+      ? entry.modelId
+      : null,
+    providerMissing,
+    modelMissing,
+    originalProviderId: entry.providerId,
+    originalModelId: entry.modelId,
+    originalProviderName: entry.providerName,
+    restoredModel:
+      provider && modelMissing ? buildRestoredModel(entry.modelId) : null,
+  };
+}
+
+export function buildHistoryRestoreWarning(
+  selection: HistoryRestoreSelection,
+): string | null {
+  if (selection.providerMissing) {
+    return 'Original provider/model is no longer configured.';
+  }
+  if (selection.modelMissing) {
+    return `Original model "${selection.originalModelId}" is no longer configured for ${selection.originalProviderName}.`;
+  }
+  return null;
+}
 
 export function buildComposerHistoryRestore(entry: HistoryEntry) {
   const messages = [...entry.request.messages];

@@ -1,8 +1,16 @@
 import {
   buildComposerHistoryRestore,
   buildResponseHistoryRestore,
+  buildHistoryRestoreWarning,
+  buildRestoredModel,
+  resolveHistorySelection,
 } from './history-restore';
-import { makeHistoryEntry, makeRequest } from '@/__tests__/fixtures';
+import {
+  makeHistoryEntry,
+  makeModel,
+  makeProvider,
+  makeRequest,
+} from '@/__tests__/fixtures';
 import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_TEMPERATURE,
@@ -69,6 +77,52 @@ describe('history-restore', () => {
         effort: DEFAULT_EFFORT,
         verbosity: DEFAULT_VERBOSITY,
       }),
+    );
+  });
+
+  it('detects missing provider and model during selection resolution', () => {
+    const entry = makeHistoryEntry({
+      providerId: 'deleted-provider',
+      modelId: 'deleted-model',
+      providerName: 'Old Provider',
+    });
+
+    expect(resolveHistorySelection(entry, [])).toEqual({
+      providerId: null,
+      modelId: null,
+      providerMissing: true,
+      modelMissing: false,
+      originalProviderId: 'deleted-provider',
+      originalModelId: 'deleted-model',
+      originalProviderName: 'Old Provider',
+      restoredModel: null,
+    });
+    expect(buildHistoryRestoreWarning(resolveHistorySelection(entry, []))).toBe(
+      'Original provider/model is no longer configured.',
+    );
+  });
+
+  it('detects missing model when provider still exists', () => {
+    const providers = [
+      makeProvider({
+        id: 'p1',
+        name: 'OpenAI',
+        models: [makeModel({ id: 'gpt-4o' })],
+      }),
+    ];
+    const entry = makeHistoryEntry({
+      providerId: 'p1',
+      modelId: 'custom-model',
+      providerName: 'OpenAI',
+    });
+
+    const selection = resolveHistorySelection(entry, providers);
+
+    expect(selection.providerMissing).toBe(false);
+    expect(selection.modelMissing).toBe(true);
+    expect(selection.restoredModel).toEqual(buildRestoredModel('custom-model'));
+    expect(buildHistoryRestoreWarning(selection)).toBe(
+      'Original model "custom-model" is no longer configured for OpenAI.',
     );
   });
 

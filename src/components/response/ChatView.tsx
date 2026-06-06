@@ -24,6 +24,8 @@ export function ChatView() {
   );
 
   const displayContent = isStreaming ? streamingContent : response?.content;
+  const isInterrupted =
+    error === 'Response interrupted' && Boolean(displayContent);
   const showLoading = isLoading && !displayContent;
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -146,7 +148,34 @@ export function ChatView() {
           </div>
         )}
 
-        {error && (
+        {isInterrupted && (
+          <div className="flex gap-3">
+            <div
+              aria-label="Warning"
+              className="w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide text-amber-600 uppercase dark:text-amber-400"
+            >
+              warn
+            </div>
+            <div
+              role="alert"
+              className="flex-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100"
+            >
+              <div className="font-medium">Response interrupted</div>
+              {errorDetail && (
+                <div className="mt-1 font-mono text-[12px] break-words whitespace-pre-wrap">
+                  {errorDetail}
+                </div>
+              )}
+              {rawResponse && (
+                <pre className="mt-2 max-h-48 overflow-auto rounded bg-amber-500/5 p-2 font-mono text-[11px] break-words whitespace-pre-wrap">
+                  {JSON.stringify(rawResponse, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
+        )}
+
+        {error && !isInterrupted && (
           <div className="flex gap-3">
             <div
               aria-label="Error"

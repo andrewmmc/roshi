@@ -2,43 +2,80 @@ import { runEval } from './eval-runner';
 import type { EvalRunner, EvalSharedRequest } from '@/types/eval';
 import { makeProvider, makeModel } from '@/__tests__/fixtures';
 
-const { mockSendRequest, MockRequestError } = vi.hoisted(() => {
-  const mockSendRequest = vi.fn();
-  class MockRequestError extends Error {
-    status: number;
-    rawResponse: Record<string, unknown>;
-    rawRequest: Record<string, unknown>;
-    requestHeaders: Record<string, string>;
-    responseHeaders: Record<string, string>;
-    requestUrl: string;
-    durationMs: number;
-    constructor(
-      message: string,
-      status: number,
-      rawResponse: Record<string, unknown>,
-      rawRequest: Record<string, unknown>,
-      requestHeaders: Record<string, string>,
-      responseHeaders: Record<string, string>,
-      requestUrl: string,
-      durationMs: number,
-    ) {
-      super(message);
-      this.name = 'RequestError';
-      this.status = status;
-      this.rawResponse = rawResponse;
-      this.rawRequest = rawRequest;
-      this.requestHeaders = requestHeaders;
-      this.responseHeaders = responseHeaders;
-      this.requestUrl = requestUrl;
-      this.durationMs = durationMs;
+const { mockSendRequest, MockRequestError, MockStreamError } = vi.hoisted(
+  () => {
+    const mockSendRequest = vi.fn();
+    class MockRequestError extends Error {
+      status: number;
+      rawResponse: Record<string, unknown>;
+      rawRequest: Record<string, unknown>;
+      requestHeaders: Record<string, string>;
+      responseHeaders: Record<string, string>;
+      requestUrl: string;
+      durationMs: number;
+      constructor(
+        message: string,
+        status: number,
+        rawResponse: Record<string, unknown>,
+        rawRequest: Record<string, unknown>,
+        requestHeaders: Record<string, string>,
+        responseHeaders: Record<string, string>,
+        requestUrl: string,
+        durationMs: number,
+      ) {
+        super(message);
+        this.name = 'RequestError';
+        this.status = status;
+        this.rawResponse = rawResponse;
+        this.rawRequest = rawRequest;
+        this.requestHeaders = requestHeaders;
+        this.responseHeaders = responseHeaders;
+        this.requestUrl = requestUrl;
+        this.durationMs = durationMs;
+      }
     }
-  }
-  return { mockSendRequest, MockRequestError };
-});
+    class MockStreamError extends MockRequestError {
+      partialResponse: {
+        id: string;
+        model: string;
+        content: string;
+        role: 'assistant';
+        finishReason: string | null;
+        usage: null;
+      };
+      constructor(
+        message: string,
+        status: number,
+        rawResponse: Record<string, unknown>,
+        rawRequest: Record<string, unknown>,
+        requestHeaders: Record<string, string>,
+        responseHeaders: Record<string, string>,
+        requestUrl: string,
+        durationMs: number,
+        partialResponse: MockStreamError['partialResponse'],
+      ) {
+        super(
+          message,
+          status,
+          rawResponse,
+          rawRequest,
+          requestHeaders,
+          responseHeaders,
+          requestUrl,
+          durationMs,
+        );
+        this.name = 'StreamError';
+        this.partialResponse = partialResponse;
+      }
+    }
+    return { mockSendRequest, MockRequestError, MockStreamError };
+  },
+);
 
 vi.mock('@/services/llm-client', () => ({
   sendRequest: mockSendRequest,
   RequestError: MockRequestError,
+  StreamError: MockStreamError,
 }));
 
 function makeRunner(overrides?: Partial<EvalRunner>): EvalRunner {
@@ -175,6 +212,45 @@ describe('runEval', () => {
     expect(result.metrics.tokensPerSec).toBeCloseTo(12.5, 6);
 
     performanceSpy.mockRestore();
+  });
+
+  it('marks interrupted streams as partial with metrics and content', async () => {
+    mockSendRequest.mockImplementation(async ({ onStreamChunk }) => {
+      onStreamChunk?.({ content: 'Partial', finishReason: null });
+      throw new MockStreamError(
+        'connection reset',
+        200,
+        { interrupted: true, streamError: 'connection reset', chunks: [] },
+        {},
+        {},
+        {},
+        'https://example.com',
+        220,
+        {
+          id: 'r',
+          model: 'm1',
+          content: 'Partial',
+          role: 'assistant',
+          finishReason: null,
+          usage: null,
+        },
+      );
+    });
+
+    const handle = runEval({
+      runners: [makeRunner({ id: 'r1' })],
+      providers: [baseProvider],
+      request: makeRequest(),
+      onUpdate: () => {},
+    });
+
+    const [result] = await handle.promise;
+    expect(result.status).toBe('partial');
+    expect(result.content).toBe('Partial');
+    expect(result.error).toContain('Stream interrupted');
+    expect(result.metrics.durationMs).toBe(220);
+    expect(result.metrics.statusCode).toBe(200);
+    expect(result.metrics.responseChars).toBe('Partial'.length);
   });
 
   it('records errors per runner without aborting others', async () => {

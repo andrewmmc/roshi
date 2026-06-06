@@ -135,6 +135,29 @@ describe('ResponsePanel', () => {
     );
   });
 
+  it('shows interrupted status for partial streamed responses', () => {
+    useResponseStore.setState({
+      response: {
+        id: 'resp_1',
+        model: 'gpt-4',
+        content: 'Partial answer',
+        role: 'assistant',
+        finishReason: null,
+        usage: null,
+      },
+      error: 'Response interrupted',
+      statusCode: 200,
+      durationMs: 180,
+    });
+
+    render(<ResponsePanel />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Response interrupted',
+    );
+    expect(screen.getByText('200 Interrupted')).toBeInTheDocument();
+  });
+
   it('disables the code tab without a supported provider', () => {
     render(<ResponsePanel />);
 

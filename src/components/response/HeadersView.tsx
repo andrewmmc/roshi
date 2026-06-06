@@ -1,7 +1,10 @@
 import { useState, useCallback, useRef, memo, useEffect } from 'react';
+import { Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IconButton } from '@/components/ui/icon-button';
 import { useResponseStore } from '@/stores/response-store';
 import { toast } from '@/stores/toast-store';
+import { exportHeadersJson } from '@/utils/export';
 
 function CopyableCell({
   value,
@@ -78,12 +81,17 @@ const HeadersTable = memo(function HeadersTable({
 });
 
 export function HeadersView() {
+  const requestUrl = useResponseStore((s) => s.requestUrl);
   const requestHeaders = useResponseStore((s) => s.requestHeaders);
   const responseHeaders = useResponseStore((s) => s.responseHeaders);
+  const hasHeaders = Boolean(
+    (requestHeaders && Object.keys(requestHeaders).length > 0) ||
+    (responseHeaders && Object.keys(responseHeaders).length > 0),
+  );
 
   return (
     <Tabs defaultValue="response" className="flex h-full flex-col">
-      <div className="mt-2 flex items-center px-4">
+      <div className="mt-2 flex items-center justify-between px-4">
         <TabsList className="h-7">
           <TabsTrigger value="response" className="h-6 px-2.5 text-xs">
             Response
@@ -92,6 +100,22 @@ export function HeadersView() {
             Request
           </TabsTrigger>
         </TabsList>
+        <IconButton
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground h-7 w-7"
+          tooltip="Export headers as JSON"
+          disabled={!hasHeaders}
+          onClick={() =>
+            exportHeadersJson({
+              requestUrl,
+              requestHeaders,
+              responseHeaders,
+            })
+          }
+        >
+          <Download className="h-3 w-3" />
+        </IconButton>
       </div>
       <TabsContent
         value="response"

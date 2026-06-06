@@ -5,6 +5,7 @@ export type EvalRunStatus =
   | 'pending'
   | 'streaming'
   | 'success'
+  | 'partial'
   | 'error'
   | 'cancelled';
 

@@ -189,6 +189,62 @@ function getRequestUrl(targetUrl: string): string {
   return `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
 }
 
+function buildStreamState(
+  fullContent: string,
+  lastId: string,
+  lastModel: string,
+  finishReason: string | null,
+  usage: NormalizedResponse['usage'],
+  allChunks: unknown[],
+): { response: NormalizedResponse; rawResponse: Record<string, unknown> } {
+  const response: NormalizedResponse = {
+    id: lastId,
+    model: lastModel,
+    content: fullContent,
+    role: 'assistant',
+    finishReason,
+    usage,
+  };
+
+  return {
+    response,
+    rawResponse: {
+      chunks: allChunks,
+      reconstructed: { id: lastId, model: lastModel, content: fullContent },
+    },
+  };
+}
+
+function throwStreamError(
+  cause: unknown,
+  statusCode: number,
+  rawRequest: Record<string, unknown>,
+  requestHeaders: Record<string, string>,
+  responseHeaders: Record<string, string>,
+  requestUrl: string,
+  startTime: number,
+  partialResponse: NormalizedResponse,
+  rawResponse: Record<string, unknown>,
+): never {
+  const durationMs = Math.round(performance.now() - startTime);
+  const message = cause instanceof Error ? cause.message : 'Stream interrupted';
+  throw new StreamError(
+    message,
+    statusCode,
+    {
+      ...rawResponse,
+      interrupted: true,
+      streamError: message,
+    },
+    rawRequest,
+    requestHeaders,
+    responseHeaders,
+    requestUrl,
+    durationMs,
+    partialResponse,
+  );
+}
+
 async function handleStream(
   body: ReadableStream<Uint8Array>,
   adapter: ProviderAdapter,
@@ -215,12 +271,20 @@ async function handleStream(
   const allChunks: unknown[] = [];
 
   let pipeError: unknown;
+  let readError: unknown;
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      let done: boolean;
+      let value: { data?: string } | undefined;
+      try {
+        ({ done, value } = await reader.read());
+      } catch (error) {
+        readError = error;
+        break;
+      }
       if (done) break;
 
-      const data = value.data;
+      const data = value?.data;
       if (!data || data === '[DONE]') continue;
 
       const parsed = parseJsonObject(data);
@@ -243,25 +307,31 @@ async function handleStream(
     });
   }
 
-  if (pipeError) {
-    throw pipeError;
+  const { response, rawResponse } = buildStreamState(
+    fullContent,
+    lastId,
+    lastModel,
+    finishReason,
+    usage,
+    allChunks,
+  );
+
+  const streamFailure = readError ?? pipeError;
+  if (streamFailure) {
+    throwStreamError(
+      streamFailure,
+      statusCode,
+      rawRequest,
+      requestHeaders,
+      responseHeaders,
+      requestUrl,
+      startTime,
+      response,
+      rawResponse,
+    );
   }
 
   const durationMs = Math.round(performance.now() - startTime);
-
-  const response: NormalizedResponse = {
-    id: lastId,
-    model: lastModel,
-    content: fullContent,
-    role: 'assistant',
-    finishReason,
-    usage,
-  };
-
-  const rawResponse = {
-    chunks: allChunks,
-    reconstructed: { id: lastId, model: lastModel, content: fullContent },
-  };
 
   return {
     response,
@@ -303,5 +373,34 @@ export class RequestError extends Error {
     this.responseHeaders = responseHeaders;
     this.requestUrl = requestUrl;
     this.durationMs = durationMs;
+  }
+}
+
+export class StreamError extends RequestError {
+  partialResponse: NormalizedResponse;
+
+  constructor(
+    message: string,
+    status: number,
+    rawResponse: Record<string, unknown>,
+    rawRequest: Record<string, unknown>,
+    requestHeaders: Record<string, string>,
+    responseHeaders: Record<string, string>,
+    requestUrl: string,
+    durationMs: number,
+    partialResponse: NormalizedResponse,
+  ) {
+    super(
+      message,
+      status,
+      rawResponse,
+      rawRequest,
+      requestHeaders,
+      responseHeaders,
+      requestUrl,
+      durationMs,
+    );
+    this.name = 'StreamError';
+    this.partialResponse = partialResponse;
   }
 }

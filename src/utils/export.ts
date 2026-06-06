@@ -8,7 +8,15 @@ import { normalizeProviderConfig } from '@/stores/provider-store';
 
 const EXPORT_VERSION = 1;
 
-type ExportType = 'providers' | 'history' | 'history-entry' | 'eval-run';
+type ExportType =
+  | 'providers'
+  | 'history'
+  | 'history-entry'
+  | 'eval-run'
+  | 'raw-request'
+  | 'raw-response'
+  | 'headers'
+  | 'code-snippet';
 
 interface ExportEnvelope<T> {
   app: 'roshi';
@@ -137,6 +145,95 @@ export function exportCurrentRequest(data: CurrentRequestExport): void {
     data: { ...data, requestHeaders: redactHeaders(data.requestHeaders) },
   };
   downloadJson(envelope, `roshi-entry-${dateTag()}.json`);
+}
+
+export interface HeadersExport {
+  requestUrl: string | null;
+  requestHeaders: Record<string, string> | null;
+  responseHeaders: Record<string, string> | null;
+}
+
+export function buildRawRequestExportPayload(
+  rawRequest: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  return rawRequest;
+}
+
+export function buildRawResponseExportPayload(
+  rawResponse: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  return rawResponse;
+}
+
+export function buildHeadersExportPayload(data: HeadersExport): HeadersExport {
+  return {
+    requestUrl: data.requestUrl,
+    requestHeaders: redactHeaders(data.requestHeaders),
+    responseHeaders: data.responseHeaders,
+  };
+}
+
+function buildTypedExportEnvelope<T>(
+  type: ExportType,
+  data: T,
+): ExportEnvelope<T> {
+  return {
+    app: 'roshi',
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    type,
+    data,
+  };
+}
+
+export function exportRawRequestJson(
+  rawRequest: Record<string, unknown> | null,
+): void {
+  const envelope = buildTypedExportEnvelope(
+    'raw-request',
+    buildRawRequestExportPayload(rawRequest),
+  );
+  downloadJson(envelope, `roshi-raw-request-${dateTag()}.json`);
+}
+
+export function exportRawResponseJson(
+  rawResponse: Record<string, unknown> | null,
+): void {
+  const envelope = buildTypedExportEnvelope(
+    'raw-response',
+    buildRawResponseExportPayload(rawResponse),
+  );
+  downloadJson(envelope, `roshi-raw-response-${dateTag()}.json`);
+}
+
+export function exportHeadersJson(data: HeadersExport): void {
+  const envelope = buildTypedExportEnvelope(
+    'headers',
+    buildHeadersExportPayload(data),
+  );
+  downloadJson(envelope, `roshi-headers-${dateTag()}.json`);
+}
+
+export function buildCodeSnippetExportPayload(code: string, label: string) {
+  return { label, code };
+}
+
+function codeSnippetExtension(label: string): string {
+  const normalized = label.toLowerCase();
+  if (normalized.includes('python')) return 'py';
+  if (normalized.includes('node')) return 'ts';
+  return 'txt';
+}
+
+export function exportCodeSnippet(code: string, label: string): void {
+  const extension = codeSnippetExtension(label);
+  void downloadFile(
+    code,
+    `roshi-code-${slugify(label) || 'snippet'}-${dateTag()}.${extension}`,
+    'text/plain',
+    'Text',
+    extension,
+  );
 }
 
 export function exportEvalRunJson(record: EvalRunRecord): void {

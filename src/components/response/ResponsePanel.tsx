@@ -51,16 +51,20 @@ export function ResponsePanel() {
     : false;
 
   const hasContent = response || error || isStreaming || isLoading;
+  const isInterrupted =
+    error === 'Response interrupted' && Boolean(response?.content);
 
   const statusText = isLoading
     ? isStreaming
       ? 'Streaming response...'
       : 'Sending request...'
-    : error
-      ? `Error: ${error}`
-      : response
-        ? 'Response complete'
-        : '';
+    : isInterrupted
+      ? 'Response interrupted'
+      : error
+        ? `Error: ${error}`
+        : response
+          ? 'Response complete'
+          : '';
 
   return (
     <Tabs defaultValue="chat" className="flex h-full flex-col">
@@ -97,12 +101,19 @@ export function ResponsePanel() {
           {statusCode !== null && !isLoading && (
             <span
               className={`font-mono font-medium ${
-                statusCode >= 200 && statusCode < 300
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
+                isInterrupted
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : statusCode >= 200 && statusCode < 300
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
               }`}
             >
-              {statusCode} {statusCode < 300 ? 'Success' : 'Error'}
+              {statusCode}{' '}
+              {isInterrupted
+                ? 'Interrupted'
+                : statusCode < 300
+                  ? 'Success'
+                  : 'Error'}
             </span>
           )}
           {durationMs !== null && !isLoading && (

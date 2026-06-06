@@ -1,4 +1,4 @@
-import { sendRequest, RequestError } from './llm-client';
+import { sendRequest, RequestError, StreamError } from './llm-client';
 import { makeProvider, makeRequest } from '@/__tests__/fixtures';
 import type { ProviderAdapter } from '@/adapters/types';
 
@@ -44,6 +44,24 @@ function createSSEStream(events: string[]): ReadableStream<Uint8Array> {
         controller.enqueue(encoder.encode(`data: ${event}\n\n`));
       }
       controller.close();
+    },
+  });
+}
+
+function createFailingSSEStream(
+  events: string[],
+  error: Error,
+): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  let index = 0;
+  return new ReadableStream({
+    pull(controller) {
+      if (index < events.length) {
+        controller.enqueue(encoder.encode(`data: ${events[index]}\n\n`));
+        index += 1;
+        return;
+      }
+      controller.error(error);
     },
   });
 }
@@ -461,6 +479,64 @@ describe('llm-client', () => {
       expect(chunks).toHaveLength(3);
       expect(result.rawResponse).toHaveProperty('chunks');
       expect(result.rawResponse).toHaveProperty('reconstructed');
+    });
+
+    it('throws StreamError with partial content when the stream fails mid-read', async () => {
+      const chunk1 = JSON.stringify({
+        id: 'chatcmpl-1',
+        model: 'gpt-4',
+        choices: [{ delta: { content: 'Partial' }, finish_reason: null }],
+      });
+
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValueOnce({
+          content: 'Partial',
+          finishReason: null,
+          model: 'gpt-4',
+          id: 'chatcmpl-1',
+        }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createFailingSSEStream(
+            [chunk1],
+            new TypeError('connection reset'),
+          ),
+        }),
+      );
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(120);
+
+      try {
+        await sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        });
+        expect.fail('should have thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(StreamError);
+        const streamErr = err as StreamError;
+        expect(streamErr.partialResponse.content).toBe('Partial');
+        expect(streamErr.status).toBe(200);
+        expect(streamErr.durationMs).toBe(120);
+        expect(streamErr.rawResponse).toMatchObject({
+          interrupted: true,
+          streamError: 'connection reset',
+          chunks: [JSON.parse(chunk1)],
+          reconstructed: {
+            id: 'chatcmpl-1',
+            model: 'gpt-4',
+            content: 'Partial',
+          },
+        });
+      }
     });
 
     it('skips [DONE] and empty data events', async () => {

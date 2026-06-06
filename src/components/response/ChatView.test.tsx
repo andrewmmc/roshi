@@ -114,6 +114,41 @@ describe('ChatView', () => {
     expect(screen.getByText('System context')).toBeInTheDocument();
   });
 
+  it('shows interrupted stream warning with partial content and raw chunks', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
+        model: 'gpt-4',
+        stream: true,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+      response: {
+        id: 'resp_1',
+        model: 'gpt-4',
+        content: 'Partial answer',
+        role: 'assistant',
+        finishReason: null,
+        usage: null,
+      },
+      error: 'Response interrupted',
+      errorDetail: 'connection reset',
+      rawResponse: {
+        interrupted: true,
+        streamError: 'connection reset',
+        chunks: [{ id: 'resp_1' }],
+      },
+    });
+
+    render(<ChatView />);
+
+    expect(screen.getByText('Partial answer')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Response interrupted');
+    expect(screen.getByText('connection reset')).toBeInTheDocument();
+    expect(screen.getByText(/"interrupted": true/)).toBeInTheDocument();
+  });
+
   it('shows error details and raw response payload', () => {
     useResponseStore.setState({
       sentRequest: {

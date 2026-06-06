@@ -25,6 +25,14 @@ import {
   exportEvalRunJson,
   exportEvalRunCsv,
   buildEvalRunCsv,
+  buildRawRequestExportPayload,
+  buildRawResponseExportPayload,
+  buildHeadersExportPayload,
+  buildCodeSnippetExportPayload,
+  exportRawRequestJson,
+  exportRawResponseJson,
+  exportHeadersJson,
+  exportCodeSnippet,
 } from './export';
 import type { CurrentRequestExport } from './export';
 import { emptyResult } from '@/types/eval';
@@ -381,6 +389,82 @@ describe('export', () => {
 
       expect(clickSpy).not.toHaveBeenCalled();
       expect(createObjectURLSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('tab-specific exports', () => {
+    it('buildRawRequestExportPayload returns the raw request object', () => {
+      const payload = { model: 'gpt-4', messages: [] };
+      expect(buildRawRequestExportPayload(payload)).toEqual(payload);
+      expect(buildRawRequestExportPayload(null)).toBeNull();
+    });
+
+    it('buildRawResponseExportPayload returns the raw response object', () => {
+      const payload = { chunks: [{ id: '1' }], interrupted: true };
+      expect(buildRawResponseExportPayload(payload)).toEqual(payload);
+    });
+
+    it('buildHeadersExportPayload redacts sensitive request headers', () => {
+      expect(
+        buildHeadersExportPayload({
+          requestUrl: 'https://api.test.com/v1/chat',
+          requestHeaders: {
+            Authorization: 'Bearer secret',
+            Accept: 'application/json',
+          },
+          responseHeaders: { 'content-type': 'text/event-stream' },
+        }),
+      ).toEqual({
+        requestUrl: 'https://api.test.com/v1/chat',
+        requestHeaders: {
+          Authorization: 'REDACTED',
+          Accept: 'application/json',
+        },
+        responseHeaders: { 'content-type': 'text/event-stream' },
+      });
+    });
+
+    it('buildCodeSnippetExportPayload includes label and code', () => {
+      expect(buildCodeSnippetExportPayload('print("hi")', 'Python')).toEqual({
+        label: 'Python',
+        code: 'print("hi")',
+      });
+    });
+
+    it('exportRawRequestJson wraps payload in a raw-request envelope', async () => {
+      exportRawRequestJson({ model: 'gpt-4' });
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const envelope = JSON.parse(await blob.text());
+      expect(envelope.type).toBe('raw-request');
+      expect(envelope.data).toEqual({ model: 'gpt-4' });
+    });
+
+    it('exportRawResponseJson wraps payload in a raw-response envelope', async () => {
+      exportRawResponseJson({ interrupted: true, chunks: [] });
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const envelope = JSON.parse(await blob.text());
+      expect(envelope.type).toBe('raw-response');
+      expect(envelope.data).toEqual({ interrupted: true, chunks: [] });
+    });
+
+    it('exportHeadersJson wraps redacted headers in a headers envelope', async () => {
+      exportHeadersJson({
+        requestUrl: 'https://api.test.com',
+        requestHeaders: { Authorization: 'Bearer secret' },
+        responseHeaders: { 'x-request-id': 'abc' },
+      });
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const envelope = JSON.parse(await blob.text());
+      expect(envelope.type).toBe('headers');
+      expect(envelope.data.requestHeaders.Authorization).toBe('REDACTED');
+      expect(envelope.data.responseHeaders).toEqual({ 'x-request-id': 'abc' });
+    });
+
+    it('exportCodeSnippet downloads a text file with the snippet', async () => {
+      exportCodeSnippet('console.log("hi")', 'Node');
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      expect(blob.type).toBe('text/plain');
+      expect(await blob.text()).toBe('console.log("hi")');
     });
   });
 

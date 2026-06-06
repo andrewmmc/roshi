@@ -1,11 +1,12 @@
 import { useState, useMemo, memo, useCallback, useRef, useEffect } from 'react';
-import { Terminal, Check } from 'lucide-react';
+import { Terminal, Check, Download } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
 import { toast } from '@/stores/toast-store';
 import { buildCurlCommand } from '@/utils/curl';
+import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
 
 const JsonBlock = memo(function JsonBlock({
   data,
@@ -116,6 +117,24 @@ export function RawJsonView() {
           {activeTab === 'request' && (
             <CurlCopyButton curlCommand={curlCommand} />
           )}
+          <IconButton
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            tooltip={
+              activeTab === 'response'
+                ? 'Export raw response JSON'
+                : 'Export raw request JSON'
+            }
+            disabled={!activeData}
+            onClick={() =>
+              activeTab === 'response'
+                ? exportRawResponseJson(rawResponse)
+                : exportRawRequestJson(rawRequest)
+            }
+          >
+            <Download className="h-3 w-3" />
+          </IconButton>
           <CopyButton text={activeJson} />
         </div>
       </div>

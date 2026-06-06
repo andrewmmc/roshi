@@ -13,7 +13,7 @@ import type {
 import { emptyResult, buildNormalizedRequestForRunner } from '@/types/eval';
 import { resolveModelCapabilities } from '@/models/resolver';
 import { estimateCostUsd } from '@/utils/cost';
-import { sendRequest, RequestError } from './llm-client';
+import { sendRequest, RequestError, StreamError } from './llm-client';
 
 export interface EvalRunnerUpdate {
   runnerId: string;
@@ -194,6 +194,25 @@ interface HandleRunnerErrorArgs {
 
 function handleRunnerError(args: HandleRunnerErrorArgs): EvalRunResult {
   const { runner, err, model, ttftMs, streamedContent, onUpdate } = args;
+
+  if (err instanceof StreamError) {
+    const content = err.partialResponse.content || streamedContent;
+    const result: EvalRunResult = {
+      ...emptyResult(runner.id),
+      status: 'partial',
+      content,
+      error: `Stream interrupted: ${err.message}`,
+      metrics: buildMetrics({
+        response: err.partialResponse,
+        durationMs: err.durationMs,
+        statusCode: err.status,
+        ttftMs,
+        pricing: model?.pricing,
+      }),
+    };
+    onUpdate({ runnerId: runner.id, result: cloneResult(result) });
+    return result;
+  }
 
   if (err instanceof DOMException && err.name === 'AbortError') {
     const result: EvalRunResult = {
