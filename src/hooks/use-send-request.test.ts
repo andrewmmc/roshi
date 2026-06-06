@@ -189,6 +189,35 @@ describe('useSendRequest', () => {
       expect(mockSendRequest).not.toHaveBeenCalled();
     });
 
+    it('clears a prior response when validation fails', async () => {
+      useResponseStore.setState({
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'Previous answer',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawResponse: { id: '1' },
+      });
+      useProviderStore.setState({
+        selectedProviderId: null,
+        selectedModelId: null,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().response).toBeNull();
+      expect(useResponseStore.getState().rawResponse).toBeNull();
+      expect(useResponseStore.getState().error).toBe(
+        'Please select a provider and model',
+      );
+    });
+
     it('sets error when no model selected', async () => {
       useProviderStore.setState({ selectedModelId: null });
       const { result } = renderHook(() => useSendRequest());
@@ -481,6 +510,48 @@ describe('useSendRequest', () => {
       );
       expect(mockDb.history.add).toHaveBeenCalledWith(
         expect.objectContaining({ modelId: 'gemini-2.5-pro' }),
+      );
+    });
+
+    it('stores the actual wire stream flag in history when streaming is disabled by compatibility', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'p1',
+            models: [makeModel({ id: 'm1', supportsStreaming: false })],
+          }),
+        ],
+        selectedProviderId: 'p1',
+        selectedModelId: 'm1',
+      });
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        stream: true,
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'm1',
+          content: '',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 0,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({ stream: false }),
+        }),
       );
     });
 
@@ -1010,12 +1081,42 @@ describe('useSendRequest', () => {
       });
 
       const state = useResponseStore.getState();
-      expect(state.streamingContent).toBe('Hello World');
+      expect(state.response?.content).toBe('Hello World');
+      expect(state.streamingContent).toBe('');
       expect(state.isStreaming).toBe(false); // finally block sets it to false
     });
   });
 
   describe('cancel', () => {
+    it('aborts the request from a different hook instance', async () => {
+      mockSendRequest.mockImplementation(
+        (options: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            options.signal.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError')),
+            );
+          }),
+      );
+
+      const { result: sender } = renderHook(() => useSendRequest());
+      const { result: canceller } = renderHook(() => useSendRequest());
+
+      let sendPromise: Promise<void>;
+      act(() => {
+        sendPromise = sender.current.send();
+      });
+
+      act(() => {
+        canceller.current.cancel();
+      });
+
+      await act(async () => {
+        await sendPromise!;
+      });
+
+      expect(useResponseStore.getState().error).toBe('Request cancelled');
+    });
+
     it('aborts the request', async () => {
       mockSendRequest.mockImplementation(
         (options: { signal: AbortSignal }) =>

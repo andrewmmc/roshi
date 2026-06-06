@@ -539,6 +539,44 @@ describe('llm-client', () => {
       }
     });
 
+    it('rethrows AbortError instead of wrapping it in StreamError', async () => {
+      const chunk1 = JSON.stringify({
+        id: 'chatcmpl-1',
+        model: 'gpt-4',
+        choices: [{ delta: { content: 'Partial' }, finish_reason: null }],
+      });
+
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValueOnce({
+          content: 'Partial',
+          finishReason: null,
+          model: 'gpt-4',
+          id: 'chatcmpl-1',
+        }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createFailingSSEStream(
+            [chunk1],
+            new DOMException('Aborted', 'AbortError'),
+          ),
+        }),
+      );
+
+      await expect(
+        sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        }),
+      ).rejects.toMatchObject({ name: 'AbortError' });
+    });
+
     it('skips [DONE] and empty data events', async () => {
       mockAdapter = createMockAdapter({
         parseStreamChunk: vi.fn().mockReturnValue({

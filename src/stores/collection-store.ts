@@ -2,7 +2,13 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import { AppError } from '@/lib/errors';
-import { removeById, replaceById } from '@/stores/store-helpers';
+import {
+  createLoadGuard,
+  removeById,
+  replaceById,
+} from '@/stores/store-helpers';
+
+const collectionLoadGuard = createLoadGuard();
 import { useComposerStore, type ComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { headersToHistoryEntries } from '@/utils/headers';
@@ -125,22 +131,24 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
   savedRequests: [],
   loaded: false,
 
-  load: async () => {
-    if (get().loaded) return;
+  load: async () =>
+    collectionLoadGuard.run(
+      () => get().loaded,
+      async () => {
+        await ensureStarterTemplatesSeeded();
 
-    await ensureStarterTemplatesSeeded();
+        const [collections, savedRequests] = await Promise.all([
+          db.collections.toArray(),
+          db.savedRequests.toArray(),
+        ]);
 
-    const [collections, savedRequests] = await Promise.all([
-      db.collections.toArray(),
-      db.savedRequests.toArray(),
-    ]);
-
-    set({
-      collections: sortedCollections(collections),
-      savedRequests: sortedSavedRequests(savedRequests),
-      loaded: true,
-    });
-  },
+        set({
+          collections: sortedCollections(collections),
+          savedRequests: sortedSavedRequests(savedRequests),
+          loaded: true,
+        });
+      },
+    ),
 
   addCollection: async (name) => {
     const trimmedName = name.trim();

@@ -53,6 +53,8 @@ interface ResponseActions {
   setCompatibilityWarnings: (warnings: string[]) => void;
   resetResponse: () => void;
 
+  /** Batch: clear prior response data and set a validation error */
+  failValidation: (error: string, errorDetail: string | null) => void;
   /** Batch: reset + set sentRequest + loading in one set() */
   startRequest: (
     sentRequest: NormalizedRequest,
@@ -138,6 +140,13 @@ export const useResponseStore = create<ResponseStore>((set) => ({
 
   resetResponse: () => set({ ...INITIAL_RESPONSE_STATE }),
 
+  failValidation: (error, errorDetail) =>
+    set({
+      ...INITIAL_RESPONSE_STATE,
+      error,
+      errorDetail,
+    }),
+
   startRequest: (sentRequest, compatibilityWarnings = []) =>
     set({
       ...INITIAL_RESPONSE_STATE,
@@ -162,6 +171,9 @@ export const useResponseStore = create<ResponseStore>((set) => ({
       responseHeaders: result.responseHeaders,
       durationMs: result.durationMs,
       statusCode: result.statusCode,
+      streamingContent: '',
+      error: null,
+      errorDetail: null,
     }),
 
   completeWithError: (result) => set(result),

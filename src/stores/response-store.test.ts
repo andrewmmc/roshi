@@ -131,6 +131,31 @@ describe('response-store', () => {
     });
   });
 
+  describe('failValidation', () => {
+    it('clears prior response data and stores the validation error', () => {
+      getState().setResponse({
+        id: '1',
+        model: 'gpt-4',
+        content: 'Hi',
+        role: 'assistant',
+        finishReason: 'stop',
+        usage: null,
+      });
+      getState().setRawResponse({ id: '1' });
+      getState().setStreaming(true);
+      getState().setStreamContent('partial');
+
+      getState().failValidation('Please select a provider and model', null);
+
+      expect(getState().response).toBeNull();
+      expect(getState().rawResponse).toBeNull();
+      expect(getState().streamingContent).toBe('');
+      expect(getState().isStreaming).toBe(false);
+      expect(getState().error).toBe('Please select a provider and model');
+      expect(getState().errorDetail).toBeNull();
+    });
+  });
+
   describe('resetResponse', () => {
     it('restores all response fields to defaults', () => {
       getState().setError('err');

@@ -318,6 +318,12 @@ async function handleStream(
 
   const streamFailure = readError ?? pipeError;
   if (streamFailure) {
+    if (
+      streamFailure instanceof DOMException &&
+      streamFailure.name === 'AbortError'
+    ) {
+      throw streamFailure;
+    }
     throwStreamError(
       streamFailure,
       statusCode,

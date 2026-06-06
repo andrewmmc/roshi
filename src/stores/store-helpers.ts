@@ -3,6 +3,22 @@ import { toErrorMessage } from '@/lib/errors';
 
 let lastSettingsSave = Promise.resolve();
 
+/** Coalesce concurrent store load() calls into a single in-flight promise. */
+export function createLoadGuard() {
+  let inFlight: Promise<void> | null = null;
+
+  return {
+    run(isLoaded: () => boolean, load: () => Promise<void>): Promise<void> {
+      if (isLoaded()) return Promise.resolve();
+      if (inFlight) return inFlight;
+      inFlight = load().finally(() => {
+        inFlight = null;
+      });
+      return inFlight;
+    },
+  };
+}
+
 export async function persistSetting(
   key: string,
   value: unknown,
