@@ -4,6 +4,8 @@ import {
   makeMessage,
 } from '@/__tests__/fixtures';
 import {
+  buildHistoryModelOptions,
+  buildHistoryProviderOptions,
   DEFAULT_HISTORY_FILTERS,
   filterHistoryEntries,
   isDefaultHistoryFilters,
@@ -96,6 +98,17 @@ describe('history-filter', () => {
     );
 
     expect(result.map((entry) => entry.id)).toEqual(['success']);
+  });
+
+  it('builds provider and model filter options from history entries', () => {
+    expect(buildHistoryProviderOptions(entries)).toEqual([
+      { id: 'anthropic', name: 'Anthropic' },
+      { id: 'openai', name: 'OpenAI' },
+    ]);
+    expect(buildHistoryModelOptions(entries)).toEqual([
+      'claude-sonnet',
+      'gpt-4.1',
+    ]);
   });
 
   it('detects active filters', () => {

@@ -88,6 +88,29 @@ function getDateCutoff(
   return cutoff;
 }
 
+export interface HistoryProviderOption {
+  id: string;
+  name: string;
+}
+
+export function buildHistoryProviderOptions(
+  entries: HistoryEntry[],
+): HistoryProviderOption[] {
+  const providers = new Map<string, string>();
+  for (const entry of entries) {
+    providers.set(entry.providerId, entry.providerName);
+  }
+  return [...providers.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function buildHistoryModelOptions(entries: HistoryEntry[]): string[] {
+  return [
+    ...new Set(entries.map((entry) => entry.modelId).filter(Boolean)),
+  ].sort();
+}
+
 export function isDefaultHistoryFilters(filters: HistoryFilters): boolean {
   return Object.entries(DEFAULT_HISTORY_FILTERS).every(
     ([key, value]) => filters[key as keyof HistoryFilters] === value,
