@@ -5,6 +5,18 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
+vi.mock('@/components/ui/slider', () => ({
+  Slider: ({
+    disabled,
+    'aria-label': ariaLabel,
+  }: {
+    disabled?: boolean;
+    'aria-label'?: string;
+  }) => (
+    <div data-testid="slider" aria-label={ariaLabel} aria-disabled={disabled} />
+  ),
+}));
+
 vi.mock('@/components/ui/select', () => {
   function getTriggerId(children: React.ReactNode): string | undefined {
     const childArray = React.Children.toArray(children);
