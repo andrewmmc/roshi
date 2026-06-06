@@ -15,108 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useComposerStore } from '@/stores/composer-store';
-import { useSelectedModelCapabilities } from '@/stores/provider-store';
-import type { ParamSupport } from '@/models/capabilities';
 import {
-  DEFAULT_TEMPERATURE,
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_TOP_P,
-  DEFAULT_TOP_K,
-  DEFAULT_FREQUENCY_PENALTY,
-  DEFAULT_PRESENCE_PENALTY,
-  DEFAULT_THINKING_ENABLED,
-  DEFAULT_THINKING_BUDGET_TOKENS,
-  DEFAULT_EFFORT,
-  DEFAULT_VERBOSITY,
-} from '@/constants/defaults';
-
-// ─── Parameter documentation ─────────────────────────────────────────────────
-
-const PARAM_INFO: Record<string, string> = {
-  temperature:
-    'Controls output randomness. 0 = deterministic/greedy. 1 = default. 2 = highly varied. Use the presets below for quick sweeps.',
-  'top-p':
-    'Nucleus sampling: model only samples from the top-P probability mass. Lower values narrow diversity. Mutually exclusive with Temperature on some providers.',
-  'top-k':
-    'Limits the sampling pool to the K most-probable tokens. Supported by Anthropic and Gemini models; ignored by OpenAI-compatible APIs.',
-  'frequency-penalty':
-    'Penalizes tokens proportional to how many times they have already appeared. Positive values reduce repetition; negative values encourage it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
-  'presence-penalty':
-    'Penalizes any token that has appeared at all, regardless of count. Pushes the model toward new topics. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
-  'max-tokens': 'Maximum output tokens the model may generate in one response.',
-  stream:
-    'Receive tokens as they are generated instead of waiting for the full response. Useful for long outputs and latency testing.',
-  thinking:
-    'Enables extended internal chain-of-thought reasoning before the visible answer. Supported on Claude 3.7+, Gemini thinking models, and GPT-5 series.',
-  'budget-tokens':
-    'Token budget reserved for internal reasoning steps. Higher budget = deeper analysis, slower response, higher cost.',
-  effort:
-    'Reasoning effort level for o-series (GPT-5) and Claude Opus 4.7+ models. Higher effort produces more thorough output at greater cost.',
-  verbosity:
-    'Controls the length and detail of the final response (GPT-5 Responses API).',
-};
-
-// ─── Quick temperature presets ───────────────────────────────────────────────
-
-const TEMP_PRESETS = [
-  {
-    label: 'Determ.',
-    value: 0,
-    title: 'Deterministic — reproducible, exact outputs (temp = 0)',
-  },
-  {
-    label: 'Balanced',
-    value: 0.7,
-    title: 'Balanced — good default for most tasks (temp = 0.7)',
-  },
-  {
-    label: 'Creative',
-    value: 1.2,
-    title: 'Creative — more varied, imaginative responses (temp = 1.2)',
-  },
-  { label: 'Random', value: 2, title: 'Maximum variance (temp = 2)' },
-] as const;
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function isParamEditable(
-  support: ParamSupport | undefined,
-  hasCapabilities: boolean,
-  fallback: boolean,
-): boolean {
-  return hasCapabilities ? support?.supported === true : fallback;
-}
-
-function getParamMin(
-  support: ParamSupport | undefined,
-  fallback: number,
-): number {
-  return support && support.supported === true && support.min !== undefined
-    ? support.min
-    : fallback;
-}
-
-function getParamMax(
-  support: ParamSupport | undefined,
-  fallback: number,
-): number {
-  return support && support.supported === true && support.max !== undefined
-    ? support.max
-    : fallback;
-}
-
-function getDisabledReason(
-  support: ParamSupport | undefined,
-  disabled: boolean,
-): string | undefined {
-  if (!disabled) return undefined;
-  if (support?.supported === false) return support.reason;
-  if (support?.supported === 'default-only') return support.reason;
-  return 'Not supported by the selected model.';
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
+  PARAM_INFO,
+  TEMP_PRESETS,
+} from '@/components/composer/parameter-control-utils';
+import { useParameterControlsState } from '@/components/composer/use-parameter-controls-state';
+import type { ResolvedSliderParam } from '@/components/composer/use-parameter-controls-state';
 
 function InfoTooltip({ content }: { content: string }) {
   return (
@@ -157,7 +61,6 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Slider + number input combo for continuous parameters. */
 function SliderNumberRow({
   label,
   paramKey,
@@ -233,6 +136,23 @@ function SliderNumberRow({
         </p>
       )}
     </div>
+  );
+}
+
+function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
+  return (
+    <SliderNumberRow
+      label={param.label}
+      paramKey={param.paramKey}
+      value={param.value}
+      onChange={param.onChange}
+      min={param.min}
+      max={param.max}
+      step={param.step}
+      decimals={param.decimals}
+      disabled={!param.canEdit}
+      disabledReason={param.disabledReason}
+    />
   );
 }
 
@@ -338,202 +258,83 @@ function CheckboxRow({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export function ParameterControls() {
-  const temperature = useComposerStore((s) => s.temperature);
-  const maxTokens = useComposerStore((s) => s.maxTokens);
-  const topP = useComposerStore((s) => s.topP);
-  const topK = useComposerStore((s) => s.topK);
-  const frequencyPenalty = useComposerStore((s) => s.frequencyPenalty);
-  const presencePenalty = useComposerStore((s) => s.presencePenalty);
-  const stream = useComposerStore((s) => s.stream);
-  const thinkingEnabled = useComposerStore((s) => s.thinkingEnabled);
-  const thinkingBudgetTokens = useComposerStore((s) => s.thinkingBudgetTokens);
-  const effort = useComposerStore((s) => s.effort);
-  const verbosity = useComposerStore((s) => s.verbosity);
-  const setTemperature = useComposerStore((s) => s.setTemperature);
-  const setMaxTokens = useComposerStore((s) => s.setMaxTokens);
-  const setTopP = useComposerStore((s) => s.setTopP);
-  const setTopK = useComposerStore((s) => s.setTopK);
-  const setFrequencyPenalty = useComposerStore((s) => s.setFrequencyPenalty);
-  const setPresencePenalty = useComposerStore((s) => s.setPresencePenalty);
-  const setStream = useComposerStore((s) => s.setStream);
-  const setThinkingEnabled = useComposerStore((s) => s.setThinkingEnabled);
-  const setThinkingBudgetTokens = useComposerStore(
-    (s) => s.setThinkingBudgetTokens,
+  const {
+    capabilities,
+    temperature,
+    maxTokens,
+    stream,
+    thinkingEnabled,
+    thinkingBudgetTokens,
+    effort,
+    verbosity,
+    setMaxTokens,
+    setStream,
+    setThinkingEnabled,
+    setThinkingBudgetTokens,
+    setEffort,
+    setVerbosity,
+    resetParameters,
+    samplingParams,
+    penaltyParams,
+    canEditMaxTokens,
+    supportsStreaming,
+    supportsThinking,
+    supportsThinkingBudget,
+    isAdaptiveThinkingOnly,
+    effortSupport,
+    verbositySupport,
+    canEditTemperature,
+    applyTempPreset,
+  } = useParameterControlsState();
+
+  const temperatureParam = samplingParams.find(
+    (param) => param.capabilityKey === 'temperature',
   );
-  const setEffort = useComposerStore((s) => s.setEffort);
-  const setVerbosity = useComposerStore((s) => s.setVerbosity);
-
-  const capabilities = useSelectedModelCapabilities();
-  const temperatureSupport = capabilities?.params.temperature;
-  const topPSupport = capabilities?.params.topP;
-  const topKSupport = capabilities?.params.topK;
-  const frequencyPenaltySupport = capabilities?.params.frequencyPenalty;
-  const presencePenaltySupport = capabilities?.params.presencePenalty;
-  const maxTokensSupport = capabilities?.params.maxTokens;
-  const thinkingSupport = capabilities?.params.thinking;
-  const effortSupport = capabilities?.params.effort;
-  const verbositySupport = capabilities?.params.verbosity;
-  const hasCapabilities = Boolean(capabilities);
-
-  const canEditTemperature = isParamEditable(
-    temperatureSupport,
-    hasCapabilities,
-    true,
+  const otherSamplingParams = samplingParams.filter(
+    (param) => param.capabilityKey !== 'temperature',
   );
-  const canEditTopP = isParamEditable(topPSupport, hasCapabilities, true);
-  const canEditTopK = isParamEditable(topKSupport, hasCapabilities, false);
-  const canEditFrequencyPenalty = isParamEditable(
-    frequencyPenaltySupport,
-    hasCapabilities,
-    true,
-  );
-  const canEditPresencePenalty = isParamEditable(
-    presencePenaltySupport,
-    hasCapabilities,
-    true,
-  );
-  const canEditMaxTokens = capabilities
-    ? maxTokensSupport?.supported === true
-    : true;
-  const supportsStreaming = capabilities?.streaming ?? true;
-  const supportsThinking = Boolean(thinkingSupport);
-  // Opus 4.7+ has adaptive-only thinking; no budget control in that mode
-  const supportsThinkingBudget =
-    thinkingSupport?.modes.includes('enabled') ?? false;
-  const isAdaptiveThinkingOnly =
-    supportsThinking &&
-    !supportsThinkingBudget &&
-    thinkingSupport?.modes.includes('adaptive');
-
-  // Temperature bounds for presets clamping
-  const tempMin = getParamMin(temperatureSupport, 0);
-  const tempMax = getParamMax(temperatureSupport, 2);
-
-  function applyTempPreset(preset: (typeof TEMP_PRESETS)[number]) {
-    if (!canEditTemperature) return;
-    setTemperature(Math.min(tempMax, Math.max(tempMin, preset.value)));
-  }
-
-  const reset = () => {
-    setTemperature(DEFAULT_TEMPERATURE);
-    setMaxTokens(DEFAULT_MAX_TOKENS);
-    setTopP(DEFAULT_TOP_P);
-    setTopK(DEFAULT_TOP_K);
-    setFrequencyPenalty(DEFAULT_FREQUENCY_PENALTY);
-    setPresencePenalty(DEFAULT_PRESENCE_PENALTY);
-    setStream(true);
-    setThinkingEnabled(DEFAULT_THINKING_ENABLED);
-    setThinkingBudgetTokens(DEFAULT_THINKING_BUDGET_TOKENS);
-    setEffort(effortSupport?.defaultLevel ?? DEFAULT_EFFORT);
-    setVerbosity(verbositySupport?.defaultLevel ?? DEFAULT_VERBOSITY);
-  };
 
   return (
     <div className="flex flex-col gap-3">
-      {/* ── Sampling ─────────────────────────────────────────────────────── */}
       <SectionHeader>Sampling</SectionHeader>
 
-      {/* Temperature with quick presets */}
-      <div className="flex flex-col gap-1.5">
-        <SliderNumberRow
-          label="Temperature"
-          paramKey="temperature"
-          value={temperature}
-          onChange={setTemperature}
-          min={tempMin}
-          max={tempMax}
-          step={0.01}
-          disabled={!canEditTemperature}
-          disabledReason={getDisabledReason(
-            temperatureSupport,
-            !canEditTemperature,
+      {temperatureParam && (
+        <div className="flex flex-col gap-1.5">
+          <ConfiguredSliderRow param={temperatureParam} />
+          {canEditTemperature && (
+            <div className="flex gap-1 pl-0">
+              {TEMP_PRESETS.map((preset) => (
+                <Button
+                  key={preset.label}
+                  variant="outline"
+                  size="sm"
+                  title={preset.title}
+                  onClick={() => applyTempPreset(preset.value)}
+                  className={`h-5 flex-1 px-0 text-[10px] transition-colors ${
+                    Math.abs(temperature - preset.value) < 0.001
+                      ? 'bg-accent border-accent-foreground/20 text-accent-foreground'
+                      : ''
+                  }`}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
           )}
-        />
-        {/* Quick presets — hidden when temperature is unsupported */}
-        {canEditTemperature && (
-          <div className="flex gap-1 pl-0">
-            {TEMP_PRESETS.map((preset) => (
-              <Button
-                key={preset.label}
-                variant="outline"
-                size="sm"
-                title={preset.title}
-                onClick={() => applyTempPreset(preset)}
-                className={`h-5 flex-1 px-0 text-[10px] transition-colors ${
-                  Math.abs(temperature - preset.value) < 0.001
-                    ? 'bg-accent border-accent-foreground/20 text-accent-foreground'
-                    : ''
-                }`}
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <SliderNumberRow
-        label="Top P"
-        paramKey="top-p"
-        value={topP}
-        onChange={setTopP}
-        min={getParamMin(topPSupport, 0)}
-        max={getParamMax(topPSupport, 1)}
-        step={0.01}
-        disabled={!canEditTopP}
-        disabledReason={getDisabledReason(topPSupport, !canEditTopP)}
-      />
+      {otherSamplingParams.map((param) => (
+        <ConfiguredSliderRow key={param.capabilityKey} param={param} />
+      ))}
 
-      <SliderNumberRow
-        label="Top K"
-        paramKey="top-k"
-        value={topK}
-        onChange={setTopK}
-        min={getParamMin(topKSupport, 0)}
-        max={getParamMax(topKSupport, 500)}
-        step={1}
-        decimals={0}
-        disabled={!canEditTopK}
-        disabledReason={getDisabledReason(topKSupport, !canEditTopK)}
-      />
-
-      {/* ── Penalties ────────────────────────────────────────────────────── */}
       <SectionHeader>Penalties</SectionHeader>
 
-      <SliderNumberRow
-        label="Frequency Penalty"
-        paramKey="frequency-penalty"
-        value={frequencyPenalty}
-        onChange={setFrequencyPenalty}
-        min={getParamMin(frequencyPenaltySupport, 0)}
-        max={getParamMax(frequencyPenaltySupport, 2)}
-        step={0.01}
-        disabled={!canEditFrequencyPenalty}
-        disabledReason={getDisabledReason(
-          frequencyPenaltySupport,
-          !canEditFrequencyPenalty,
-        )}
-      />
+      {penaltyParams.map((param) => (
+        <ConfiguredSliderRow key={param.capabilityKey} param={param} />
+      ))}
 
-      <SliderNumberRow
-        label="Presence Penalty"
-        paramKey="presence-penalty"
-        value={presencePenalty}
-        onChange={setPresencePenalty}
-        min={getParamMin(presencePenaltySupport, 0)}
-        max={getParamMax(presencePenaltySupport, 2)}
-        step={0.01}
-        disabled={!canEditPresencePenalty}
-        disabledReason={getDisabledReason(
-          presencePenaltySupport,
-          !canEditPresencePenalty,
-        )}
-      />
-
-      {/* ── Output ───────────────────────────────────────────────────────── */}
       <SectionHeader>Output</SectionHeader>
 
       <div className="flex flex-col gap-0.5">
@@ -588,7 +389,6 @@ export function ParameterControls() {
         }
       />
 
-      {/* ── Advanced ─────────────────────────────────────────────────────── */}
       <SectionHeader>Advanced</SectionHeader>
 
       <CheckboxRow
@@ -604,7 +404,6 @@ export function ParameterControls() {
         }
       />
 
-      {/* Budget tokens — only when thinking is enabled and the model supports a manual budget */}
       {supportsThinking && supportsThinkingBudget && thinkingEnabled && (
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-1.5">
@@ -633,7 +432,6 @@ export function ParameterControls() {
         </div>
       )}
 
-      {/* Adaptive-only models (Opus 4.7+): show informational note instead of budget */}
       {supportsThinking && isAdaptiveThinkingOnly && thinkingEnabled && (
         <p className="text-muted-foreground/60 text-[11px]">
           This model uses adaptive thinking — the reasoning depth is set
@@ -669,7 +467,6 @@ export function ParameterControls() {
         />
       )}
 
-      {/* Model quirks — surface compatibility notes to aid testing */}
       {capabilities?.quirks && capabilities.quirks.length > 0 && (
         <div className="border-border/50 mt-1 rounded border p-2">
           <p className="text-muted-foreground/60 mb-1 text-[10px] font-semibold tracking-wide uppercase">
@@ -690,7 +487,7 @@ export function ParameterControls() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={reset}
+          onClick={resetParameters}
           className="h-7 text-xs"
         >
           Reset to defaults
