@@ -161,7 +161,6 @@ describe('ModelMarket', () => {
   });
 
   it('triggers refresh and reset actions', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     renderMarket();
 
     fireEvent.click(screen.getByRole('button', { name: /refresh catalogue/i }));
@@ -170,10 +169,11 @@ describe('ModelMarket', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /reset picks/i }));
+    expect(screen.getByText('Reset all model picks?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset all' }));
     await waitFor(() => {
       expect(resetAllProviders).toHaveBeenCalledTimes(1);
     });
-    confirm.mockRestore();
   });
 
   it('renders custom provider models with edit affordance', () => {
