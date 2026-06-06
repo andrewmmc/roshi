@@ -109,7 +109,7 @@ async function runSingleRunner(
   let ttftMs: number | null = null;
   let streamedContent = '';
 
-  const inProgressResult: EvalRunResult = {
+  let inProgressResult: EvalRunResult = {
     ...emptyResult(runner.id),
     status: canStream ? 'streaming' : 'pending',
   };
@@ -139,16 +139,16 @@ async function runSingleRunner(
           ...inProgressResult.metrics,
           ttftMs: ttftMs,
         };
-        const update: EvalRunResult = {
+        inProgressResult = {
           ...inProgressResult,
-          status: 'streaming',
           content: streamedContent,
           metrics: partialMetrics,
+          status: 'streaming',
         };
-        inProgressResult.content = streamedContent;
-        inProgressResult.metrics = partialMetrics;
-        inProgressResult.status = 'streaming';
-        onUpdate({ runnerId: runner.id, result: cloneResult(update) });
+        onUpdate({
+          runnerId: runner.id,
+          result: cloneResult(inProgressResult),
+        });
       },
     });
 
