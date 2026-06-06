@@ -124,15 +124,19 @@ describe('export', () => {
   let clickSpy: ReturnType<typeof vi.fn>;
   let createObjectURLSpy: ReturnType<typeof vi.fn>;
   let revokeObjectURLSpy: ReturnType<typeof vi.fn>;
+  let downloadFilename: string;
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-15T12:00:00Z'));
 
     clickSpy = vi.fn();
+    downloadFilename = '';
     vi.spyOn(document, 'createElement').mockReturnValue({
       set href(_: string) {},
-      set download(_: string) {},
+      set download(value: string) {
+        downloadFilename = value;
+      },
       click: clickSpy,
     } as unknown as HTMLElement);
 
@@ -465,6 +469,15 @@ describe('export', () => {
       const blob: Blob = createObjectURLSpy.mock.calls[0][0];
       expect(blob.type).toBe('text/plain');
       expect(await blob.text()).toBe('console.log("hi")');
+      expect(downloadFilename).toMatch(/\.ts$/);
+    });
+
+    it('picks file extensions from snippet labels', async () => {
+      exportCodeSnippet('print("hi")', 'Python');
+      expect(downloadFilename).toMatch(/\.py$/);
+
+      exportCodeSnippet('plain text', 'cURL');
+      expect(downloadFilename).toMatch(/\.txt$/);
     });
   });
 

@@ -62,4 +62,36 @@ describe('build-normalized-request', () => {
     expect(compatibility.request.stream).toBe(false);
     expect(compatibility.warnings.length).toBeGreaterThan(0);
   });
+
+  it('uses selectedModelId when model metadata is missing and honors stream overrides', () => {
+    const provider = makeProvider({
+      models: [makeModel({ id: 'gpt-4o', supportsStreaming: true })],
+    });
+
+    const compatibility = buildCompatibleRequestFromComposer({
+      composer: {
+        messages: [makeMessage({ role: 'user', content: 'Hello' })],
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+        topP: 1,
+        topK: 0,
+        frequencyPenalty: 0,
+        presencePenalty: 0,
+        stream: false,
+        thinkingEnabled: false,
+        thinkingBudgetTokens: 1024,
+        effort: 'medium',
+        verbosity: 'medium',
+      },
+      messages: [makeMessage({ role: 'user', content: 'Hello' })],
+      model: null,
+      provider,
+      selectedModelId: 'gpt-4o',
+      streamOverride: true,
+    });
+
+    expect(compatibility.request.model).toBe('gpt-4o');
+    expect(compatibility.request.stream).toBe(true);
+  });
 });

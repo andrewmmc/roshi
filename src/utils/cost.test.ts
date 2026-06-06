@@ -51,6 +51,19 @@ describe('estimateCostUsd', () => {
     // 100 * 5 / 1e6 + 50 * 15 / 1e6 = 5e-4 + 7.5e-4 = 1.25e-3
     expect(cost).toBeCloseTo(0.00125, 10);
   });
+
+  it('returns null when the computed cost is not finite', () => {
+    expect(
+      estimateCostUsd({
+        pricing: {
+          inputPerMTokens: Number.POSITIVE_INFINITY,
+          outputPerMTokens: 0,
+        },
+        promptTokens: 1,
+        completionTokens: 0,
+      }),
+    ).toBe(null);
+  });
 });
 
 describe('formatCostUsd', () => {

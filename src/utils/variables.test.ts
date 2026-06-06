@@ -67,6 +67,9 @@ describe('variables', () => {
 
   it('masks secret values for preview', () => {
     expect(maskSecretValue('super-secret')).toMatch(/^•+$/);
+    expect(maskSecretValue('')).toBe('');
+    expect(maskSecretValue('ab')).toHaveLength(6);
+    expect(maskSecretValue('a'.repeat(20))).toHaveLength(12);
   });
 
   it('collects variable references from composer fields', () => {
