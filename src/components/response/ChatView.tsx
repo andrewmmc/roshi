@@ -55,10 +55,7 @@ export function ChatView() {
               m.content.trim() || (m.attachments && m.attachments.length > 0),
           )
           .map((msg) => (
-            <div
-              key={msg.id ?? `${msg.role}-${msg.content.slice(0, 32)}`}
-              className="flex gap-3"
-            >
+            <div key={msg.id} className="flex gap-3">
               <div
                 aria-label={getRoleAriaLabel(msg.role)}
                 className="text-muted-foreground w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase"

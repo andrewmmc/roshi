@@ -93,12 +93,12 @@ describe('ChatView', () => {
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
-  it('renders assistant and system messages with fallback keys', () => {
+  it('renders assistant and system messages', () => {
     useResponseStore.setState({
       sentRequest: {
         messages: [
-          { role: 'assistant', content: 'Assistant draft' },
-          { role: 'system', content: 'System context' },
+          { id: 'assistant-1', role: 'assistant', content: 'Assistant draft' },
+          { id: 'system-1', role: 'system', content: 'System context' },
         ],
         model: 'gpt-4',
         stream: false,

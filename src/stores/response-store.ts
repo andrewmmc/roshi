@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { nanoid } from 'nanoid';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 
 interface ResponseState {
@@ -186,6 +187,7 @@ export const useResponseStore = create<ResponseStore>((set) => ({
       sentRequest: {
         messages: data.messages.map((m) => ({
           ...m,
+          id: m.id ?? nanoid(),
           role: m.role as 'system' | 'user' | 'assistant',
         })),
         model: '',
