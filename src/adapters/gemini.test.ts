@@ -433,6 +433,21 @@ describe('geminiAdapter', () => {
       expect(result.content).toBe('Hello!');
     });
 
+    it('treats missing text on non-thought parts as empty strings', () => {
+      const raw = makeGeminiResponse({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: 'Hello' }, { thought: false }, {}],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+      });
+
+      expect(geminiAdapter.parseResponse(raw).content).toBe('Hello');
+    });
+
     it('returns null usage when missing', () => {
       const raw = makeGeminiResponse({ usageMetadata: undefined });
       const result = geminiAdapter.parseResponse(raw);
@@ -499,6 +514,20 @@ describe('geminiAdapter', () => {
       });
       const result = geminiAdapter.parseStreamChunk(data);
       expect(result?.content).toBe('result');
+    });
+
+    it('treats missing text on stream parts as empty strings', () => {
+      const data = JSON.stringify({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: 'Hello' }, { thought: false }],
+            },
+          },
+        ],
+      });
+
+      expect(geminiAdapter.parseStreamChunk(data)?.content).toBe('Hello');
     });
 
     it('parses finish reason', () => {

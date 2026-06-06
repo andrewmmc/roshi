@@ -116,6 +116,30 @@ describe('openaiPythonGenerator', () => {
       expect(code).not.toContain('temperature=');
     });
 
+    it('includes only effort in responses code when verbosity is unset', () => {
+      const params = makeCodeGenParams({
+        provider: makeProvider({ protocol: 'openai-responses' }),
+        effort: 'medium',
+        verbosity: undefined,
+      });
+      const code = openaiPythonGenerator.generate(params);
+
+      expect(code).toContain('reasoning={"effort": "medium"}');
+      expect(code).not.toContain('text={"verbosity":');
+    });
+
+    it('includes only verbosity in responses code when effort is unset', () => {
+      const params = makeCodeGenParams({
+        provider: makeProvider({ protocol: 'openai-responses' }),
+        effort: undefined,
+        verbosity: 'high',
+      });
+      const code = openaiPythonGenerator.generate(params);
+
+      expect(code).toContain('text={"verbosity": "high"}');
+      expect(code).not.toContain('reasoning={"effort":');
+    });
+
     it('generates responses streaming code for OpenAI GPT-5 models', () => {
       const params = makeCodeGenParams({
         provider: makeProvider({

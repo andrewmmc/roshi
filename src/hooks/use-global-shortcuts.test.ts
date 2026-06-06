@@ -104,6 +104,20 @@ describe('useGlobalShortcuts', () => {
       fireKey('Escape');
       expect(cancel).not.toHaveBeenCalled();
     });
+
+    it('does not cancel when a dialog is open', () => {
+      const dialog = document.createElement('div');
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('data-open', '');
+      document.body.appendChild(dialog);
+
+      useResponseStore.setState({ isLoading: true });
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Escape');
+
+      expect(cancel).not.toHaveBeenCalled();
+      dialog.remove();
+    });
   });
 
   describe('Cmd/Ctrl+Shift+N — new request', () => {
@@ -196,6 +210,39 @@ describe('useGlobalShortcuts', () => {
 
       await act(async () => {});
       expect(writeText).not.toHaveBeenCalled();
+    });
+
+    it('copies streaming content when the final response is not ready', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+      useResponseStore.setState({
+        response: null,
+        streamingContent: 'partial stream',
+      } as never);
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('ç', { altKey: true, code: 'KeyC' });
+
+      await act(async () => {});
+      expect(writeText).toHaveBeenCalledWith('partial stream');
+    });
+
+    it('ignores clipboard write failures', async () => {
+      const writeText = vi
+        .fn()
+        .mockRejectedValue(new Error('clipboard denied'));
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+      useResponseStore.setState({
+        response: { content: 'hello world', usage: null, thinking: null },
+      } as never);
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('ç', { altKey: true, code: 'KeyC' });
+
+      await act(async () => {});
+      expect(writeText).toHaveBeenCalledWith('hello world');
     });
   });
 });

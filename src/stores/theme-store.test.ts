@@ -36,6 +36,25 @@ describe('theme-store', () => {
       getState().init();
       expect(getState().theme).toBe('light');
     });
+
+    it('defaults to light when window is unavailable', () => {
+      const originalWindow = globalThis.window;
+      Object.defineProperty(globalThis, 'window', {
+        value: undefined,
+        configurable: true,
+      });
+
+      try {
+        getState().init();
+        expect(getState().theme).toBe('light');
+        expect(getState().initialized).toBe(true);
+      } finally {
+        Object.defineProperty(globalThis, 'window', {
+          value: originalWindow,
+          configurable: true,
+        });
+      }
+    });
   });
 
   describe('toggle', () => {

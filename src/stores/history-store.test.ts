@@ -52,27 +52,29 @@ describe('history-store', () => {
     });
   });
 
+  const addEntryData = () => ({
+    providerId: 'p1',
+    providerName: 'TestProvider',
+    modelId: 'gpt-4',
+    request: { messages: [], model: 'gpt-4', stream: false },
+    customHeaders: [{ key: 'X-Test', value: 'value' }],
+    rawRequest: {},
+    requestUrl: null,
+    requestHeaders: null,
+    responseHeaders: null,
+    response: null,
+    rawResponse: null,
+    error: null,
+    durationMs: 100,
+    statusCode: 200,
+  });
+
   describe('addEntry', () => {
     it('creates entry with id and timestamp, prepends to state', async () => {
       const existing = makeHistoryEntry({ id: 'existing' });
       useHistoryStore.setState({ entries: [existing] });
 
-      const result = await getState().addEntry({
-        providerId: 'p1',
-        providerName: 'TestProvider',
-        modelId: 'gpt-4',
-        request: { messages: [], model: 'gpt-4', stream: false },
-        customHeaders: [{ key: 'X-Test', value: 'value' }],
-        rawRequest: {},
-        requestUrl: null,
-        requestHeaders: null,
-        responseHeaders: null,
-        response: null,
-        rawResponse: null,
-        error: null,
-        durationMs: 100,
-        statusCode: 200,
-      });
+      const result = await getState().addEntry(addEntryData());
 
       expect(result.id).toBe('mock-history-id');
       expect(result.createdAt).toBeInstanceOf(Date);
@@ -80,6 +82,17 @@ describe('history-store', () => {
       expect(mockDb.history.add).toHaveBeenCalledWith(result);
       expect(getState().entries[0].id).toBe('mock-history-id');
       expect(getState().entries[1].id).toBe('existing');
+    });
+
+    it('restores entries and rethrows when the DB add fails', async () => {
+      const existing = makeHistoryEntry({ id: 'existing' });
+      useHistoryStore.setState({ entries: [existing] });
+      mockDb.history.add.mockRejectedValueOnce(new Error('db add failed'));
+
+      await expect(getState().addEntry(addEntryData())).rejects.toThrow(
+        'db add failed',
+      );
+      expect(getState().entries).toEqual([existing]);
     });
   });
 
@@ -95,6 +108,22 @@ describe('history-store', () => {
       expect(getState().entries).toHaveLength(1);
       expect(getState().entries[0].id).toBe('b');
     });
+
+    it('restores entries and rethrows when the DB delete fails', async () => {
+      const entries = [
+        makeHistoryEntry({ id: 'a' }),
+        makeHistoryEntry({ id: 'b' }),
+      ];
+      useHistoryStore.setState({ entries });
+      mockDb.history.delete.mockRejectedValueOnce(
+        new Error('db delete failed'),
+      );
+
+      await expect(getState().deleteEntry('a')).rejects.toThrow(
+        'db delete failed',
+      );
+      expect(getState().entries).toEqual(entries);
+    });
   });
 
   describe('clearAll', () => {
@@ -107,6 +136,15 @@ describe('history-store', () => {
 
       expect(mockDb.history.clear).toHaveBeenCalled();
       expect(getState().entries).toEqual([]);
+    });
+
+    it('restores entries and rethrows when the DB clear fails', async () => {
+      const entries = [makeHistoryEntry({ id: 'a' })];
+      useHistoryStore.setState({ entries });
+      mockDb.history.clear.mockRejectedValueOnce(new Error('db clear failed'));
+
+      await expect(getState().clearAll()).rejects.toThrow('db clear failed');
+      expect(getState().entries).toEqual(entries);
     });
   });
 });
