@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
+import { AppError } from '@/lib/errors';
 import { useComposerStore, type ComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { headersToHistoryEntries } from '@/utils/headers';
@@ -83,7 +84,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
 
   addCollection: async (name) => {
     const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('COLLECTION_NAME_REQUIRED');
+    if (!trimmedName) throw new AppError('COLLECTION_NAME_REQUIRED');
 
     const collection: Collection = {
       id: nanoid(),
@@ -107,7 +108,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
 
   renameCollection: async (id, name) => {
     const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('COLLECTION_NAME_REQUIRED');
+    if (!trimmedName) throw new AppError('COLLECTION_NAME_REQUIRED');
 
     const prevCollections = get().collections;
     try {
@@ -155,11 +156,11 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
 
   saveCurrentRequest: async (collectionId, name) => {
     const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('SAVED_REQUEST_NAME_REQUIRED');
+    if (!trimmedName) throw new AppError('SAVED_REQUEST_NAME_REQUIRED');
 
     const providerStore = useProviderStore.getState();
     const provider = providerStore.getSelectedProvider();
-    if (!provider) throw new Error('PROVIDER_REQUIRED');
+    if (!provider) throw new AppError('PROVIDER_REQUIRED');
 
     const composer = useComposerStore.getState();
     const modelId =
@@ -208,14 +209,14 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
 
   updateSavedRequest: async (id, name) => {
     const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('SAVED_REQUEST_NAME_REQUIRED');
+    if (!trimmedName) throw new AppError('SAVED_REQUEST_NAME_REQUIRED');
 
     const existing = get().savedRequests.find((request) => request.id === id);
-    if (!existing) throw new Error('SAVED_REQUEST_NOT_FOUND');
+    if (!existing) throw new AppError('SAVED_REQUEST_NOT_FOUND');
 
     const providerStore = useProviderStore.getState();
     const provider = providerStore.getSelectedProvider();
-    if (!provider) throw new Error('PROVIDER_REQUIRED');
+    if (!provider) throw new AppError('PROVIDER_REQUIRED');
 
     const composer = useComposerStore.getState();
     const modelId =

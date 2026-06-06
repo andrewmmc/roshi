@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { db } from '@/db';
+import { AppError } from '@/lib/errors';
 import type { Environment, EnvironmentVariable } from '@/types/history';
 
 const ENVIRONMENT_SELECTION_KEY = 'environment-selection';
@@ -84,7 +85,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
 
   addEnvironment: async (name) => {
     const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('ENVIRONMENT_NAME_REQUIRED');
+    if (!trimmedName) throw new AppError('ENVIRONMENT_NAME_REQUIRED');
 
     const now = new Date();
     const environment: Environment = {
@@ -123,7 +124,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
 
   updateEnvironment: async (id, updates) => {
     const name = updates.name.trim();
-    if (!name) throw new Error('ENVIRONMENT_NAME_REQUIRED');
+    if (!name) throw new AppError('ENVIRONMENT_NAME_REQUIRED');
 
     const nextUpdates = {
       name,

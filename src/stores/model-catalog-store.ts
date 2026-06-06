@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { toErrorMessage } from '@/lib/errors';
 import type { ProviderModel } from '@/types/provider';
 import {
   clearModelsCache,
@@ -58,7 +59,7 @@ export const useModelCatalogStore = create<ModelCatalogStore>((set, get) => ({
     } catch (error) {
       set({
         status: 'error',
-        error: error instanceof Error ? error.message : 'Failed to load models',
+        error: toErrorMessage(error, 'Failed to load models'),
       });
     }
   },
