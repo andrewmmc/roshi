@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Download } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IconButton } from '@/components/ui/icon-button';
 import { useResponseStore } from '@/stores/response-store';
@@ -19,6 +20,14 @@ const HeadersView = lazy(() =>
 const CodeView = lazy(() =>
   import('./CodeView').then((m) => ({ default: m.CodeView })),
 );
+
+function TabLoadingFallback() {
+  return (
+    <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
+      Loading…
+    </div>
+  );
+}
 
 export function ResponsePanel() {
   const isLoading = useResponseStore((s) => s.isLoading);
@@ -132,9 +141,11 @@ export function ResponsePanel() {
 
       <TabsContent value="chat" className="mt-0 min-h-0 flex-1 overflow-hidden">
         {hasContent ? (
-          <Suspense>
-            <ChatView />
-          </Suspense>
+          <ErrorBoundary panel>
+            <Suspense fallback={<TabLoadingFallback />}>
+              <ChatView />
+            </Suspense>
+          </ErrorBoundary>
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see the response
@@ -144,9 +155,11 @@ export function ResponsePanel() {
 
       <TabsContent value="raw" className="mt-0 min-h-0 flex-1 overflow-hidden">
         {hasContent ? (
-          <Suspense>
-            <RawJsonView />
-          </Suspense>
+          <ErrorBoundary panel>
+            <Suspense fallback={<TabLoadingFallback />}>
+              <RawJsonView />
+            </Suspense>
+          </ErrorBoundary>
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see raw JSON
@@ -159,9 +172,11 @@ export function ResponsePanel() {
         className="mt-0 min-h-0 flex-1 overflow-hidden"
       >
         {hasContent ? (
-          <Suspense>
-            <HeadersView />
-          </Suspense>
+          <ErrorBoundary panel>
+            <Suspense fallback={<TabLoadingFallback />}>
+              <HeadersView />
+            </Suspense>
+          </ErrorBoundary>
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
             Send a request to see headers
@@ -170,9 +185,11 @@ export function ResponsePanel() {
       </TabsContent>
 
       <TabsContent value="code" className="mt-0 min-h-0 flex-1 overflow-hidden">
-        <Suspense>
-          <CodeView />
-        </Suspense>
+        <ErrorBoundary panel>
+          <Suspense fallback={<TabLoadingFallback />}>
+            <CodeView />
+          </Suspense>
+        </ErrorBoundary>
       </TabsContent>
     </Tabs>
   );
