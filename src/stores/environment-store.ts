@@ -37,8 +37,15 @@ function normalizeVariables(
     .filter((variable) => variable.key);
 }
 
+let lastSavePromise: Promise<void> = Promise.resolve();
+
 async function saveSelection(id: string | null) {
-  await db.settings.put({ key: ENVIRONMENT_SELECTION_KEY, value: id });
+  lastSavePromise = lastSavePromise.then(() =>
+    db.settings
+      .put({ key: ENVIRONMENT_SELECTION_KEY, value: id })
+      .then(() => undefined),
+  );
+  await lastSavePromise;
 }
 
 async function loadSelection(): Promise<string | null> {
@@ -89,19 +96,29 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
     };
 
     const shouldSelect = get().selectedEnvironmentId === null;
-    await db.environments.add(environment);
-    set((state) => ({
-      environments: sortEnvironments([...state.environments, environment]),
-      selectedEnvironmentId: shouldSelect
-        ? environment.id
-        : state.selectedEnvironmentId,
-    }));
+    const prevEnvironments = get().environments;
+    const prevSelectedEnvironmentId = get().selectedEnvironmentId;
+    try {
+      await db.environments.add(environment);
+      set((state) => ({
+        environments: sortEnvironments([...state.environments, environment]),
+        selectedEnvironmentId: shouldSelect
+          ? environment.id
+          : state.selectedEnvironmentId,
+      }));
 
-    if (shouldSelect) {
-      await saveSelection(environment.id);
+      if (shouldSelect) {
+        await saveSelection(environment.id);
+      }
+
+      return environment;
+    } catch (error) {
+      set({
+        environments: prevEnvironments,
+        selectedEnvironmentId: prevSelectedEnvironmentId,
+      });
+      throw error;
     }
-
-    return environment;
   },
 
   updateEnvironment: async (id, updates) => {
@@ -114,37 +131,53 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
       updatedAt: new Date(),
     };
 
-    await db.environments.update(id, nextUpdates);
-    set((state) => ({
-      environments: sortEnvironments(
-        state.environments.map((environment) =>
-          environment.id === id
-            ? { ...environment, ...nextUpdates }
-            : environment,
+    const prevEnvironments = get().environments;
+    try {
+      await db.environments.update(id, nextUpdates);
+      set((state) => ({
+        environments: sortEnvironments(
+          state.environments.map((environment) =>
+            environment.id === id
+              ? { ...environment, ...nextUpdates }
+              : environment,
+          ),
         ),
-      ),
-    }));
+      }));
+    } catch (error) {
+      set({ environments: prevEnvironments });
+      throw error;
+    }
   },
 
   deleteEnvironment: async (id) => {
-    await db.environments.delete(id);
+    const prevEnvironments = get().environments;
+    const prevSelectedEnvironmentId = get().selectedEnvironmentId;
+    try {
+      await db.environments.delete(id);
 
-    let nextSelection: string | null = null;
-    set((state) => {
-      const environments = state.environments.filter(
-        (environment) => environment.id !== id,
-      );
-      nextSelection =
-        state.selectedEnvironmentId === id
-          ? (environments[0]?.id ?? null)
-          : state.selectedEnvironmentId;
-      return {
-        environments,
-        selectedEnvironmentId: nextSelection,
-      };
-    });
+      let nextSelection: string | null = null;
+      set((state) => {
+        const environments = state.environments.filter(
+          (environment) => environment.id !== id,
+        );
+        nextSelection =
+          state.selectedEnvironmentId === id
+            ? (environments[0]?.id ?? null)
+            : state.selectedEnvironmentId;
+        return {
+          environments,
+          selectedEnvironmentId: nextSelection,
+        };
+      });
 
-    await saveSelection(nextSelection);
+      await saveSelection(nextSelection);
+    } catch (error) {
+      set({
+        environments: prevEnvironments,
+        selectedEnvironmentId: prevSelectedEnvironmentId,
+      });
+      throw error;
+    }
   },
 
   selectEnvironment: (id) => {
