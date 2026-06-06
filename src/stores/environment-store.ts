@@ -3,11 +3,14 @@ import { nanoid } from 'nanoid';
 import { db } from '@/db';
 import { AppError } from '@/lib/errors';
 import {
+  createLoadGuard,
   loadSetting,
   persistSetting,
   removeById,
   replaceById,
 } from '@/stores/store-helpers';
+
+const environmentLoadGuard = createLoadGuard();
 import type { Environment, EnvironmentVariable } from '@/types/history';
 
 const ENVIRONMENT_SELECTION_KEY = 'environment-selection';
@@ -58,29 +61,31 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
   selectedEnvironmentId: null,
   loaded: false,
 
-  load: async () => {
-    if (get().loaded) return;
+  load: async () =>
+    environmentLoadGuard.run(
+      () => get().loaded,
+      async () => {
+        const [environments, savedSelection] = await Promise.all([
+          db.environments.toArray(),
+          loadSelection(),
+        ]);
+        const selectedEnvironmentId = environments.some(
+          (environment) => environment.id === savedSelection,
+        )
+          ? savedSelection
+          : null;
 
-    const [environments, savedSelection] = await Promise.all([
-      db.environments.toArray(),
-      loadSelection(),
-    ]);
-    const selectedEnvironmentId = environments.some(
-      (environment) => environment.id === savedSelection,
-    )
-      ? savedSelection
-      : null;
+        if (selectedEnvironmentId !== savedSelection) {
+          await saveSelection(selectedEnvironmentId);
+        }
 
-    if (selectedEnvironmentId !== savedSelection) {
-      await saveSelection(selectedEnvironmentId);
-    }
-
-    set({
-      environments: sortEnvironments(environments),
-      selectedEnvironmentId,
-      loaded: true,
-    });
-  },
+        set({
+          environments: sortEnvironments(environments),
+          selectedEnvironmentId,
+          loaded: true,
+        });
+      },
+    ),
 
   addEnvironment: async (name) => {
     const trimmedName = name.trim();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createLoadGuard,
   removeById,
   replaceById,
   toStoreErrorMessage,
@@ -38,5 +39,31 @@ describe('store-helpers', () => {
     expect(toStoreErrorMessage(new Error('boom'), 'fallback')).toBe('boom');
     expect(toStoreErrorMessage('plain', 'fallback')).toBe('plain');
     expect(toStoreErrorMessage(null, 'fallback')).toBe('fallback');
+  });
+
+  it('coalesces concurrent load guard runs', async () => {
+    const guard = createLoadGuard();
+    let loaded = false;
+    let loadCount = 0;
+
+    const first = guard.run(
+      () => loaded,
+      async () => {
+        loadCount += 1;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        loaded = true;
+      },
+    );
+    const second = guard.run(
+      () => loaded,
+      async () => {
+        loadCount += 1;
+        loaded = true;
+      },
+    );
+
+    await Promise.all([first, second]);
+    expect(loadCount).toBe(1);
+    expect(loaded).toBe(true);
   });
 });

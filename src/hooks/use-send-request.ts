@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
@@ -88,14 +88,12 @@ function buildCompatibleRequest({
 function createBaseHistoryEntry({
   provider,
   request,
-  composerStream,
   customHeaders,
   collectionId,
   savedRequestId,
 }: {
   provider: ProviderConfig;
   request: NormalizedRequest;
-  composerStream: boolean;
   customHeaders: ComposerStore['customHeaders'];
   collectionId: string | null;
   savedRequestId: string | null;
@@ -106,9 +104,17 @@ function createBaseHistoryEntry({
     modelId: request.model,
     collectionId: collectionId ?? undefined,
     savedRequestId: savedRequestId ?? undefined,
-    request: { ...request, stream: composerStream },
+    request: { ...request },
     customHeaders: headersToHistoryEntries(customHeaders),
   };
+}
+
+let activeAbortController: AbortController | null = null;
+let activeRequestId = 0;
+let sendInFlight = false;
+
+function isStaleRequest(requestId: number): boolean {
+  return requestId !== activeRequestId;
 }
 
 function completeSuccessfulRequest(
@@ -247,9 +253,13 @@ function completeUnknownError(respStore: ResponseStore, err: unknown): void {
 }
 
 export function useSendRequest() {
-  const abortRef = useRef<AbortController | null>(null);
-
   const send = useCallback(async () => {
+    if (sendInFlight || useResponseStore.getState().isLoading) {
+      return;
+    }
+
+    sendInFlight = true;
+
     const provider = useProviderStore.getState().getSelectedProvider();
     const model = useProviderStore.getState().getSelectedModel();
     const selectedModelId = useProviderStore.getState().selectedModelId;
@@ -265,14 +275,13 @@ export function useSendRequest() {
     });
 
     if (interpolated.missingVariables.length > 0) {
-      respStore.setError(
+      respStore.failValidation(
         `Missing environment variables: ${interpolated.missingVariables.join(', ')}`,
-      );
-      respStore.setErrorDetail(
         environment
           ? 'Add these variables to the selected environment or remove the placeholders before sending.'
           : 'Select an environment with these variables or remove the placeholders before sending.',
       );
+      sendInFlight = false;
       return;
     }
 
@@ -285,8 +294,8 @@ export function useSendRequest() {
 
     const validation = validateRequestInputs(provider, model, requestComposer);
     if (!validation.ok) {
-      respStore.setError(validation.error);
-      respStore.setErrorDetail(null);
+      respStore.failValidation(validation.error, null);
+      sendInFlight = false;
       return;
     }
 
@@ -301,13 +310,14 @@ export function useSendRequest() {
 
     respStore.startRequest(normalizedRequest, compatibility.warnings);
 
+    activeAbortController?.abort();
     const abortController = new AbortController();
-    abortRef.current = abortController;
+    activeAbortController = abortController;
+    const requestId = ++activeRequestId;
 
     const baseHistoryEntry = createBaseHistoryEntry({
       provider: validation.provider,
       request: normalizedRequest,
-      composerStream: composer.stream,
       customHeaders: requestComposer.customHeaders,
       collectionId: composer.activeCollectionId,
       savedRequestId: composer.activeSavedRequestId,
@@ -323,11 +333,15 @@ export function useSendRequest() {
             : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {
-          if (chunk.content) {
-            respStore.setStreamChunk(chunk.content);
+          if (chunk.content && !isStaleRequest(requestId)) {
+            useResponseStore.getState().setStreamChunk(chunk.content);
           }
         },
       });
+
+      if (isStaleRequest(requestId)) {
+        return;
+      }
 
       completeSuccessfulRequest(respStore, result);
 
@@ -349,6 +363,10 @@ export function useSendRequest() {
         statusCode: result.statusCode,
       });
     } catch (err) {
+      if (isStaleRequest(requestId)) {
+        return;
+      }
+
       if (err instanceof StreamError) {
         const { summary, detail } = completeInterruptedStream(respStore, err);
 
@@ -403,13 +421,18 @@ export function useSendRequest() {
         completeUnknownError(respStore, err);
       }
     } finally {
-      respStore.finishRequest();
-      abortRef.current = null;
+      if (!isStaleRequest(requestId)) {
+        respStore.finishRequest();
+        if (activeAbortController === abortController) {
+          activeAbortController = null;
+        }
+      }
+      sendInFlight = false;
     }
   }, []);
 
   const cancel = useCallback(() => {
-    abortRef.current?.abort();
+    activeAbortController?.abort();
   }, []);
 
   return { send, cancel };

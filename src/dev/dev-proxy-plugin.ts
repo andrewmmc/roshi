@@ -1,7 +1,8 @@
 import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '../constants/defaults';
 
-const PROXY_TIMEOUT_MS = 30_000;
+const PROXY_TIMEOUT_MS = DEFAULT_REQUEST_TIMEOUT_MS;
 const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
 
 const SKIP_REQUEST_HEADERS = new Set([

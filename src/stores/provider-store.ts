@@ -10,11 +10,14 @@ import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import { resolveModelCapabilities } from '@/models/resolver';
 import {
+  createLoadGuard,
   loadSetting,
   persistSetting,
   removeById,
   replaceById,
 } from '@/stores/store-helpers';
+
+const providerLoadGuard = createLoadGuard();
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
@@ -192,75 +195,77 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   seeding: false,
   refreshingCatalog: false,
 
-  load: async () => {
-    if (get().loaded) return;
+  load: async () =>
+    providerLoadGuard.run(
+      () => get().loaded,
+      async () => {
+        const providers = await db.providers.toArray();
 
-    const providers = await db.providers.toArray();
-
-    for (const p of providers) {
-      const legacyType = p.type as string;
-      if (legacyType === 'custom') {
-        await db.providers.update(p.id, { type: 'openai-compatible' });
-        (p as ProviderConfig).type = 'openai-compatible';
-      }
-    }
-
-    const normalizedProviders = providers.map((provider) => {
-      const normalized = normalizeProviderConfig(provider);
-      if (!providerConfigsEqual(provider, normalized)) {
-        void db.providers.put(normalized);
-      }
-      return normalized;
-    });
-
-    // One-shot migration: clear out the legacy auto-synced model lists on
-    // built-in providers so users start fresh in the new Model Market.
-    const alreadyMigrated = await hasMigratedToMarket();
-    if (!alreadyMigrated) {
-      for (let i = 0; i < normalizedProviders.length; i++) {
-        const provider = normalizedProviders[i];
-        if (provider.isBuiltIn && provider.models.length > 0) {
-          const wiped: ProviderConfig = { ...provider, models: [] };
-          await db.providers.update(provider.id, { models: [] });
-          normalizedProviders[i] = wiped;
+        for (const p of providers) {
+          const legacyType = p.type as string;
+          if (legacyType === 'custom') {
+            await db.providers.update(p.id, { type: 'openai-compatible' });
+            (p as ProviderConfig).type = 'openai-compatible';
+          }
         }
-      }
-      await markMarketMigrationComplete();
-    }
 
-    // Seed missing built-in providers with empty model lists.
-    const needsSeed = builtinProviders.filter(
-      (template) =>
-        !normalizedProviders.some(
-          (p) => p.name === template.name && p.isBuiltIn,
-        ),
-    );
+        const normalizedProviders = providers.map((provider) => {
+          const normalized = normalizeProviderConfig(provider);
+          if (!providerConfigsEqual(provider, normalized)) {
+            void db.providers.put(normalized);
+          }
+          return normalized;
+        });
 
-    if (needsSeed.length > 0) {
-      set({ seeding: true });
-      try {
-        const seededProviders = createBuiltInProviders(needsSeed);
-        for (const newProvider of seededProviders) {
-          await db.providers.add(newProvider);
-          normalizedProviders.push(newProvider);
+        // One-shot migration: clear out the legacy auto-synced model lists on
+        // built-in providers so users start fresh in the new Model Market.
+        const alreadyMigrated = await hasMigratedToMarket();
+        if (!alreadyMigrated) {
+          for (let i = 0; i < normalizedProviders.length; i++) {
+            const provider = normalizedProviders[i];
+            if (provider.isBuiltIn && provider.models.length > 0) {
+              const wiped: ProviderConfig = { ...provider, models: [] };
+              await db.providers.update(provider.id, { models: [] });
+              normalizedProviders[i] = wiped;
+            }
+          }
+          await markMarketMigrationComplete();
         }
-      } finally {
-        set({ seeding: false });
-      }
-    }
 
-    const saved = await loadSelection();
-    const { providerId: selectedProviderId, modelId: selectedModelId } =
-      chooseValidSelection(normalizedProviders, saved);
+        // Seed missing built-in providers with empty model lists.
+        const needsSeed = builtinProviders.filter(
+          (template) =>
+            !normalizedProviders.some(
+              (p) => p.name === template.name && p.isBuiltIn,
+            ),
+        );
 
-    await saveSelection(selectedProviderId, selectedModelId);
-    set({
-      providers: normalizedProviders,
-      selectedProviderId,
-      selectedModelId,
-      loaded: true,
-    });
-  },
+        if (needsSeed.length > 0) {
+          set({ seeding: true });
+          try {
+            const seededProviders = createBuiltInProviders(needsSeed);
+            for (const newProvider of seededProviders) {
+              await db.providers.add(newProvider);
+              normalizedProviders.push(newProvider);
+            }
+          } finally {
+            set({ seeding: false });
+          }
+        }
+
+        const saved = await loadSelection();
+        const { providerId: selectedProviderId, modelId: selectedModelId } =
+          chooseValidSelection(normalizedProviders, saved);
+
+        await saveSelection(selectedProviderId, selectedModelId);
+        set({
+          providers: normalizedProviders,
+          selectedProviderId,
+          selectedModelId,
+          loaded: true,
+        });
+      },
+    ),
 
   addProvider: async (provider) => {
     const customCount = get().providers.filter((p) => !p.isBuiltIn).length;
