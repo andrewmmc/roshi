@@ -136,5 +136,8 @@ export function buildNormalizedRequestForRunner(
     presencePenalty: shared.presencePenalty,
     stream: overrides.stream ?? shared.stream,
     systemPrompt: shared.systemPrompt || undefined,
+    thinking: undefined,
+    effort: undefined,
+    verbosity: undefined,
   };
 }

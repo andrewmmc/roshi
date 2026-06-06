@@ -20,9 +20,10 @@ import type { ComposerStore } from '@/stores/composer-store';
 import type { ResponseStore } from '@/stores/response-store';
 import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
 import type { NormalizedRequest } from '@/types/normalized';
-import { resolveModelCapabilities } from '@/models/resolver';
-import { filterRequestByCapabilities } from '@/models/compatibility';
-import type { RequestCompatibilityResult } from '@/models/compatibility';
+import {
+  buildCompatibleRequestFromComposer,
+  filterComposerMessages,
+} from '@/utils/build-normalized-request';
 import { interpolateComposerFields } from '@/utils/variables';
 
 type BaseHistoryEntry = Pick<
@@ -54,9 +55,7 @@ function validateRequestInputs(
     return { ok: false, error: 'Please select a provider and model' };
   }
 
-  const messages = composer.messages.filter(
-    (m) => m.content.trim() || (m.attachments && m.attachments.length > 0),
-  );
+  const messages = filterComposerMessages(composer.messages);
   if (messages.length === 0) {
     return { ok: false, error: 'Please enter at least one message' };
   }
@@ -76,28 +75,14 @@ function buildCompatibleRequest({
   model: ProviderModel | null;
   provider: ProviderConfig;
   selectedModelId: string | null;
-}): RequestCompatibilityResult {
-  const modelId = model?.id ?? selectedModelId ?? '';
-  const capabilities = resolveModelCapabilities(provider, modelId);
-  const request: NormalizedRequest = {
+}) {
+  return buildCompatibleRequestFromComposer({
+    composer,
     messages,
-    model: modelId,
-    temperature: composer.temperature,
-    maxTokens: composer.maxTokens,
-    topP: composer.topP,
-    topK: composer.topK || undefined,
-    frequencyPenalty: composer.frequencyPenalty,
-    presencePenalty: composer.presencePenalty,
-    stream: composer.stream && capabilities.streaming,
-    systemPrompt: composer.systemPrompt || undefined,
-    effort: capabilities.params.effort ? composer.effort : undefined,
-    verbosity: capabilities.params.verbosity ? composer.verbosity : undefined,
-    thinking: composer.thinkingEnabled
-      ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
-      : undefined,
-  };
-
-  return filterRequestByCapabilities(request, capabilities);
+    model,
+    provider,
+    selectedModelId,
+  });
 }
 
 function createBaseHistoryEntry({

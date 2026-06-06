@@ -8,6 +8,7 @@ const { mockDb, nanoidCount } = vi.hoisted(() => {
   const mockDb = {
     collections: {
       toArray: vi.fn().mockResolvedValue([]),
+      get: vi.fn().mockResolvedValue(undefined),
       add: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
@@ -15,6 +16,7 @@ const { mockDb, nanoidCount } = vi.hoisted(() => {
     savedRequests: {
       toArray: vi.fn().mockResolvedValue([]),
       add: vi.fn().mockResolvedValue(undefined),
+      bulkAdd: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
       where: vi.fn(),
@@ -94,6 +96,7 @@ describe('collection-store', () => {
     mockDb.savedRequests.where.mockReturnValue({
       equals: vi.fn().mockReturnValue({
         delete: vi.fn().mockResolvedValue(undefined),
+        toArray: vi.fn().mockResolvedValue([]),
       }),
     });
   });

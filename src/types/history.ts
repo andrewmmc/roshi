@@ -28,12 +28,15 @@ export interface HistoryEntry {
   createdAt: Date;
 }
 
+export type CollectionKind = 'user' | 'templates';
+
 export interface Collection {
   id: string;
   name: string;
   parentId?: string;
   sortOrder: number;
   createdAt: Date;
+  kind?: CollectionKind;
 }
 
 export interface SavedRequestSnapshot {
@@ -63,6 +66,8 @@ export interface SavedRequest {
   request: SavedRequestSnapshot;
   createdAt: Date;
   updatedAt: Date;
+  /** Built-in starter templates cannot be edited in place. */
+  isTemplate?: boolean;
 }
 
 export interface EnvironmentVariable {

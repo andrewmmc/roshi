@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, FileDown, Play, Save, Square } from 'lucide-react';
+import { Download, FileDown, Play, Save, Square, Upload } from 'lucide-react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useEvalStore } from '@/stores/eval-store';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import { ViewToggle } from '@/components/layout/ViewToggle';
 import { toast } from '@/stores/toast-store';
 import { exportEvalRunJson, exportEvalRunCsv } from '@/utils/export';
@@ -41,6 +42,9 @@ export function EvalView() {
   const error = useEvalStore((s) => s.error);
   const runners = useEvalStore((s) => s.runners);
   const compareSelection = useEvalStore((s) => s.compareSelection);
+  const judgeResult = useEvalStore((s) => s.judgeResult);
+  const loadIntoComposer = useEvalStore((s) => s.loadIntoComposer);
+  const setMainView = useUiStore((s) => s.setMainView);
 
   const saveRecord = useEvalRunsStore((s) => s.save);
 
@@ -71,6 +75,12 @@ export function EvalView() {
     exportEvalRunCsv(buildRecord());
   };
 
+  const handleLoadIntoComposer = (runnerId?: string | null) => {
+    loadIntoComposer(runnerId);
+    setMainView('request');
+    toast('Loaded eval case into composer');
+  };
+
   return (
     <div className="bg-background flex h-full flex-col">
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
@@ -85,6 +95,27 @@ export function EvalView() {
             <span className="text-muted-foreground animate-pulse text-xs">
               Judging…
             </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => handleLoadIntoComposer()}
+            title="Load this eval prompt into the main composer"
+          >
+            <Upload className="mr-1.5 h-3 w-3" />
+            Load into composer
+          </Button>
+          {judgeResult?.winnerRunnerId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => handleLoadIntoComposer(judgeResult.winnerRunnerId)}
+              title="Load the judge winner into the main composer"
+            >
+              Load winner
+            </Button>
           )}
           <Button
             variant="outline"

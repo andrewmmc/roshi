@@ -20,6 +20,7 @@ import {
   TEMP_PRESETS,
 } from '@/components/composer/parameter-control-utils';
 import { useParameterControlsState } from '@/components/composer/use-parameter-controls-state';
+import { ModelCompatibilitySummary } from '@/components/composer/ModelCompatibilitySummary';
 import type { ResolvedSliderParam } from '@/components/composer/use-parameter-controls-state';
 
 function InfoTooltip({ content }: { content: string }) {
@@ -130,11 +131,6 @@ function SliderNumberRow({
         disabled={disabled}
         aria-label={`${label} slider`}
       />
-      {disabled && disabledReason && (
-        <p className="text-muted-foreground/40 text-[10px] leading-tight">
-          {disabledReason}
-        </p>
-      )}
     </div>
   );
 }
@@ -297,6 +293,7 @@ export function ParameterControls() {
 
   return (
     <div className="flex flex-col gap-3">
+      <ModelCompatibilitySummary />
       <SectionHeader>Sampling</SectionHeader>
 
       {temperatureParam && (

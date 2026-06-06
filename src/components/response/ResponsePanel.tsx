@@ -7,6 +7,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { useSelectedProvider } from '@/stores/provider-store';
 import { formatCount } from '@/utils/format';
 import { exportCurrentRequest } from '@/utils/export';
+import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -158,9 +159,7 @@ export function ResponsePanel() {
             </Suspense>
           </ErrorBoundary>
         ) : (
-          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-            Send a request to see the response
-          </div>
+          <ResponseEmptyState />
         )}
       </TabsContent>
 
@@ -172,9 +171,7 @@ export function ResponsePanel() {
             </Suspense>
           </ErrorBoundary>
         ) : (
-          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-            Send a request to see raw JSON
-          </div>
+          <ResponseEmptyState />
         )}
       </TabsContent>
 
@@ -189,9 +186,7 @@ export function ResponsePanel() {
             </Suspense>
           </ErrorBoundary>
         ) : (
-          <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-            Send a request to see headers
-          </div>
+          <ResponseEmptyState />
         )}
       </TabsContent>
 

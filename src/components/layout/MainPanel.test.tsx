@@ -18,6 +18,10 @@ vi.mock('@/components/composer/ProviderSelect', () => ({
   ProviderSelect: () => <div>ProviderSelect Mock</div>,
 }));
 
+vi.mock('@/components/environments/EnvironmentManager', () => ({
+  EnvironmentSelector: () => <div>EnvironmentSelector Mock</div>,
+}));
+
 vi.mock('@/components/composer/TokenCountBadge', () => ({
   TokenCountBadge: () => <div>TokenCountBadge Mock</div>,
 }));
@@ -30,6 +34,20 @@ vi.mock('@/components/ui/resizable', () => ({
     <div>{children}</div>
   ),
   ResizableHandle: () => <div />,
+}));
+
+vi.mock('@/components/onboarding/FirstRunChecklist', () => ({
+  FirstRunChecklist: () => null,
+}));
+
+vi.mock('@/components/composer/RequestCompatibilityWarning', () => ({
+  RequestCompatibilityWarning: () => null,
+}));
+
+vi.mock('@/stores/eval-store', () => ({
+  useEvalStore: (
+    selector: (state: { seedFromMainComposer: () => void }) => unknown,
+  ) => selector({ seedFromMainComposer: vi.fn() }),
 }));
 
 vi.mock('@/hooks/use-send-request', () => ({
@@ -61,7 +79,9 @@ describe('MainPanel', () => {
 
     render(<MainPanel />);
 
-    fireEvent.click(screen.getByRole('button', { name: /send/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: (name) => name.startsWith('Send') }),
+    );
 
     expect(send).toHaveBeenCalledTimes(1);
   });

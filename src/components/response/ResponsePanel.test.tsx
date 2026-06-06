@@ -45,15 +45,21 @@ describe('ResponsePanel', () => {
     render(<ResponsePanel />);
 
     expect(
-      screen.getByText('Send a request to see the response'),
+      screen.getByText(
+        'Select a model and send a request to see the response here.',
+      ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Body' }));
     expect(
-      screen.getByText('Send a request to see raw JSON'),
+      screen.getByText(
+        'Select a model and send a request to see the response here.',
+      ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Headers' }));
     expect(
-      screen.getByText('Send a request to see headers'),
+      screen.getByText(
+        'Select a model and send a request to see the response here.',
+      ),
     ).toBeInTheDocument();
   });
 

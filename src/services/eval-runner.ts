@@ -1,6 +1,5 @@
 import type { ProviderConfig } from '@/types/provider';
 import type {
-  NormalizedRequest,
   NormalizedResponse,
   NormalizedStreamChunk,
 } from '@/types/normalized';
@@ -11,7 +10,7 @@ import type {
   EvalSharedRequest,
 } from '@/types/eval';
 import { emptyResult, buildNormalizedRequestForRunner } from '@/types/eval';
-import { resolveModelCapabilities } from '@/models/resolver';
+import { buildCompatibleRequestFromComposer } from '@/utils/build-normalized-request';
 import { estimateCostUsd } from '@/utils/cost';
 import { sendRequest, RequestError, StreamError } from './llm-client';
 
@@ -96,14 +95,32 @@ async function runSingleRunner(
   }
 
   const model = provider.models.find((m) => m.id === runner.modelId);
-  const capabilities = resolveModelCapabilities(provider, runner.modelId);
-  const canStream = capabilities.streaming && request.stream;
-
-  const normalizedRequest: NormalizedRequest = buildNormalizedRequestForRunner(
-    request,
-    runner.modelId,
-    { stream: canStream },
-  );
+  const baseRequest = buildNormalizedRequestForRunner(request, runner.modelId);
+  const compatibility = buildCompatibleRequestFromComposer({
+    composer: {
+      messages: baseRequest.messages,
+      systemPrompt: baseRequest.systemPrompt ?? '',
+      temperature: baseRequest.temperature ?? request.temperature,
+      maxTokens: baseRequest.maxTokens ?? request.maxTokens,
+      topP: baseRequest.topP ?? request.topP,
+      topK: request.topK,
+      frequencyPenalty:
+        baseRequest.frequencyPenalty ?? request.frequencyPenalty,
+      presencePenalty: baseRequest.presencePenalty ?? request.presencePenalty,
+      stream: request.stream,
+      thinkingEnabled: false,
+      thinkingBudgetTokens: 0,
+      effort: '',
+      verbosity: '',
+    },
+    messages: baseRequest.messages,
+    model: model ?? null,
+    provider,
+    selectedModelId: runner.modelId,
+    streamOverride: request.stream,
+  });
+  const normalizedRequest = compatibility.request;
+  const canStream = normalizedRequest.stream === true;
 
   const startedAt = performance.now();
   let ttftMs: number | null = null;

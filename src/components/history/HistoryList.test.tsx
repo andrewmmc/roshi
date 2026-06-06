@@ -31,14 +31,25 @@ const { mockDb } = vi.hoisted(() => ({
     },
     collections: {
       toArray: vi.fn().mockResolvedValue([]),
+      add: vi.fn().mockResolvedValue(undefined),
     },
     savedRequests: {
       toArray: vi.fn().mockResolvedValue([]),
+      bulkAdd: vi.fn().mockResolvedValue(undefined),
+      where: vi.fn().mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      }),
     },
     settings: {
       get: vi.fn().mockResolvedValue(undefined),
       put: vi.fn().mockResolvedValue(undefined),
     },
+    transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
+      const callback = args[args.length - 1] as () => Promise<void>;
+      await callback();
+    }),
   },
 }));
 vi.mock('@/db', () => ({ db: mockDb }));

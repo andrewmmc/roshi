@@ -29,6 +29,7 @@ import {
   historyEntriesToHeaders,
   type HeaderEntry,
 } from '@/utils/headers';
+import { useComposerStore } from '@/stores/composer-store';
 
 export const MAX_COMPARE_SELECTION = 2;
 
@@ -108,6 +109,8 @@ interface EvalStoreActions {
 
   loadRun: (record: EvalRunRecord) => void;
   reset: () => void;
+  seedFromMainComposer: () => void;
+  loadIntoComposer: (runnerId?: string | null) => void;
 
   /** Build a serializable EvalRunRecord from current state */
   buildRecord: (name?: string) => EvalRunRecord;
@@ -456,6 +459,114 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   },
 
   reset: () => set(createInitialState()),
+
+  seedFromMainComposer: () => {
+    const mainComposer = useComposerStore.getState();
+    const providerStore = useProviderStore.getState();
+    const provider = providerStore.getSelectedProvider();
+    const model = providerStore.getSelectedModel();
+
+    set((state) => {
+      const composer: EvalComposerState = {
+        systemPrompt: mainComposer.systemPrompt,
+        messages:
+          mainComposer.messages.length > 0
+            ? mainComposer.messages.map((message) => ({
+                id: message.id ?? nanoid(),
+                role: message.role,
+                content: message.content,
+              }))
+            : [{ id: nanoid(), role: 'user', content: '' }],
+        temperature: mainComposer.temperature,
+        maxTokens: mainComposer.maxTokens,
+        topP: mainComposer.topP,
+        topK: mainComposer.topK,
+        frequencyPenalty: mainComposer.frequencyPenalty,
+        presencePenalty: mainComposer.presencePenalty,
+        stream: mainComposer.stream,
+        customHeaders: mainComposer.customHeaders.map((header) => ({
+          ...header,
+        })),
+      };
+
+      let runners = state.runners;
+      if (provider && model) {
+        const alreadyAdded = runners.some(
+          (runner) =>
+            runner.providerId === provider.id && runner.modelId === model.id,
+        );
+        if (!alreadyAdded) {
+          const { label, providerName } = makeRunnerLabel(
+            providerStore.providers,
+            provider.id,
+            model.id,
+          );
+          const runner: EvalRunner = {
+            id: nanoid(),
+            providerId: provider.id,
+            providerName,
+            modelId: model.id,
+            label,
+          };
+          runners = [...runners, runner];
+        }
+      }
+
+      const results = { ...state.results };
+      for (const runner of runners) {
+        if (!results[runner.id]) {
+          results[runner.id] = emptyResult(runner.id);
+        }
+      }
+
+      return {
+        composer,
+        runners,
+        results,
+        error: null,
+        compareSelection: [],
+        judgeResult: null,
+      };
+    });
+  },
+
+  loadIntoComposer: (runnerId = null) => {
+    const state = get();
+    const providerStore = useProviderStore.getState();
+    const targetRunner =
+      (runnerId
+        ? state.runners.find((runner) => runner.id === runnerId)
+        : null) ??
+      (state.judgeResult?.winnerRunnerId
+        ? state.runners.find(
+            (runner) => runner.id === state.judgeResult?.winnerRunnerId,
+          )
+        : null) ??
+      state.runners[0] ??
+      null;
+
+    useComposerStore.getState().loadComposerFromHistory({
+      messages: state.composer.messages.map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+      })),
+      systemPrompt: state.composer.systemPrompt,
+      temperature: state.composer.temperature,
+      maxTokens: state.composer.maxTokens,
+      topP: state.composer.topP,
+      topK: state.composer.topK,
+      frequencyPenalty: state.composer.frequencyPenalty,
+      presencePenalty: state.composer.presencePenalty,
+      stream: state.composer.stream,
+      customHeaders: headersToHistoryEntries(state.composer.customHeaders),
+    });
+
+    if (targetRunner) {
+      providerStore.selectProvider(targetRunner.providerId);
+      providerStore.selectModel(targetRunner.modelId);
+    }
+  },
 
   buildRecord: (name) => {
     const state = get();

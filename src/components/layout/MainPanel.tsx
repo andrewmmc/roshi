@@ -8,12 +8,15 @@ import { RequestComposer } from '@/components/composer/RequestComposer';
 import { ResponsePanel } from '@/components/response/ResponsePanel';
 import { ProviderSelect } from '@/components/composer/ProviderSelect';
 import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
+import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
+import { RequestCompatibilityWarning } from '@/components/composer/RequestCompatibilityWarning';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react';
+import { GitCompare, Send, Square } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useEvalStore } from '@/stores/eval-store';
 import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
@@ -48,9 +51,17 @@ function RequestView() {
   const isLoading = useResponseStore((s) => s.isLoading);
   const { send, cancel } = useSendRequest();
   const hasProvider = useProviderStore((s) => s.providers.length > 0);
+  const setMainView = useUiStore((s) => s.setMainView);
+  const seedFromMainComposer = useEvalStore((s) => s.seedFromMainComposer);
+
+  const handleComparePrompt = () => {
+    seedFromMainComposer();
+    setMainView('eval');
+  };
 
   return (
     <>
+      <FirstRunChecklist />
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <div className="flex min-w-0 items-center gap-2">
           <ViewToggle />
@@ -59,6 +70,17 @@ function RequestView() {
         </div>
         <div className="flex items-center gap-3">
           <TokenCountBadge />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="hidden h-7 text-xs sm:inline-flex"
+            onClick={handleComparePrompt}
+            title="Compare this prompt across models"
+          >
+            <GitCompare className="mr-1.5 h-3 w-3" />
+            Compare
+          </Button>
           {isLoading ? (
             <Button
               variant="destructive"
@@ -94,6 +116,9 @@ function RequestView() {
             </Button>
           )}
         </div>
+      </div>
+      <div className="border-border/70 shrink-0 border-b px-4 py-2">
+        <RequestCompatibilityWarning />
       </div>
       <ResizablePanelGroup orientation="vertical" className="flex-1">
         <ResizablePanel defaultSize="40%" minSize="20%">
