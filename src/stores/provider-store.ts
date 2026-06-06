@@ -92,11 +92,18 @@ function chooseValidSelection(
   };
 }
 
+let lastSavePromise: Promise<void> = Promise.resolve();
+
 async function saveSelection(
   providerId: string | null,
   modelId: string | null,
 ) {
-  await db.settings.put({ key: SELECTION_KEY, value: { providerId, modelId } });
+  lastSavePromise = lastSavePromise.then(() =>
+    db.settings
+      .put({ key: SELECTION_KEY, value: { providerId, modelId } })
+      .then(() => undefined),
+  );
+  await lastSavePromise;
 }
 
 async function loadSelection(): Promise<{
