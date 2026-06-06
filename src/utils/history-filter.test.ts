@@ -120,4 +120,103 @@ describe('history-filter', () => {
       }),
     ).toBe(false);
   });
+
+  it('filters by error status and status code classes', () => {
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        status: 'error',
+      }).map((entry) => entry.id),
+    ).toEqual(['error']);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        status: 'success',
+      }).map((entry) => entry.id),
+    ).toEqual(['success']);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        statusCodeClass: '4xx',
+      }).map((entry) => entry.id),
+    ).toEqual(['error']);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        statusCodeClass: 'none',
+      }),
+    ).toEqual([]);
+
+    expect(
+      filterHistoryEntries(
+        [
+          makeHistoryEntry({
+            id: 'no-status',
+            statusCode: null,
+            error: null,
+            response: null,
+          }),
+        ],
+        { ...DEFAULT_HISTORY_FILTERS, statusCodeClass: 'none' },
+      ).map((entry) => entry.id),
+    ).toEqual(['no-status']);
+  });
+
+  it('excludes entries that do not match provider, model, collection, or saved request filters', () => {
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        providerId: 'missing-provider',
+      }),
+    ).toEqual([]);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        modelId: 'missing-model',
+      }),
+    ).toEqual([]);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        collectionId: 'missing-collection',
+      }),
+    ).toEqual([]);
+
+    expect(
+      filterHistoryEntries(entries, {
+        ...DEFAULT_HISTORY_FILTERS,
+        savedRequestId: 'missing-request',
+      }),
+    ).toEqual([]);
+  });
+
+  it('filters by the 30-day date range', () => {
+    const result = filterHistoryEntries(
+      entries,
+      { ...DEFAULT_HISTORY_FILTERS, dateRange: '30d' },
+      new Date('2025-03-12T00:00:00Z'),
+    );
+
+    expect(result.map((entry) => entry.id)).toEqual(['success', 'error']);
+  });
+
+  it('filters by today using the provided clock', () => {
+    const todayEntry = makeHistoryEntry({
+      id: 'today',
+      createdAt: new Date('2025-03-12T15:00:00Z'),
+    });
+
+    const result = filterHistoryEntries(
+      [todayEntry, ...entries],
+      { ...DEFAULT_HISTORY_FILTERS, dateRange: 'today' },
+      new Date('2025-03-12T23:59:00Z'),
+    );
+
+    expect(result.map((entry) => entry.id)).toEqual(['today']);
+  });
 });

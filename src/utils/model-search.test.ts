@@ -39,4 +39,15 @@ describe('model-search', () => {
     expect(matchesModelSearch(sparse, 'sparse')).toBe(true);
     expect(matchesModelSearch(sparse, 'missing')).toBe(false);
   });
+
+  it('matches on the internal name when display name differs', () => {
+    const model = makeModel({
+      id: 'model-id',
+      displayName: 'Friendly Label',
+      name: 'internal-model-name',
+    });
+
+    expect(matchesModelSearch(model, 'internal-model')).toBe(true);
+    expect(matchesModelSearch(model, 'friendly')).toBe(true);
+  });
 });
