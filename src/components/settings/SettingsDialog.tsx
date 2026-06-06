@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Server, Settings, Variable, X } from 'lucide-react';
+import { Boxes, Server, Settings, Variable, X } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ProviderSettings } from '@/components/providers/ProviderManager';
+import { ModelMarket } from '@/components/models/ModelMarket';
 import {
   EnvironmentSettings,
   EnvironmentSettingsFooter,
 } from '@/components/environments/EnvironmentManager';
 import { useUiStore, type SettingsPage } from '@/stores/ui-store';
+import type { ProviderConfig } from '@/types/provider';
 import { cn } from '@/lib/utils';
 
 type SettingsSection = {
@@ -19,6 +22,7 @@ type SettingsSection = {
 
 const SECTIONS: SettingsSection[] = [
   { id: 'providers', label: 'Providers', icon: Server },
+  { id: 'models', label: 'Models', icon: Boxes },
   { id: 'environments', label: 'Environments', icon: Variable },
 ];
 
@@ -26,8 +30,16 @@ export function SettingsDialog() {
   const open = useUiStore((s) => s.settingsOpen);
   const settingsPage = useUiStore((s) => s.settingsPage);
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
+  const [pendingEditProviderId, setPendingEditProviderId] = useState<
+    string | null
+  >(null);
 
   const handleClose = () => setSettingsOpen(false);
+
+  const handleEditProvider = (provider: ProviderConfig) => {
+    setPendingEditProviderId(provider.id);
+    setSettingsOpen(true, 'providers');
+  };
 
   return (
     <>
@@ -96,7 +108,17 @@ export function SettingsDialog() {
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               {settingsPage === 'providers' && (
-                <ProviderSettings onClose={handleClose} />
+                <ProviderSettings
+                  onClose={handleClose}
+                  pendingEditProviderId={pendingEditProviderId}
+                  onConsumePendingEdit={() => setPendingEditProviderId(null)}
+                />
+              )}
+              {settingsPage === 'models' && (
+                <ModelMarket
+                  onClose={handleClose}
+                  onEditProvider={handleEditProvider}
+                />
               )}
               {settingsPage === 'environments' && (
                 <>

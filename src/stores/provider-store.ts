@@ -6,37 +6,22 @@ import type { ProviderModel } from '@/types/provider';
 import { getDefaultProtocolForProviderType } from '@/types/provider';
 import { builtinProviders } from '@/providers/builtins';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
-import {
-  fetchModelsForProvider,
-  clearModelsCache,
-} from '@/services/models-api';
 import { resolveModelCapabilities } from '@/models/resolver';
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
+const MARKET_MIGRATION_KEY = 'model-market-migrated-v1';
 type BuiltInProviderTemplate = (typeof builtinProviders)[number];
-
-async function fetchModelsForTemplates(
-  templates: readonly BuiltInProviderTemplate[],
-): Promise<ProviderConfig['models'][]> {
-  const results = await Promise.allSettled(
-    templates.map((template) => fetchModelsForProvider(template.name)),
-  );
-  return results.map((result, index) =>
-    result.status === 'fulfilled' ? result.value : templates[index].models,
-  );
-}
 
 function createBuiltInProvider(
   template: BuiltInProviderTemplate,
-  models: ProviderConfig['models'],
   id = nanoid(),
 ): ProviderConfig {
   return {
     ...template,
     id,
     apiKey: '',
-    models,
+    models: [],
   };
 }
 
@@ -77,25 +62,10 @@ function providerConfigsEqual(a: ProviderConfig, b: ProviderConfig): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function mergeSyncedModels(
-  existingModels: ProviderModel[],
-  syncedModels: ProviderModel[],
-): ProviderModel[] {
-  const syncedIds = new Set(syncedModels.map((model) => model.id));
-  const manualModels = existingModels.filter(
-    (model) => model.source === 'manual' && !syncedIds.has(model.id),
-  );
-
-  return [...syncedModels, ...manualModels];
-}
-
-async function createBuiltInProviders(
+function createBuiltInProviders(
   templates: readonly BuiltInProviderTemplate[],
-): Promise<ProviderConfig[]> {
-  const fetchedModels = await fetchModelsForTemplates(templates);
-  return templates.map((template, index) =>
-    createBuiltInProvider(template, fetchedModels[index]),
-  );
+): ProviderConfig[] {
+  return templates.map((template) => createBuiltInProvider(template));
 }
 
 function chooseValidSelection(
@@ -105,16 +75,20 @@ function chooseValidSelection(
   const savedProvider = saved.providerId
     ? providers.find((p) => p.id === saved.providerId)
     : null;
-  const provider = savedProvider ?? providers[0] ?? null;
   const savedModelValid = Boolean(
     savedProvider?.models.some((m) => m.id === saved.modelId),
   );
+  if (savedProvider && savedModelValid) {
+    return { providerId: savedProvider.id, modelId: saved.modelId };
+  }
+
+  // Prefer a provider that has at least one picked model.
+  const providerWithModels = providers.find((p) => p.models.length > 0);
+  const provider = providerWithModels ?? savedProvider ?? providers[0] ?? null;
 
   return {
     providerId: provider?.id ?? null,
-    modelId: savedModelValid
-      ? saved.modelId
-      : (provider?.models[0]?.id ?? null),
+    modelId: provider?.models[0]?.id ?? null,
   };
 }
 
@@ -151,12 +125,30 @@ async function loadSelection(): Promise<{
   return { providerId: null, modelId: null };
 }
 
+async function hasMigratedToMarket(): Promise<boolean> {
+  try {
+    const setting = await db.settings.get(MARKET_MIGRATION_KEY);
+    return Boolean(setting?.value);
+  } catch {
+    return false;
+  }
+}
+
+async function markMarketMigrationComplete(): Promise<void> {
+  try {
+    await db.settings.put({ key: MARKET_MIGRATION_KEY, value: true });
+  } catch {
+    /* ignore */
+  }
+}
+
 interface ProviderStore {
   providers: ProviderConfig[];
   selectedProviderId: string | null;
   selectedModelId: string | null;
   loaded: boolean;
   seeding: boolean;
+  refreshingCatalog: boolean;
 
   load: () => Promise<void>;
   addProvider: (
@@ -171,7 +163,15 @@ interface ProviderStore {
   selectModel: (id: string | null) => void;
   resetProvider: (id: string) => Promise<void>;
   resetAllProviders: () => Promise<void>;
-  syncModels: () => Promise<void>;
+  refreshModelCatalog: () => Promise<void>;
+  addModelToProvider: (
+    providerId: string,
+    model: ProviderModel,
+  ) => Promise<void>;
+  removeModelFromProvider: (
+    providerId: string,
+    modelId: string,
+  ) => Promise<void>;
 
   getSelectedProvider: () => ProviderConfig | null;
   getSelectedModel: () => ProviderConfig['models'][0] | null;
@@ -183,6 +183,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   selectedModelId: null,
   loaded: false,
   seeding: false,
+  refreshingCatalog: false,
 
   load: async () => {
     if (get().loaded) return;
@@ -205,7 +206,22 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       return normalized;
     });
 
-    // Seed missing built-in providers with models fetched from API
+    // One-shot migration: clear out the legacy auto-synced model lists on
+    // built-in providers so users start fresh in the new Model Market.
+    const alreadyMigrated = await hasMigratedToMarket();
+    if (!alreadyMigrated) {
+      for (let i = 0; i < normalizedProviders.length; i++) {
+        const provider = normalizedProviders[i];
+        if (provider.isBuiltIn && provider.models.length > 0) {
+          const wiped: ProviderConfig = { ...provider, models: [] };
+          await db.providers.update(provider.id, { models: [] });
+          normalizedProviders[i] = wiped;
+        }
+      }
+      await markMarketMigrationComplete();
+    }
+
+    // Seed missing built-in providers with empty model lists.
     const needsSeed = builtinProviders.filter(
       (template) =>
         !normalizedProviders.some(
@@ -216,7 +232,7 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     if (needsSeed.length > 0) {
       set({ seeding: true });
       try {
-        const seededProviders = await createBuiltInProviders(needsSeed);
+        const seededProviders = createBuiltInProviders(needsSeed);
         for (const newProvider of seededProviders) {
           await db.providers.add(newProvider);
           normalizedProviders.push(newProvider);
@@ -328,19 +344,31 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     const template = builtinProviders.find((b) => b.name === provider.name);
     if (!template) return;
 
-    const [models] = await fetchModelsForTemplates([template]);
-    const reset = createBuiltInProvider(template, models, provider.id);
+    const reset = createBuiltInProvider(template, provider.id);
     await db.providers.put(reset);
-    set((state) => ({
-      providers: state.providers.map((p) => (p.id === id ? reset : p)),
-    }));
+    let selectionChanged = false;
+    let newProviderId: string | null = null;
+    let newModelId: string | null = null;
+    set((state) => {
+      const providers = state.providers.map((p) => (p.id === id ? reset : p));
+      const updates: Partial<ProviderStore> = { providers };
+      if (state.selectedProviderId === id) {
+        selectionChanged = true;
+        newProviderId = reset.id;
+        newModelId = null;
+        updates.selectedModelId = null;
+      }
+      return updates;
+    });
+    if (selectionChanged) {
+      await saveSelection(newProviderId, newModelId);
+    }
   },
 
   resetAllProviders: async () => {
-    // Delete all providers from DB (both built-in and custom)
     await db.providers.clear();
 
-    const newProviders = await createBuiltInProviders(builtinProviders);
+    const newProviders = createBuiltInProviders(builtinProviders);
     for (const newProvider of newProviders) {
       await db.providers.add(newProvider);
     }
@@ -351,30 +379,79 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     set({ providers: newProviders, selectedProviderId, selectedModelId });
   },
 
-  syncModels: async () => {
-    clearModelsCache();
-    const builtins = get().providers.filter((p) => p.isBuiltIn);
-    const results = await Promise.allSettled(
-      builtins.map((p) => fetchModelsForProvider(p.name)),
-    );
-    const fetchedModelsById = new Map<string, ProviderConfig['models']>();
-
-    for (let i = 0; i < builtins.length; i++) {
-      const provider = builtins[i];
-      const result = results[i];
-      if (result.status !== 'fulfilled') continue;
-      const models = mergeSyncedModels(provider.models, result.value);
-      fetchedModelsById.set(provider.id, models);
-      await db.providers.update(provider.id, { models });
+  refreshModelCatalog: async () => {
+    if (get().refreshingCatalog) return;
+    set({ refreshingCatalog: true });
+    try {
+      const { useModelCatalogStore } = await import('./model-catalog-store');
+      await useModelCatalogStore.getState().load(true);
+    } finally {
+      set({ refreshingCatalog: false });
     }
+  },
 
-    set((state) => ({
-      providers: state.providers.map((p) => {
-        if (!p.isBuiltIn) return p;
-        const models = fetchedModelsById.get(p.id);
-        return models ? { ...p, models } : p;
-      }),
-    }));
+  addModelToProvider: async (providerId, model) => {
+    const provider = get().providers.find((p) => p.id === providerId);
+    if (!provider) return;
+    if (provider.models.some((m) => m.id === model.id)) return;
+
+    const normalized = normalizeProviderModel(provider, model);
+    const models = [...provider.models, normalized];
+    await db.providers.update(providerId, { models });
+
+    let shouldPersistSelection = false;
+    let newSelectedProviderId: string | null = null;
+    let newSelectedModelId: string | null = null;
+    set((state) => {
+      const providers = state.providers.map((p) =>
+        p.id === providerId ? { ...p, models } : p,
+      );
+      const updates: Partial<ProviderStore> = { providers };
+      const noProviderSelected = !state.selectedProviderId;
+      const sameProviderNoModel =
+        state.selectedProviderId === providerId && !state.selectedModelId;
+      if (noProviderSelected || sameProviderNoModel) {
+        shouldPersistSelection = true;
+        newSelectedProviderId = providerId;
+        newSelectedModelId = normalized.id;
+        updates.selectedProviderId = providerId;
+        updates.selectedModelId = normalized.id;
+      }
+      return updates;
+    });
+    if (shouldPersistSelection) {
+      await saveSelection(newSelectedProviderId, newSelectedModelId);
+    }
+  },
+
+  removeModelFromProvider: async (providerId, modelId) => {
+    const provider = get().providers.find((p) => p.id === providerId);
+    if (!provider) return;
+    if (!provider.models.some((m) => m.id === modelId)) return;
+
+    const models = provider.models.filter((m) => m.id !== modelId);
+    await db.providers.update(providerId, { models });
+
+    let shouldPersistSelection = false;
+    let newSelectedModelId: string | null = null;
+    set((state) => {
+      const providers = state.providers.map((p) =>
+        p.id === providerId ? { ...p, models } : p,
+      );
+      const updates: Partial<ProviderStore> = { providers };
+      if (
+        state.selectedProviderId === providerId &&
+        state.selectedModelId === modelId
+      ) {
+        shouldPersistSelection = true;
+        newSelectedModelId = models[0]?.id ?? null;
+        updates.selectedModelId = newSelectedModelId;
+      }
+      return updates;
+    });
+    if (shouldPersistSelection) {
+      await saveSelection(providerId, newSelectedModelId);
+    }
   },
 
   getSelectedProvider: () => {

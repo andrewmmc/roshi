@@ -11,8 +11,9 @@ const {
   selectProvider,
   resetProvider,
   resetAllProviders,
-  syncModels,
+  refreshModelCatalog,
   exportProviders,
+  openModelMarket,
   mockProviders,
 } = vi.hoisted(() => ({
   updateProvider: vi.fn(),
@@ -21,8 +22,9 @@ const {
   selectProvider: vi.fn(),
   resetProvider: vi.fn(),
   resetAllProviders: vi.fn(),
-  syncModels: vi.fn(),
+  refreshModelCatalog: vi.fn(),
   exportProviders: vi.fn(),
+  openModelMarket: vi.fn(),
   mockProviders: { value: [] as ReturnType<typeof makeProvider>[] },
 }));
 
@@ -35,8 +37,14 @@ vi.mock('@/hooks/use-providers', () => ({
     updateProvider,
     resetProvider,
     resetAllProviders,
-    syncModels,
+    refreshModelCatalog,
   }),
+}));
+
+vi.mock('@/stores/ui-store', () => ({
+  useUiStore: (
+    selector: (state: { openModelMarket: typeof openModelMarket }) => unknown,
+  ) => selector({ openModelMarket }),
 }));
 
 vi.mock('@/utils/export', () => ({
@@ -103,8 +111,9 @@ describe('ProviderSettings', () => {
     selectProvider.mockReset();
     resetProvider.mockReset();
     resetAllProviders.mockReset();
-    syncModels.mockReset();
+    refreshModelCatalog.mockReset();
     exportProviders.mockReset();
+    openModelMarket.mockReset();
     mockProviders.value = [
       makeProvider({
         id: 'builtin-openai',
@@ -141,10 +150,22 @@ describe('ProviderSettings', () => {
     expect(resetAllProviders).toHaveBeenCalledTimes(1);
   });
 
+  it('opens the Model Market for a provider via the Manage models entry', async () => {
+    renderProviderSettings();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /manage models for openai/i }),
+    );
+
+    expect(openModelMarket).toHaveBeenCalledWith('builtin-openai');
+  });
+
   it('switches to edit view and updates a provider through the form', async () => {
     renderProviderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: /openai/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /edit provider openai/i }),
+    );
 
     expect(screen.getByText('Edit Provider')).toBeInTheDocument();
     expect(screen.getByText('ProviderForm Mock OpenAI')).toBeInTheDocument();
@@ -190,17 +211,18 @@ describe('ProviderSettings', () => {
 
     renderProviderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: /openai/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /edit provider openai/i }),
+    );
     fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
 
     expect(resetProvider).toHaveBeenCalledWith('builtin-openai');
   });
 
-  it('syncs models, exports providers, closes, and removes custom providers', async () => {
+  it('exports providers, closes, and removes custom providers', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { onClose } = renderProviderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: /sync models/i }));
     fireEvent.click(screen.getByRole('button', { name: /export json/i }));
     fireEvent.click(
       screen.getByRole('button', { name: /remove custom provider my custom/i }),
@@ -209,8 +231,9 @@ describe('ProviderSettings', () => {
       screen.getAllByRole('button', { name: /^close$/i }).at(-1)!,
     );
 
-    await waitFor(() => expect(syncModels).toHaveBeenCalledTimes(1));
-    expect(exportProviders).toHaveBeenCalledWith(mockProviders.value);
+    await waitFor(() => {
+      expect(exportProviders).toHaveBeenCalledWith(mockProviders.value);
+    });
     expect(confirm).toHaveBeenCalledWith(
       'Remove this custom provider? This cannot be undone.',
     );

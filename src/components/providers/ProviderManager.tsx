@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Pencil,
   X,
   RotateCcw,
   Download,
-  RefreshCw,
+  Boxes,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import { builtinProviders } from '@/providers/builtins';
 import {
   createCustomProviderTemplate,
@@ -33,8 +34,14 @@ function getProviderDetails(provider: ProviderConfig): string {
     (provider.endpoints.chat !== builtin.endpoints.chat ||
       provider.endpoints.responses !== builtin.endpoints.responses);
   const hasCustomBaseUrl = builtin && provider.baseUrl !== builtin.baseUrl;
+  const modelCount = provider.models.length;
+  const modelsLabel =
+    modelCount === 0
+      ? 'No models added'
+      : `${modelCount} model${modelCount === 1 ? '' : 's'}`;
 
   return [
+    modelsLabel,
     hasApiKey ? 'API key configured' : 'No API key',
     hasCustomHeaders && 'Custom headers',
     hasCustomEndpoint && 'Custom endpoint',
@@ -50,12 +57,14 @@ function ProviderList({
   onAddCustomProvider,
   onEditProvider,
   onDeleteProvider,
+  onManageModels,
 }: {
   providers: ProviderConfig[];
   canAddCustomProvider: boolean;
   onAddCustomProvider: () => void;
   onEditProvider: (provider: ProviderConfig) => void;
   onDeleteProvider: (provider: ProviderConfig) => void;
+  onManageModels: (provider: ProviderConfig) => void;
 }) {
   return (
     <div className="flex flex-col gap-2 px-3 py-3">
@@ -107,6 +116,17 @@ function ProviderList({
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
+              onClick={() => onManageModels(provider)}
+              tooltip="Manage models"
+              aria-label={`Manage models for ${provider.name}`}
+            >
+              <Boxes className="h-3.5 w-3.5" />
+            </IconButton>
+            <IconButton
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onEditProvider(provider)}
               tooltip="Edit provider"
               aria-label={`Edit provider ${provider.name}`}
@@ -138,10 +158,8 @@ export function ProviderSettingsFooter({
   editingProvider,
   resettingAll,
   resettingProvider,
-  syncingModels,
   providers,
   onResetAll,
-  onSyncModels,
   onClose,
   onBackToList,
   onResetProvider,
@@ -151,10 +169,8 @@ export function ProviderSettingsFooter({
   editingProvider: ProviderConfig | null;
   resettingAll: boolean;
   resettingProvider: boolean;
-  syncingModels: boolean;
   providers: ProviderConfig[];
   onResetAll: () => void;
-  onSyncModels: () => void;
   onClose: () => void;
   onBackToList: () => void;
   onResetProvider: () => void;
@@ -175,19 +191,6 @@ export function ProviderSettingsFooter({
             {resettingAll ? 'Resetting...' : 'Reset all to default'}
           </Button>
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground text-xs"
-              disabled={syncingModels}
-              onClick={onSyncModels}
-            >
-              <RefreshCw
-                className={`mr-1 h-3 w-3 ${syncingModels ? 'animate-spin' : ''}`}
-              />
-              {syncingModels ? 'Syncing...' : 'Sync models'}
-            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -250,16 +253,24 @@ export function ProviderSettingsFooter({
   );
 }
 
-export function ProviderSettings({ onClose }: { onClose: () => void }) {
+export function ProviderSettings({
+  onClose,
+  pendingEditProviderId = null,
+  onConsumePendingEdit,
+}: {
+  onClose: () => void;
+  pendingEditProviderId?: string | null;
+  onConsumePendingEdit?: () => void;
+}) {
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
     null,
   );
   const [resettingAll, setResettingAll] = useState(false);
   const [resettingProvider, setResettingProvider] = useState(false);
-  const [syncingModels, setSyncingModels] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
+  const openModelMarket = useUiStore((s) => s.openModelMarket);
 
   const {
     providers,
@@ -268,12 +279,23 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
     deleteProvider,
     resetProvider,
     resetAllProviders,
-    syncModels,
     selectProvider,
   } = useProviders();
 
   const customProviderCount = providers.filter((p) => !p.isBuiltIn).length;
   const canAddCustomProvider = customProviderCount < MAX_CUSTOM_PROVIDERS;
+
+  // Honour external requests to open a specific provider in edit view.
+  useEffect(() => {
+    if (!pendingEditProviderId) return;
+    const provider = providers.find((p) => p.id === pendingEditProviderId);
+    if (provider) {
+      setEditingProvider(provider);
+      setFormVersion((v) => v + 1);
+      setView('edit');
+    }
+    onConsumePendingEdit?.();
+  }, [pendingEditProviderId, providers, onConsumePendingEdit]);
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
@@ -321,21 +343,16 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const handleManageModels = (provider: ProviderConfig) => {
+    openModelMarket(provider.id);
+  };
+
   const handleResetAll = async () => {
     setResettingAll(true);
     try {
       await resetAllProviders();
     } finally {
       setResettingAll(false);
-    }
-  };
-
-  const handleSyncModels = async () => {
-    setSyncingModels(true);
-    try {
-      await syncModels();
-    } finally {
-      setSyncingModels(false);
     }
   };
 
@@ -373,7 +390,7 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
         </h2>
         <p className="text-muted-foreground mt-0.5 text-xs">
           {view === 'list' &&
-            'Tune credentials and model options for each connected provider.'}
+            'Tune credentials and endpoints for each provider. Pick models from the Models tab.'}
           {view === 'edit' &&
             'Update keys, headers, endpoints, and model entries without leaving the composer.'}
           {view === 'add' &&
@@ -401,6 +418,7 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
             onAddCustomProvider={openAddCustomProvider}
             onEditProvider={openEditProvider}
             onDeleteProvider={handleDeleteProvider}
+            onManageModels={handleManageModels}
           />
         )}
 
@@ -430,10 +448,8 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
         editingProvider={editingProvider}
         resettingAll={resettingAll}
         resettingProvider={resettingProvider}
-        syncingModels={syncingModels}
         providers={providers}
         onResetAll={() => void handleResetAll()}
-        onSyncModels={() => void handleSyncModels()}
         onClose={handleClose}
         onBackToList={handleBackToList}
         onResetProvider={() => void handleResetProvider()}
