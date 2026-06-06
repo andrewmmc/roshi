@@ -1,6 +1,6 @@
 import type { ModelModality } from '@/models/capabilities';
 import type { ModelCapabilityOverrides } from '@/types/provider';
-import type { ProviderModel } from '@/types/provider';
+import type { ModelPricing, ProviderModel } from '@/types/provider';
 import { runtimeFetch } from './runtime-fetch';
 
 const MODELS_API_URL = 'https://models.dev/api.json';
@@ -19,6 +19,10 @@ interface ApiModel {
   };
   limit?: {
     context?: number;
+    output?: number;
+  };
+  cost?: {
+    input?: number;
     output?: number;
   };
 }
@@ -46,6 +50,7 @@ function toProviderModel(
   model: ApiModel,
 ): ProviderModel {
   const tokenLimits = getTokenLimits(model);
+  const pricing = getModelPricing(model);
 
   return {
     id,
@@ -56,7 +61,20 @@ function toProviderModel(
     lastSyncedAt: DEFAULT_SYNCED_AT,
     maxTokens: tokenLimits?.output,
     capabilities: getModelCapabilities(model),
+    ...(pricing ? { pricing } : {}),
   };
+}
+
+function getModelPricing(model: ApiModel): ModelPricing | undefined {
+  const input = model.cost?.input;
+  const output = model.cost?.output;
+  if (typeof input !== 'number' || typeof output !== 'number') {
+    return undefined;
+  }
+  if (!Number.isFinite(input) || !Number.isFinite(output)) {
+    return undefined;
+  }
+  return { inputPerMTokens: input, outputPerMTokens: output };
 }
 
 function toModelModality(value: string): ModelModality | null {

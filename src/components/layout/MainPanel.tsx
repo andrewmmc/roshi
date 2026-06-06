@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,19 +13,47 @@ import { Send, Square } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
+import { ViewToggle } from './ViewToggle';
+
+const EvalView = lazy(() =>
+  import('@/components/eval/EvalView').then((m) => ({ default: m.EvalView })),
+);
 
 export function MainPanel() {
+  const mainView = useUiStore((s) => s.mainView);
+
+  return (
+    <div className="bg-background flex h-full flex-col">
+      {mainView === 'request' ? <RequestView /> : null}
+      {mainView === 'eval' ? (
+        <Suspense
+          fallback={
+            <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
+              Loading eval…
+            </div>
+          }
+        >
+          <EvalView />
+        </Suspense>
+      ) : null}
+    </div>
+  );
+}
+
+function RequestView() {
   const isLoading = useResponseStore((s) => s.isLoading);
   const { send, cancel } = useSendRequest();
   const hasProvider = useProviderStore((s) => s.providers.length > 0);
 
   return (
-    <div className="bg-background flex h-full flex-col">
+    <>
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
         <div className="flex min-w-0 items-center gap-2">
+          <ViewToggle />
           <ProviderSelect />
           <EnvironmentSelector />
         </div>
@@ -79,6 +108,6 @@ export function MainPanel() {
           </ErrorBoundary>
         </ResizablePanel>
       </ResizablePanelGroup>
-    </div>
+    </>
   );
 }

@@ -22,8 +22,95 @@ import {
   exportHistory,
   exportHistoryEntry,
   exportCurrentRequest,
+  exportEvalRunJson,
+  exportEvalRunCsv,
+  buildEvalRunCsv,
 } from './export';
 import type { CurrentRequestExport } from './export';
+import { emptyResult } from '@/types/eval';
+import type { EvalRunRecord } from '@/types/eval';
+
+function makeEvalRecord(): EvalRunRecord {
+  return {
+    id: 'rec-1',
+    createdAt: new Date('2026-01-02T03:04:05Z'),
+    name: 'Pricing copy',
+    request: {
+      messages: [{ role: 'user', content: 'Hello' }],
+      systemPrompt: '',
+      temperature: 1,
+      maxTokens: 1024,
+      topP: 1,
+      topK: 0,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      stream: true,
+      customHeaders: [],
+    },
+    runners: [
+      {
+        id: 'r1',
+        providerId: 'p1',
+        providerName: 'OpenAI',
+        modelId: 'gpt-4',
+        label: 'OpenAI / gpt-4',
+      },
+      {
+        id: 'r2',
+        providerId: 'p2',
+        providerName: 'Anthropic',
+        modelId: 'claude-3-opus',
+        label: 'Anthropic / claude-3-opus',
+      },
+    ],
+    results: [
+      {
+        ...emptyResult('r1'),
+        status: 'success',
+        content: 'Hi, world!',
+        metrics: {
+          durationMs: 500,
+          ttftMs: 80,
+          tokensPerSec: 25.5,
+          promptTokens: 10,
+          completionTokens: 12,
+          totalTokens: 22,
+          costUsd: 0.000123,
+          responseChars: 10,
+          finishReason: 'stop',
+          statusCode: 200,
+        },
+        rating: 4,
+        thumbs: 'up',
+      },
+      {
+        ...emptyResult('r2'),
+        status: 'error',
+        content: '',
+        error: 'HTTP 401, nope',
+        metrics: {
+          ...emptyResult('r2').metrics,
+          statusCode: 401,
+        },
+      },
+    ],
+    judgeConfig: { enabled: true, runner: null, rubric: '' },
+    judgeResult: {
+      scores: {
+        r1: {
+          helpfulness: 5,
+          accuracy: 4,
+          clarity: 5,
+          overall: 4.7,
+          rationale: 'Great answer',
+        },
+      },
+      winnerRunnerId: 'r1',
+      rawContent: '{}',
+      error: null,
+    },
+  };
+}
 
 describe('export', () => {
   let clickSpy: ReturnType<typeof vi.fn>;
@@ -294,6 +381,43 @@ describe('export', () => {
 
       expect(clickSpy).not.toHaveBeenCalled();
       expect(createObjectURLSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('eval run export', () => {
+    it('exportEvalRunJson wraps a record in an envelope and downloads it', async () => {
+      const record = makeEvalRecord();
+      exportEvalRunJson(record);
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const text = await blob.text();
+      const envelope = JSON.parse(text);
+      expect(envelope.type).toBe('eval-run');
+      expect(envelope.data.id).toBe('rec-1');
+      expect(envelope.data.runners).toHaveLength(2);
+    });
+
+    it('buildEvalRunCsv writes one row per runner with quoted fields when needed', () => {
+      const csv = buildEvalRunCsv(makeEvalRecord());
+      const lines = csv.split('\n');
+      expect(lines[0]).toContain('runner_id');
+      expect(lines).toHaveLength(3);
+      const r1 = lines[1].split(',');
+      expect(r1[0]).toBe('r1');
+      expect(r1[1]).toBe('OpenAI');
+      expect(r1[2]).toBe('gpt-4');
+      expect(r1[3]).toBe('success');
+      expect(r1[4]).toBe('500');
+      // r2 contains an error message with a comma → must be quoted
+      const r2 = lines[2];
+      expect(r2).toContain('"HTTP 401, nope"');
+    });
+
+    it('exportEvalRunCsv triggers a CSV download', async () => {
+      exportEvalRunCsv(makeEvalRecord());
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      expect(blob.type).toBe('text/csv');
+      const text = await blob.text();
+      expect(text.split('\n')[0]).toContain('runner_id');
     });
   });
 });
