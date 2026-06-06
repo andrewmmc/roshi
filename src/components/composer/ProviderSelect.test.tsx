@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ProviderSelect } from './ProviderSelect';
 import { useProviderStore } from '@/stores/provider-store';
+import { useUiStore } from '@/stores/ui-store';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
 vi.mock('@/components/ui/select', () => {
@@ -125,6 +126,31 @@ describe('ProviderSelect', () => {
     expect(screen.getAllByText('GPT-4o').length).toBeGreaterThan(0);
     expect(selectProvider).toHaveBeenCalledWith('p1');
     expect(selectModel).toHaveBeenCalledWith('m2');
+  });
+
+  it('renders a Browse models button when the selected provider has no models', () => {
+    const openModelMarket = vi.fn();
+    useUiStore.setState({ openModelMarket });
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'p1',
+          name: 'OpenAI',
+          models: [],
+        }),
+      ],
+      selectedProviderId: 'p1',
+      selectedModelId: null,
+    });
+
+    render(<ProviderSelect />);
+
+    const browse = screen.getByRole('button', { name: /browse models/i });
+    fireEvent.click(browse);
+    expect(openModelMarket).toHaveBeenCalledWith('p1');
+    expect(
+      screen.queryByRole('combobox', { name: /select model/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('enables model selection for google gemini and displays available models', () => {

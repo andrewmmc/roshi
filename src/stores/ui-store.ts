@@ -1,12 +1,17 @@
 import { create } from 'zustand';
 
-export type SettingsPage = 'providers' | 'environments';
+export type SettingsPage = 'providers' | 'environments' | 'models';
 export type MainView = 'request' | 'eval';
 
 interface UiStore {
   settingsOpen: boolean;
   settingsPage: SettingsPage;
+  /** Optional provider id to focus when opening Settings > Models. */
+  settingsModelsProviderId: string | null;
   setSettingsOpen: (open: boolean, page?: SettingsPage) => void;
+  /** Open Settings > Models pre-filtered to a specific provider. */
+  openModelMarket: (providerId?: string | null) => void;
+  setSettingsModelsProviderId: (providerId: string | null) => void;
   historySearchFocusGen: number;
   focusHistorySearch: () => void;
   aboutOpen: boolean;
@@ -18,11 +23,20 @@ interface UiStore {
 export const useUiStore = create<UiStore>((set) => ({
   settingsOpen: false,
   settingsPage: 'providers',
+  settingsModelsProviderId: null,
   setSettingsOpen: (open, page) =>
     set((s) => ({
       settingsOpen: open,
       settingsPage: page ?? s.settingsPage,
     })),
+  openModelMarket: (providerId = null) =>
+    set({
+      settingsOpen: true,
+      settingsPage: 'models',
+      settingsModelsProviderId: providerId,
+    }),
+  setSettingsModelsProviderId: (providerId) =>
+    set({ settingsModelsProviderId: providerId }),
   historySearchFocusGen: 0,
   focusHistorySearch: () =>
     set((s) => ({ historySearchFocusGen: s.historySearchFocusGen + 1 })),

@@ -122,7 +122,7 @@ describe('ProviderForm', () => {
     );
   });
 
-  it('enables model management for google gemini and disables built-in name/type edits', () => {
+  it('disables built-in name/type edits and hides the models editor', () => {
     render(
       <ProviderForm
         onSubmit={() => undefined}
@@ -135,7 +135,33 @@ describe('ProviderForm', () => {
     );
 
     expect(screen.getByDisplayValue('TestProvider')).toBeDisabled();
-    expect(screen.getByRole('button', { name: /add model/i })).toBeEnabled();
+    // Models section is now exclusive to the Model Market for built-in providers.
+    expect(
+      screen.queryByRole('button', { name: /add model/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('preserves existing models when editing a built-in provider', () => {
+    const onSubmit = vi.fn();
+    const initial = makeProvider({
+      isBuiltIn: true,
+      models: [makeModel({ id: 'gpt-4', displayName: 'GPT-4' })],
+    });
+    const { container } = render(
+      <ProviderForm onSubmit={onSubmit} isBuiltIn initialData={initial} />,
+    );
+
+    fireEvent.change(screen.getByDisplayValue('test-key'), {
+      target: { value: 'new-key' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiKey: 'new-key',
+        models: initial.models,
+      }),
+    );
   });
 
   it('adds and removes model rows', () => {

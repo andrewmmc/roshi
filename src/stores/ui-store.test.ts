@@ -7,6 +7,7 @@ describe('ui-store', () => {
     useUiStore.setState({
       settingsOpen: false,
       settingsPage: 'providers',
+      settingsModelsProviderId: null,
       historySearchFocusGen: 0,
       aboutOpen: false,
     });
@@ -38,6 +39,27 @@ describe('ui-store', () => {
       getState().setSettingsOpen(true);
       getState().setSettingsOpen(false);
       expect(getState().settingsOpen).toBe(false);
+    });
+  });
+
+  describe('openModelMarket', () => {
+    it('opens settings on the models page with no filter by default', () => {
+      getState().openModelMarket();
+      expect(getState().settingsOpen).toBe(true);
+      expect(getState().settingsPage).toBe('models');
+      expect(getState().settingsModelsProviderId).toBeNull();
+    });
+
+    it('opens the models page pre-filtered to a specific provider', () => {
+      getState().openModelMarket('builtin-openai');
+      expect(getState().settingsPage).toBe('models');
+      expect(getState().settingsModelsProviderId).toBe('builtin-openai');
+    });
+
+    it('lets callers clear the filter explicitly', () => {
+      getState().openModelMarket('p1');
+      getState().setSettingsModelsProviderId(null);
+      expect(getState().settingsModelsProviderId).toBeNull();
     });
   });
 

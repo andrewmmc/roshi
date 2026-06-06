@@ -130,16 +130,19 @@ export function ProviderForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Clean up models: remove empty ones, sync names, strip _formKey
-    const cleanedModels = formModels
-      .filter((m) => m.id.trim())
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ _formKey, ...m }) => ({
-        ...m,
-        name: m.name || m.id,
-        displayName: m.displayName || m.id,
-        source: m.source ?? 'manual',
-      }));
+    // For built-in providers, the Models section is hidden and managed via the
+    // Model Market; preserve whatever models the provider currently holds.
+    const cleanedModels = isBuiltIn
+      ? (initialData?.models ?? form.models)
+      : formModels
+          .filter((m) => m.id.trim())
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          .map(({ _formKey, ...m }) => ({
+            ...m,
+            name: m.name || m.id,
+            displayName: m.displayName || m.id,
+            source: m.source ?? 'manual',
+          }));
     // Convert header entries to record for submission
     const customHeaders = headersToRecord(headerEntries);
     onSubmit({ ...form, models: cleanedModels, customHeaders });
@@ -337,52 +340,54 @@ export function ProviderForm({
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <Label className="text-xs">Models</Label>
-          {formModels.map((model, i) => (
-            <div key={model._formKey} className="flex items-center gap-2">
-              <Input
-                aria-label={`Model ID ${i + 1}`}
-                value={model.id}
-                onChange={(e) => updateModel(i, { id: e.target.value })}
-                placeholder="model-id"
-                className="flex-1 text-sm"
-              />
-              <Input
-                aria-label={`Model display name ${i + 1}`}
-                value={model.displayName}
-                onChange={(e) =>
-                  updateModel(i, { displayName: e.target.value })
-                }
-                placeholder="Display Name"
-                className="flex-1 text-sm"
-              />
-              {formModels.length > 1 && (
-                <IconButton
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => removeModel(i)}
-                  tooltip="Remove model"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </IconButton>
-              )}
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={addModel}
-            disabled={!supportsModelSelection(form.type)}
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Add Model
-          </Button>
-        </div>
+        {!isBuiltIn && (
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs">Models</Label>
+            {formModels.map((model, i) => (
+              <div key={model._formKey} className="flex items-center gap-2">
+                <Input
+                  aria-label={`Model ID ${i + 1}`}
+                  value={model.id}
+                  onChange={(e) => updateModel(i, { id: e.target.value })}
+                  placeholder="model-id"
+                  className="flex-1 text-sm"
+                />
+                <Input
+                  aria-label={`Model display name ${i + 1}`}
+                  value={model.displayName}
+                  onChange={(e) =>
+                    updateModel(i, { displayName: e.target.value })
+                  }
+                  placeholder="Display Name"
+                  className="flex-1 text-sm"
+                />
+                {formModels.length > 1 && (
+                  <IconButton
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => removeModel(i)}
+                    tooltip="Remove model"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </IconButton>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              onClick={addModel}
+              disabled={!supportsModelSelection(form.type)}
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Model
+            </Button>
+          </div>
+        )}
       </div>
     </form>
   );
