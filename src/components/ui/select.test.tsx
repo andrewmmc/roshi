@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { stripNonDomProps } from '@/__tests__/strip-dom-props';
 import {
   SelectContent,
   SelectGroup,
@@ -23,7 +24,11 @@ vi.mock('@base-ui/react/select', () => {
       children?: React.ReactNode;
       render?: React.ReactNode;
     }) => {
-      return React.createElement(tag, props, render ?? children);
+      return React.createElement(
+        tag,
+        stripNonDomProps(props),
+        render ?? children,
+      );
     };
 
   return {

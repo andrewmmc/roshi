@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ResponsePanel } from './ResponsePanel';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
@@ -41,7 +42,8 @@ describe('ResponsePanel', () => {
     });
   });
 
-  it('shows empty states when there is no response content', () => {
+  it('shows empty states when there is no response content', async () => {
+    const user = userEvent.setup();
     render(<ResponsePanel />);
 
     expect(
@@ -49,18 +51,24 @@ describe('ResponsePanel', () => {
         'Select a model and send a request to see the response here.',
       ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Body' }));
-    expect(
-      screen.getByText(
-        'Select a model and send a request to see the response here.',
-      ),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Headers' }));
-    expect(
-      screen.getByText(
-        'Select a model and send a request to see the response here.',
-      ),
-    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Body' }));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Select a model and send a request to see the response here.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Headers' }));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Select a model and send a request to see the response here.',
+        ),
+      ).toBeInTheDocument();
+    });
   });
 
   it('shows loading status text while sending', () => {
@@ -73,6 +81,7 @@ describe('ResponsePanel', () => {
   });
 
   it('renders response metadata and enables the code tab for supported providers', async () => {
+    const user = userEvent.setup();
     useProviderStore.setState({
       providers: [makeProvider({ id: 'p1', type: 'anthropic' })],
       selectedProviderId: 'p1',
@@ -98,11 +107,13 @@ describe('ResponsePanel', () => {
     expect(screen.getByText('321ms')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Code' })).toBeEnabled();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Body' }));
+    await user.click(screen.getByRole('tab', { name: 'Body' }));
     expect(await screen.findByText('RawJsonView Mock')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Headers' }));
+
+    await user.click(screen.getByRole('tab', { name: 'Headers' }));
     expect(await screen.findByText('HeadersView Mock')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
+
+    await user.click(screen.getByRole('tab', { name: 'Code' }));
     expect(await screen.findByText('CodeView Mock')).toBeInTheDocument();
   });
 
@@ -117,7 +128,8 @@ describe('ResponsePanel', () => {
     );
   });
 
-  it('renders error metadata and exports the current request', () => {
+  it('renders error metadata and exports the current request', async () => {
+    const user = userEvent.setup();
     useResponseStore.setState({
       error: 'Bad request',
       statusCode: 400,
@@ -130,7 +142,8 @@ describe('ResponsePanel', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Error: Bad request');
     expect(screen.getByText('400 Error')).toBeInTheDocument();
-    fireEvent.click(
+
+    await user.click(
       screen.getByRole('button', {
         name: /export request and response as json/i,
       }),

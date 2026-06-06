@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { stripNonDomProps } from '@/__tests__/strip-dom-props';
 import {
   KbdShortcut,
   Tooltip,
@@ -19,7 +20,7 @@ vi.mock('@base-ui/react/tooltip', () => {
       children?: React.ReactNode;
       render?: React.ReactNode;
     }) =>
-      React.createElement(tag, props, render ?? children);
+      React.createElement(tag, stripNonDomProps(props), render ?? children);
 
   return {
     Tooltip: {

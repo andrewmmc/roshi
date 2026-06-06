@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ProviderSettings } from './ProviderManager';
 import { makeProvider } from '@/__tests__/fixtures';
 import { useProviderStore } from '@/stores/provider-store';
@@ -137,6 +138,7 @@ describe('ProviderSettings', () => {
   });
 
   it('renders provider details in list view and resets all providers', async () => {
+    const user = userEvent.setup();
     renderProviderSettings();
 
     expect(screen.getByText('Providers')).toBeInTheDocument();
@@ -144,16 +146,17 @@ describe('ProviderSettings', () => {
       screen.getByText(/API key configured · Custom headers/),
     ).toBeInTheDocument();
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: /reset all to default/i }),
     );
     expect(resetAllProviders).toHaveBeenCalledTimes(1);
   });
 
   it('opens the Model Market for a provider via the Manage models entry', async () => {
+    const user = userEvent.setup();
     renderProviderSettings();
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: /manage models for openai/i }),
     );
 
@@ -161,16 +164,17 @@ describe('ProviderSettings', () => {
   });
 
   it('switches to edit view and updates a provider through the form', async () => {
+    const user = userEvent.setup();
     renderProviderSettings();
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: /edit provider openai/i }),
     );
 
-    expect(screen.getByText('Edit Provider')).toBeInTheDocument();
+    expect(await screen.findByText('Edit Provider')).toBeInTheDocument();
     expect(screen.getByText('ProviderForm Mock OpenAI')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit Mock' }));
+    await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
     expect(updateProvider).toHaveBeenCalledWith(
       'builtin-openai',
       expect.objectContaining({ name: 'Updated Provider' }),
@@ -178,18 +182,19 @@ describe('ProviderSettings', () => {
   });
 
   it('opens add custom provider view and submits a new provider', async () => {
+    const user = userEvent.setup();
     addProvider.mockResolvedValue(
       makeProvider({ id: 'new-id', name: 'New', isBuiltIn: false }),
     );
 
     renderProviderSettings();
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: /add custom provider/i }),
     );
-    expect(screen.getByText('Add custom provider')).toBeInTheDocument();
+    expect(await screen.findByText('Add custom provider')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit Mock' }));
+    await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
 
     await waitFor(() => {
       expect(addProvider).toHaveBeenCalledTimes(1);
@@ -198,6 +203,7 @@ describe('ProviderSettings', () => {
   });
 
   it('resets a built-in provider in edit view', async () => {
+    const user = userEvent.setup();
     resetProvider.mockResolvedValue(undefined);
     useProviderStore.setState({
       providers: [
@@ -211,23 +217,24 @@ describe('ProviderSettings', () => {
 
     renderProviderSettings();
 
-    fireEvent.click(
+    await user.click(
       screen.getByRole('button', { name: /edit provider openai/i }),
     );
-    fireEvent.click(screen.getByRole('button', { name: /reset to default/i }));
+    await user.click(screen.getByRole('button', { name: /reset to default/i }));
 
     expect(resetProvider).toHaveBeenCalledWith('builtin-openai');
   });
 
   it('exports providers, closes, and removes custom providers', async () => {
+    const user = userEvent.setup();
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { onClose } = renderProviderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: /export json/i }));
-    fireEvent.click(
+    await user.click(screen.getByRole('button', { name: /export json/i }));
+    await user.click(
       screen.getByRole('button', { name: /remove custom provider my custom/i }),
     );
-    fireEvent.click(
+    await user.click(
       screen.getAllByRole('button', { name: /^close$/i }).at(-1)!,
     );
 
@@ -242,6 +249,7 @@ describe('ProviderSettings', () => {
   });
 
   it('shows add limit messaging and alerts when the store rejects an add', async () => {
+    const user = userEvent.setup();
     const alert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     mockProviders.value = Array.from({ length: 3 }, (_, i) =>
       makeProvider({
@@ -260,10 +268,10 @@ describe('ProviderSettings', () => {
     mockProviders.value = [];
     addProvider.mockRejectedValue(new Error('MAX_CUSTOM_PROVIDERS'));
     renderProviderSettings();
-    fireEvent.click(
+    await user.click(
       screen.getAllByRole('button', { name: /add custom provider/i })[1],
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Submit Mock' }));
+    await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
 
     await waitFor(() => {
       expect(alert).toHaveBeenCalledWith(

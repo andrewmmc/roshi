@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { stripNonDomProps } from '@/__tests__/strip-dom-props';
 import { Slider } from './slider';
 
 vi.mock('@base-ui/react/slider', () => ({
@@ -7,21 +8,21 @@ vi.mock('@base-ui/react/slider', () => ({
       children,
       ...props
     }: React.HTMLAttributes<HTMLDivElement> & { value?: number[] }) => (
-      <div data-testid="slider-root" {...props}>
+      <div data-testid="slider-root" {...stripNonDomProps(props)}>
         {children}
       </div>
     ),
     Control: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...props}>{children}</div>
+      <div {...stripNonDomProps(props)}>{children}</div>
     ),
     Track: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...props}>{children}</div>
+      <div {...stripNonDomProps(props)}>{children}</div>
     ),
     Indicator: (props: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...props} />
+      <div {...stripNonDomProps(props)} />
     ),
     Thumb: (props: React.HTMLAttributes<HTMLDivElement>) => (
-      <div data-testid="slider-thumb" {...props} />
+      <div data-testid="slider-thumb" {...stripNonDomProps(props)} />
     ),
   },
 }));

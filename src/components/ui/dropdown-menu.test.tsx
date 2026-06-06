@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { stripNonDomProps } from '@/__tests__/strip-dom-props';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -23,9 +24,17 @@ vi.mock('@base-ui/react/menu', () => {
     (tag: string) =>
     ({
       children,
+      render,
       ...props
-    }: Record<string, unknown> & { children?: React.ReactNode }) => {
-      return React.createElement(tag, props, children);
+    }: Record<string, unknown> & {
+      children?: React.ReactNode;
+      render?: React.ReactNode;
+    }) => {
+      return React.createElement(
+        tag,
+        stripNonDomProps(props),
+        render ?? children,
+      );
     };
 
   return {

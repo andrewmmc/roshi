@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AboutDialog } from './AboutDialog';
 import { useUiStore } from '@/stores/ui-store';
 
@@ -23,12 +24,12 @@ describe('AboutDialog', () => {
     useUiStore.setState({ aboutOpen: false });
   });
 
-  it('renders when aboutOpen is true', () => {
+  it('renders when aboutOpen is true', async () => {
     useUiStore.setState({ aboutOpen: true });
 
     render(<AboutDialog />);
 
-    expect(screen.getByText('About Roshi')).toBeInTheDocument();
+    expect(await screen.findByText('About Roshi')).toBeInTheDocument();
     expect(
       screen.getByText(
         'MIT-licensed local-first workbench for testing LLM APIs',
@@ -39,17 +40,21 @@ describe('AboutDialog', () => {
     expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
   });
 
-  it('does not render when aboutOpen is false', () => {
+  it('does not render when aboutOpen is false', async () => {
     render(<AboutDialog />);
 
+    await waitFor(() => {
+      expect(listenMock).toHaveBeenCalled();
+    });
     expect(screen.queryByText('About Roshi')).not.toBeInTheDocument();
   });
 
   it('opens external links through Tauri opener', async () => {
+    const user = userEvent.setup();
     useUiStore.setState({ aboutOpen: true });
     render(<AboutDialog />);
 
-    fireEvent.click(screen.getByRole('link', { name: /website/i }));
+    await user.click(await screen.findByRole('link', { name: /website/i }));
 
     await waitFor(() => {
       expect(openUrlMock).toHaveBeenCalledWith('https://roshi.mmc.dev/');
@@ -57,12 +62,15 @@ describe('AboutDialog', () => {
   });
 
   it('falls back to window.open when Tauri opener fails', async () => {
+    const user = userEvent.setup();
     const windowOpen = vi.spyOn(window, 'open').mockReturnValue(null);
     openUrlMock.mockRejectedValue(new Error('not tauri'));
     useUiStore.setState({ aboutOpen: true });
     render(<AboutDialog />);
 
-    fireEvent.click(screen.getByRole('link', { name: /privacy policy/i }));
+    await user.click(
+      await screen.findByRole('link', { name: /privacy policy/i }),
+    );
 
     await waitFor(() => {
       expect(windowOpen).toHaveBeenCalledWith(
@@ -91,7 +99,9 @@ describe('AboutDialog', () => {
     );
     handler?.();
 
-    expect(useUiStore.getState().aboutOpen).toBe(true);
+    await waitFor(() => {
+      expect(useUiStore.getState().aboutOpen).toBe(true);
+    });
     unmount();
     expect(unlisten).toHaveBeenCalled();
   });

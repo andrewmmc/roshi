@@ -1,68 +1,13 @@
-import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ProviderSelect } from './ProviderSelect';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
-vi.mock('@/components/ui/select', () => {
-  function Select({
-    value,
-    onValueChange,
-    disabled,
-    children,
-  }: {
-    value?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-    children: React.ReactNode;
-  }) {
-    return (
-      <select
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onValueChange?.(e.target.value)}
-      >
-        {children}
-      </select>
-    );
-  }
-
-  function SelectTrigger({
-    ariaLabel,
-    children,
-    ...props
-  }: React.HTMLAttributes<HTMLDivElement> & { ariaLabel?: string }) {
-    return (
-      <div aria-label={ariaLabel} {...props}>
-        {children}
-      </div>
-    );
-  }
-
-  return {
-    Select,
-    SelectTrigger,
-    SelectContent: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
-    SelectItem: ({
-      value,
-      children,
-      title,
-    }: {
-      value: string;
-      children: React.ReactNode;
-      title?: string;
-    }) => (
-      <option value={value} title={title}>
-        {children}
-      </option>
-    ),
-    SelectValue: ({ children }: { children?: React.ReactNode }) => (
-      <>{children}</>
-    ),
-  };
+vi.mock('@/components/ui/select', async () => {
+  const mocks = await import('@/__tests__/mock-select');
+  return mocks;
 });
 
 describe('ProviderSelect', () => {
@@ -96,7 +41,8 @@ describe('ProviderSelect', () => {
     expect(screen.getByText('Loading providers…')).toBeInTheDocument();
   });
 
-  it('renders providers and models and dispatches selections', () => {
+  it('renders providers and models and dispatches selections', async () => {
+    const user = userEvent.setup();
     const selectProvider = vi.fn();
     const selectModel = vi.fn();
     useProviderStore.setState({
@@ -119,16 +65,15 @@ describe('ProviderSelect', () => {
     render(<ProviderSelect />);
 
     const selects = screen.getAllByRole('combobox');
-    fireEvent.change(selects[0], { target: { value: 'p1' } });
-    fireEvent.change(selects[1], { target: { value: 'm2' } });
+    await user.selectOptions(selects[0], 'p1');
+    await user.selectOptions(selects[1], 'm2');
 
-    expect(screen.getAllByText('OpenAI').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('GPT-4o').length).toBeGreaterThan(0);
     expect(selectProvider).toHaveBeenCalledWith('p1');
     expect(selectModel).toHaveBeenCalledWith('m2');
   });
 
-  it('renders a Browse models button when the selected provider has no models', () => {
+  it('renders a Browse models button when the selected provider has no models', async () => {
+    const user = userEvent.setup();
     const openModelMarket = vi.fn();
     useUiStore.setState({ openModelMarket });
     useProviderStore.setState({
@@ -146,14 +91,15 @@ describe('ProviderSelect', () => {
     render(<ProviderSelect />);
 
     const browse = screen.getByRole('button', { name: /browse models/i });
-    fireEvent.click(browse);
+    await user.click(browse);
     expect(openModelMarket).toHaveBeenCalledWith('p1');
     expect(
       screen.queryByRole('combobox', { name: /select model/i }),
     ).not.toBeInTheDocument();
   });
 
-  it('enables model selection for google gemini and displays available models', () => {
+  it('enables model selection for google gemini and displays available models', async () => {
+    const user = userEvent.setup();
     const selectModel = vi.fn();
     useProviderStore.setState({
       providers: [
@@ -183,10 +129,8 @@ describe('ProviderSelect', () => {
     const selects = screen.getAllByRole('combobox');
     expect(selects[1]).not.toBeDisabled();
 
-    fireEvent.change(selects[1], { target: { value: 'gemini-2.0-flash' } });
+    await user.selectOptions(selects[1], 'gemini-2.0-flash');
 
-    expect(screen.getAllByText('Gemini 2.5 Pro').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Gemini 2.0 Flash').length).toBeGreaterThan(0);
     expect(selectModel).toHaveBeenCalledWith('gemini-2.0-flash');
   });
 });

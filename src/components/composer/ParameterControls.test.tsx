@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
+import userEvent from '@testing-library/user-event';
 import { ParameterControls } from './ParameterControls';
 import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
@@ -17,53 +17,9 @@ vi.mock('@/components/ui/slider', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/select', () => {
-  function getTriggerId(children: React.ReactNode): string | undefined {
-    const childArray = React.Children.toArray(children);
-    const trigger = childArray.find(
-      (child) => React.isValidElement<{ id?: string }>(child) && child.props.id,
-    );
-    return React.isValidElement<{ id?: string }>(trigger)
-      ? trigger.props.id
-      : undefined;
-  }
-
-  function Select({
-    value,
-    onValueChange,
-    disabled,
-    children,
-  }: {
-    value: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-    children: React.ReactNode;
-  }) {
-    return (
-      <select
-        id={getTriggerId(children)}
-        value={value}
-        onChange={(event) => onValueChange?.(event.target.value)}
-        disabled={disabled}
-      >
-        {children}
-      </select>
-    );
-  }
-
-  return {
-    Select,
-    SelectTrigger: ({ children }: { children: React.ReactNode }) => children,
-    SelectContent: ({ children }: { children: React.ReactNode }) => children,
-    SelectItem: ({
-      value,
-      children,
-    }: {
-      value: string;
-      children: React.ReactNode;
-    }) => <option value={value}>{children}</option>,
-    SelectValue: () => null,
-  };
+vi.mock('@/components/ui/select', async () => {
+  const mocks = await import('@/__tests__/mock-select');
+  return mocks;
 });
 
 describe('ParameterControls', () => {
@@ -125,7 +81,8 @@ describe('ParameterControls', () => {
     expect(screen.getByLabelText('Verbosity')).toBeEnabled();
   });
 
-  it('updates GPT-5 effort and verbosity controls', () => {
+  it('updates GPT-5 effort and verbosity controls', async () => {
+    const user = userEvent.setup();
     useProviderStore.setState({
       providers: [
         makeProvider({
@@ -139,12 +96,8 @@ describe('ParameterControls', () => {
 
     render(<ParameterControls />);
 
-    fireEvent.change(screen.getByLabelText('Effort'), {
-      target: { value: 'high' },
-    });
-    fireEvent.change(screen.getByLabelText('Verbosity'), {
-      target: { value: 'low' },
-    });
+    await user.selectOptions(screen.getByLabelText('Effort'), 'high');
+    await user.selectOptions(screen.getByLabelText('Verbosity'), 'low');
 
     expect(useComposerStore.getState().effort).toBe('high');
     expect(useComposerStore.getState().verbosity).toBe('low');
@@ -173,7 +126,8 @@ describe('ParameterControls', () => {
     );
   });
 
-  it('shows and clamps thinking budget when supported', () => {
+  it('shows and clamps thinking budget when supported', async () => {
+    const user = userEvent.setup();
     useProviderStore.setState({
       providers: [makeProvider({ id: 'g1', type: 'google-gemini' })],
       selectedProviderId: 'g1',
@@ -181,7 +135,7 @@ describe('ParameterControls', () => {
 
     render(<ParameterControls />);
 
-    fireEvent.click(screen.getByLabelText('Thinking'));
+    await user.click(screen.getByLabelText('Thinking'));
     const budgetInput = screen.getByLabelText('Budget Tokens');
     fireEvent.change(budgetInput, { target: { value: '500' } });
 
@@ -189,7 +143,8 @@ describe('ParameterControls', () => {
     expect(useComposerStore.getState().thinkingBudgetTokens).toBe(1024);
   });
 
-  it('hides budget tokens for adaptive-only thinking models', () => {
+  it('hides budget tokens for adaptive-only thinking models', async () => {
+    const user = userEvent.setup();
     useProviderStore.setState({
       providers: [
         makeProvider({
@@ -204,25 +159,26 @@ describe('ParameterControls', () => {
 
     render(<ParameterControls />);
 
-    fireEvent.click(screen.getByLabelText('Thinking'));
+    await user.click(screen.getByLabelText('Thinking'));
 
     expect(screen.queryByLabelText('Budget Tokens')).not.toBeInTheDocument();
   });
 
-  it('resets edited values back to defaults', () => {
+  it('resets edited values back to defaults', async () => {
+    const user = userEvent.setup();
     render(<ParameterControls />);
 
-    fireEvent.change(screen.getByLabelText('Temperature'), {
-      target: { value: '1.55' },
-    });
-    fireEvent.change(screen.getByLabelText('Max Tokens'), {
-      target: { value: '123' },
-    });
+    await user.clear(screen.getByLabelText('Temperature'));
+    await user.type(screen.getByLabelText('Temperature'), '1.55');
+    await user.clear(screen.getByLabelText('Max Tokens'));
+    await user.type(screen.getByLabelText('Max Tokens'), '123');
     useComposerStore.getState().setEffort('high');
     useComposerStore.getState().setVerbosity('low');
-    fireEvent.click(screen.getByLabelText('Stream'));
+    await user.click(screen.getByLabelText('Stream'));
 
-    fireEvent.click(screen.getByRole('button', { name: /reset to defaults/i }));
+    await user.click(
+      screen.getByRole('button', { name: /reset to defaults/i }),
+    );
 
     const state = useComposerStore.getState();
     expect(state.temperature).toBe(1);

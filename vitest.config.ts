@@ -43,6 +43,7 @@ export default defineConfig({
         'src/hooks/use-providers.ts',
         'src/hooks/use-token-count.ts',
         'src/providers/**/*.ts',
+        'src/components/composer/parameter-control-utils.ts',
       ],
       exclude: [
         'src/**/*.test.ts',
