@@ -120,6 +120,7 @@ export function EvalView() {
           <Button
             variant="outline"
             size="sm"
+            className="h-7 text-xs"
             disabled={isRunning || runners.length === 0}
             onClick={() => setSaveOpen(true)}
           >
@@ -129,6 +130,7 @@ export function EvalView() {
           <Button
             variant="ghost"
             size="sm"
+            className="h-7 text-xs"
             disabled={isRunning || runners.length === 0}
             onClick={handleExportJson}
             title="Export run as JSON"
@@ -139,6 +141,7 @@ export function EvalView() {
           <Button
             variant="ghost"
             size="sm"
+            className="h-7 text-xs"
             disabled={isRunning || runners.length === 0}
             onClick={handleExportCsv}
             title="Export metrics as CSV"
