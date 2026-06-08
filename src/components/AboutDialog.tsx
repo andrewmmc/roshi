@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Rocket } from 'lucide-react';
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +23,7 @@ const LINKS = [
 export function AboutDialog() {
   const open = useUiStore((s) => s.aboutOpen);
   const setOpen = useUiStore((s) => s.setAboutOpen);
+  const setChecklistOpen = useUiStore((s) => s.setChecklistOpen);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -73,6 +74,17 @@ export function AboutDialog() {
           <Separator />
 
           <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                setChecklistOpen(true);
+                setOpen(false);
+              }}
+              className="text-foreground hover:text-primary flex w-full items-center gap-2 text-sm transition-colors"
+            >
+              <Rocket className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+              Getting started guide
+            </button>
             {LINKS.map(({ label, url }) => (
               <a
                 key={label}

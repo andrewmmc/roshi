@@ -18,6 +18,8 @@ interface UiStore {
   focusHistorySearch: () => void;
   aboutOpen: boolean;
   setAboutOpen: (open: boolean) => void;
+  checklistOpen: boolean;
+  setChecklistOpen: (open: boolean) => void;
   mainView: MainView;
   setMainView: (view: MainView) => void;
   sidebarCollapsed: boolean;
@@ -46,6 +48,8 @@ export const useUiStore = create<UiStore>((set) => ({
     set((s) => ({ historySearchFocusGen: s.historySearchFocusGen + 1 })),
   aboutOpen: false,
   setAboutOpen: (open) => set({ aboutOpen: open }),
+  checklistOpen: false,
+  setChecklistOpen: (open) => set({ checklistOpen: open }),
   mainView: 'request',
   setMainView: (mainView) => set({ mainView }),
   sidebarCollapsed:

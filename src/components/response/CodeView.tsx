@@ -125,7 +125,7 @@ export function CodeView() {
             onClick={toggleStream}
             aria-pressed={stream}
             className={cn(
-              'border-border h-6 cursor-pointer rounded border px-2 text-[11px] font-medium transition-colors',
+              'border-border h-6 cursor-pointer rounded border px-2 text-xs font-medium transition-colors',
               stream
                 ? 'bg-accent text-accent-foreground'
                 : 'text-muted-foreground bg-transparent',

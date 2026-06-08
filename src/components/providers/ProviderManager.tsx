@@ -107,7 +107,7 @@ function ProviderList({
           Add custom provider
         </Button>
         {!canAddCustomProvider && (
-          <p className="text-muted-foreground px-0.5 text-center text-[11px] leading-snug">
+          <p className="text-muted-foreground px-0.5 text-center text-xs leading-snug">
             Maximum {MAX_CUSTOM_PROVIDERS} custom providers. Remove one to add
             another.
           </p>

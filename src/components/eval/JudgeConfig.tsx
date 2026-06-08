@@ -48,6 +48,10 @@ export function JudgeConfig() {
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground text-xs">
+        Judge uses a separate model to automatically score each response against
+        your rubric and pick a winner.
+      </p>
       <label className="flex items-center gap-2 text-xs">
         <input
           type="checkbox"
@@ -57,14 +61,14 @@ export function JudgeConfig() {
           className="rounded"
         />
         <span className="text-foreground">Enable LLM-as-judge</span>
-        <span className="text-muted-foreground text-[11px]">
+        <span className="text-muted-foreground text-xs">
           Score every candidate after the run.
         </span>
       </label>
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Judge provider
           </label>
           <Select
@@ -87,7 +91,7 @@ export function JudgeConfig() {
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Judge model
           </label>
           <Select
@@ -112,7 +116,7 @@ export function JudgeConfig() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+        <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
           Rubric
         </label>
         <Textarea

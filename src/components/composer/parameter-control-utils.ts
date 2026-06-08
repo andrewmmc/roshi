@@ -22,26 +22,27 @@ import {
 
 export const PARAM_INFO: Record<string, string> = {
   temperature:
-    'Controls output randomness. 0 = deterministic/greedy. 1 = default. 2 = highly varied. Use the presets below for quick sweeps.',
+    'Controls output randomness. 0 = consistent/predictable. 1 = default. 2 = highly varied. Use the presets below for common use cases.',
   'top-p':
-    'Nucleus sampling: model only samples from the top-P probability mass. Lower values narrow diversity. Mutually exclusive with Temperature on some providers.',
+    'Limits the vocabulary the model samples from. Lower = more focused; higher = more varied. On most providers, use either temperature or Top P — not both.',
   'top-k':
-    'Limits the sampling pool to the K most-probable tokens. Supported by Anthropic and Gemini models; ignored by OpenAI-compatible APIs.',
+    'Caps the number of candidate tokens the model can pick from. Lower = more predictable. Supported by Anthropic and Gemini; ignored by OpenAI-compatible APIs.',
   'frequency-penalty':
-    'Penalizes tokens proportional to how many times they have already appeared. Positive values reduce repetition; negative values encourage it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
+    'Discourages the model from repeating words it has already used. Positive values reduce repetition; negative values allow it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
   'presence-penalty':
-    'Penalizes any token that has appeared at all, regardless of count. Pushes the model toward new topics. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
-  'max-tokens': 'Maximum output tokens the model may generate in one response.',
+    'Pushes the model to introduce new topics by penalising any word that has appeared at all. Positive values = more varied output. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
+  'max-tokens':
+    'Hard limit on response length. Higher values allow longer replies but cost more API credits.',
   stream:
-    'Receive tokens as they are generated instead of waiting for the full response. Useful for long outputs and latency testing.',
+    'Receive tokens as they arrive instead of waiting for the full response. Useful for long outputs and latency testing.',
   thinking:
-    'Enables extended internal chain-of-thought reasoning before the visible answer. Supported on Claude 3.7+, Gemini thinking models, and GPT-5 series.',
+    'Lets the model reason internally before answering — can improve accuracy on hard or ambiguous questions. Supported on Claude 3.7+, Gemini thinking models, and GPT-5 series.',
   'budget-tokens':
-    'Token budget reserved for internal reasoning steps. Higher budget = deeper analysis, slower response, higher cost.',
+    'How many tokens the model may spend on hidden reasoning steps. More = deeper analysis, slower response, higher cost.',
   effort:
-    'Reasoning effort level for o-series (GPT-5) and Claude Opus 4.7+ models. Higher effort produces more thorough output at greater cost.',
+    'Reasoning depth for o-series and Claude Opus 4.7+ models. Higher effort = more thorough output at greater cost and latency.',
   verbosity:
-    'Controls the length and detail of the final response (GPT-5 Responses API).',
+    'Controls how long and detailed the final answer is (GPT-5 Responses API).',
 };
 
 export const TEMP_PRESETS = [

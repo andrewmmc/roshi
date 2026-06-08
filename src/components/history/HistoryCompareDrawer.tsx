@@ -49,7 +49,7 @@ export function HistoryCompareDrawer({
         </Button>
       </div>
       <div className="max-h-72 overflow-auto p-3">
-        <div className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wider uppercase">
+        <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
           Prompt diff
         </div>
         <DiffText segments={diff.segments} />

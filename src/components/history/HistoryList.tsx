@@ -94,7 +94,7 @@ function HistorySearchControls({
       </div>
       {isFiltering && (
         <div className="flex items-center pt-1">
-          <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[10px]">
+          <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px]">
             Filters active ·{' '}
             <span>
               {filteredCount} of {totalCount}

@@ -40,10 +40,7 @@ function InfoTooltip({ content }: { content: string }) {
             <circle cx="6" cy="3.5" r="0.6" fill="currentColor" />
           </svg>
         </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          className="max-w-60 text-[11px] leading-snug"
-        >
+        <TooltipContent side="right" className="max-w-60 text-xs leading-snug">
           {content}
         </TooltipContent>
       </Tooltip>
@@ -54,7 +51,7 @@ function InfoTooltip({ content }: { content: string }) {
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-2 mb-0.5 flex items-center gap-2">
-      <span className="text-muted-foreground/50 text-[10px] font-semibold tracking-widest uppercase">
+      <span className="text-muted-foreground/50 text-[11px] font-semibold tracking-widest uppercase">
         {children}
       </span>
       <div className="bg-border/50 h-px flex-1" />
@@ -308,7 +305,7 @@ export function ParameterControls() {
                   size="sm"
                   title={preset.title}
                   onClick={() => applyTempPreset(preset.value)}
-                  className={`h-5 flex-1 px-0 text-[10px] transition-colors ${
+                  className={`h-5 flex-1 px-0 text-[11px] transition-colors ${
                     Math.abs(temperature - preset.value) < 0.001
                       ? 'bg-accent border-accent-foreground/20 text-accent-foreground'
                       : ''
@@ -367,7 +364,7 @@ export function ParameterControls() {
           />
         </div>
         {capabilities?.tokenLimits?.output && (
-          <p className="text-muted-foreground/40 text-right text-[10px]">
+          <p className="text-muted-foreground/40 text-right text-[11px]">
             model limit: {capabilities.tokenLimits.output.toLocaleString()}
           </p>
         )}
@@ -430,7 +427,7 @@ export function ParameterControls() {
       )}
 
       {supportsThinking && isAdaptiveThinkingOnly && thinkingEnabled && (
-        <p className="text-muted-foreground/60 text-[11px]">
+        <p className="text-muted-foreground/60 text-xs">
           This model uses adaptive thinking — the reasoning depth is set
           automatically.
         </p>
@@ -466,10 +463,10 @@ export function ParameterControls() {
 
       {capabilities?.quirks && capabilities.quirks.length > 0 && (
         <div className="border-border/50 mt-1 rounded-lg border p-2">
-          <p className="text-muted-foreground/60 mb-1 text-[10px] font-semibold tracking-wide uppercase">
+          <p className="text-muted-foreground/60 mb-1 text-[11px] font-semibold tracking-wide uppercase">
             Model notes
           </p>
-          <ul className="text-muted-foreground/70 flex flex-col gap-0.5 text-[11px]">
+          <ul className="text-muted-foreground/70 flex flex-col gap-0.5 text-xs">
             {capabilities.quirks.map((q) => (
               <li key={q} className="flex items-start gap-1.5">
                 <span className="mt-0.5 shrink-0">·</span>

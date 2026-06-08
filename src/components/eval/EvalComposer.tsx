@@ -34,7 +34,7 @@ export function EvalComposer() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+        <Label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
           System prompt
         </Label>
         <Textarea
@@ -49,7 +49,7 @@ export function EvalComposer() {
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <Label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Messages
           </Label>
           <div className="flex gap-1.5">
@@ -147,7 +147,7 @@ export function EvalComposer() {
           disabled={isRunning}
         />
         <label className="flex flex-col gap-1 text-[11px]">
-          <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Stream
           </span>
           <input
@@ -182,7 +182,7 @@ function NumberField({
 }) {
   return (
     <label className="flex flex-col gap-1 text-[11px]">
-      <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+      <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
         {label}
       </span>
       <Input

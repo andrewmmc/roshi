@@ -109,7 +109,7 @@ export function EnvironmentPreviewButton({
                       </span>
                       <span
                         className={cn(
-                          'rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase',
+                          'rounded-full px-2 py-0.5 text-[11px] font-medium tracking-wide uppercase',
                           variable.status === 'resolved' &&
                             'bg-green-500/10 text-green-700 dark:text-green-300',
                           variable.status === 'missing' &&

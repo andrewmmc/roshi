@@ -53,9 +53,12 @@ export function RunnerPicker() {
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground text-xs">
+        Each runner is a provider + model pair that receives the same prompt.
+      </p>
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Provider
           </label>
           <Select
@@ -79,7 +82,7 @@ export function RunnerPicker() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
             Model
           </label>
           <Select
@@ -114,7 +117,7 @@ export function RunnerPicker() {
       </div>
 
       {runners.length === 0 ? (
-        <p className="text-muted-foreground text-[11px]">
+        <p className="text-muted-foreground text-xs">
           No runners yet. Add at least one provider + model to compare.
         </p>
       ) : (

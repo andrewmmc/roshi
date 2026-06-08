@@ -92,7 +92,7 @@ export function HistoryFiltersSheet({
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Provider
             </span>
             <Select
@@ -118,7 +118,7 @@ export function HistoryFiltersSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Model
             </span>
             <Select
@@ -144,7 +144,7 @@ export function HistoryFiltersSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Date range
             </span>
             <Select
@@ -172,7 +172,7 @@ export function HistoryFiltersSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Status code
             </span>
             <Select
@@ -210,7 +210,7 @@ export function HistoryFiltersSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Collection
             </span>
             <Select
@@ -236,7 +236,7 @@ export function HistoryFiltersSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <span className="text-muted-foreground text-[11px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
               Saved request
             </span>
             <Select

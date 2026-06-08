@@ -53,13 +53,13 @@ export function CompareDrawer() {
       </div>
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
         <div className="border-border/60 max-h-72 overflow-auto border-b p-3 md:border-r md:border-b-0">
-          <div className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wider uppercase">
+          <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
             Differences
           </div>
           <DiffText segments={diff} />
         </div>
         <div className="max-h-72 overflow-auto p-3">
-          <div className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wider uppercase">
+          <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
             Side-by-side metrics
           </div>
           <table className="w-full text-[11px]">

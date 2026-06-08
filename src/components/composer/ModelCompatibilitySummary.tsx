@@ -8,13 +8,13 @@ export function ModelCompatibilitySummary() {
 
   return (
     <div className="border-border/50 bg-muted/15 rounded-lg border p-2.5">
-      <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-wide uppercase">
+      <p className="text-muted-foreground/70 mb-2 text-[11px] font-semibold tracking-wide uppercase">
         Model compatibility
       </p>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-3">
         {items.map((item) => (
           <div key={item.label} className="min-w-0">
-            <dt className="text-muted-foreground/60 text-[10px]">
+            <dt className="text-muted-foreground/60 text-[11px]">
               {item.label}
             </dt>
             <dd

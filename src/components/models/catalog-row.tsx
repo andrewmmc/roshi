@@ -21,12 +21,12 @@ function ModelCapabilityBadges({ model }: { model: ProviderModel }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {context && (
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-[11px]">
           {context}
         </Badge>
       )}
       {nonTextModalities.map((m) => (
-        <Badge key={m} variant="ghost" className="text-[10px] capitalize">
+        <Badge key={m} variant="ghost" className="text-[11px] capitalize">
           {m}
         </Badge>
       ))}

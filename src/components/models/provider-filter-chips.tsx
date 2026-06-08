@@ -16,7 +16,7 @@ export function ProviderFilterChips({
         type="button"
         onClick={() => onChange(null)}
         className={cn(
-          'rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+          'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
           activeProviderId === null
             ? 'border-foreground/20 bg-foreground/5 text-foreground'
             : 'border-border text-muted-foreground hover:text-foreground',
@@ -30,7 +30,7 @@ export function ProviderFilterChips({
           type="button"
           onClick={() => onChange(p.id)}
           className={cn(
-            'rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+            'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
             activeProviderId === p.id
               ? 'border-foreground/20 bg-foreground/5 text-foreground'
               : 'border-border text-muted-foreground hover:text-foreground',

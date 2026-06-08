@@ -43,7 +43,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
           {headerSlot}
         </div>
       )}
-      <div className="text-muted-foreground border-sidebar-border/60 flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[10px] font-semibold tracking-wider uppercase">
+      <div className="text-muted-foreground border-sidebar-border/60 flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[11px] font-semibold tracking-wider uppercase">
         <span>Saved eval runs</span>
         <span>{records.length}</span>
       </div>

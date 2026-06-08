@@ -61,7 +61,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
         <div className="flex min-w-0 items-center gap-2">
           <span
             className={cn(
-              'rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase',
+              'rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase',
               statusBadgeClass(result.status),
             )}
           >
@@ -78,7 +78,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+          <label className="text-muted-foreground inline-flex items-center gap-1 text-xs">
             <input
               type="checkbox"
               checked={compareChecked}
@@ -91,7 +91,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
             type="button"
             onClick={() => removeRunner(runner.id)}
             disabled={isRunning}
-            className="text-muted-foreground hover:text-foreground text-[11px] disabled:opacity-40"
+            className="text-muted-foreground hover:text-foreground text-xs disabled:opacity-40"
           >
             Remove
           </button>
@@ -137,7 +137,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-[10px]"
+                className="h-6 px-2 text-[11px]"
                 disabled={isRunning}
                 onClick={() => {
                   loadIntoComposer(runner.id);
@@ -148,7 +148,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
                 Use in composer
               </Button>
             )}
-            <span className="text-muted-foreground text-[10px]">
+            <span className="text-muted-foreground text-[11px]">
               {wordCount} words
             </span>
           </div>
@@ -156,7 +156,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
 
         {judgeScore && (
           <div className="border-border/60 border-t pt-1.5">
-            <div className="text-muted-foreground/70 mb-1 text-[10px] font-semibold tracking-wider uppercase">
+            <div className="text-muted-foreground/70 mb-1 text-[11px] font-semibold tracking-wider uppercase">
               Judge
             </div>
             <div className="grid grid-cols-4 gap-1 text-[11px]">
@@ -166,7 +166,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
               <ScoreCell label="Overall" value={judgeScore.overall} bold />
             </div>
             {judgeScore.rationale && (
-              <p className="text-muted-foreground mt-1 text-[11px] italic">
+              <p className="text-muted-foreground mt-1 text-xs italic">
                 {judgeScore.rationale}
               </p>
             )}

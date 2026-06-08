@@ -68,7 +68,7 @@ export function HistoryItem({
           >
             {preview}
           </div>
-          <div className="text-muted-foreground/70 mt-0.5 text-[10px]">
+          <div className="text-muted-foreground/70 mt-0.5 text-[11px]">
             {new Date(entry.createdAt).toLocaleString()}
             {entry.durationMs !== null && ` · ${entry.durationMs}ms`}
           </div>
