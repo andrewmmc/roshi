@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Download, FileDown, Play, Save, Square, Upload } from 'lucide-react';
+import {
+  Download,
+  FileDown,
+  MoreHorizontal,
+  PanelLeftOpen,
+  Play,
+  Save,
+  Square,
+  Upload,
+} from 'lucide-react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -7,6 +16,14 @@ import {
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +41,7 @@ import { ViewToggle } from '@/components/layout/ViewToggle';
 import { toast } from '@/stores/toast-store';
 import { exportEvalRunJson, exportEvalRunCsv } from '@/utils/export';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
 import { EvalComposer } from './EvalComposer';
 import { RunnerPicker } from './RunnerPicker';
 import { JudgeConfig } from './JudgeConfig';
@@ -45,11 +63,14 @@ export function EvalView() {
   const judgeResult = useEvalStore((s) => s.judgeResult);
   const loadIntoComposer = useEvalStore((s) => s.loadIntoComposer);
   const setMainView = useUiStore((s) => s.setMainView);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
   const saveRecord = useEvalRunsStore((s) => s.save);
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const { containerRef, narrow } = useContainerBreakpoint(580);
 
   useEffect(() => {
     if (!loaded) loadProviders();
@@ -81,10 +102,27 @@ export function EvalView() {
     toast('Loaded eval case into composer');
   };
 
+  const secondaryDisabled = isRunning || runners.length === 0;
+
   return (
     <div className="bg-background flex h-full flex-col">
-      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
-        <div className="flex items-center gap-3">
+      <div
+        ref={containerRef}
+        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4"
+      >
+        <div className="flex items-center gap-2">
+          {sidebarCollapsed && (
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label="Open sidebar"
+              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0"
+              onClick={() => setSidebarCollapsed(false)}
+              tooltip="Open sidebar"
+            >
+              <PanelLeftOpen className="h-3.5 w-3.5" />
+            </IconButton>
+          )}
           <ViewToggle />
           <span className="text-muted-foreground hidden text-xs md:inline">
             Run one prompt against multiple model providers
@@ -96,59 +134,113 @@ export function EvalView() {
               Judging…
             </span>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => handleLoadIntoComposer()}
-            title="Load this eval prompt into the main composer"
-          >
-            <Upload className="mr-1.5 h-3 w-3" />
-            Load into composer
-          </Button>
-          {judgeResult?.winnerRunnerId && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => handleLoadIntoComposer(judgeResult.winnerRunnerId)}
-              title="Load the judge winner into the main composer"
-            >
-              Load winner
-            </Button>
+          {/* Secondary actions — inline when wide, overflow when narrow */}
+          {!narrow ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => handleLoadIntoComposer()}
+                title="Load this eval prompt into the main composer"
+              >
+                <Upload className="mr-1.5 h-3 w-3" />
+                Load into composer
+              </Button>
+              {judgeResult?.winnerRunnerId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() =>
+                    handleLoadIntoComposer(judgeResult.winnerRunnerId)
+                  }
+                  title="Load the judge winner into the main composer"
+                >
+                  Load winner
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={secondaryDisabled}
+                onClick={() => setSaveOpen(true)}
+              >
+                <Save className="mr-1.5 h-3 w-3" />
+                Save run
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={secondaryDisabled}
+                onClick={handleExportJson}
+                title="Export run as JSON"
+              >
+                <FileDown className="mr-1.5 h-3 w-3" />
+                JSON
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={secondaryDisabled}
+                onClick={handleExportCsv}
+                title="Export metrics as CSV"
+              >
+                <Download className="mr-1.5 h-3 w-3" />
+                CSV
+              </Button>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                aria-label="More actions"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleLoadIntoComposer()}>
+                  <Upload className="h-3.5 w-3.5" />
+                  Load into composer
+                </DropdownMenuItem>
+                {judgeResult?.winnerRunnerId && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      handleLoadIntoComposer(judgeResult.winnerRunnerId)
+                    }
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Load winner
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={secondaryDisabled}
+                  onClick={() => setSaveOpen(true)}
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Save run
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={secondaryDisabled}
+                  onClick={handleExportJson}
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  Export JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={secondaryDisabled}
+                  onClick={handleExportCsv}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            disabled={isRunning || runners.length === 0}
-            onClick={() => setSaveOpen(true)}
-          >
-            <Save className="mr-1.5 h-3 w-3" />
-            Save run
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs"
-            disabled={isRunning || runners.length === 0}
-            onClick={handleExportJson}
-            title="Export run as JSON"
-          >
-            <FileDown className="mr-1.5 h-3 w-3" />
-            JSON
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs"
-            disabled={isRunning || runners.length === 0}
-            onClick={handleExportCsv}
-            title="Export metrics as CSV"
-          >
-            <Download className="mr-1.5 h-3 w-3" />
-            CSV
-          </Button>
           {isRunning ? (
             <Button
               variant="destructive"

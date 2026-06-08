@@ -19,8 +19,24 @@ function formatPreviewValue(value: string | null, masked: boolean): string {
   return value || '—';
 }
 
-export function EnvironmentPreviewButton() {
-  const [open, setOpen] = useState(false);
+export function EnvironmentPreviewButton({
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+} = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const handleOpenChange = (next: boolean) => {
+    if (isControlled) {
+      onOpenChangeProp?.(next);
+    } else {
+      setInternalOpen(next);
+    }
+  };
+
   const messages = useComposerStore((s) => s.messages);
   const systemPrompt = useComposerStore((s) => s.systemPrompt);
   const customHeaders = useComposerStore((s) => s.customHeaders);
@@ -52,11 +68,11 @@ export function EnvironmentPreviewButton() {
         )}
         tooltip="Preview environment variables"
         aria-label="Preview environment variables"
-        onClick={() => setOpen(true)}
+        onClick={() => handleOpenChange(true)}
       >
         <Eye className="h-3 w-3" />
       </IconButton>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>
             <SheetTitle>Environment preview</SheetTitle>

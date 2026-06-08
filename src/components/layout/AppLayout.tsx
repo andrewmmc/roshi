@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import type { PanelImperativeHandle } from 'react-resizable-panels';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -6,8 +8,36 @@ import {
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useUiStore } from '@/stores/ui-store';
+
+const COLLAPSE_BREAKPOINT = 768;
 
 export function AppLayout() {
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+  const panelRef = useRef<PanelImperativeHandle | null>(null);
+
+  // Sync Zustand state → panel imperative API (2.1)
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    if (sidebarCollapsed && !panel.isCollapsed()) {
+      panel.collapse();
+    } else if (!sidebarCollapsed && panel.isCollapsed()) {
+      panel.expand();
+    }
+  }, [sidebarCollapsed]);
+
+  // Auto-collapse on narrow viewport (2.2)
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${COLLAPSE_BREAKPOINT - 1}px)`);
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
+      setSidebarCollapsed(e.matches);
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [setSidebarCollapsed]);
+
   return (
     <div className="bg-sidebar h-screen w-screen overflow-hidden">
       <a
@@ -17,15 +47,26 @@ export function AppLayout() {
         Skip to main content
       </a>
       <ResizablePanelGroup orientation="horizontal">
-        <ResizablePanel defaultSize="26%" minSize="22%" maxSize="32%">
+        <ResizablePanel
+          panelRef={panelRef}
+          defaultSize={26}
+          minSize={22}
+          maxSize={32}
+          collapsible
+          collapsedSize={0}
+          onResize={() => {
+            const panel = panelRef.current;
+            if (panel) setSidebarCollapsed(panel.isCollapsed());
+          }}
+        >
           <aside className="h-full">
             <ErrorBoundary panel>
               <Sidebar />
             </ErrorBoundary>
           </aside>
         </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize="76%" minSize="40%">
+        {!sidebarCollapsed && <ResizableHandle />}
+        <ResizablePanel defaultSize={74} minSize={40}>
           <main id="main-content" className="h-full">
             <MainPanel />
           </main>

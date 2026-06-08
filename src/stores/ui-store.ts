@@ -3,6 +3,8 @@ import { create } from 'zustand';
 export type SettingsPage = 'providers' | 'environments' | 'models';
 export type MainView = 'request' | 'eval';
 
+const SIDEBAR_COLLAPSE_BREAKPOINT = 768;
+
 interface UiStore {
   settingsOpen: boolean;
   settingsPage: SettingsPage;
@@ -18,6 +20,8 @@ interface UiStore {
   setAboutOpen: (open: boolean) => void;
   mainView: MainView;
   setMainView: (view: MainView) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -44,4 +48,9 @@ export const useUiStore = create<UiStore>((set) => ({
   setAboutOpen: (open) => set({ aboutOpen: open }),
   mainView: 'request',
   setMainView: (mainView) => set({ mainView }),
+  sidebarCollapsed:
+    typeof window !== 'undefined'
+      ? window.innerWidth < SIDEBAR_COLLAPSE_BREAKPOINT
+      : false,
+  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 }));

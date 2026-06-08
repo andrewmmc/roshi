@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,7 +12,22 @@ import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentP
 import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
 import { RequestCompatibilityWarning } from '@/components/composer/RequestCompatibilityWarning';
 import { Button } from '@/components/ui/button';
-import { GitCompare, Send, Square } from 'lucide-react';
+import { IconButton } from '@/components/ui/icon-button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Eye,
+  GitCompare,
+  MoreHorizontal,
+  PanelLeftOpen,
+  Send,
+  Square,
+} from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { useProviderStore } from '@/stores/provider-store';
@@ -22,6 +37,7 @@ import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
 import { ViewToggle } from './ViewToggle';
+import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
 
 const EvalView = lazy(() =>
   import('@/components/eval/EvalView').then((m) => ({ default: m.EvalView })),
@@ -55,6 +71,11 @@ function RequestView() {
   const hasProvider = useProviderStore((s) => s.providers.length > 0);
   const setMainView = useUiStore((s) => s.setMainView);
   const seedFromMainComposer = useEvalStore((s) => s.seedFromMainComposer);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+
+  const [envPreviewOpen, setEnvPreviewOpen] = useState(false);
+  const { containerRef, narrow } = useContainerBreakpoint(520);
 
   const handleComparePrompt = () => {
     seedFromMainComposer();
@@ -63,26 +84,70 @@ function RequestView() {
 
   return (
     <>
-      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
+      <div
+        ref={containerRef}
+        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4"
+      >
         <div className="flex min-w-0 items-center gap-2">
+          {sidebarCollapsed && (
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label="Open sidebar"
+              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0"
+              onClick={() => setSidebarCollapsed(false)}
+              tooltip="Open sidebar"
+            >
+              <PanelLeftOpen className="h-3.5 w-3.5" />
+            </IconButton>
+          )}
           <ViewToggle />
           <ProviderSelect />
           <EnvironmentSelector />
-          <EnvironmentPreviewButton />
+          {/* Always render so the sheet portal stays mounted; hide trigger when narrow */}
+          <span className={narrow ? 'hidden' : undefined}>
+            <EnvironmentPreviewButton
+              open={envPreviewOpen}
+              onOpenChange={setEnvPreviewOpen}
+            />
+          </span>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <TokenCountBadge />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden h-7 text-xs sm:inline-flex"
-            onClick={handleComparePrompt}
-            title="Compare this prompt across models"
-          >
-            <GitCompare className="mr-1.5 h-3 w-3" />
-            Compare
-          </Button>
+          {!narrow && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="hidden h-7 text-xs sm:inline-flex"
+              onClick={handleComparePrompt}
+              title="Compare this prompt across models"
+            >
+              <GitCompare className="mr-1.5 h-3 w-3" />
+              Compare
+            </Button>
+          )}
+          {narrow && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                aria-label="More actions"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
+                  <Eye className="h-3.5 w-3.5" />
+                  Env preview
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleComparePrompt}>
+                  <GitCompare className="h-3.5 w-3.5" />
+                  Compare
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           {isLoading ? (
             <Button
               variant="destructive"

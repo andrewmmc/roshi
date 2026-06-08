@@ -238,7 +238,7 @@ export function EnvironmentSelector() {
       <SelectTrigger
         aria-label="Select environment"
         title="Select environment"
-        className="h-7 w-[150px] text-xs"
+        className="h-7 max-w-[150px] min-w-[80px] flex-1 text-xs"
       >
         <SelectValue placeholder="Environment">
           {selectedEnvironment?.name ?? 'No environment'}

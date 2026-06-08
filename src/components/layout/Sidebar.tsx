@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FilePlus2, Sun, Moon } from 'lucide-react';
+import { FilePlus2, PanelLeftClose, Sun, Moon } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +48,7 @@ export function Sidebar() {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggle);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const [showDiscard, setShowDiscard] = useState(false);
 
   const reset = useCallback(() => {
@@ -78,6 +79,16 @@ export function Sidebar() {
             Roshi
           </button>
           <div className="ml-auto flex items-center gap-0.5">
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label="Collapse sidebar"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={() => setSidebarCollapsed(true)}
+              tooltip="Collapse sidebar"
+            >
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            </IconButton>
             <IconButton
               variant="ghost"
               size="icon"

@@ -10,6 +10,7 @@ describe('ui-store', () => {
       settingsModelsProviderId: null,
       historySearchFocusGen: 0,
       aboutOpen: false,
+      sidebarCollapsed: false,
     });
   });
 
@@ -85,6 +86,23 @@ describe('ui-store', () => {
     it('switches to eval view', () => {
       getState().setMainView('eval');
       expect(getState().mainView).toBe('eval');
+    });
+  });
+
+  describe('sidebarCollapsed', () => {
+    it('defaults to false in test environment', () => {
+      expect(getState().sidebarCollapsed).toBe(false);
+    });
+
+    it('collapses the sidebar', () => {
+      getState().setSidebarCollapsed(true);
+      expect(getState().sidebarCollapsed).toBe(true);
+    });
+
+    it('expands the sidebar', () => {
+      useUiStore.setState({ sidebarCollapsed: true });
+      getState().setSidebarCollapsed(false);
+      expect(getState().sidebarCollapsed).toBe(false);
     });
   });
 
