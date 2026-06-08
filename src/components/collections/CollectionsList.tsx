@@ -6,6 +6,13 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -121,18 +128,29 @@ function SaveRequestDialog({
             <label className="text-muted-foreground text-xs font-medium">
               Save into
             </label>
-            <select
-              aria-label="Select collection"
+            <Select
               value={selectedCollectionId || collections[0]?.id || ''}
-              onChange={(e) => setSelectedCollectionId(e.target.value)}
-              className="border-input bg-muted/20 text-foreground focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
+              onValueChange={(value) => setSelectedCollectionId(value ?? '')}
             >
-              {collections.map((collection) => (
-                <option key={collection.id} value={collection.id}>
-                  {collection.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger aria-label="Select collection" className="w-full">
+                <SelectValue>
+                  {
+                    collections.find(
+                      (collection) =>
+                        collection.id ===
+                        (selectedCollectionId || collections[0]?.id),
+                    )?.name
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
@@ -520,18 +538,32 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               <label className="text-muted-foreground text-xs font-medium">
                 Collection
               </label>
-              <select
-                aria-label="Select collection"
+              <Select
                 value={duplicateCollectionId || userCollections[0]?.id || ''}
-                onChange={(e) => setDuplicateCollectionId(e.target.value)}
-                className="border-input bg-muted/20 text-foreground focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
+                onValueChange={(value) => setDuplicateCollectionId(value ?? '')}
               >
-                {userCollections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  aria-label="Select collection"
+                  className="w-full"
+                >
+                  <SelectValue>
+                    {
+                      userCollections.find(
+                        (collection) =>
+                          collection.id ===
+                          (duplicateCollectionId || userCollections[0]?.id),
+                      )?.name
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {userCollections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className="text-muted-foreground text-xs font-medium">
