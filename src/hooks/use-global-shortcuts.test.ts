@@ -138,19 +138,63 @@ describe('useGlobalShortcuts', () => {
       expect(resetResponse).toHaveBeenCalledTimes(1);
     });
 
-    it('does not reset when there are unsaved changes', () => {
+    it('opens the discard dialog and does not reset when there are unsaved changes', () => {
       useComposerStore.setState({
         messages: [{ id: '1', role: 'user', content: 'hello' }],
       });
       // sentRequest is null so content is considered unsaved
       useResponseStore.setState({ sentRequest: null });
+      useUiStore.setState({ newRequestDiscardOpen: false });
 
       const messagesBefore = useComposerStore.getState().messages;
 
       renderHook(() => useGlobalShortcuts());
       fireKey('N', { metaKey: true, shiftKey: true });
 
+      // Composer should NOT have been reset
       expect(useComposerStore.getState().messages).toBe(messagesBefore);
+      // Discard dialog should have been opened
+      expect(useUiStore.getState().newRequestDiscardOpen).toBe(true);
+    });
+  });
+
+  describe('? — open shortcuts dialog', () => {
+    beforeEach(() => {
+      useUiStore.setState({ shortcutsOpen: false });
+    });
+
+    it('opens the shortcuts dialog when no input is focused', () => {
+      renderHook(() => useGlobalShortcuts());
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: '?',
+            shiftKey: true,
+            bubbles: true,
+          }),
+        );
+      });
+      expect(useUiStore.getState().shortcutsOpen).toBe(true);
+    });
+
+    it('does not open when an input is focused', () => {
+      const input = document.createElement('input');
+      document.body.appendChild(input);
+      input.focus();
+
+      renderHook(() => useGlobalShortcuts());
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: '?',
+            shiftKey: true,
+            bubbles: true,
+          }),
+        );
+      });
+      expect(useUiStore.getState().shortcutsOpen).toBe(false);
+
+      input.remove();
     });
   });
 

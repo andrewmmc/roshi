@@ -37,6 +37,7 @@ import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
 import { ViewToggle } from './ViewToggle';
+import { TabBar } from './TabBar';
 import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
 
 const EvalView = lazy(() =>
@@ -84,6 +85,7 @@ function RequestView() {
 
   return (
     <>
+      <TabBar />
       <div
         ref={containerRef}
         className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4"

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FilePlus2, PanelLeftClose, Sun, Moon } from 'lucide-react';
+import { FilePlus2, PanelLeftClose, Sun, Moon, Keyboard } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +48,7 @@ export function Sidebar() {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggle);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
+  const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const [showDiscard, setShowDiscard] = useState(false);
 
@@ -115,6 +116,21 @@ export function Sidebar() {
               )}
             </IconButton>
             <SettingsDialog />
+            <IconButton
+              variant="ghost"
+              size="icon"
+              aria-label="Keyboard shortcuts"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={() => setShortcutsOpen(true)}
+              tooltip={
+                <span className="flex items-center gap-1.5">
+                  Keyboard shortcuts
+                  <KbdShortcut mac="?" win="?" />
+                </span>
+              }
+            >
+              <Keyboard className="h-3.5 w-3.5" />
+            </IconButton>
             <IconButton
               variant="ghost"
               size="icon"

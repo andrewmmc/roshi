@@ -49,11 +49,25 @@ export function useGlobalShortcuts() {
         if (!hasUnsaved) {
           useComposerStore.getState().resetComposer();
           useResponseStore.getState().resetResponse();
+        } else {
+          // Open the global discard-confirmation dialog (rendered by CommandPalette).
+          useUiStore.getState().setNewRequestDiscardOpen(true);
         }
-        // If there are unsaved changes, we can't open the discard dialog from here —
-        // the user must click the New Request button. We simply do nothing so the
-        // shortcut is a no-op rather than silently discarding data.
         return;
+      }
+
+      // ? — open shortcuts cheat-sheet (only when not typing in an input)
+      if (e.key === '?' && !mod) {
+        const active = document.activeElement as HTMLElement | null;
+        const isInput =
+          active?.tagName === 'INPUT' ||
+          active?.tagName === 'TEXTAREA' ||
+          active?.isContentEditable;
+        if (!isInput && !isDialogOpen()) {
+          e.preventDefault();
+          useUiStore.getState().setShortcutsOpen(true);
+          return;
+        }
       }
 
       // Cmd/Ctrl+P — focus history search

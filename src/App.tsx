@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AboutDialog } from '@/components/AboutDialog';
+import { CommandPalette } from '@/components/CommandPalette';
+import { ShortcutsDialog } from '@/components/ShortcutsDialog';
 import { ToastContainer } from '@/components/ui/toast';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
@@ -26,6 +28,8 @@ export function App() {
   return (
     <ErrorBoundary>
       <AboutDialog />
+      <CommandPalette />
+      <ShortcutsDialog />
       <AppLayout />
       <ToastContainer />
     </ErrorBoundary>

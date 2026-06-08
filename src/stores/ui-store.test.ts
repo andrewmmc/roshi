@@ -11,6 +11,10 @@ describe('ui-store', () => {
       historySearchFocusGen: 0,
       aboutOpen: false,
       sidebarCollapsed: false,
+      commandPaletteOpen: false,
+      commandPaletteOpenCount: 0,
+      newRequestDiscardOpen: false,
+      shortcutsOpen: false,
     });
   });
 
@@ -103,6 +107,51 @@ describe('ui-store', () => {
       useUiStore.setState({ sidebarCollapsed: true });
       getState().setSidebarCollapsed(false);
       expect(getState().sidebarCollapsed).toBe(false);
+    });
+  });
+
+  describe('commandPaletteOpen', () => {
+    it('defaults to false', () => {
+      expect(getState().commandPaletteOpen).toBe(false);
+    });
+
+    it('opens the palette and increments the counter', () => {
+      getState().setCommandPaletteOpen(true);
+      expect(getState().commandPaletteOpen).toBe(true);
+      expect(getState().commandPaletteOpenCount).toBe(1);
+    });
+
+    it('does not increment the counter when closing', () => {
+      getState().setCommandPaletteOpen(true);
+      getState().setCommandPaletteOpen(false);
+      expect(getState().commandPaletteOpen).toBe(false);
+      expect(getState().commandPaletteOpenCount).toBe(1);
+    });
+  });
+
+  describe('newRequestDiscardOpen', () => {
+    it('defaults to false', () => {
+      expect(getState().newRequestDiscardOpen).toBe(false);
+    });
+
+    it('can be opened and closed', () => {
+      getState().setNewRequestDiscardOpen(true);
+      expect(getState().newRequestDiscardOpen).toBe(true);
+      getState().setNewRequestDiscardOpen(false);
+      expect(getState().newRequestDiscardOpen).toBe(false);
+    });
+  });
+
+  describe('shortcutsOpen', () => {
+    it('defaults to false', () => {
+      expect(getState().shortcutsOpen).toBe(false);
+    });
+
+    it('can be opened and closed', () => {
+      getState().setShortcutsOpen(true);
+      expect(getState().shortcutsOpen).toBe(true);
+      getState().setShortcutsOpen(false);
+      expect(getState().shortcutsOpen).toBe(false);
     });
   });
 
