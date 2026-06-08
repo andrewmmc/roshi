@@ -53,7 +53,7 @@ export function RequestComposer() {
         <ScrollArea className="h-full">
           <div className="p-4">
             {composerIsEmpty && (
-              <div className="border-border/60 bg-muted/15 mb-4 rounded-md border px-3 py-2.5">
+              <div className="border-border/60 bg-muted/15 mb-4 rounded-lg border px-3 py-2.5">
                 <p className="text-muted-foreground text-[11px]">
                   Need a starting point? Browse starter templates in
                   Collections, or compare this prompt across models in Eval.

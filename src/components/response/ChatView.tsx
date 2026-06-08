@@ -45,7 +45,7 @@ export function ChatView() {
             >
               sys
             </div>
-            <div className="bg-muted/40 text-muted-foreground flex-1 rounded-md px-3 py-2 text-[13px] italic select-text">
+            <div className="bg-muted/40 text-muted-foreground flex-1 rounded-lg px-3 py-2 text-[13px] italic select-text">
               {systemPrompt}
             </div>
           </div>
@@ -65,7 +65,7 @@ export function ChatView() {
                 {getRoleLabel(msg.role)}
               </div>
               <div
-                className={`relative flex-1 rounded-md px-3 py-2 text-[13px] select-text ${
+                className={`relative flex-1 rounded-lg px-3 py-2 text-[13px] select-text ${
                   msg.role === 'user'
                     ? 'bg-muted/25'
                     : msg.role === 'assistant'
@@ -99,7 +99,7 @@ export function ChatView() {
             >
               warn
             </div>
-            <div className="flex-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100">
+            <div className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100">
               <div className="font-medium">
                 Request adjusted for model compatibility
               </div>
@@ -120,7 +120,7 @@ export function ChatView() {
             >
               {getRoleLabel('assistant')}
             </div>
-            <div className="bg-muted/40 flex-1 rounded-md px-3 py-2 text-[13px]">
+            <div className="bg-muted/40 flex-1 rounded-lg px-3 py-2 text-[13px]">
               <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
             </div>
           </div>
@@ -134,7 +134,7 @@ export function ChatView() {
             >
               {getRoleLabel('assistant')}
             </div>
-            <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs relative max-w-none flex-1 rounded-md px-3 py-2 text-[13px] select-text">
+            <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs relative max-w-none flex-1 rounded-lg px-3 py-2 text-[13px] select-text">
               {!isStreaming && (
                 <CopyButton
                   text={displayContent}
@@ -158,7 +158,7 @@ export function ChatView() {
             </div>
             <div
               role="alert"
-              className="flex-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100"
+              className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100"
             >
               <div className="font-medium">Response interrupted</div>
               {errorDetail && (
@@ -185,7 +185,7 @@ export function ChatView() {
             </div>
             <div
               role="alert"
-              className="bg-destructive/5 border-destructive/15 text-destructive flex-1 rounded-md border px-3 py-2 text-[13px]"
+              className="bg-destructive/5 border-destructive/15 text-destructive flex-1 rounded-lg border px-3 py-2 text-[13px]"
             >
               <div className="font-medium">{error}</div>
               {errorDetail && (

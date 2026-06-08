@@ -465,7 +465,7 @@ export function ParameterControls() {
       )}
 
       {capabilities?.quirks && capabilities.quirks.length > 0 && (
-        <div className="border-border/50 mt-1 rounded border p-2">
+        <div className="border-border/50 mt-1 rounded-lg border p-2">
           <p className="text-muted-foreground/60 mb-1 text-[10px] font-semibold tracking-wide uppercase">
             Model notes
           </p>

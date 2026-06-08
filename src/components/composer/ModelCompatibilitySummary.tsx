@@ -7,7 +7,7 @@ export function ModelCompatibilitySummary() {
   const items = buildModelCompatibilitySummary(capabilities);
 
   return (
-    <div className="border-border/50 bg-muted/15 rounded-md border p-2.5">
+    <div className="border-border/50 bg-muted/15 rounded-lg border p-2.5">
       <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-wide uppercase">
         Model compatibility
       </p>
