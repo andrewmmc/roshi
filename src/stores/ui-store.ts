@@ -20,6 +20,14 @@ interface UiStore {
   setAboutOpen: (open: boolean) => void;
   checklistOpen: boolean;
   setChecklistOpen: (open: boolean) => void;
+  commandPaletteOpen: boolean;
+  /** Increments every time commandPaletteOpen transitions to true. Used as a key to remount the palette content and reset its local state. */
+  commandPaletteOpenCount: number;
+  setCommandPaletteOpen: (open: boolean) => void;
+  newRequestDiscardOpen: boolean;
+  setNewRequestDiscardOpen: (open: boolean) => void;
+  shortcutsOpen: boolean;
+  setShortcutsOpen: (open: boolean) => void;
   mainView: MainView;
   setMainView: (view: MainView) => void;
   sidebarCollapsed: boolean;
@@ -50,6 +58,19 @@ export const useUiStore = create<UiStore>((set) => ({
   setAboutOpen: (open) => set({ aboutOpen: open }),
   checklistOpen: false,
   setChecklistOpen: (open) => set({ checklistOpen: open }),
+  commandPaletteOpen: false,
+  commandPaletteOpenCount: 0,
+  setCommandPaletteOpen: (open) =>
+    set((s) => ({
+      commandPaletteOpen: open,
+      commandPaletteOpenCount: open
+        ? s.commandPaletteOpenCount + 1
+        : s.commandPaletteOpenCount,
+    })),
+  newRequestDiscardOpen: false,
+  setNewRequestDiscardOpen: (open) => set({ newRequestDiscardOpen: open }),
+  shortcutsOpen: false,
+  setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
   mainView: 'request',
   setMainView: (mainView) => set({ mainView }),
   sidebarCollapsed:
