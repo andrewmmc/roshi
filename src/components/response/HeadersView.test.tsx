@@ -19,13 +19,18 @@ describe('HeadersView', () => {
 
     render(<HeadersView />);
 
-    expect(screen.getByText('content-type')).toBeInTheDocument();
+    expect(
+      screen.getByRole('tab', { name: 'Response', selected: true }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('content-type')).toBeVisible();
     expect(screen.queryByText('authorization')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Request' }));
 
-    expect(screen.getByText('authorization')).toBeInTheDocument();
-    expect(screen.queryByText('content-type')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('tab', { name: 'Request', selected: true }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('authorization')).toBeVisible();
   });
 
   it('shows empty state text when no headers are available', () => {

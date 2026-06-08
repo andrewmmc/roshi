@@ -24,6 +24,13 @@ class ResizeObserverStub {
 }
 global.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 
+// jsdom does not implement getAnimations — return no active animations
+Object.defineProperty(Element.prototype, 'getAnimations', {
+  configurable: true,
+  writable: true,
+  value: vi.fn(() => []),
+});
+
 afterEach(() => {
   localStorage.clear();
 });

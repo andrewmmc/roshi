@@ -10,6 +10,7 @@ describe('ui-store', () => {
       settingsModelsProviderId: null,
       historySearchFocusGen: 0,
       aboutOpen: false,
+      checklistOpen: false,
       sidebarCollapsed: false,
       commandPaletteOpen: false,
       commandPaletteOpenCount: 0,
@@ -98,6 +99,27 @@ describe('ui-store', () => {
       expect(getState().sidebarCollapsed).toBe(false);
     });
 
+    it('initializes as collapsed on narrow screens', async () => {
+      vi.resetModules();
+      const originalWidth = window.innerWidth;
+
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: 640,
+      });
+
+      const { useUiStore: freshUiStore } = await import('./ui-store');
+
+      expect(freshUiStore.getState().sidebarCollapsed).toBe(true);
+
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: originalWidth,
+      });
+    });
+
     it('collapses the sidebar', () => {
       getState().setSidebarCollapsed(true);
       expect(getState().sidebarCollapsed).toBe(true);
@@ -169,6 +191,20 @@ describe('ui-store', () => {
       getState().setAboutOpen(true);
       getState().setAboutOpen(false);
       expect(getState().aboutOpen).toBe(false);
+    });
+  });
+
+  describe('checklistOpen', () => {
+    it('defaults to false', () => {
+      expect(getState().checklistOpen).toBe(false);
+    });
+
+    it('can be opened and closed', () => {
+      getState().setChecklistOpen(true);
+      expect(getState().checklistOpen).toBe(true);
+
+      getState().setChecklistOpen(false);
+      expect(getState().checklistOpen).toBe(false);
     });
   });
 });

@@ -208,13 +208,13 @@ describe('history-filter', () => {
   it('filters by today using the provided clock', () => {
     const todayEntry = makeHistoryEntry({
       id: 'today',
-      createdAt: new Date('2025-03-12T15:00:00Z'),
+      createdAt: new Date(2025, 2, 12, 15, 0, 0),
     });
 
     const result = filterHistoryEntries(
       [todayEntry, ...entries],
       { ...DEFAULT_HISTORY_FILTERS, dateRange: 'today' },
-      new Date('2025-03-12T23:59:00Z'),
+      new Date(2025, 2, 12, 23, 59, 0),
     );
 
     expect(result.map((entry) => entry.id)).toEqual(['today']);

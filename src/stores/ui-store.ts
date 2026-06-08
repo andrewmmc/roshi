@@ -73,9 +73,6 @@ export const useUiStore = create<UiStore>((set) => ({
   setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
   mainView: 'request',
   setMainView: (mainView) => set({ mainView }),
-  sidebarCollapsed:
-    typeof window !== 'undefined'
-      ? window.innerWidth < SIDEBAR_COLLAPSE_BREAKPOINT
-      : false,
+  sidebarCollapsed: window.innerWidth < SIDEBAR_COLLAPSE_BREAKPOINT,
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 }));
