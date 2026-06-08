@@ -54,12 +54,12 @@ export function ProviderSelect() {
   );
 
   return (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 gap-2">
       <Select value={selectedProviderId || ''} onValueChange={selectProvider}>
         <SelectTrigger
           aria-label="Select provider"
           title="Select provider"
-          className="h-7 w-[160px] text-xs"
+          className="h-7 w-[160px] shrink-0 text-xs"
         >
           <SelectValue placeholder="Provider">
             {selectedProvider?.name ?? 'Provider'}
@@ -95,7 +95,7 @@ export function ProviderSelect() {
         >
           <SelectTrigger
             aria-label="Select model"
-            className="h-7 w-[280px] text-xs"
+            className="h-7 w-[280px] min-w-0 text-xs"
             title={selectedModel?.displayName}
           >
             <SelectValue placeholder="Model">
