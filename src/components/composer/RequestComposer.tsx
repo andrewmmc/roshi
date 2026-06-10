@@ -13,6 +13,7 @@ export function RequestComposer() {
   const setSystemPrompt = useComposerStore((s) => s.setSystemPrompt);
   const messages = useComposerStore((s) => s.messages);
   const setMainView = useUiStore((s) => s.setMainView);
+  const openSidebarSection = useUiStore((s) => s.openSidebarSection);
   const hasCustomHeaders = useComposerStore((s) =>
     s.customHeaders.some((h) => h.key.trim() !== ''),
   );
@@ -59,6 +60,15 @@ export function RequestComposer() {
                   Collections, or compare this prompt across models in Eval.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => openSidebarSection('collections')}
+                  >
+                    Browse Collections
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"

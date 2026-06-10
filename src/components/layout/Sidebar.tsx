@@ -50,6 +50,8 @@ export function Sidebar() {
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+  const sidebarSection = useUiStore((s) => s.sidebarSection);
+  const setSidebarSection = useUiStore((s) => s.setSidebarSection);
   const [showDiscard, setShowDiscard] = useState(false);
 
   const reset = useCallback(() => {
@@ -68,7 +70,10 @@ export function Sidebar() {
   return (
     <div className="bg-sidebar flex h-full flex-col">
       <Tabs
-        defaultValue="history"
+        value={sidebarSection}
+        onValueChange={(value) =>
+          setSidebarSection(value as typeof sidebarSection)
+        }
         className="flex h-full min-h-0 flex-col gap-0"
       >
         <div className="border-sidebar-border/70 flex h-11 shrink-0 items-center gap-1 border-b px-3">

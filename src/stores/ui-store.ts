@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 export type SettingsPage = 'providers' | 'environments' | 'models';
 export type MainView = 'request' | 'eval';
+export type SidebarSection = 'history' | 'collections' | 'evals';
 
 const SIDEBAR_COLLAPSE_BREAKPOINT = 768;
 
@@ -32,6 +33,10 @@ interface UiStore {
   setMainView: (view: MainView) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  sidebarSection: SidebarSection;
+  setSidebarSection: (section: SidebarSection) => void;
+  /** Expand the sidebar (if collapsed) and switch it to the given section. */
+  openSidebarSection: (section: SidebarSection) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -75,4 +80,8 @@ export const useUiStore = create<UiStore>((set) => ({
   setMainView: (mainView) => set({ mainView }),
   sidebarCollapsed: window.innerWidth < SIDEBAR_COLLAPSE_BREAKPOINT,
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  sidebarSection: 'history',
+  setSidebarSection: (sidebarSection) => set({ sidebarSection }),
+  openSidebarSection: (sidebarSection) =>
+    set({ sidebarSection, sidebarCollapsed: false }),
 }));
