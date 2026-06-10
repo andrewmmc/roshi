@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { useDefaultLayout } from 'react-resizable-panels';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -77,6 +78,7 @@ function RequestView() {
 
   const [envPreviewOpen, setEnvPreviewOpen] = useState(false);
   const { containerRef, narrow } = useContainerBreakpoint(520);
+  const mainLayout = useDefaultLayout({ id: 'roshi-main' });
 
   const handleComparePrompt = () => {
     seedFromMainComposer();
@@ -189,14 +191,19 @@ function RequestView() {
       <div className="border-border/70 shrink-0 border-b px-4 py-2">
         <RequestCompatibilityWarning />
       </div>
-      <ResizablePanelGroup orientation="vertical" className="flex-1">
-        <ResizablePanel defaultSize="40%" minSize="20%">
+      <ResizablePanelGroup
+        orientation="vertical"
+        className="flex-1"
+        defaultLayout={mainLayout.defaultLayout}
+        onLayoutChanged={mainLayout.onLayoutChanged}
+      >
+        <ResizablePanel id="composer" defaultSize="40%" minSize="20%">
           <ErrorBoundary panel>
             <RequestComposer />
           </ErrorBoundary>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize="60%" minSize="20%">
+        <ResizablePanel id="response" defaultSize="60%" minSize="20%">
           <ErrorBoundary panel>
             <ResponsePanel />
           </ErrorBoundary>

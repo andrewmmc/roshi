@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
-import type { PanelImperativeHandle } from 'react-resizable-panels';
+import {
+  useDefaultLayout,
+  type PanelImperativeHandle,
+} from 'react-resizable-panels';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -16,6 +19,9 @@ export function AppLayout() {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const panelRef = useRef<PanelImperativeHandle | null>(null);
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'roshi-shell',
+  });
 
   // Sync Zustand state → panel imperative API (2.1)
   useEffect(() => {
@@ -46,8 +52,13 @@ export function AppLayout() {
       >
         Skip to main content
       </a>
-      <ResizablePanelGroup orientation="horizontal">
+      <ResizablePanelGroup
+        orientation="horizontal"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+      >
         <ResizablePanel
+          id="sidebar"
           panelRef={panelRef}
           defaultSize="300px"
           minSize="240px"
@@ -66,7 +77,7 @@ export function AppLayout() {
           </aside>
         </ResizablePanel>
         {!sidebarCollapsed && <ResizableHandle />}
-        <ResizablePanel minSize="480px">
+        <ResizablePanel id="main" minSize="480px">
           <main id="main-content" className="h-full">
             <MainPanel />
           </main>
