@@ -202,7 +202,7 @@ function RequestView() {
             <RequestComposer />
           </ErrorBoundary>
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle />
         <ResizablePanel id="response" defaultSize="60%" minSize="20%">
           <ErrorBoundary panel>
             <ResponsePanel />

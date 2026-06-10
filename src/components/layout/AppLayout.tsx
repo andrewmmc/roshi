@@ -76,7 +76,7 @@ export function AppLayout() {
             </ErrorBoundary>
           </aside>
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle />
         <ResizablePanel id="main" minSize="480px">
           <main id="main-content" className="h-full">
             <MainPanel />
