@@ -49,9 +49,9 @@ export function AppLayout() {
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel
           panelRef={panelRef}
-          defaultSize={26}
-          minSize={22}
-          maxSize={32}
+          defaultSize="300px"
+          minSize="240px"
+          maxSize="420px"
           collapsible
           collapsedSize={0}
           onResize={() => {
@@ -66,7 +66,7 @@ export function AppLayout() {
           </aside>
         </ResizablePanel>
         {!sidebarCollapsed && <ResizableHandle />}
-        <ResizablePanel defaultSize={74} minSize={40}>
+        <ResizablePanel minSize="480px">
           <main id="main-content" className="h-full">
             <MainPanel />
           </main>
