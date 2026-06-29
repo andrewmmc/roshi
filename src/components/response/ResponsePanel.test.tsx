@@ -51,6 +51,12 @@ describe('ResponsePanel', () => {
         'Select a model and send a request to see the response here.',
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /add api key/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Write a message above, then press Send.'),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Body' }));
     await waitFor(() => {
