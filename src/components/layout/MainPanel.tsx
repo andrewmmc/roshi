@@ -174,7 +174,7 @@ function RequestView() {
                 >
                   <ChevronDown className="h-3.5 w-3.5" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="min-w-56">
                   <DropdownMenuItem onClick={handleComparePrompt}>
                     <GitCompare className="h-3.5 w-3.5" />
                     Compare prompt across models
