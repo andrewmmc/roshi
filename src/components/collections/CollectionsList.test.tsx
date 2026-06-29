@@ -62,52 +62,18 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('creates a new collection from the save dialog and selects it', async () => {
-    mockCollectionState.addCollection.mockImplementation(
-      async (name: string) => {
-        const collection = makeCollection({
-          id: 'collection-2',
-          name,
-          sortOrder: 1,
-        });
-        mockCollectionState.collections = [
-          ...mockCollectionState.collections,
-          collection,
-        ];
-        return collection;
-      },
-    );
+  it('keeps collection creation out of the save dialog', () => {
     render(<CollectionsList />);
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Save current request' }),
     );
-    fireEvent.change(screen.getByLabelText('Request name'), {
-      target: { value: 'Reusable prompt' },
-    });
-    fireEvent.change(screen.getByLabelText('New collection name'), {
-      target: { value: 'Research prompts' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Create & select' }));
 
-    await waitFor(() => {
-      expect(mockCollectionState.addCollection).toHaveBeenCalledWith(
-        'Research prompts',
-      );
-    });
-    await waitFor(() => {
-      expect(
-        screen.getByRole('combobox', { name: 'Select collection' }),
-      ).toHaveTextContent('Research prompts');
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save request' }));
-
-    await waitFor(() => {
-      expect(mockCollectionState.saveCurrentRequest).toHaveBeenCalledWith(
-        'collection-2',
-        'Reusable prompt',
-      );
-    });
+    expect(
+      screen.queryByLabelText('New collection name'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Create & select' }),
+    ).not.toBeInTheDocument();
   });
 });
