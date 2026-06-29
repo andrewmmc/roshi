@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Copy, Folder, FolderOpen, Plus, Save, Trash2 } from 'lucide-react';
+import { Folder, FolderOpen, Plus, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,6 @@ import {
 import { useProviderStore } from '@/stores/provider-store';
 import { useResponseStore } from '@/stores/response-store';
 import type { SavedRequest, Collection } from '@/types/history';
-import { TEMPLATE_COLLECTION_ID } from '@/constants/request-templates';
 
 function SaveRequestDialog({
   open,
@@ -185,15 +184,11 @@ function SavedRequestItem({
   active,
   onSelect,
   onDelete,
-  onDuplicate,
-  isTemplate = false,
 }: {
   request: SavedRequest;
   active: boolean;
   onSelect: (request: SavedRequest) => void;
   onDelete: (id: string) => void;
-  onDuplicate?: (request: SavedRequest) => void;
-  isTemplate?: boolean;
 }) {
   const preview =
     request.request.messages.find((message) => message.role === 'user')
@@ -206,36 +201,18 @@ function SavedRequestItem({
       active={active}
       onClick={() => onSelect(request)}
       actions={
-        <>
-          {isTemplate && onDuplicate && (
-            <IconButton
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground hover:text-foreground"
-              tooltip="Duplicate into collection"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate(request);
-              }}
-            >
-              <Copy className="h-3 w-3" />
-            </IconButton>
-          )}
-          {!isTemplate && (
-            <IconButton
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground hover:text-destructive"
-              tooltip="Delete saved request"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(request.id);
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </IconButton>
-          )}
-        </>
+        <IconButton
+          variant="ghost"
+          size="icon-xs"
+          className="text-muted-foreground hover:text-destructive"
+          tooltip="Delete saved request"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(request.id);
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </IconButton>
       }
     >
       <div className="min-w-0 flex-1 pr-8">
@@ -262,7 +239,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     saveCurrentRequest,
     updateSavedRequest,
     deleteSavedRequest,
-    duplicateTemplate,
   } = useCollections();
   const loadComposerFromHistory = useComposerStore(
     (s) => s.loadComposerFromHistory,
@@ -277,36 +253,16 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const resetResponse = useResponseStore((s) => s.resetResponse);
   const [saveOpen, setSaveOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
-  const [duplicateOpen, setDuplicateOpen] = useState(false);
-  const [duplicateTemplateId, setDuplicateTemplateId] = useState<string | null>(
-    null,
-  );
-  const [duplicateName, setDuplicateName] = useState('');
-  const [duplicateCollectionId, setDuplicateCollectionId] = useState('');
   const pendingRequestRef = useRef<SavedRequest | null>(null);
 
   const userCollections = useMemo(
     () => collections.filter((collection) => collection.kind !== 'templates'),
     [collections],
   );
-  const templateCollection = useMemo(
-    () =>
-      collections.find(
-        (collection) => collection.id === TEMPLATE_COLLECTION_ID,
-      ),
-    [collections],
-  );
-  const templateRequests = useMemo(
-    () =>
-      savedRequests.filter(
-        (request) => request.collectionId === TEMPLATE_COLLECTION_ID,
-      ),
-    [savedRequests],
-  );
 
   const requestsByCollection = useMemo(() => {
     const grouped = new Map<string, SavedRequest[]>();
-    for (const request of savedRequests) {
+    for (const request of savedRequests.filter((item) => !item.isTemplate)) {
       grouped.set(request.collectionId, [
         ...(grouped.get(request.collectionId) ?? []),
         request,
@@ -376,32 +332,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     toast('Saved request updated');
   }, [activeSavedRequestId, savedRequests, updateSavedRequest]);
 
-  const openDuplicateDialog = useCallback(
-    (template: SavedRequest) => {
-      setDuplicateTemplateId(template.id);
-      setDuplicateName(`${template.name} copy`);
-      setDuplicateCollectionId(userCollections[0]?.id ?? '');
-      setDuplicateOpen(true);
-    },
-    [userCollections],
-  );
-
-  const handleDuplicateTemplate = useCallback(async () => {
-    if (!duplicateTemplateId || !duplicateCollectionId) return;
-    await duplicateTemplate(
-      duplicateTemplateId,
-      duplicateCollectionId,
-      duplicateName,
-    );
-    toast('Template duplicated into collection');
-    setDuplicateOpen(false);
-  }, [
-    duplicateCollectionId,
-    duplicateName,
-    duplicateTemplateId,
-    duplicateTemplate,
-  ]);
-
   const renderCollectionSection = (collection: Collection) => {
     const requests = requestsByCollection.get(collection.id) ?? [];
     const isTemplateCollection = collection.kind === 'templates';
@@ -428,11 +358,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             </IconButton>
           )}
         </div>
-        {isTemplateCollection && (
-          <p className="text-muted-foreground/70 px-2.5 pb-1 text-[11px]">
-            Built-in examples. Load one or duplicate into your collections.
-          </p>
-        )}
         {requests.length === 0 ? (
           <p className="text-muted-foreground/70 px-2.5 pb-1 text-[11px]">
             No saved requests
@@ -445,8 +370,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               active={request.id === activeSavedRequestId}
               onSelect={handleSelect}
               onDelete={deleteSavedRequest}
-              onDuplicate={openDuplicateDialog}
-              isTemplate={Boolean(request.isTemplate)}
             />
           ))
         )}
@@ -488,15 +411,12 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-2 p-2">
-          {templateCollection && templateRequests.length > 0
-            ? renderCollectionSection(templateCollection)
-            : null}
           {userCollections.length === 0 && (
             <EmptyState
               compact
               icon={FolderOpen}
               title="No collections yet"
-              description="Save requests into collections for quick reuse, or duplicate a starter template above."
+              description="Save requests into collections for quick reuse."
               actions={
                 <Button
                   type="button"
@@ -524,70 +444,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         onSaveRequest={handleSaveRequest}
         onUpdateRequest={handleUpdateRequest}
       />
-
-      <Dialog open={duplicateOpen} onOpenChange={setDuplicateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Duplicate template</DialogTitle>
-            <DialogDescription>
-              Copy this starter template into one of your collections.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-muted-foreground text-xs font-medium">
-                Collection
-              </label>
-              <Select
-                value={duplicateCollectionId || userCollections[0]?.id || ''}
-                onValueChange={(value) => setDuplicateCollectionId(value ?? '')}
-              >
-                <SelectTrigger
-                  aria-label="Select collection"
-                  className="w-full"
-                >
-                  <SelectValue>
-                    {
-                      userCollections.find(
-                        (collection) =>
-                          collection.id ===
-                          (duplicateCollectionId || userCollections[0]?.id),
-                      )?.name
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {userCollections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id}>
-                      {collection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-muted-foreground text-xs font-medium">
-                Request name
-              </label>
-              <Input
-                value={duplicateName}
-                onChange={(e) => setDuplicateName(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDuplicateOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => void handleDuplicateTemplate()}
-              disabled={!duplicateCollectionId || !duplicateName.trim()}
-            >
-              Duplicate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <ConfirmDiscardDialog
         open={discardOpen}

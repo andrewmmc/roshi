@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, RotateCcw, Search, X } from 'lucide-react';
+import { Loader2, RefreshCw, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { BuiltInProviderSection } from '@/components/models/built-in-provider-section';
 import { CustomProviderSection } from '@/components/models/custom-provider-section';
 import { ProviderFilterChips } from '@/components/models/provider-filter-chips';
-import { ResetModelsDialog } from '@/components/models/reset-models-dialog';
 import { useProviderStore } from '@/stores/provider-store';
 import { useModelCatalogStore } from '@/stores/model-catalog-store';
 import { useUiStore } from '@/stores/ui-store';
@@ -18,30 +17,16 @@ import type { ProviderConfig } from '@/types/provider';
 const BUILTIN_NAMES = new Set(builtinProviders.map((p) => p.name));
 
 export function ModelMarketFooter({
-  resettingAll,
   refreshing,
-  onResetAll,
   onRefresh,
   onClose,
 }: {
-  resettingAll: boolean;
   refreshing: boolean;
-  onResetAll: () => void;
   onRefresh: () => void;
   onClose: () => void;
 }) {
   return (
-    <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-destructive hover:text-destructive text-xs"
-        disabled={resettingAll}
-        onClick={onResetAll}
-      >
-        <RotateCcw className="mr-1 h-3 w-3" />
-        {resettingAll ? 'Resetting…' : 'Reset picks'}
-      </Button>
+    <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
       <div className="flex gap-2">
         <Button
           type="button"
@@ -75,7 +60,6 @@ export function ModelMarket({
   const loaded = useProviderStore((s) => s.loaded);
   const seeding = useProviderStore((s) => s.seeding);
   const loadProviders = useProviderStore((s) => s.load);
-  const resetModelPicks = useProviderStore((s) => s.resetModelPicks);
   const refreshModelCatalog = useProviderStore((s) => s.refreshModelCatalog);
   const refreshing = useProviderStore((s) => s.refreshingCatalog);
   const catalogStatus = useModelCatalogStore((s) => s.status);
@@ -84,8 +68,6 @@ export function ModelMarket({
   const setFilterProviderId = useUiStore((s) => s.setSettingsModelsProviderId);
 
   const [search, setSearch] = useState('');
-  const [resettingAll, setResettingAll] = useState(false);
-  const [showResetDialog, setShowResetDialog] = useState(false);
 
   useEffect(() => {
     if (!loaded) {
@@ -116,16 +98,6 @@ export function ModelMarket({
 
   const handleRefresh = async () => {
     await refreshModelCatalog();
-  };
-
-  const handleResetAll = async () => {
-    setResettingAll(true);
-    try {
-      await resetModelPicks();
-      setShowResetDialog(false);
-    } finally {
-      setResettingAll(false);
-    }
   };
 
   if (!loaded || seeding) {
@@ -206,21 +178,10 @@ export function ModelMarket({
       </div>
 
       <ModelMarketFooter
-        resettingAll={resettingAll}
         refreshing={refreshing}
-        onResetAll={() => setShowResetDialog(true)}
         onRefresh={() => void handleRefresh()}
         onClose={onClose}
       />
-
-      {showResetDialog ? (
-        <ResetModelsDialog
-          open={showResetDialog}
-          resetting={resettingAll}
-          onOpenChange={setShowResetDialog}
-          onConfirm={() => void handleResetAll()}
-        />
-      ) : null}
     </div>
   );
 }

@@ -7,7 +7,6 @@ import type { ProviderModel } from '@/types/provider';
 const {
   addModelToProvider,
   removeModelFromProvider,
-  resetModelPicks,
   refreshModelCatalog,
   loadProviders,
   loadCatalog,
@@ -17,7 +16,6 @@ const {
 } = vi.hoisted(() => ({
   addModelToProvider: vi.fn().mockResolvedValue(undefined),
   removeModelFromProvider: vi.fn().mockResolvedValue(undefined),
-  resetModelPicks: vi.fn().mockResolvedValue(undefined),
   refreshModelCatalog: vi.fn().mockResolvedValue(undefined),
   loadProviders: vi.fn().mockResolvedValue(undefined),
   loadCatalog: vi.fn().mockResolvedValue(undefined),
@@ -42,7 +40,6 @@ vi.mock('@/stores/provider-store', () => {
     load: typeof loadProviders;
     addModelToProvider: typeof addModelToProvider;
     removeModelFromProvider: typeof removeModelFromProvider;
-    resetModelPicks: typeof resetModelPicks;
     refreshModelCatalog: typeof refreshModelCatalog;
     refreshingCatalog: boolean;
   };
@@ -55,7 +52,6 @@ vi.mock('@/stores/provider-store', () => {
         load: loadProviders,
         addModelToProvider,
         removeModelFromProvider,
-        resetModelPicks,
         refreshModelCatalog,
         refreshingCatalog: providerStoreState.refreshingCatalog,
       }),
@@ -178,19 +174,12 @@ describe('ModelMarket', () => {
     expect(screen.getByText('Claude 3.5 Sonnet')).toBeInTheDocument();
   });
 
-  it('triggers refresh and reset actions', async () => {
+  it('triggers refresh action', async () => {
     renderMarket();
 
     fireEvent.click(screen.getByRole('button', { name: /refresh catalogue/i }));
     await waitFor(() => {
       expect(refreshModelCatalog).toHaveBeenCalledTimes(1);
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /reset picks/i }));
-    expect(screen.getByText('Reset all model picks?')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Reset all' }));
-    await waitFor(() => {
-      expect(resetModelPicks).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -221,12 +210,14 @@ describe('ModelMarket', () => {
     expect(loadProviders).toHaveBeenCalled();
   });
 
-  it('does not mount the reset dialog until reset is requested', () => {
+  it('does not render reset picks controls', () => {
     renderMarket();
+
+    expect(
+      screen.queryByRole('button', { name: /reset picks/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText('Reset all model picks?'),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /reset picks/i }));
-    expect(screen.getByText('Reset all model picks?')).toBeInTheDocument();
   });
 });

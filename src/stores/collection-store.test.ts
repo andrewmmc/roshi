@@ -108,8 +108,16 @@ describe('collection-store', () => {
         makeCollection({ id: 'a', name: 'Alpha', sortOrder: 0 }),
       ];
       const savedRequests = [
-        makeSavedRequest({ id: 'old', updatedAt: new Date('2026-01-01') }),
-        makeSavedRequest({ id: 'new', updatedAt: new Date('2026-02-01') }),
+        makeSavedRequest({
+          id: 'old',
+          collectionId: 'a',
+          updatedAt: new Date('2026-01-01'),
+        }),
+        makeSavedRequest({
+          id: 'new',
+          collectionId: 'b',
+          updatedAt: new Date('2026-02-01'),
+        }),
       ];
       mockDb.collections.toArray.mockResolvedValue(collections);
       mockDb.savedRequests.toArray.mockResolvedValue(savedRequests);
@@ -119,6 +127,36 @@ describe('collection-store', () => {
       expect(getState().loaded).toBe(true);
       expect(getState().collections.map((c) => c.id)).toEqual(['a', 'b']);
       expect(getState().savedRequests.map((r) => r.id)).toEqual(['new', 'old']);
+    });
+
+    it('does not load starter template collections or template requests', async () => {
+      const userCollection = makeCollection({ id: 'user' });
+      const templateCollection = makeCollection({
+        id: 'templates',
+        name: 'Starter templates',
+        kind: 'templates',
+      });
+      mockDb.collections.toArray.mockResolvedValue([
+        templateCollection,
+        userCollection,
+      ]);
+      mockDb.savedRequests.toArray.mockResolvedValue([
+        makeSavedRequest({ id: 'user-request', collectionId: 'user' }),
+        makeSavedRequest({
+          id: 'template-request',
+          collectionId: 'templates',
+          isTemplate: true,
+        }),
+      ]);
+
+      await getState().load();
+
+      expect(getState().collections).toEqual([userCollection]);
+      expect(getState().savedRequests.map((request) => request.id)).toEqual([
+        'user-request',
+      ]);
+      expect(mockDb.transaction).not.toHaveBeenCalled();
+      expect(mockDb.savedRequests.bulkAdd).not.toHaveBeenCalled();
     });
 
     it('is idempotent when already loaded', async () => {

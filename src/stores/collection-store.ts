@@ -12,10 +12,6 @@ const collectionLoadGuard = createLoadGuard();
 import { useComposerStore, type ComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { headersToHistoryEntries } from '@/utils/headers';
-import {
-  STARTER_REQUEST_TEMPLATES,
-  TEMPLATE_COLLECTION_ID,
-} from '@/constants/request-templates';
 import type {
   Collection,
   SavedRequest,
@@ -34,11 +30,6 @@ interface CollectionStore {
   saveCurrentRequest: (
     collectionId: string,
     name: string,
-  ) => Promise<SavedRequest>;
-  duplicateTemplate: (
-    templateId: string,
-    collectionId: string,
-    name?: string,
   ) => Promise<SavedRequest>;
   updateSavedRequest: (id: string, name: string) => Promise<void>;
   deleteSavedRequest: (id: string) => Promise<void>;
@@ -78,54 +69,6 @@ function makeSavedRequestSnapshot(
   };
 }
 
-async function ensureStarterTemplatesSeeded(): Promise<void> {
-  const collections = await db.collections.toArray();
-  const existingCollection = collections.find(
-    (collection) => collection.id === TEMPLATE_COLLECTION_ID,
-  );
-  const allSavedRequests = await db.savedRequests.toArray();
-  const existingTemplates = allSavedRequests.filter(
-    (request) => request.collectionId === TEMPLATE_COLLECTION_ID,
-  );
-
-  if (existingCollection && existingTemplates.length > 0) {
-    return;
-  }
-
-  const now = new Date();
-  const collection: Collection = existingCollection ?? {
-    id: TEMPLATE_COLLECTION_ID,
-    name: 'Starter templates',
-    sortOrder: -1,
-    createdAt: now,
-    kind: 'templates',
-  };
-
-  const savedRequests: SavedRequest[] = STARTER_REQUEST_TEMPLATES.map(
-    (template) => ({
-      id: template.id,
-      collectionId: TEMPLATE_COLLECTION_ID,
-      name: template.name,
-      providerId: '',
-      providerName: 'Any provider',
-      modelId: '',
-      request: template.request,
-      createdAt: now,
-      updatedAt: now,
-      isTemplate: true,
-    }),
-  );
-
-  await db.transaction('rw', db.collections, db.savedRequests, async () => {
-    if (!existingCollection) {
-      await db.collections.add(collection);
-    }
-    if (existingTemplates.length === 0) {
-      await db.savedRequests.bulkAdd(savedRequests);
-    }
-  });
-}
-
 export const useCollectionStore = create<CollectionStore>((set, get) => ({
   collections: [],
   savedRequests: [],
@@ -135,16 +78,25 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
     collectionLoadGuard.run(
       () => get().loaded,
       async () => {
-        await ensureStarterTemplatesSeeded();
-
         const [collections, savedRequests] = await Promise.all([
           db.collections.toArray(),
           db.savedRequests.toArray(),
         ]);
+        const visibleCollections = collections.filter(
+          (collection) => collection.kind !== 'templates',
+        );
+        const visibleCollectionIds = new Set(
+          visibleCollections.map((collection) => collection.id),
+        );
+        const visibleSavedRequests = savedRequests.filter(
+          (request) =>
+            !request.isTemplate &&
+            visibleCollectionIds.has(request.collectionId),
+        );
 
         set({
-          collections: sortedCollections(collections),
-          savedRequests: sortedSavedRequests(savedRequests),
+          collections: sortedCollections(visibleCollections),
+          savedRequests: sortedSavedRequests(visibleSavedRequests),
           loaded: true,
         });
       },
@@ -267,56 +219,6 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
           prevComposerContext.collectionId,
           prevComposerContext.savedRequestId,
         );
-      set({ savedRequests: prevSavedRequests });
-      throw error;
-    }
-  },
-
-  duplicateTemplate: async (templateId, collectionId, name) => {
-    const template = get().savedRequests.find(
-      (request) => request.id === templateId && request.isTemplate,
-    );
-    if (!template) throw new AppError('SAVED_REQUEST_NOT_FOUND');
-
-    const trimmedName = (name ?? `${template.name} copy`).trim();
-    if (!trimmedName) throw new AppError('SAVED_REQUEST_NAME_REQUIRED');
-
-    const providerStore = useProviderStore.getState();
-    const provider = providerStore.getSelectedProvider();
-    if (!provider) throw new AppError('PROVIDER_REQUIRED');
-
-    const modelId =
-      providerStore.selectedModelId ?? provider.models[0]?.id ?? '';
-    const now = new Date();
-    const savedRequest: SavedRequest = {
-      id: nanoid(),
-      collectionId,
-      name: trimmedName,
-      providerId: provider.id,
-      providerName: provider.name,
-      modelId,
-      request: {
-        ...template.request,
-        messages: template.request.messages.map((message) => ({
-          ...message,
-          id: nanoid(),
-        })),
-      },
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const prevSavedRequests = get().savedRequests;
-    try {
-      await db.savedRequests.add(savedRequest);
-      set((state) => ({
-        savedRequests: sortedSavedRequests([
-          ...state.savedRequests,
-          savedRequest,
-        ]),
-      }));
-      return savedRequest;
-    } catch (error) {
       set({ savedRequests: prevSavedRequests });
       throw error;
     }

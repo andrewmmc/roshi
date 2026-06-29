@@ -66,7 +66,7 @@ export interface SavedRequest {
   request: SavedRequestSnapshot;
   createdAt: Date;
   updatedAt: Date;
-  /** Built-in starter templates cannot be edited in place. */
+  /** Legacy template requests are filtered from the collections UI. */
   isTemplate?: boolean;
 }
 

@@ -12,7 +12,6 @@ const { mockCollectionState } = vi.hoisted(() => ({
     saveCurrentRequest: vi.fn(),
     updateSavedRequest: vi.fn(),
     deleteSavedRequest: vi.fn(),
-    duplicateTemplate: vi.fn(),
   },
 }));
 
@@ -38,7 +37,6 @@ describe('CollectionsList', () => {
     mockCollectionState.addCollection.mockResolvedValue(makeCollection());
     mockCollectionState.saveCurrentRequest.mockResolvedValue({});
     mockCollectionState.updateSavedRequest.mockResolvedValue(undefined);
-    mockCollectionState.duplicateTemplate.mockResolvedValue({});
     useComposerStore.getState().resetComposer();
   });
 
