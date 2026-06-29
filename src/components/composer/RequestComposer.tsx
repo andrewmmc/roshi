@@ -1,29 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { MessageEditor } from './MessageEditor';
 import { ParameterControls } from './ParameterControls';
 import { HeaderEditor } from './HeaderEditor';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useComposerStore } from '@/stores/composer-store';
-import { useUiStore } from '@/stores/ui-store';
 
 export function RequestComposer() {
   const systemPrompt = useComposerStore((s) => s.systemPrompt);
   const setSystemPrompt = useComposerStore((s) => s.setSystemPrompt);
-  const messages = useComposerStore((s) => s.messages);
-  const setMainView = useUiStore((s) => s.setMainView);
-  const openSidebarSection = useUiStore((s) => s.openSidebarSection);
   const hasCustomHeaders = useComposerStore((s) =>
     s.customHeaders.some((h) => h.key.trim() !== ''),
   );
-  const composerIsEmpty =
-    !systemPrompt.trim() &&
-    messages.every(
-      (message) =>
-        !message.content.trim() &&
-        !(message.attachments && message.attachments.length > 0),
-    );
 
   return (
     <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
@@ -53,34 +41,6 @@ export function RequestComposer() {
       <TabsContent value="messages" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
-            {composerIsEmpty && (
-              <div className="border-border/60 bg-muted/15 mb-4 rounded-lg border px-3 py-2.5">
-                <p className="text-muted-foreground text-xs">
-                  Need a starting point? Browse starter templates in
-                  Collections, or compare this prompt across models in Eval.
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => openSidebarSection('collections')}
-                  >
-                    Browse Collections
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => setMainView('eval')}
-                  >
-                    Open Eval
-                  </Button>
-                </div>
-              </div>
-            )}
             <MessageEditor />
           </div>
         </ScrollArea>
