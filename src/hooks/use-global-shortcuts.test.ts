@@ -37,7 +37,7 @@ describe('useGlobalShortcuts', () => {
     useResponseStore.getState().resetResponse();
     useUiStore.setState({
       settingsOpen: false,
-      settingsPage: 'providers',
+      settingsPage: 'general',
       historySearchFocusGen: 0,
     });
     useThemeStore.getState().init();
@@ -208,12 +208,12 @@ describe('useGlobalShortcuts', () => {
   });
 
   describe('Cmd/Ctrl+Shift+, — open settings', () => {
-    it('opens settings on the providers page', () => {
+    it('opens settings on the general page', () => {
       expect(useUiStore.getState().settingsOpen).toBe(false);
       renderHook(() => useGlobalShortcuts());
       fireKey(',', { metaKey: true, shiftKey: true });
       expect(useUiStore.getState().settingsOpen).toBe(true);
-      expect(useUiStore.getState().settingsPage).toBe('providers');
+      expect(useUiStore.getState().settingsPage).toBe('general');
     });
   });
 

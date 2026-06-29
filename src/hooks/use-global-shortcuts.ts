@@ -80,7 +80,7 @@ export function useGlobalShortcuts() {
       // Cmd/Ctrl+Shift+, — open settings
       if (mod && e.shiftKey && e.key === ',') {
         e.preventDefault();
-        useUiStore.getState().setSettingsOpen(true, 'providers');
+        useUiStore.getState().setSettingsOpen(true, 'general');
         return;
       }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, Server, Settings, Variable, X } from 'lucide-react';
+import { Boxes, MonitorCog, Server, Settings, Variable, X } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import {
   EnvironmentSettingsFooter,
 } from '@/components/environments/EnvironmentManager';
 import { useUiStore, type SettingsPage } from '@/stores/ui-store';
+import { useThemeStore } from '@/stores/theme-store';
 import type { ProviderConfig } from '@/types/provider';
 import { cn } from '@/lib/utils';
 
@@ -21,10 +22,57 @@ type SettingsSection = {
 };
 
 const SECTIONS: SettingsSection[] = [
+  { id: 'general', label: 'General', icon: MonitorCog },
   { id: 'providers', label: 'Providers', icon: Server },
   { id: 'models', label: 'Models', icon: Boxes },
   { id: 'environments', label: 'Environments', icon: Variable },
 ];
+
+function GeneralSettings() {
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+  const darkMode = theme === 'dark';
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="border-border border-b px-5 py-4">
+        <h2 className="text-sm font-semibold tracking-tight">General</h2>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Configure app-wide preferences.
+        </p>
+      </div>
+
+      <div className="flex-1 px-5 py-4">
+        <div className="border-border/70 bg-muted/20 flex items-center justify-between gap-4 rounded-lg border p-3">
+          <div>
+            <div className="text-sm font-medium">Dark mode</div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Use a darker color theme throughout Roshi.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={darkMode}
+            aria-label="Dark mode"
+            onClick={() => setTheme(darkMode ? 'light' : 'dark')}
+            className={cn(
+              'focus-visible:border-ring focus-visible:ring-ring/50 relative h-6 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors outline-none focus-visible:ring-3',
+              darkMode ? 'bg-primary' : 'bg-muted-foreground/30',
+            )}
+          >
+            <span
+              className={cn(
+                'bg-background absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow-sm transition-transform',
+                darkMode && 'translate-x-4',
+              )}
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function SettingsDialog() {
   const open = useUiStore((s) => s.settingsOpen);
@@ -107,6 +155,7 @@ export function SettingsDialog() {
             </nav>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {settingsPage === 'general' && <GeneralSettings />}
               {settingsPage === 'providers' && (
                 <ProviderSettings
                   onClose={handleClose}

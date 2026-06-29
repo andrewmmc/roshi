@@ -2,7 +2,6 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { Sidebar } from './Sidebar';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
-import { useThemeStore } from '@/stores/theme-store';
 import { useUiStore } from '@/stores/ui-store';
 
 vi.mock('@/components/settings', () => ({
@@ -17,20 +16,15 @@ describe('Sidebar', () => {
   beforeEach(() => {
     useComposerStore.getState().resetComposer();
     useResponseStore.getState().resetResponse();
-    useThemeStore.setState({ theme: 'light' });
     useUiStore.setState({ aboutOpen: false });
   });
 
-  it('opens the about dialog and toggles the theme', () => {
+  it('opens the about dialog', () => {
     render(<Sidebar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Roshi' }));
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Switch to dark mode' }),
-    );
 
     expect(useUiStore.getState().aboutOpen).toBe(true);
-    expect(useThemeStore.getState().theme).toBe('dark');
   });
 
   it('resets immediately when there are no unsaved changes', () => {

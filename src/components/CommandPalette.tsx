@@ -148,10 +148,16 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         action: () => useUiStore.getState().focusHistorySearch(),
       },
       {
+        id: 'settings-general',
+        label: 'Settings: General',
+        group: 'Navigation',
+        shortcut: { mac: '⌘⇧,', win: 'Ctrl+Shift+,' },
+        action: () => useUiStore.getState().setSettingsOpen(true, 'general'),
+      },
+      {
         id: 'settings-providers',
         label: 'Settings: Providers',
         group: 'Navigation',
-        shortcut: { mac: '⌘⇧,', win: 'Ctrl+Shift+,' },
         action: () => useUiStore.getState().setSettingsOpen(true, 'providers'),
       },
       {

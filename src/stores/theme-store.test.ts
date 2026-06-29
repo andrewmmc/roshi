@@ -77,4 +77,14 @@ describe('theme-store', () => {
       expect(localStorage.getItem('llm-tester-theme')).toBe('light');
     });
   });
+
+  describe('setTheme', () => {
+    it('sets an explicit theme', () => {
+      getState().setTheme('dark');
+
+      expect(getState().theme).toBe('dark');
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      expect(localStorage.getItem('llm-tester-theme')).toBe('dark');
+    });
+  });
 });

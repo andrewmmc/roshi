@@ -24,6 +24,7 @@ interface ThemeStore {
   theme: Theme;
   initialized: boolean;
   init: () => void;
+  setTheme: (theme: Theme) => void;
   toggle: () => void;
 }
 
@@ -37,10 +38,14 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     set({ theme, initialized: true });
   },
 
+  setTheme: (theme) => {
+    applyTheme(theme);
+    localStorage.setItem(STORAGE_KEY, theme);
+    set({ theme });
+  },
+
   toggle: () => {
     const next = get().theme === 'light' ? 'dark' : 'light';
-    applyTheme(next);
-    localStorage.setItem(STORAGE_KEY, next);
-    set({ theme: next });
+    get().setTheme(next);
   },
 }));

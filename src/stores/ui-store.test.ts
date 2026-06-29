@@ -6,7 +6,7 @@ describe('ui-store', () => {
   beforeEach(() => {
     useUiStore.setState({
       settingsOpen: false,
-      settingsPage: 'providers',
+      settingsPage: 'general',
       settingsModelsProviderId: null,
       historySearchFocusGen: 0,
       aboutOpen: false,
@@ -24,8 +24,8 @@ describe('ui-store', () => {
       expect(getState().settingsOpen).toBe(false);
     });
 
-    it('defaults settingsPage to providers', () => {
-      expect(getState().settingsPage).toBe('providers');
+    it('defaults settingsPage to general', () => {
+      expect(getState().settingsPage).toBe('general');
     });
 
     it('opens settings and preserves the current page when page is omitted', () => {

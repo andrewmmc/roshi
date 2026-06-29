@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FilePlus2, PanelLeftClose, Sun, Moon, Keyboard } from 'lucide-react';
+import { FilePlus2, PanelLeftClose, Keyboard } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +14,6 @@ import {
   selectHasUnsavedChanges,
 } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
-import { useThemeStore } from '@/stores/theme-store';
 
 function SidebarSectionTabs() {
   return (
@@ -45,8 +44,6 @@ export function Sidebar() {
   const resetComposer = useComposerStore((s) => s.resetComposer);
   const resetResponse = useResponseStore((s) => s.resetResponse);
   const hasUnsavedChanges = useComposerStore(selectHasUnsavedChanges);
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggle);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
@@ -94,31 +91,6 @@ export function Sidebar() {
               tooltip="Collapse sidebar"
             >
               <PanelLeftClose className="h-3.5 w-3.5" />
-            </IconButton>
-            <IconButton
-              variant="ghost"
-              size="icon"
-              aria-label={
-                theme === 'light'
-                  ? 'Switch to dark mode'
-                  : 'Switch to light mode'
-              }
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
-              onClick={toggleTheme}
-              tooltip={
-                <span className="flex items-center gap-1.5">
-                  {theme === 'light'
-                    ? 'Switch to dark mode'
-                    : 'Switch to light mode'}
-                  <KbdShortcut mac="⌥T" win="Alt+T" />
-                </span>
-              }
-            >
-              {theme === 'light' ? (
-                <Moon className="h-3.5 w-3.5" />
-              ) : (
-                <Sun className="h-3.5 w-3.5" />
-              )}
             </IconButton>
             <SettingsDialog />
             <IconButton

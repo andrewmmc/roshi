@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type SettingsPage = 'providers' | 'environments' | 'models';
+export type SettingsPage = 'general' | 'providers' | 'environments' | 'models';
 export type MainView = 'request' | 'eval';
 export type SidebarSection = 'history' | 'collections' | 'evals';
 
@@ -41,7 +41,7 @@ interface UiStore {
 
 export const useUiStore = create<UiStore>((set) => ({
   settingsOpen: false,
-  settingsPage: 'providers',
+  settingsPage: 'general',
   settingsModelsProviderId: null,
   setSettingsOpen: (open, page) =>
     set((s) => ({
