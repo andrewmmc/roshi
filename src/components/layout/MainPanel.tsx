@@ -16,10 +16,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  ChevronDown,
   Eye,
   GitCompare,
   MoreHorizontal,
@@ -35,6 +35,7 @@ import { useEvalStore } from '@/stores/eval-store';
 import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
+import { toast } from '@/stores/toast-store';
 import { ViewToggle } from './ViewToggle';
 import { TabBar } from './TabBar';
 import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
@@ -80,6 +81,7 @@ function RequestView() {
   const handleComparePrompt = () => {
     seedFromMainComposer();
     setMainView('eval');
+    toast('Prompt copied to eval. Add models, then run compare.');
   };
 
   return (
@@ -115,19 +117,6 @@ function RequestView() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <TokenCountBadge />
-          {!narrow && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="hidden h-7 text-xs sm:inline-flex"
-              onClick={handleComparePrompt}
-              title="Compare this prompt across models"
-            >
-              <GitCompare className="mr-1.5 h-3 w-3" />
-              Compare
-            </Button>
-          )}
           {narrow && (
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -140,11 +129,6 @@ function RequestView() {
                 <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
                   <Eye className="h-3.5 w-3.5" />
                   Env preview
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleComparePrompt}>
-                  <GitCompare className="h-3.5 w-3.5" />
-                  Compare
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -163,25 +147,41 @@ function RequestView() {
               </kbd>
             </Button>
           ) : (
-            <Button
-              size="sm"
-              className="h-7 text-xs shadow-sm"
-              onClick={send}
-              disabled={!hasProvider}
-            >
-              <Send className="mr-1.5 h-3 w-3" />
-              Send
-              <span className="ml-1.5 hidden items-center gap-0.5 opacity-60 sm:inline-flex">
-                {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
-                  <kbd
-                    key={i}
-                    className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide"
-                  >
-                    {k}
-                  </kbd>
-                ))}
-              </span>
-            </Button>
+            <div className="flex items-center">
+              <Button
+                size="sm"
+                className="h-7 rounded-r-none text-xs shadow-sm"
+                onClick={send}
+                disabled={!hasProvider}
+              >
+                <Send className="mr-1.5 h-3 w-3" />
+                Send
+                <span className="ml-1.5 hidden items-center gap-0.5 opacity-60 sm:inline-flex">
+                  {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
+                    <kbd
+                      key={i}
+                      className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide"
+                    >
+                      {k}
+                    </kbd>
+                  ))}
+                </span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 border-primary-foreground/20 inline-flex h-7 w-7 items-center justify-center rounded-l-none rounded-r-lg border-l shadow-sm transition-all outline-none focus-visible:ring-3"
+                  aria-label="More send actions"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleComparePrompt}>
+                    <GitCompare className="h-3.5 w-3.5" />
+                    Compare prompt across models
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </div>

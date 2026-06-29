@@ -2,9 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MainPanel } from './MainPanel';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
+import { useToastStore } from '@/stores/toast-store';
+import { useUiStore } from '@/stores/ui-store';
 
-const send = vi.fn();
-const cancel = vi.fn();
+const { send, cancel, seedFromMainComposer } = vi.hoisted(() => ({
+  send: vi.fn(),
+  cancel: vi.fn(),
+  seedFromMainComposer: vi.fn(),
+}));
 
 vi.mock('@/components/composer/RequestComposer', () => ({
   RequestComposer: () => <div>RequestComposer Mock</div>,
@@ -47,7 +52,7 @@ vi.mock('@/components/composer/RequestCompatibilityWarning', () => ({
 vi.mock('@/stores/eval-store', () => ({
   useEvalStore: (
     selector: (state: { seedFromMainComposer: () => void }) => unknown,
-  ) => selector({ seedFromMainComposer: vi.fn() }),
+  ) => selector({ seedFromMainComposer }),
 }));
 
 vi.mock('@/hooks/use-send-request', () => ({
@@ -58,7 +63,10 @@ describe('MainPanel', () => {
   beforeEach(() => {
     send.mockReset();
     cancel.mockReset();
+    seedFromMainComposer.mockReset();
     useResponseStore.getState().resetResponse();
+    useToastStore.setState({ toasts: [] });
+    useUiStore.setState({ mainView: 'request', sidebarCollapsed: false });
     useProviderStore.setState({
       providers: [],
       selectedProviderId: null,
@@ -71,7 +79,9 @@ describe('MainPanel', () => {
   it('disables sending when no providers exist', () => {
     render(<MainPanel />);
 
-    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: (name) => name.startsWith('Send') }),
+    ).toBeDisabled();
   });
 
   it('sends on button click when a provider exists', () => {
@@ -84,6 +94,21 @@ describe('MainPanel', () => {
     );
 
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('moves compare into the send actions menu and shows feedback', async () => {
+    render(<MainPanel />);
+
+    expect(screen.queryByRole('button', { name: /^compare$/i })).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('More send actions'));
+    fireEvent.click(await screen.findByText('Compare prompt across models'));
+
+    expect(seedFromMainComposer).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().mainView).toBe('eval');
+    expect(useToastStore.getState().toasts[0]?.message).toBe(
+      'Prompt copied to eval. Add models, then run compare.',
+    );
   });
 
   it('shows the stop button while loading', () => {
