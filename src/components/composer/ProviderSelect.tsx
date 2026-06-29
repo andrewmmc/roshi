@@ -9,13 +9,15 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
+
+const BROWSE_MODELS_VALUE = '__browse_models__';
 
 export function ProviderSelect() {
   const providers = useProviderStore((s) => s.providers);
@@ -49,9 +51,15 @@ export function ProviderSelect() {
     selectedProvider?.type ?? 'openai-compatible',
   );
   const hasModels = (selectedProvider?.models.length ?? 0) > 0;
-  const showBrowseModels = Boolean(
-    selectedProvider && providerSupportsModels && !hasModels,
-  );
+  const showBrowseModels = Boolean(selectedProvider && providerSupportsModels);
+  const handleModelChange = (value: string | null) => {
+    if (value === BROWSE_MODELS_VALUE) {
+      openModelMarket(selectedProvider?.id ?? null);
+      return;
+    }
+
+    selectModel(value);
+  };
 
   return (
     <div className="flex min-w-0 flex-1 gap-2">
@@ -74,49 +82,43 @@ export function ProviderSelect() {
         </SelectContent>
       </Select>
 
-      {showBrowseModels ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 px-2 text-xs"
-          onClick={() => openModelMarket(selectedProvider?.id ?? null)}
-          aria-label="Browse models"
-          title="Browse and add models"
+      <Select
+        value={selectedModelId || ''}
+        onValueChange={handleModelChange}
+        disabled={!providerSupportsModels}
+      >
+        <SelectTrigger
+          aria-label="Select model"
+          className="h-7 min-w-[100px] flex-1 text-xs"
+          title={selectedModel?.displayName}
         >
-          <Plus className="h-3 w-3" />
-          Browse models
-        </Button>
-      ) : (
-        <Select
-          value={selectedModelId || ''}
-          onValueChange={selectModel}
-          disabled={!providerSupportsModels}
-        >
-          <SelectTrigger
-            aria-label="Select model"
-            className="h-7 min-w-[100px] flex-1 text-xs"
-            title={selectedModel?.displayName}
-          >
-            <SelectValue placeholder="Model">
-              {selectedModel?.displayName ?? 'Model'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {selectedProvider?.models.length ? (
-              selectedProvider.models.map((m) => (
-                <SelectItem key={m.id} value={m.id} title={m.displayName}>
-                  {m.displayName}
-                </SelectItem>
-              ))
-            ) : (
-              <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-                No models available.
-              </div>
-            )}
-          </SelectContent>
-        </Select>
-      )}
+          <SelectValue placeholder="Model">
+            {selectedModel?.displayName ?? 'Model'}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {hasModels ? (
+            selectedProvider?.models.map((m) => (
+              <SelectItem key={m.id} value={m.id} title={m.displayName}>
+                {m.displayName}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="text-muted-foreground px-2 py-3 text-center text-xs">
+              No models available.
+            </div>
+          )}
+          {showBrowseModels ? (
+            <>
+              {hasModels ? <SelectSeparator /> : null}
+              <SelectItem value={BROWSE_MODELS_VALUE}>
+                <Plus className="h-3 w-3" />
+                Browse models
+              </SelectItem>
+            </>
+          ) : null}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

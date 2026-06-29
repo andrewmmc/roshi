@@ -111,4 +111,15 @@ function SelectValue() {
   return null;
 }
 
-export { Select, SelectTrigger, SelectContent, SelectItem, SelectValue };
+function SelectSeparator() {
+  return null;
+}
+
+export {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectValue,
+};

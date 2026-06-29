@@ -72,7 +72,7 @@ describe('ProviderSelect', () => {
     expect(selectModel).toHaveBeenCalledWith('m2');
   });
 
-  it('renders a Browse models button when the selected provider has no models', async () => {
+  it('shows Browse models inside the model dropdown when the selected provider has no models', async () => {
     const user = userEvent.setup();
     const openModelMarket = vi.fn();
     useUiStore.setState({ openModelMarket });
@@ -90,12 +90,16 @@ describe('ProviderSelect', () => {
 
     render(<ProviderSelect />);
 
-    const browse = screen.getByRole('button', { name: /browse models/i });
-    await user.click(browse);
+    expect(
+      screen.queryByRole('button', { name: /browse models/i }),
+    ).not.toBeInTheDocument();
+    const modelSelect = screen.getByRole('combobox', { name: /select model/i });
+    await user.selectOptions(modelSelect, '__browse_models__');
+
     expect(openModelMarket).toHaveBeenCalledWith('p1');
     expect(
-      screen.queryByRole('combobox', { name: /select model/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('option', { name: /browse models/i }),
+    ).toBeInTheDocument();
   });
 
   it('enables model selection for google gemini and displays available models', async () => {
