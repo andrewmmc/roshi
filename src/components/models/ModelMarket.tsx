@@ -145,29 +145,32 @@ export function ModelMarket({
           Pick the models you want available in the composer. Refreshing the
           catalogue never changes the models you have already added.
         </p>
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search models…"
-              className="h-8 pr-7 pl-7 text-xs"
-              aria-label="Search models"
-            />
-            {search && (
-              <IconButton
-                variant="ghost"
-                size="icon-sm"
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2"
-                tooltip="Clear search"
-                onClick={() => setSearch('')}
-                aria-label="Clear search"
-              >
-                <X className="h-3 w-3" />
-              </IconButton>
-            )}
-          </div>
+      </div>
+
+      <div className="shrink-0 border-b px-5 py-3">
+        <div className="relative">
+          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search models…"
+            className="h-8 pr-7 pl-7 text-xs"
+            aria-label="Search models"
+          />
+          {search && (
+            <IconButton
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
+              tooltip="Clear search"
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </IconButton>
+          )}
+        </div>
+        <div className="mt-2">
           <ProviderFilterChips
             providers={sorted}
             activeProviderId={filterProviderId}

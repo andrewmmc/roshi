@@ -35,9 +35,9 @@ function GeneralSettings() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-border border-b px-5 py-4">
-        <h2 className="text-sm font-semibold tracking-tight">General</h2>
-        <p className="text-muted-foreground mt-1 text-xs">
+      <div className="border-border bg-muted/20 border-b px-5 py-4">
+        <h2 className="text-[15px] font-medium tracking-tight">General</h2>
+        <p className="text-muted-foreground mt-0.5 text-xs">
           Configure app-wide preferences.
         </p>
       </div>
