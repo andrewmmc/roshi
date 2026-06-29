@@ -158,7 +158,10 @@ export function EvalHeadersEditor() {
         These custom headers are sent with every eval runner request.
       </p>
       {customHeaders.map((header, index) => (
-        <div key={header.id} className="flex items-center gap-2">
+        <div
+          key={header.id}
+          className="flex flex-col gap-2 sm:flex-row sm:items-center"
+        >
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}

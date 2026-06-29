@@ -27,17 +27,21 @@ export function RunnerPicker() {
   const firstProvider =
     sortedProviders.find((p) => p.models.length > 0) ?? sortedProviders[0];
   const [providerId, setProviderId] = useState<string>(firstProvider?.id ?? '');
-  const provider = sortedProviders.find((p) => p.id === providerId);
+  const effectiveProviderId = providerId || firstProvider?.id || '';
+  const provider = sortedProviders.find((p) => p.id === effectiveProviderId);
   const firstModelId = provider?.models[0]?.id ?? '';
   const [modelId, setModelId] = useState<string>(firstModelId);
+  const effectiveModelId = modelId || firstModelId;
 
-  const selectedProvider = sortedProviders.find((p) => p.id === providerId);
+  const selectedProvider = sortedProviders.find(
+    (p) => p.id === effectiveProviderId,
+  );
   const availableModels = selectedProvider?.models ?? [];
-  const selectedModel = availableModels.find((m) => m.id === modelId);
+  const selectedModel = availableModels.find((m) => m.id === effectiveModelId);
 
   const handleAdd = () => {
-    if (!providerId || !modelId) return;
-    addRunner({ providerId, modelId });
+    if (!effectiveProviderId || !effectiveModelId) return;
+    addRunner({ providerId: effectiveProviderId, modelId: effectiveModelId });
   };
 
   const handleProviderChange = (id: string | null) => {
@@ -62,7 +66,7 @@ export function RunnerPicker() {
             Provider
           </label>
           <Select
-            value={providerId}
+            value={effectiveProviderId}
             onValueChange={handleProviderChange}
             disabled={isRunning}
           >
@@ -86,7 +90,7 @@ export function RunnerPicker() {
             Model
           </label>
           <Select
-            value={modelId}
+            value={effectiveModelId}
             onValueChange={handleModelChange}
             disabled={isRunning || availableModels.length === 0}
           >
@@ -109,7 +113,7 @@ export function RunnerPicker() {
           variant="outline"
           size="sm"
           onClick={handleAdd}
-          disabled={isRunning || !providerId || !modelId}
+          disabled={isRunning || !effectiveProviderId || !effectiveModelId}
         >
           <Plus className="mr-1 h-3 w-3" />
           Add runner

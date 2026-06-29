@@ -345,44 +345,46 @@ function EvalSetupTabs({
 }) {
   return (
     <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
-      <div className="border-border/70 flex h-11 shrink-0 items-center border-b px-3">
-        <TabsList
-          variant="line"
-          className="h-7 max-w-full gap-0 overflow-x-auto"
-        >
-          <TabsTrigger value="runners" className="px-3 text-xs">
-            Runners
-            {runnerCount > 0 && (
-              <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none">
-                {runnerCount}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="messages" className="px-3 text-xs">
-            Messages
-          </TabsTrigger>
-          <TabsTrigger value="system" className="px-3 text-xs">
-            System Prompt
-            {hasSystemPrompt && (
-              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="headers" className="px-3 text-xs">
-            Headers
-            {hasCustomHeaders && (
-              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="parameters" className="px-3 text-xs">
-            Parameters
-          </TabsTrigger>
-          <TabsTrigger value="judge" className="px-3 text-xs">
-            Judge
-            {judgeEnabled && (
-              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
-            )}
-          </TabsTrigger>
-        </TabsList>
+      <div className="border-border/70 flex h-11 min-w-0 shrink-0 items-center border-b px-3">
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <TabsList
+            variant="line"
+            className="h-7 w-max max-w-none shrink-0 gap-0"
+          >
+            <TabsTrigger value="runners" className="px-3 text-xs">
+              Runners
+              {runnerCount > 0 && (
+                <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none">
+                  {runnerCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="px-3 text-xs">
+              Messages
+            </TabsTrigger>
+            <TabsTrigger value="system" className="px-3 text-xs">
+              System Prompt
+              {hasSystemPrompt && (
+                <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="headers" className="px-3 text-xs">
+              Headers
+              {hasCustomHeaders && (
+                <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="parameters" className="px-3 text-xs">
+              Parameters
+            </TabsTrigger>
+            <TabsTrigger value="judge" className="px-3 text-xs">
+              Judge
+              {judgeEnabled && (
+                <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
       </div>
 
       <TabsContent value="runners" className="min-h-0 flex-1 overflow-hidden">
