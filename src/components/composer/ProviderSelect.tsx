@@ -17,6 +17,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
 
+const ADD_PROVIDER_VALUE = '__add_provider__';
 const BROWSE_MODELS_VALUE = '__browse_models__';
 
 export function ProviderSelect() {
@@ -29,6 +30,7 @@ export function ProviderSelect() {
   const seeding = useProviderStore((s) => s.seeding);
   const load = useProviderStore((s) => s.load);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
+  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
   const selectedProvider = useSelectedProvider();
   const selectedModel = useSelectedModel();
 
@@ -52,6 +54,14 @@ export function ProviderSelect() {
   );
   const hasModels = (selectedProvider?.models.length ?? 0) > 0;
   const showBrowseModels = Boolean(selectedProvider && providerSupportsModels);
+  const handleProviderChange = (value: string | null) => {
+    if (value === ADD_PROVIDER_VALUE) {
+      setSettingsOpen(true, 'providers');
+      return;
+    }
+
+    selectProvider(value);
+  };
   const handleModelChange = (value: string | null) => {
     if (value === BROWSE_MODELS_VALUE) {
       openModelMarket(selectedProvider?.id ?? null);
@@ -63,7 +73,10 @@ export function ProviderSelect() {
 
   return (
     <div className="flex min-w-0 flex-1 gap-2">
-      <Select value={selectedProviderId || ''} onValueChange={selectProvider}>
+      <Select
+        value={selectedProviderId || ''}
+        onValueChange={handleProviderChange}
+      >
         <SelectTrigger
           aria-label="Select provider"
           title="Select provider"
@@ -79,6 +92,11 @@ export function ProviderSelect() {
               {p.name}
             </SelectItem>
           ))}
+          {providers.length ? <SelectSeparator /> : null}
+          <SelectItem value={ADD_PROVIDER_VALUE}>
+            <Plus className="h-3 w-3" />
+            Add provider
+          </SelectItem>
         </SelectContent>
       </Select>
 

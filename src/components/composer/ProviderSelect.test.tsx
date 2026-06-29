@@ -12,6 +12,7 @@ vi.mock('@/components/ui/select', async () => {
 
 describe('ProviderSelect', () => {
   beforeEach(() => {
+    useUiStore.setState(useUiStore.getInitialState(), true);
     useProviderStore.setState({
       providers: [],
       selectedProviderId: null,
@@ -70,6 +71,30 @@ describe('ProviderSelect', () => {
 
     expect(selectProvider).toHaveBeenCalledWith('p1');
     expect(selectModel).toHaveBeenCalledWith('m2');
+  });
+
+  it('shows Add provider inside the provider dropdown', async () => {
+    const user = userEvent.setup();
+    useUiStore.setState({ settingsOpen: false, settingsPage: 'general' });
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'p1',
+          name: 'OpenAI',
+        }),
+      ],
+      selectedProviderId: 'p1',
+    });
+
+    render(<ProviderSelect />);
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /select provider/i }),
+      '__add_provider__',
+    );
+
+    expect(useUiStore.getState().settingsOpen).toBe(true);
+    expect(useUiStore.getState().settingsPage).toBe('providers');
   });
 
   it('shows Browse models inside the model dropdown when the selected provider has no models', async () => {

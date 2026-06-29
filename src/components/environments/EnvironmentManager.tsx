@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,16 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/stores/toast-store';
 import { useEnvironments } from '@/hooks/use-environments';
+import { useUiStore } from '@/stores/ui-store';
 import type { Environment, EnvironmentVariable } from '@/types/history';
+
+const MANAGE_ENVIRONMENTS_VALUE = '__manage_environments__';
 
 function createVariable(): EnvironmentVariable {
   return { id: nanoid(), key: '', value: '' };
@@ -219,6 +223,7 @@ export function EnvironmentSettingsFooter({
 export function EnvironmentSelector() {
   const { environments, selectedEnvironmentId, selectEnvironment } =
     useEnvironments();
+  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
 
   const selectedEnvironment = useMemo(
     () =>
@@ -227,13 +232,19 @@ export function EnvironmentSelector() {
       ) ?? null,
     [environments, selectedEnvironmentId],
   );
+  const handleEnvironmentChange = (value: string | null) => {
+    if (value === MANAGE_ENVIRONMENTS_VALUE) {
+      setSettingsOpen(true, 'environments');
+      return;
+    }
+
+    selectEnvironment(value === 'none' ? null : value);
+  };
 
   return (
     <Select
       value={selectedEnvironmentId ?? 'none'}
-      onValueChange={(value) =>
-        selectEnvironment(value === 'none' ? null : value)
-      }
+      onValueChange={handleEnvironmentChange}
     >
       <SelectTrigger
         aria-label="Select environment"
@@ -246,11 +257,17 @@ export function EnvironmentSelector() {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="none">No environment</SelectItem>
+        {environments.length ? <SelectSeparator /> : null}
         {environments.map((environment) => (
           <SelectItem key={environment.id} value={environment.id}>
             {environment.name}
           </SelectItem>
         ))}
+        <SelectSeparator />
+        <SelectItem value={MANAGE_ENVIRONMENTS_VALUE}>
+          <Settings className="h-3 w-3" />
+          Manage environments
+        </SelectItem>
       </SelectContent>
     </Select>
   );
