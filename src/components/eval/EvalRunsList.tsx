@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { Trash2 } from 'lucide-react';
+import { BarChart2, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { IconButton } from '@/components/ui/icon-button';
+import { SidebarRow } from '@/components/ui/sidebar-row';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
@@ -38,23 +40,24 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {headerSlot && (
-        <div className="border-sidebar-border/60 flex h-11 shrink-0 items-center border-b px-3">
+        <div className="border-sidebar-border flex h-11 shrink-0 items-center border-b px-3">
           {headerSlot}
         </div>
       )}
-      <div className="text-muted-foreground border-sidebar-border/60 flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[11px] font-semibold tracking-wider uppercase">
+      <div className="text-muted-foreground border-sidebar-border flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[11px] font-medium tracking-wide uppercase">
         <span>Saved eval runs</span>
         <span>{records.length}</span>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         {records.length === 0 ? (
-          <div className="flex flex-col gap-3 px-3 py-4">
-            <p className="text-muted-foreground text-[12px]">
-              Compare one prompt across multiple models, then save the run here.
-            </p>
-          </div>
+          <EmptyState
+            compact
+            icon={BarChart2}
+            title="No saved runs"
+            description="Compare one prompt across multiple models, then save the run here."
+          />
         ) : (
-          <ul className="flex flex-col">
+          <div className="flex flex-col gap-px p-1">
             {records.map((record) => {
               const successCount = record.results.filter(
                 (r) => r.status === 'success',
@@ -65,50 +68,48 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                   )?.label ?? null)
                 : null;
               return (
-                <li
+                <SidebarRow
                   key={record.id}
-                  className="border-sidebar-border/40 hover:bg-sidebar-accent/50 group flex flex-col gap-0.5 border-b px-3 py-2 text-[12px]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <button
-                      type="button"
-                      className="text-foreground flex-1 truncate text-left text-[12px] font-medium"
-                      onClick={() => {
-                        loadRun(record);
-                        setMainView('eval');
-                      }}
-                      title={record.name ?? 'Untitled eval run'}
-                    >
-                      {record.name ?? 'Untitled eval run'}
-                    </button>
+                  title={record.name ?? 'Untitled eval run'}
+                  onClick={() => {
+                    loadRun(record);
+                    setMainView('eval');
+                  }}
+                  actions={
                     <IconButton
                       variant="ghost"
                       size="icon-xs"
                       tooltip="Delete eval run"
                       onClick={() => remove(record.id)}
                       aria-label="Delete eval run"
-                      className="opacity-0 group-hover:opacity-100"
+                      className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-3 w-3" />
                     </IconButton>
-                  </div>
-                  <div className="text-muted-foreground flex items-center justify-between text-[11px]">
-                    <span>
-                      {record.runners.length} runner
-                      {record.runners.length === 1 ? '' : 's'} · {successCount}{' '}
-                      ok
-                    </span>
-                    <span>{formatRelative(record.createdAt)}</span>
-                  </div>
-                  {winnerLabel && (
-                    <div className="text-muted-foreground text-[11px]">
-                      Winner: <span className="font-mono">{winnerLabel}</span>
+                  }
+                >
+                  <div className="min-w-0 flex-1 pr-8">
+                    <div className="text-foreground/85 truncate text-[13px] leading-snug font-medium">
+                      {record.name ?? 'Untitled eval run'}
                     </div>
-                  )}
-                </li>
+                    <div className="text-muted-foreground flex items-center justify-between text-[11px]">
+                      <span>
+                        {record.runners.length} runner
+                        {record.runners.length === 1 ? '' : 's'} ·{' '}
+                        {successCount} ok
+                      </span>
+                      <span>{formatRelative(record.createdAt)}</span>
+                    </div>
+                    {winnerLabel && (
+                      <div className="text-muted-foreground text-[11px]">
+                        Winner: <span className="font-mono">{winnerLabel}</span>
+                      </div>
+                    )}
+                  </div>
+                </SidebarRow>
               );
             })}
-          </ul>
+          </div>
         )}
       </ScrollArea>
     </div>

@@ -1,10 +1,10 @@
-import { useState, useMemo, memo, useCallback, useRef, useEffect } from 'react';
-import { Terminal, Check, Download } from 'lucide-react';
+import { useState, useMemo, memo } from 'react';
+import { Download } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
-import { toast } from '@/stores/toast-store';
+import { EmptyState } from '@/components/ui/empty-state';
 import { JsonHighlight } from '@/components/ui/json-highlight';
 import { buildCurlCommand } from '@/utils/curl';
 import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
@@ -22,56 +22,11 @@ const JsonBlock = memo(function JsonBlock({
   );
 
   if (!data) {
-    return (
-      <div className="text-muted-foreground p-4 text-[13px] italic">
-        No {label} data available
-      </div>
-    );
+    return <EmptyState title={`No ${label} data available`} compact />;
   }
 
   return <JsonHighlight json={jsonStr} />;
 });
-
-function CurlCopyButton({ curlCommand }: { curlCommand: string | null }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const handleCopy = useCallback(async () => {
-    if (!curlCommand) return;
-    await navigator.clipboard.writeText(curlCommand);
-    if (!mountedRef.current) return;
-    setCopied(true);
-    toast('Copied as cURL');
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
-  }, [curlCommand]);
-
-  return (
-    <IconButton
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground hover:text-foreground h-7 w-7"
-      onClick={handleCopy}
-      disabled={!curlCommand}
-      tooltip={copied ? 'Copied' : 'Copy as cURL'}
-    >
-      {copied ? (
-        <Check className="h-3 w-3 text-green-600" />
-      ) : (
-        <Terminal className="h-3 w-3" />
-      )}
-    </IconButton>
-  );
-}
 
 export function RawJsonView() {
   const rawRequest = useResponseStore((s) => s.rawRequest);
@@ -102,22 +57,20 @@ export function RawJsonView() {
       className="flex h-full flex-col"
     >
       <div className="mt-2 flex items-center justify-between px-4">
-        <TabsList className="h-7">
-          <TabsTrigger value="response" className="h-6 px-2.5 text-xs">
+        <TabsList variant="line" className="h-7 gap-0">
+          <TabsTrigger value="response" className="px-3 text-xs">
             Response
           </TabsTrigger>
-          <TabsTrigger value="request" className="h-6 px-2.5 text-xs">
+          <TabsTrigger value="request" className="px-3 text-xs">
             Request
           </TabsTrigger>
         </TabsList>
         <div className="flex items-center">
-          {activeTab === 'request' && (
-            <CurlCopyButton curlCommand={curlCommand} />
-          )}
+          {activeTab === 'request' && <CopyButton text={curlCommand ?? ''} />}
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
             tooltip={
               activeTab === 'response'
                 ? 'Export raw response JSON'
@@ -130,7 +83,7 @@ export function RawJsonView() {
                 : exportRawRequestJson(rawRequest)
             }
           >
-            <Download className="h-3 w-3" />
+            <Download className="h-3.5 w-3.5" />
           </IconButton>
           <CopyButton text={activeJson} />
         </div>

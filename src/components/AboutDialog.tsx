@@ -4,6 +4,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -49,6 +51,9 @@ export function AboutDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>About Roshi</DialogTitle>
+          <DialogDescription className="sr-only">
+            Information about Roshi and helpful links.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex flex-col items-center gap-3 py-2">
@@ -100,6 +105,8 @@ export function AboutDialog() {
 
           <p className="text-muted-foreground text-xs">© 2026 Andrew Mok</p>
         </div>
+
+        <DialogFooter showCloseButton />
       </DialogContent>
     </Dialog>
   );

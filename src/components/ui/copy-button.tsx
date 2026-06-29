@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
-import { KbdShortcut } from '@/components/ui/tooltip';
+import { KbdShortcut } from '@/components/ui/kbd';
 import { toast } from '@/stores/toast-store';
+import { cn } from '@/lib/utils';
 import { Copy, Check } from 'lucide-react';
 
 export function CopyButton({
@@ -52,16 +53,16 @@ export function CopyButton({
   return (
     <IconButton
       variant="ghost"
-      size="icon"
-      className={`text-muted-foreground hover:text-foreground h-7 w-7 ${className ?? ''}`}
+      size="icon-sm"
+      className={cn('text-muted-foreground hover:text-foreground', className)}
       onClick={handleCopy}
       disabled={!text}
       tooltip={tooltipContent}
     >
       {copied ? (
-        <Check className="h-3 w-3 text-green-600" />
+        <Check className="h-3.5 w-3.5 text-green-600" />
       ) : (
-        <Copy className="h-3 w-3" />
+        <Copy className="h-3.5 w-3.5" />
       )}
     </IconButton>
   );

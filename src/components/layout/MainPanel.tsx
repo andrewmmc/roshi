@@ -35,6 +35,7 @@ import { useEvalStore } from '@/stores/eval-store';
 import { IS_MAC } from '@/lib/platform';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { TokenCountBadge } from '@/components/composer/TokenCountBadge';
+import { Kbd } from '@/components/ui/kbd';
 import { toast } from '@/stores/toast-store';
 import { ViewToggle } from './ViewToggle';
 import { TabBar } from './TabBar';
@@ -89,15 +90,15 @@ function RequestView() {
       <TabBar />
       <div
         ref={containerRef}
-        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4"
+        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3"
       >
         <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Open sidebar"
-              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0"
+              className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => setSidebarCollapsed(false)}
               tooltip="Open sidebar"
             >
@@ -140,11 +141,9 @@ function RequestView() {
               className="h-7 text-xs"
               onClick={cancel}
             >
-              <Square className="mr-1.5 h-3 w-3" />
+              <Square className="mr-1.5 h-3.5 w-3.5" />
               Stop
-              <kbd className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide opacity-60">
-                Esc
-              </kbd>
+              <Kbd className="ml-1.5">Esc</Kbd>
             </Button>
           ) : (
             <div className="flex items-center">
@@ -154,16 +153,11 @@ function RequestView() {
                 onClick={send}
                 disabled={!hasProvider}
               >
-                <Send className="mr-1.5 h-3 w-3" />
+                <Send className="mr-1.5 h-3.5 w-3.5" />
                 Send
-                <span className="ml-1.5 hidden items-center gap-0.5 opacity-60 sm:inline-flex">
+                <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
                   {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
-                    <kbd
-                      key={i}
-                      className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-current/25 bg-current/10 px-1 font-sans text-[9px] leading-none font-medium tracking-wide"
-                    >
-                      {k}
-                    </kbd>
+                    <Kbd key={i}>{k}</Kbd>
                   ))}
                 </span>
               </Button>

@@ -62,7 +62,7 @@ export function HeaderListEditor({
             tooltip="Remove header"
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0"
+            className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
           >
             <Trash2 className="h-3.5 w-3.5" />

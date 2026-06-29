@@ -197,7 +197,7 @@ export function MessageEditor() {
                 onChange={(e) => handleContentChange(index, e.target.value)}
                 aria-label={`${msg.role} message ${index + 1}`}
                 placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
-                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-[12px] md:text-[12px]"
+                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-xs"
                 rows={2}
               />
               <AttachmentChips messageIndex={index} />
@@ -214,13 +214,13 @@ export function MessageEditor() {
                       }
                     }}
                     placeholder="https://example.com/image.png"
-                    className="h-7 flex-1 font-mono text-xs"
+                    className="flex-1 font-mono text-xs"
                     autoFocus
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 shrink-0 text-xs"
+                    className="shrink-0"
                     onClick={() => handleUrlSubmit(index)}
                     disabled={!urlValue.trim()}
                   >
@@ -229,7 +229,7 @@ export function MessageEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 shrink-0 text-xs"
+                    className="shrink-0"
                     onClick={() => {
                       setUrlInputIndex(null);
                       setUrlValue('');
@@ -263,11 +263,11 @@ export function MessageEditor() {
                       render={
                         <DropdownMenuTrigger
                           aria-label="Message options"
-                          className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+                          className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex size-7 cursor-pointer items-center justify-center rounded-[min(var(--radius-md),12px)] transition-colors"
                         />
                       }
                     >
-                      <Ellipsis className="h-4 w-4" />
+                      <Ellipsis className="h-3.5 w-3.5" />
                     </TooltipTrigger>
                     <TooltipContent>Message options</TooltipContent>
                   </Tooltip>
@@ -322,10 +322,10 @@ export function MessageEditor() {
         ref={addMessageBtnRef}
         variant="outline"
         size="sm"
-        className="h-7 self-start text-xs"
+        className="self-start"
         onClick={handleAddMessage}
       >
-        <Plus className="mr-1.5 h-3 w-3" />
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
         Add Message
       </Button>
 

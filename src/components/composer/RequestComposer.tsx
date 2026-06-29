@@ -4,6 +4,7 @@ import { MessageEditor } from './MessageEditor';
 import { ParameterControls } from './ParameterControls';
 import { HeaderEditor } from './HeaderEditor';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PanelHeader } from '@/components/ui/panel-header';
 import { useComposerStore } from '@/stores/composer-store';
 
 export function RequestComposer() {
@@ -15,7 +16,7 @@ export function RequestComposer() {
 
   return (
     <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
-      <div className="border-border/70 flex h-11 shrink-0 items-center border-b px-3">
+      <PanelHeader>
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="messages" className="px-3 text-xs">
             Messages
@@ -36,7 +37,7 @@ export function RequestComposer() {
             Parameters
           </TabsTrigger>
         </TabsList>
-      </div>
+      </PanelHeader>
 
       <TabsContent value="messages" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
@@ -54,7 +55,7 @@ export function RequestComposer() {
               onChange={(e) => setSystemPrompt(e.target.value)}
               aria-label="System prompt"
               placeholder="System prompt (optional)"
-              className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[12px] md:text-[12px]"
+              className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-xs"
               rows={3}
             />
           </div>

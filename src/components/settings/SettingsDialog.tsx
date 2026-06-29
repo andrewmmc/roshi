@@ -93,9 +93,9 @@ export function SettingsDialog() {
     <>
       <IconButton
         variant="ghost"
-        size="icon"
+        size="icon-sm"
         aria-label="Settings"
-        className="text-muted-foreground hover:text-foreground h-7 w-7"
+        className="text-muted-foreground hover:text-foreground"
         onClick={() => setSettingsOpen(true)}
         tooltip={
           <span className="flex items-center gap-1.5">

@@ -3,6 +3,7 @@ import { SearchIcon } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
+import { KbdShortcut } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
 import { useTabStore } from '@/stores/tab-store';
@@ -14,7 +15,6 @@ import {
   selectHasUnsavedChanges,
 } from '@/stores/composer-store';
 import { useSendRequest } from '@/hooks/use-send-request';
-import { IS_MAC } from '@/lib/platform';
 import { toast } from '@/stores/toast-store';
 
 // ---------------------------------------------------------------------------
@@ -27,26 +27,6 @@ interface Command {
   group: string;
   shortcut?: { mac: string; win: string };
   action: () => void;
-}
-
-// ---------------------------------------------------------------------------
-// Small helper: renders shortcut keys as <kbd> badges
-// ---------------------------------------------------------------------------
-
-function ShortcutBadge({ mac, win }: { mac: string; win: string }) {
-  const keys = IS_MAC ? [...mac] : win.split('+');
-  return (
-    <span className="ml-auto flex shrink-0 items-center gap-0.5">
-      {keys.map((k, i) => (
-        <kbd
-          key={i}
-          className="border-foreground/15 bg-foreground/8 inline-flex h-5 min-w-5 items-center justify-center rounded border px-1 font-sans text-[10px] leading-none font-medium tracking-wide"
-        >
-          {k}
-        </kbd>
-      ))}
-    </span>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -290,6 +270,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         <SearchIcon className="text-muted-foreground h-4 w-4 shrink-0" />
         <input
           autoFocus
+          aria-label="Search commands"
           className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
           placeholder="Search commands…"
           value={query}
@@ -308,20 +289,23 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
             No commands found.
           </p>
         ) : (
-          <div className="py-1">
+          <div role="listbox" className="py-1">
             {displayGroups.map((group) => (
               <div key={group.label}>
-                <p className="text-muted-foreground px-3 pt-2 pb-0.5 text-[10px] font-semibold tracking-wider uppercase first:pt-1">
+                <p className="text-muted-foreground px-3 pt-2 pb-0.5 text-[11px] font-medium tracking-wide uppercase first:pt-1">
                   {group.label}
                 </p>
                 {group.items.map(({ cmd, flatIdx }) => (
-                  <div
+                  <button
+                    type="button"
                     key={cmd.id}
                     ref={(el) => {
                       itemRefs.current[flatIdx] = el;
                     }}
+                    role="option"
+                    aria-selected={effectiveIndex === flatIdx}
                     className={cn(
-                      'mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm',
+                      'mx-1 flex w-[calc(100%-0.5rem)] cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm',
                       effectiveIndex === flatIdx
                         ? 'bg-accent'
                         : 'hover:bg-accent/50',
@@ -329,14 +313,17 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
                     onClick={() => runAndClose(cmd.action)}
                     onMouseEnter={() => setSelectedIndex(flatIdx)}
                   >
-                    <span className="flex-1 truncate">{cmd.label}</span>
+                    <span className="flex-1 truncate text-left">
+                      {cmd.label}
+                    </span>
                     {cmd.shortcut && (
-                      <ShortcutBadge
+                      <KbdShortcut
                         mac={cmd.shortcut.mac}
                         win={cmd.shortcut.win}
+                        className="ml-auto shrink-0"
                       />
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             ))}

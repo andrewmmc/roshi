@@ -116,15 +116,15 @@ export function EvalView() {
     <div className="bg-background flex h-full flex-col">
       <div
         ref={containerRef}
-        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4"
+        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3"
       >
         <div className="flex items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Open sidebar"
-              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0"
+              className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => setSidebarCollapsed(false)}
               tooltip="Open sidebar"
             >
@@ -148,18 +148,16 @@ export function EvalView() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs"
                 onClick={() => handleLoadIntoComposer()}
                 title="Load this eval prompt into the main composer"
               >
-                <Upload className="mr-1.5 h-3 w-3" />
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
                 Load into composer
               </Button>
               {judgeResult?.winnerRunnerId && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
                   onClick={() =>
                     handleLoadIntoComposer(judgeResult.winnerRunnerId)
                   }
@@ -171,33 +169,30 @@ export function EvalView() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs"
                 disabled={secondaryDisabled}
                 onClick={() => setSaveOpen(true)}
               >
-                <Save className="mr-1.5 h-3 w-3" />
+                <Save className="mr-1.5 h-3.5 w-3.5" />
                 Save run
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
                 disabled={secondaryDisabled}
                 onClick={handleExportJson}
                 title="Export run as JSON"
               >
-                <FileDown className="mr-1.5 h-3 w-3" />
+                <FileDown className="mr-1.5 h-3.5 w-3.5" />
                 JSON
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
                 disabled={secondaryDisabled}
                 onClick={handleExportCsv}
                 title="Export metrics as CSV"
               >
-                <Download className="mr-1.5 h-3 w-3" />
+                <Download className="mr-1.5 h-3.5 w-3.5" />
                 CSV
               </Button>
             </>
@@ -250,13 +245,8 @@ export function EvalView() {
             </DropdownMenu>
           )}
           {isRunning ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={cancelAll}
-              className="h-7 text-xs"
-            >
-              <Square className="mr-1.5 h-3 w-3" />
+            <Button variant="destructive" size="sm" onClick={cancelAll}>
+              <Square className="mr-1.5 h-3.5 w-3.5" />
               Stop all
             </Button>
           ) : (
@@ -264,9 +254,9 @@ export function EvalView() {
               size="sm"
               onClick={handleStart}
               disabled={runners.length === 0}
-              className="h-7 text-xs shadow-sm"
+              className="shadow-sm"
             >
-              <Play className="mr-1.5 h-3 w-3" />
+              <Play className="mr-1.5 h-3.5 w-3.5" />
               Run eval
             </Button>
           )}
@@ -354,7 +344,7 @@ function EvalSetupTabs({
             <TabsTrigger value="runners" className="px-3 text-xs">
               Runners
               {runnerCount > 0 && (
-                <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none">
+                <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none">
                   {runnerCount}
                 </span>
               )}

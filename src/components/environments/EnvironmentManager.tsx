@@ -4,6 +4,8 @@ import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
+import { Field } from '@/components/ui/field';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Select,
   SelectContent,
@@ -60,26 +62,32 @@ function EnvironmentEditor({
 
   return (
     <div className="bg-muted/20 rounded-xl border p-3">
-      <div className="mb-3 flex items-center gap-2">
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          aria-label="Environment name"
-          className="h-7 text-xs"
-        />
-        <IconButton
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-destructive h-7 w-7"
-          tooltip="Delete environment"
-          onClick={async () => {
-            await onDelete(environment.id);
-            toast('Environment deleted');
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </IconButton>
-      </div>
+      <Field
+        label="Name"
+        htmlFor={`env-name-${environment.id}`}
+        className="mb-3"
+      >
+        <div className="flex items-center gap-2">
+          <Input
+            id={`env-name-${environment.id}`}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="flex-1"
+          />
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive"
+            tooltip="Delete environment"
+            onClick={async () => {
+              await onDelete(environment.id);
+              toast('Environment deleted');
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </IconButton>
+        </div>
+      </Field>
       <div className="space-y-2">
         {variables.map((variable) => (
           <div
@@ -93,7 +101,7 @@ function EnvironmentEditor({
               }
               placeholder="name"
               aria-label="Variable key"
-              className="h-7 font-mono text-xs"
+              className="font-mono text-xs"
             />
             <Input
               value={variable.value}
@@ -102,12 +110,12 @@ function EnvironmentEditor({
               }
               placeholder="value"
               aria-label="Variable value"
-              className="h-7 font-mono text-xs"
+              className="font-mono text-xs"
             />
             <IconButton
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive h-7 w-7"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-destructive"
               tooltip="Remove variable"
               onClick={() => removeVariable(variable.id)}
             >
@@ -186,9 +194,11 @@ export function EnvironmentSettings() {
         </div>
 
         {environments.length === 0 ? (
-          <div className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
-            No environments yet. Create one to start using variables.
-          </div>
+          <EmptyState
+            compact
+            title="No environments yet"
+            description="Create one to start using variables."
+          />
         ) : (
           <div className="space-y-3">
             {environments.map((environment) => (

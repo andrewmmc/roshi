@@ -58,7 +58,7 @@ export function EvalSystemPromptEditor() {
       rows={3}
       placeholder="Shared system prompt (optional)"
       aria-label="Eval system prompt"
-      className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-[12px] md:text-[12px]"
+      className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-xs"
     />
   );
 }
@@ -112,7 +112,7 @@ export function EvalMessagesEditor() {
                 aria-label={`${msg.role} eval message ${index + 1}`}
                 placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
                 rows={2}
-                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-[12px] md:text-[12px]"
+                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-xs"
               />
             </div>
             <Button
@@ -131,11 +131,11 @@ export function EvalMessagesEditor() {
       <Button
         variant="outline"
         size="sm"
-        className="h-7 self-start text-xs"
+        className="self-start"
         onClick={handleAddMessage}
         disabled={isRunning}
       >
-        <Plus className="mr-1.5 h-3 w-3" />
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
         Add Message
       </Button>
     </div>
@@ -145,7 +145,7 @@ export function EvalMessagesEditor() {
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-2 mb-0.5 flex items-center gap-2">
-      <span className="text-muted-foreground/50 text-[11px] font-semibold tracking-widest uppercase">
+      <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide uppercase">
         {children}
       </span>
       <div className="bg-border/50 h-px flex-1" />
@@ -228,7 +228,7 @@ function SliderNumberRow({
           min={min}
           max={max}
           disabled={disabled}
-          className="h-6 w-20 font-mono text-[11px] md:text-[11px]"
+          className="h-6 w-20 font-mono text-xs"
         />
       </div>
       <Slider
@@ -323,7 +323,7 @@ export function EvalHeadersEditor() {
             placeholder="Header name"
             disabled={isRunning}
             aria-label="Custom header name"
-            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
@@ -331,12 +331,12 @@ export function EvalHeadersEditor() {
             placeholder="Header value"
             disabled={isRunning}
             aria-label="Custom header value"
-            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
             disabled={isRunning || customHeaders.length <= 1}
             tooltip="Remove header"
@@ -390,16 +390,16 @@ export function EvalParametersEditor() {
             <Button
               key={preset.label}
               variant="outline"
-              size="sm"
+              size="xs"
               title={preset.title}
               aria-pressed={
                 Math.abs(composer.temperature - preset.value) < 0.001
               }
               onClick={() => setTemperature(preset.value)}
               disabled={isRunning}
-              className={`h-5 flex-1 px-0 text-[11px] transition-colors ${
+              className={`flex-1 px-1 transition-colors ${
                 Math.abs(composer.temperature - preset.value) < 0.001
-                  ? 'bg-accent border-accent-foreground/20 text-accent-foreground'
+                  ? 'bg-accent text-accent-foreground'
                   : ''
               }`}
             >
@@ -475,7 +475,7 @@ export function EvalParametersEditor() {
               const next = parseInt(e.target.value, 10);
               setMaxTokens(Number.isFinite(next) ? Math.max(1, next) : 1);
             }}
-            className="h-6 w-20 font-mono text-[11px] md:text-[11px]"
+            className="h-6 w-20 font-mono text-xs"
             min={1}
             max={2_000_000}
             disabled={isRunning}

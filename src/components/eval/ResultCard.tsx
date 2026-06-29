@@ -100,22 +100,22 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
 
       <div className="flex-1 overflow-auto px-3 py-2">
         {result.error && result.status !== 'partial' ? (
-          <pre className="text-destructive text-[12px] whitespace-pre-wrap">
+          <pre className="text-destructive text-xs whitespace-pre-wrap">
             {result.error}
           </pre>
         ) : result.content ? (
           <>
             {result.status === 'partial' && result.error && (
-              <p className="mb-2 text-[12px] font-medium text-amber-700 dark:text-amber-300">
+              <p className="mb-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {result.error}
               </p>
             )}
-            <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
+            <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap">
               {result.content}
             </pre>
           </>
         ) : (
-          <p className="text-muted-foreground text-[12px] italic">
+          <p className="text-muted-foreground text-xs italic">
             Waiting for response…
           </p>
         )}
@@ -136,8 +136,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[11px]"
+                size="xs"
                 disabled={isRunning}
                 onClick={() => {
                   loadIntoComposer(runner.id);
@@ -156,7 +155,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
 
         {judgeScore && (
           <div className="border-border/60 border-t pt-1.5">
-            <div className="text-muted-foreground/70 mb-1 text-[11px] font-semibold tracking-wider uppercase">
+            <div className="text-muted-foreground/70 mb-1 text-[11px] font-medium tracking-wide uppercase">
               Judge
             </div>
             <div className="grid grid-cols-4 gap-1 text-[11px]">
@@ -193,7 +192,7 @@ function ScoreCell({
       </span>
       <span
         className={cn(
-          'font-mono text-[12px]',
+          'font-mono text-xs',
           bold && 'text-foreground font-semibold',
         )}
       >

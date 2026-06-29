@@ -123,8 +123,8 @@ export function FirstRunChecklist() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="h-6 shrink-0 px-2 text-xs"
+                    size="xs"
+                    className="shrink-0"
                     onClick={step.onAction}
                   >
                     {step.actionLabel}

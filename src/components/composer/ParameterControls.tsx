@@ -54,7 +54,7 @@ function InfoTooltip({ content }: { content: string }) {
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-2 mb-0.5 flex items-center gap-2">
-      <span className="text-muted-foreground/50 text-[11px] font-semibold tracking-widest uppercase">
+      <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide uppercase">
         {children}
       </span>
       <div className="bg-border/50 h-px flex-1" />
@@ -116,7 +116,7 @@ function SliderNumberRow({
           max={max}
           disabled={disabled}
           title={disabledReason}
-          className="h-6 w-20 font-mono text-[11px] md:text-[11px]"
+          className="h-6 w-20 font-mono text-xs"
         />
       </div>
       <Slider
@@ -194,7 +194,7 @@ function SelectRow({
           <SelectTrigger
             id={inputId}
             size="sm"
-            className="h-6 w-28 font-mono text-[11px] md:text-[11px]"
+            className="h-6 w-28 font-mono text-xs"
             title={disabledReason}
           >
             <SelectValue />
@@ -305,13 +305,13 @@ export function ParameterControls() {
                 <Button
                   key={preset.label}
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   title={preset.title}
                   aria-pressed={Math.abs(temperature - preset.value) < 0.001}
                   onClick={() => applyTempPreset(preset.value)}
-                  className={`h-5 flex-1 px-0 text-[11px] transition-colors ${
+                  className={`flex-1 px-1 transition-colors ${
                     Math.abs(temperature - preset.value) < 0.001
-                      ? 'bg-accent border-accent-foreground/20 text-accent-foreground'
+                      ? 'bg-accent text-accent-foreground'
                       : ''
                   }`}
                 >
@@ -356,7 +356,7 @@ export function ParameterControls() {
             type="number"
             value={maxTokens}
             onChange={(e) => setMaxTokens(parseInt(e.target.value, 10) || 0)}
-            className="h-6 w-20 font-mono text-[11px] md:text-[11px]"
+            className="h-6 w-20 font-mono text-xs"
             min={1}
             max={capabilities?.tokenLimits?.output ?? 1000000}
             disabled={!canEditMaxTokens}
@@ -368,7 +368,7 @@ export function ParameterControls() {
           />
         </div>
         {capabilities?.tokenLimits?.output && (
-          <p className="text-muted-foreground/40 text-right text-[11px]">
+          <p className="text-muted-foreground/40 text-right text-xs">
             model limit: {capabilities.tokenLimits.output.toLocaleString()}
           </p>
         )}
@@ -422,7 +422,7 @@ export function ParameterControls() {
                 Math.max(1024, parseInt(e.target.value, 10) || 1024),
               )
             }
-            className="h-6 w-20 font-mono text-[11px] md:text-[11px]"
+            className="h-6 w-20 font-mono text-xs"
             min={1024}
             max={capabilities?.tokenLimits?.output ?? 1000000}
             step={1024}
@@ -467,7 +467,7 @@ export function ParameterControls() {
 
       {capabilities?.quirks && capabilities.quirks.length > 0 && (
         <div className="border-border/50 mt-1 rounded-lg border p-2">
-          <p className="text-muted-foreground/60 mb-1 text-[11px] font-semibold tracking-wide uppercase">
+          <p className="text-muted-foreground/60 mb-1 text-[11px] font-medium tracking-wide uppercase">
             Model notes
           </p>
           <ul className="text-muted-foreground/70 flex flex-col gap-0.5 text-xs">
@@ -482,12 +482,7 @@ export function ParameterControls() {
       )}
 
       <div className="flex justify-end pt-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetParameters}
-          className="h-7 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={resetParameters}>
           Reset to defaults
         </Button>
       </div>

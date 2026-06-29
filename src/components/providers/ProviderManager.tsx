@@ -116,7 +116,7 @@ function ProviderList({
       {sortProvidersByName(providers).map((provider) => (
         <div
           key={provider.id}
-          className="border-border/60 bg-background/80 flex w-full items-center gap-2 rounded-xl border px-2 py-2"
+          className="border-border/70 bg-background/80 flex w-full items-center gap-2 rounded-xl border px-2 py-2"
         >
           <div className="min-w-0 flex-1 px-1 py-0.5">
             <div className="text-sm font-medium tracking-tight">
@@ -465,7 +465,7 @@ export function ProviderSettings({
             onClick={handleBackToList}
             tooltip="Back to provider list"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </IconButton>
         )}
       </div>

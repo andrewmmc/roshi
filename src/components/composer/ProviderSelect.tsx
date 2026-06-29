@@ -94,7 +94,7 @@ export function ProviderSelect() {
           ))}
           {providers.length ? <SelectSeparator /> : null}
           <SelectItem value={ADD_PROVIDER_VALUE}>
-            <Plus className="h-3 w-3" />
+            <Plus />
             Add provider
           </SelectItem>
         </SelectContent>
@@ -130,7 +130,7 @@ export function ProviderSelect() {
             <>
               <SelectSeparator />
               <SelectItem value={BROWSE_MODELS_VALUE}>
-                <Plus className="h-3 w-3" />
+                <Plus />
                 Browse models
               </SelectItem>
             </>

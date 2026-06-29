@@ -19,7 +19,7 @@ export function RequestCompatibilityWarning() {
           <p className="font-medium">
             Some settings will be omitted when sending
           </p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+          <ul className="mt-1 list-disc space-y-1 pl-4">
             {warnings.map((warning) => (
               <li key={warning}>{warning}</li>
             ))}

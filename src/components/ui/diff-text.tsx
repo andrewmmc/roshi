@@ -11,7 +11,7 @@ export function DiffText({
   return (
     <pre
       className={cn(
-        'font-mono text-[12px] leading-relaxed whitespace-pre-wrap',
+        'font-mono text-xs leading-relaxed whitespace-pre-wrap',
         className,
       )}
     >

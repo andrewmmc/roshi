@@ -48,7 +48,7 @@ export function HeaderEditor() {
     <div className="flex flex-col gap-2">
       {presetHeaders.length > 0 && (
         <>
-          <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+          <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
             From provider
           </p>
           {presetHeaders.map(({ key, value }) => (
@@ -58,21 +58,21 @@ export function HeaderEditor() {
                 readOnly
                 disabled
                 aria-label={`Provider header name: ${key}`}
-                className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+                className="h-7 flex-1 font-mono text-xs"
               />
               <Input
                 value={maskHeaderValue(key, value, provider?.apiKey)}
                 readOnly
                 disabled
                 aria-label={`Provider header value for ${key}`}
-                className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+                className="h-7 flex-1 font-mono text-xs"
               />
               <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
-                <Lock className="h-3 w-3" aria-hidden="true" />
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
               </div>
             </div>
           ))}
-          <p className="text-muted-foreground mt-2 text-[11px] font-medium tracking-wider uppercase">
+          <p className="text-muted-foreground mt-2 text-[11px] font-medium tracking-wide uppercase">
             Custom
           </p>
         </>
@@ -84,19 +84,19 @@ export function HeaderEditor() {
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
             aria-label="Custom header name"
-            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
             aria-label="Custom header value"
-            className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
+            className="h-7 flex-1 font-mono text-xs"
           />
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7 shrink-0"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
             tooltip="Remove header"

@@ -59,9 +59,8 @@ export function EnvironmentPreviewButton({
     <>
       <IconButton
         variant="ghost"
-        size="icon"
+        size="icon-sm"
         className={cn(
-          'h-7 w-7',
           hasMissing
             ? 'text-amber-600 hover:text-amber-700 dark:text-amber-400'
             : 'text-muted-foreground hover:text-foreground',

@@ -1,5 +1,6 @@
 import { Boxes, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useProviderStore, useSelectedProvider } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import {
@@ -26,34 +27,34 @@ export function ResponseEmptyState() {
         : 'Write a message, then send the request to see the response here.';
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <p className="text-muted-foreground text-[13px]">{message}</p>
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {needsApiKey && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => setSettingsOpen(true, 'providers')}
-          >
-            <Server className="mr-1.5 h-3 w-3" />
-            Add API key
-          </Button>
-        )}
-        {needsModel && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => openModelMarket(selectedProvider?.id ?? null)}
-          >
-            <Boxes className="mr-1.5 h-3 w-3" />
-            Pick a model
-          </Button>
-        )}
-      </div>
-    </div>
+    <EmptyState
+      title={message}
+      actions={
+        <>
+          {needsApiKey && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen(true, 'providers')}
+            >
+              <Server className="h-3 w-3" />
+              Add API key
+            </Button>
+          )}
+          {needsModel && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => openModelMarket(selectedProvider?.id ?? null)}
+            >
+              <Boxes className="h-3 w-3" />
+              Pick a model
+            </Button>
+          )}
+        </>
+      }
+    />
   );
 }

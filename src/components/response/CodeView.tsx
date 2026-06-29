@@ -7,6 +7,8 @@ import { getSendableMessages } from '@/services/codegen/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { exportCodeSnippet } from '@/utils/export';
 import { cn } from '@/lib/utils';
 
@@ -76,29 +78,19 @@ export function CodeView() {
   ]);
 
   if (!provider || !model) {
-    return (
-      <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-        Select a provider and model to see code
-      </div>
-    );
+    return <EmptyState title="Select a provider and model to see code" />;
   }
 
   if (generators.length === 0) {
     return (
-      <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-        Code generation is not available for this provider type
-      </div>
+      <EmptyState title="Code generation is not available for this provider type" />
     );
   }
 
   const hasMessages = getSendableMessages(messages).length > 0;
 
   if (!hasMessages) {
-    return (
-      <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-        Enter a message to see code
-      </div>
-    );
+    return <EmptyState title="Enter a message to see code" />;
   }
 
   return (
@@ -109,41 +101,43 @@ export function CodeView() {
     >
       <div className="mt-2 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <TabsList className="h-7">
+          <TabsList variant="line" className="h-7 gap-0">
             {generators.map((gen) => (
               <TabsTrigger
                 key={gen.label}
                 value={gen.label}
-                className="h-6 px-2.5 text-xs"
+                className="px-3 text-xs"
               >
                 {gen.label}
               </TabsTrigger>
             ))}
           </TabsList>
-          <button
+          <Button
             type="button"
+            size="xs"
+            variant="ghost"
             onClick={toggleStream}
             aria-pressed={stream}
             className={cn(
-              'border-border h-6 cursor-pointer rounded border px-2 text-xs font-medium transition-colors',
+              'border-border border',
               stream
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground bg-transparent',
+                ? 'bg-accent text-accent-foreground hover:bg-accent/80'
+                : 'text-muted-foreground',
             )}
           >
             {stream ? 'stream' : 'sync'}
-          </button>
+          </Button>
         </div>
         <div className="flex items-center">
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
             tooltip="Export code snippet"
             disabled={!activeCode}
             onClick={() => exportCodeSnippet(activeCode, activeTab)}
           >
-            <Download className="h-3 w-3" />
+            <Download className="h-3.5 w-3.5" />
           </IconButton>
           <CopyButton text={activeCode} />
         </div>

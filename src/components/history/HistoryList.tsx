@@ -7,11 +7,13 @@ import {
   Download,
   SlidersHorizontal,
   GitCompare,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -288,8 +290,8 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
           <div className="flex items-center">
             <IconButton
               variant="ghost"
-              size="icon"
-              className={`relative h-7 w-7 ${
+              size="icon-sm"
+              className={`relative ${
                 compareMode
                   ? 'bg-sidebar-accent text-primary hover:text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -305,12 +307,12 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
                 compareMode ? 'Exit prompt compare' : 'Compare prompt diffs'
               }
             >
-              <GitCompare className="h-3 w-3" />
+              <GitCompare className="h-3.5 w-3.5" />
             </IconButton>
             <IconButton
               variant="ghost"
-              size="icon"
-              className={`relative h-7 w-7 ${
+              size="icon-sm"
+              className={`relative ${
                 isFiltering
                   ? 'bg-sidebar-accent text-primary hover:text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -318,28 +320,28 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
               onClick={() => setShowFilters(true)}
               tooltip="Filter history"
             >
-              <SlidersHorizontal className="h-3 w-3" />
+              <SlidersHorizontal className="h-3.5 w-3.5" />
               {isFiltering && (
                 <span className="bg-primary absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
               )}
             </IconButton>
             <IconButton
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => exportHistory(entries)}
               tooltip="Export all history as JSON"
             >
-              <Download className="h-3 w-3" />
+              <Download className="h-3.5 w-3.5" />
             </IconButton>
             <IconButton
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive h-7 w-7"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-destructive"
               onClick={() => setShowConfirm(true)}
               tooltip="Clear all history"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </IconButton>
           </div>
         )}
@@ -357,16 +359,15 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-px p-1">
           {entries.length === 0 && (
-            <div className="flex flex-col items-center gap-3 px-3 py-8 text-center">
-              <p className="text-muted-foreground text-xs">
-                Every request you send is saved here for quick replay.
-              </p>
-            </div>
+            <EmptyState
+              compact
+              icon={History}
+              title="No history yet"
+              description="Every request you send is saved here for quick replay."
+            />
           )}
           {entries.length > 0 && filtered.length === 0 && (
-            <p className="text-muted-foreground py-8 text-center text-xs">
-              No matching entries
-            </p>
+            <EmptyState compact title="No matching entries" />
           )}
           {filtered.map((entry) => (
             <HistoryItem

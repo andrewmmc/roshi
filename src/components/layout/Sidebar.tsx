@@ -31,22 +31,19 @@ function SidebarSectionTabs() {
         <>
           <TabsTrigger
             value="history"
-            className="px-2.5 text-xs after:bottom-[-5px]"
+            className="px-3 text-xs after:bottom-[-5px]"
           >
             History
           </TabsTrigger>
           <TabsTrigger
             value="collections"
-            className="px-2.5 text-xs after:bottom-[-5px]"
+            className="px-3 text-xs after:bottom-[-5px]"
           >
             Collections
           </TabsTrigger>
         </>
       ) : (
-        <TabsTrigger
-          value="evals"
-          className="px-2.5 text-xs after:bottom-[-5px]"
-        >
+        <TabsTrigger value="evals" className="px-3 text-xs after:bottom-[-5px]">
           Evals
         </TabsTrigger>
       )}
@@ -114,9 +111,9 @@ export function Sidebar() {
           <div className="ml-auto flex items-center gap-0.5">
             <IconButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Collapse sidebar"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarCollapsed(true)}
               tooltip="Collapse sidebar"
             >
@@ -125,9 +122,9 @@ export function Sidebar() {
             <SettingsDialog />
             <IconButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Keyboard shortcuts"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setShortcutsOpen(true)}
               tooltip={
                 <span className="flex items-center gap-1.5">
@@ -140,9 +137,9 @@ export function Sidebar() {
             </IconButton>
             <IconButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="New request"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              className="text-muted-foreground hover:text-foreground"
               onClick={handleNewRequest}
               tooltip={
                 <span className="flex items-center gap-1.5">

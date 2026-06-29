@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IconButton } from '@/components/ui/icon-button';
+import { PanelHeader } from '@/components/ui/panel-header';
 import { useResponseStore } from '@/stores/response-store';
 import { formatCount } from '@/utils/format';
 import { exportCurrentRequest } from '@/utils/export';
@@ -61,18 +62,18 @@ export function ResponsePanel() {
 
   return (
     <Tabs defaultValue="chat" className="flex h-full flex-col">
-      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between border-b px-4">
-        <TabsList className="h-7">
-          <TabsTrigger value="chat" className="h-6 px-2.5 text-xs">
+      <PanelHeader className="justify-between">
+        <TabsList variant="line" className="h-7 gap-0">
+          <TabsTrigger value="chat" className="px-3 text-xs">
             Chat
           </TabsTrigger>
-          <TabsTrigger value="raw" className="h-6 px-2.5 text-xs">
+          <TabsTrigger value="raw" className="px-3 text-xs">
             Body
           </TabsTrigger>
-          <TabsTrigger value="headers" className="h-6 px-2.5 text-xs">
+          <TabsTrigger value="headers" className="px-3 text-xs">
             Headers
           </TabsTrigger>
-          <TabsTrigger value="code" className="h-6 px-2.5 text-xs">
+          <TabsTrigger value="code" className="px-3 text-xs">
             Code
           </TabsTrigger>
         </TabsList>
@@ -111,8 +112,8 @@ export function ResponsePanel() {
           {statusCode !== null && !isLoading && (
             <IconButton
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-foreground"
               tooltip="Export request and response as JSON"
               onClick={() =>
                 exportCurrentRequest({
@@ -129,11 +130,11 @@ export function ResponsePanel() {
                 })
               }
             >
-              <Download className="h-3 w-3" />
+              <Download className="h-3.5 w-3.5" />
             </IconButton>
           )}
         </div>
-      </div>
+      </PanelHeader>
 
       <div className="sr-only" aria-live="polite" role="status">
         {statusText}

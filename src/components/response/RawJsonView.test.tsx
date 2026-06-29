@@ -51,7 +51,10 @@ describe('RawJsonView', () => {
 
     render(<RawJsonView />);
     fireEvent.click(screen.getByRole('tab', { name: 'Request' }));
-    fireEvent.click(screen.getByRole('button', { name: /copy as curl/i }));
+    // First copy button in request tab is the cURL copy; second is the JSON copy
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /copy to clipboard/i })[0],
+    );
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('curl'),

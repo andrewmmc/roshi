@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Kbd } from '@/components/ui/kbd';
 import { IS_MAC } from '@/lib/platform';
 import { useUiStore } from '@/stores/ui-store';
 
@@ -94,14 +95,12 @@ function KbdSequence({ keys }: { keys: string[] }) {
       {keys.map((k, i) => (
         <span key={i} className="flex items-center gap-0.5">
           {i > 0 && k !== '→' && (
-            <span className="text-muted-foreground text-[10px]">+</span>
+            <span className="text-muted-foreground text-[11px]">+</span>
           )}
           {k === '→' ? (
-            <span className="text-muted-foreground mx-0.5 text-[10px]">→</span>
+            <span className="text-muted-foreground mx-0.5 text-[11px]">→</span>
           ) : (
-            <kbd className="border-border bg-muted rounded border px-1 py-0.5 font-mono text-[11px] leading-none">
-              {k}
-            </kbd>
+            <Kbd>{k}</Kbd>
           )}
         </span>
       ))}
@@ -123,7 +122,7 @@ export function ShortcutsDialog() {
         <div className="flex flex-col gap-4">
           {SECTIONS.map((section) => (
             <div key={section.label} className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+              <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
                 {section.label}
               </span>
               <div className="flex flex-col gap-1">

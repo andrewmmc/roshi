@@ -1,10 +1,12 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Copy, Folder, Plus, Save, Trash2 } from 'lucide-react';
+import { Copy, Folder, FolderOpen, Plus, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SidebarRow } from '@/components/ui/sidebar-row';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Select,
   SelectContent,
@@ -200,54 +202,54 @@ function SavedRequestItem({
     'No prompt text';
 
   return (
-    <div className="group relative">
-      <button
-        className={`hover:bg-sidebar-accent/70 w-full cursor-pointer rounded px-2.5 py-1.5 pr-9 text-left transition-colors ${
-          active ? 'bg-sidebar-accent/80' : ''
-        }`}
-        onClick={() => onSelect(request)}
-      >
+    <SidebarRow
+      active={active}
+      onClick={() => onSelect(request)}
+      actions={
+        <>
+          {isTemplate && onDuplicate && (
+            <IconButton
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-foreground"
+              tooltip="Duplicate into collection"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate(request);
+              }}
+            >
+              <Copy className="h-3 w-3" />
+            </IconButton>
+          )}
+          {!isTemplate && (
+            <IconButton
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-destructive"
+              tooltip="Delete saved request"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(request.id);
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+            </IconButton>
+          )}
+        </>
+      }
+    >
+      <div className="min-w-0 flex-1 pr-8">
         <div className="text-foreground/85 truncate text-[13px] leading-snug">
           {request.name}
         </div>
         <div className="text-muted-foreground mt-0.5 truncate text-[11px]">
           {request.providerName} / {request.modelId}
         </div>
-        <div className="text-muted-foreground/70 mt-0.5 truncate text-[10px]">
+        <div className="text-muted-foreground/70 mt-0.5 truncate text-xs">
           {preview}
         </div>
-      </button>
-      <div className="absolute top-1/2 right-0.5 -translate-y-1/2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-        {isTemplate && onDuplicate && (
-          <IconButton
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
-            tooltip="Duplicate into collection"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDuplicate(request);
-            }}
-          >
-            <Copy className="h-2.5 w-2.5" />
-          </IconButton>
-        )}
-        {!isTemplate && (
-          <IconButton
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
-            tooltip="Delete saved request"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(request.id);
-            }}
-          >
-            <Trash2 className="h-2.5 w-2.5" />
-          </IconButton>
-        )}
       </div>
-    </div>
+    </SidebarRow>
   );
 }
 
@@ -411,18 +413,18 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
           <span className="text-muted-foreground flex-1 truncate text-[11px] font-medium tracking-wide uppercase">
             {collection.name}
           </span>
-          <span className="text-muted-foreground/60 text-[10px]">
+          <span className="text-muted-foreground/60 text-[11px]">
             {requests.length}
           </span>
           {!isTemplateCollection && (
             <IconButton
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-destructive opacity-0 transition-opacity group-hover:opacity-100"
               tooltip="Delete collection"
               onClick={() => deleteCollection(collection.id)}
             >
-              <Trash2 className="h-2.5 w-2.5" />
+              <Trash2 className="h-3 w-3" />
             </IconButton>
           )}
         </div>
@@ -463,23 +465,23 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         <div className="flex items-center">
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setSaveOpen(true)}
             tooltip="Save current request"
           >
-            <Save className="h-3 w-3" />
+            <Save className="h-3.5 w-3.5" />
           </IconButton>
           <IconButton
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
             onClick={async () => {
               await handleCreateCollection('New collection');
             }}
             tooltip="New collection"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3.5 w-3.5" />
           </IconButton>
         </div>
       </div>
@@ -490,21 +492,22 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             ? renderCollectionSection(templateCollection)
             : null}
           {userCollections.length === 0 && (
-            <div className="flex flex-col items-center gap-3 px-3 py-6 text-center">
-              <p className="text-muted-foreground text-xs">
-                Save requests into collections for quick reuse, or duplicate a
-                starter template above.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setSaveOpen(true)}
-              >
-                Save current request
-              </Button>
-            </div>
+            <EmptyState
+              compact
+              icon={FolderOpen}
+              title="No collections yet"
+              description="Save requests into collections for quick reuse, or duplicate a starter template above."
+              actions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSaveOpen(true)}
+                >
+                  Save current request
+                </Button>
+              }
+            />
           )}
           {userCollections.map((collection) =>
             renderCollectionSection(collection),

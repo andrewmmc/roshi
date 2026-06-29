@@ -5,9 +5,9 @@ export function StreamingIndicator() {
       aria-label="Response is streaming"
     >
       <span className="flex gap-0.5" aria-hidden="true">
-        <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
-        <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
-        <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
       </span>
       <span className="sr-only">Response is streaming</span>
     </span>

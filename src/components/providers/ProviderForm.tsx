@@ -4,6 +4,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -152,10 +153,7 @@ export function ProviderForm({
     <form ref={ref} onSubmit={handleSubmit} data-1p-ignore data-lp-ignore>
       <div className="space-y-4 px-5 py-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="provider-name" className="text-xs">
-              Name
-            </Label>
+          <Field label="Name" htmlFor="provider-name">
             <Input
               id="provider-name"
               value={form.name}
@@ -165,11 +163,8 @@ export function ProviderForm({
               disabled={isBuiltIn}
               className="w-full"
             />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="provider-type" className="text-xs">
-              Type
-            </Label>
+          </Field>
+          <Field label="Type" htmlFor="provider-type">
             <Select
               value={form.type}
               onValueChange={(val) =>
@@ -188,14 +183,11 @@ export function ProviderForm({
                 <SelectItem value="google-gemini">Google Gemini</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
 
         {form.type === 'openai-compatible' && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="provider-protocol" className="text-xs">
-              Protocol
-            </Label>
+          <Field label="Protocol" htmlFor="provider-protocol">
             <Select
               value={form.protocol ?? 'openai-compatible-chat'}
               onValueChange={(val) =>
@@ -218,13 +210,10 @@ export function ProviderForm({
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="provider-base-url" className="text-xs">
-            Base URL
-          </Label>
+        <Field label="Base URL" htmlFor="provider-base-url">
           <Input
             id="provider-base-url"
             value={form.baseUrl}
@@ -232,13 +221,10 @@ export function ProviderForm({
             placeholder="https://api.openai.com/v1"
             required
           />
-        </div>
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="provider-auth-type" className="text-xs">
-              Auth Type
-            </Label>
+          <Field label="Auth Type" htmlFor="provider-auth-type">
             <Select
               value={form.auth.type}
               onValueChange={(val) =>
@@ -259,12 +245,9 @@ export function ProviderForm({
                 <SelectItem value="none">None</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
           {form.auth.type === 'api-key-header' && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="provider-auth-header-name" className="text-xs">
-                Header Name
-              </Label>
+            <Field label="Header Name" htmlFor="provider-auth-header-name">
               <Input
                 id="provider-auth-header-name"
                 value={form.auth.headerName || ''}
@@ -276,14 +259,11 @@ export function ProviderForm({
                 }
                 placeholder="x-api-key"
               />
-            </div>
+            </Field>
           )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="provider-api-key" className="text-xs">
-            API Key
-          </Label>
+        <Field label="API Key" htmlFor="provider-api-key">
           <PasswordInput
             id="provider-api-key"
             value={form.apiKey}
@@ -292,7 +272,7 @@ export function ProviderForm({
             data-1p-ignore
             data-lp-ignore
           />
-        </div>
+        </Field>
 
         <div className="flex flex-col gap-2">
           <HeaderListEditor
@@ -304,10 +284,7 @@ export function ProviderForm({
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="provider-chat-endpoint" className="text-xs">
-            Chat Endpoint
-          </Label>
+        <Field label="Chat Endpoint" htmlFor="provider-chat-endpoint">
           <Input
             id="provider-chat-endpoint"
             value={form.endpoints.chat}
@@ -319,13 +296,13 @@ export function ProviderForm({
             }
             placeholder="/chat/completions"
           />
-        </div>
+        </Field>
 
         {form.type === 'openai-compatible' && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="provider-responses-endpoint" className="text-xs">
-              Responses Endpoint
-            </Label>
+          <Field
+            label="Responses Endpoint"
+            htmlFor="provider-responses-endpoint"
+          >
             <Input
               id="provider-responses-endpoint"
               value={form.endpoints.responses ?? ''}
@@ -337,7 +314,7 @@ export function ProviderForm({
               }
               placeholder="/responses"
             />
-          </div>
+          </Field>
         )}
 
         {!isBuiltIn && (
@@ -365,8 +342,8 @@ export function ProviderForm({
                   <IconButton
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0"
+                    size="icon-sm"
+                    className="shrink-0"
                     onClick={() => removeModel(i)}
                     tooltip="Remove model"
                   >

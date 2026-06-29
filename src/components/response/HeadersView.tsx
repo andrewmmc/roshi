@@ -1,48 +1,11 @@
-import { useState, useCallback, useRef, memo, useEffect } from 'react';
+import { memo } from 'react';
 import { Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IconButton } from '@/components/ui/icon-button';
+import { CopyButton } from '@/components/ui/copy-button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useResponseStore } from '@/stores/response-store';
-import { toast } from '@/stores/toast-store';
 import { exportHeadersJson } from '@/utils/export';
-
-function CopyableCell({
-  value,
-  className,
-}: {
-  value: string;
-  className?: string;
-}) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const handleClick = useCallback(async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    toast('Copied to clipboard');
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 1500);
-  }, [value]);
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  return (
-    <td className={`px-3 py-1 align-top ${className ?? ''}`}>
-      <button
-        type="button"
-        className="hover:bg-muted/50 -mx-1 -my-0.5 block w-[calc(100%+0.5rem)] cursor-pointer rounded px-1 py-0.5 text-left break-all transition-colors"
-        onClick={handleClick}
-        title="Click to copy"
-      >
-        {copied ? (
-          <span className="text-xs text-green-600">Copied!</span>
-        ) : (
-          value
-        )}
-      </button>
-    </td>
-  );
-}
 
 const HeadersTable = memo(function HeadersTable({
   headers,
@@ -50,11 +13,7 @@ const HeadersTable = memo(function HeadersTable({
   headers: Record<string, string> | null;
 }) {
   if (!headers || Object.keys(headers).length === 0) {
-    return (
-      <div className="text-muted-foreground p-4 text-[13px] italic">
-        No headers available
-      </div>
-    );
+    return <EmptyState title="No headers available" compact />;
   }
 
   return (
@@ -67,12 +26,19 @@ const HeadersTable = memo(function HeadersTable({
       </thead>
       <tbody>
         {Object.entries(headers).map(([key, value]) => (
-          <tr key={key} className="border-border/40 border-b last:border-0">
-            <CopyableCell
-              value={key}
-              className="text-muted-foreground w-1/3 align-top"
-            />
-            <CopyableCell value={value} />
+          <tr key={key} className="border-border/50 border-b last:border-0">
+            <td className="text-muted-foreground w-1/3 px-3 py-1 align-top">
+              <div className="flex items-center justify-between gap-1">
+                <span className="break-all">{key}</span>
+                <CopyButton text={key} className="shrink-0" />
+              </div>
+            </td>
+            <td className="px-3 py-1 align-top">
+              <div className="flex items-center justify-between gap-1">
+                <span className="break-all">{value}</span>
+                <CopyButton text={value} className="shrink-0" />
+              </div>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -92,18 +58,18 @@ export function HeadersView() {
   return (
     <Tabs defaultValue="response" className="flex h-full flex-col">
       <div className="mt-2 flex items-center justify-between px-4">
-        <TabsList className="h-7">
-          <TabsTrigger value="response" className="h-6 px-2.5 text-xs">
+        <TabsList variant="line" className="h-7 gap-0">
+          <TabsTrigger value="response" className="px-3 text-xs">
             Response
           </TabsTrigger>
-          <TabsTrigger value="request" className="h-6 px-2.5 text-xs">
+          <TabsTrigger value="request" className="px-3 text-xs">
             Request
           </TabsTrigger>
         </TabsList>
         <IconButton
           variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground h-7 w-7"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-foreground"
           tooltip="Export headers as JSON"
           disabled={!hasHeaders}
           onClick={() =>
@@ -114,7 +80,7 @@ export function HeadersView() {
             })
           }
         >
-          <Download className="h-3 w-3" />
+          <Download className="h-3.5 w-3.5" />
         </IconButton>
       </div>
       <TabsContent
