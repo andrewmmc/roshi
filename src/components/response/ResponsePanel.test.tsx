@@ -47,13 +47,14 @@ describe('ResponsePanel', () => {
     render(<ResponsePanel />);
 
     expect(
-      screen.getByText(
-        'Select a model and send a request to see the response here.',
-      ),
+      screen.getByText('Add a provider API key to send your first request.'),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /add api key/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /pick a model/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText('Write a message above, then press Send.'),
     ).not.toBeInTheDocument();
@@ -61,20 +62,35 @@ describe('ResponsePanel', () => {
     await user.click(screen.getByRole('tab', { name: 'Body' }));
     await waitFor(() => {
       expect(
-        screen.getByText(
-          'Select a model and send a request to see the response here.',
-        ),
+        screen.getByText('Add a provider API key to send your first request.'),
       ).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('tab', { name: 'Headers' }));
     await waitFor(() => {
       expect(
-        screen.getByText(
-          'Select a model and send a request to see the response here.',
-        ),
+        screen.getByText('Add a provider API key to send your first request.'),
       ).toBeInTheDocument();
     });
+  });
+
+  it('guides users to pick a model when the selected provider has none', () => {
+    useProviderStore.setState({
+      providers: [makeProvider({ id: 'p1', name: 'Acme', models: [] })],
+      selectedProviderId: 'p1',
+    });
+
+    render(<ResponsePanel />);
+
+    expect(
+      screen.getByText('Pick a model for Acme before sending.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /pick a model/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /add api key/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows loading status text while sending', () => {
@@ -183,12 +199,14 @@ describe('ResponsePanel', () => {
     expect(screen.getByText('200 Interrupted')).toBeInTheDocument();
   });
 
-  it('disables the code tab without a supported provider', () => {
+  it('keeps the code tab reachable so it can explain missing setup', async () => {
+    const user = userEvent.setup();
     render(<ResponsePanel />);
 
-    expect(screen.getByRole('tab', { name: 'Code' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    const codeTab = screen.getByRole('tab', { name: 'Code' });
+    expect(codeTab).toBeEnabled();
+
+    await user.click(codeTab);
+    expect(await screen.findByText('CodeView Mock')).toBeInTheDocument();
   });
 });

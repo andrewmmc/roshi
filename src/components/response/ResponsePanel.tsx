@@ -4,7 +4,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IconButton } from '@/components/ui/icon-button';
 import { useResponseStore } from '@/stores/response-store';
-import { useSelectedProvider } from '@/stores/provider-store';
 import { formatCount } from '@/utils/format';
 import { exportCurrentRequest } from '@/utils/export';
 import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
@@ -44,13 +43,6 @@ export function ResponsePanel() {
   const requestHeaders = useResponseStore((s) => s.requestHeaders);
   const responseHeaders = useResponseStore((s) => s.responseHeaders);
 
-  const selectedProvider = useSelectedProvider();
-  const isCodeTabEnabled = selectedProvider
-    ? selectedProvider.type === 'openai-compatible' ||
-      selectedProvider.type === 'anthropic' ||
-      selectedProvider.type === 'google-gemini'
-    : false;
-
   const hasContent = response || error || isStreaming || isLoading;
   const isInterrupted =
     error === 'Response interrupted' && Boolean(response?.content);
@@ -80,11 +72,7 @@ export function ResponsePanel() {
           <TabsTrigger value="headers" className="h-6 px-2.5 text-xs">
             Headers
           </TabsTrigger>
-          <TabsTrigger
-            value="code"
-            className="h-6 px-2.5 text-xs"
-            disabled={!isCodeTabEnabled}
-          >
+          <TabsTrigger value="code" className="h-6 px-2.5 text-xs">
             Code
           </TabsTrigger>
         </TabsList>

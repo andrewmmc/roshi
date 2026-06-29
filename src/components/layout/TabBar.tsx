@@ -51,42 +51,45 @@ export function TabBar() {
           const isActive = tab.id === activeTabId;
           const label = isActive ? liveActiveLabel : tab.label;
           return (
-            <button
+            <div
               key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              data-active-tab={isActive || undefined}
               title={label}
-              onClick={() => switchTab(tab.id)}
               className={cn(
-                'group flex h-full max-w-[160px] min-w-0 shrink-0 cursor-pointer items-center gap-1 border-r px-3 text-xs transition-colors',
-                'border-border/50 focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none',
+                'group border-border/50 flex h-full max-w-[160px] min-w-0 shrink-0 items-center border-r text-xs transition-colors',
                 isActive
                   ? 'bg-background text-foreground'
                   : 'bg-sidebar text-muted-foreground hover:bg-sidebar-accent hover:text-foreground',
               )}
             >
-              <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                data-active-tab={isActive || undefined}
+                onClick={() => switchTab(tab.id)}
+                className="focus-visible:ring-ring flex h-full min-w-0 flex-1 cursor-pointer items-center px-3 text-left focus-visible:ring-1 focus-visible:outline-none"
+              >
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+              </button>
               {canClose && (
-                <span
-                  role="button"
-                  tabIndex={-1}
+                <button
+                  type="button"
                   aria-label={`Close tab: ${label}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     closeTab(tab.id);
                   }}
                   className={cn(
-                    'text-muted-foreground hover:text-foreground -mr-1 flex h-4 w-4 shrink-0 items-center justify-center rounded',
+                    'text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-1 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded focus-visible:ring-1 focus-visible:outline-none',
                     isActive
                       ? 'opacity-60 hover:opacity-100'
-                      : 'opacity-0 group-hover:opacity-60 group-hover:hover:opacity-100',
+                      : 'opacity-0 group-focus-within:opacity-60 group-hover:opacity-60 hover:opacity-100 focus:opacity-100',
                   )}
                 >
                   <X className="h-2.5 w-2.5" />
-                </span>
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
