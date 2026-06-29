@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
@@ -9,14 +10,63 @@ vi.mock('@/components/settings', () => ({
 }));
 
 vi.mock('@/components/history/HistoryList', () => ({
-  HistoryList: () => <div>HistoryList Mock</div>,
+  HistoryList: ({ headerSlot }: { headerSlot?: ReactNode }) => (
+    <div>
+      {headerSlot}
+      <div>HistoryList Mock</div>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/collections/CollectionsList', () => ({
+  CollectionsList: ({ headerSlot }: { headerSlot?: ReactNode }) => (
+    <div>
+      {headerSlot}
+      <div>CollectionsList Mock</div>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/eval/EvalRunsList', () => ({
+  EvalRunsList: ({ headerSlot }: { headerSlot?: ReactNode }) => (
+    <div>
+      {headerSlot}
+      <div>EvalRunsList Mock</div>
+    </div>
+  ),
 }));
 
 describe('Sidebar', () => {
   beforeEach(() => {
     useComposerStore.getState().resetComposer();
     useResponseStore.getState().resetResponse();
-    useUiStore.setState({ aboutOpen: false });
+    useUiStore.setState({
+      aboutOpen: false,
+      mainView: 'request',
+      sidebarSection: 'history',
+    });
+  });
+
+  it('shows request sidebar sections in request view', () => {
+    useUiStore.setState({ mainView: 'request', sidebarSection: 'history' });
+
+    render(<Sidebar />);
+
+    expect(screen.getByText('History')).toBeInTheDocument();
+    expect(screen.getByText('Collections')).toBeInTheDocument();
+    expect(screen.queryByText('Evals')).not.toBeInTheDocument();
+    expect(screen.getByText('HistoryList Mock')).toBeInTheDocument();
+  });
+
+  it('shows eval runs in eval view', () => {
+    useUiStore.setState({ mainView: 'eval', sidebarSection: 'history' });
+
+    render(<Sidebar />);
+
+    expect(screen.getByText('Evals')).toBeInTheDocument();
+    expect(screen.queryByText('History')).not.toBeInTheDocument();
+    expect(screen.queryByText('Collections')).not.toBeInTheDocument();
+    expect(screen.getByText('EvalRunsList Mock')).toBeInTheDocument();
   });
 
   it('opens the about dialog', () => {

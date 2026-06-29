@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
 import { FilePlus2, PanelLeftClose, Keyboard } from 'lucide-react';
-import { useUiStore } from '@/stores/ui-store';
+import {
+  useUiStore,
+  type MainView,
+  type SidebarSection,
+} from '@/stores/ui-store';
 import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KbdShortcut } from '@/components/ui/tooltip';
@@ -16,28 +20,49 @@ import {
 import { useResponseStore } from '@/stores/response-store';
 
 function SidebarSectionTabs() {
+  const mainView = useUiStore((s) => s.mainView);
+
   return (
     <TabsList
       variant="line"
       className="h-7 shrink-0 justify-start gap-0 rounded-none px-0"
     >
-      <TabsTrigger
-        value="history"
-        className="px-2.5 text-xs after:bottom-[-5px]"
-      >
-        History
-      </TabsTrigger>
-      <TabsTrigger
-        value="collections"
-        className="px-2.5 text-xs after:bottom-[-5px]"
-      >
-        Collections
-      </TabsTrigger>
-      <TabsTrigger value="evals" className="px-2.5 text-xs after:bottom-[-5px]">
-        Evals
-      </TabsTrigger>
+      {mainView === 'request' ? (
+        <>
+          <TabsTrigger
+            value="history"
+            className="px-2.5 text-xs after:bottom-[-5px]"
+          >
+            History
+          </TabsTrigger>
+          <TabsTrigger
+            value="collections"
+            className="px-2.5 text-xs after:bottom-[-5px]"
+          >
+            Collections
+          </TabsTrigger>
+        </>
+      ) : (
+        <TabsTrigger
+          value="evals"
+          className="px-2.5 text-xs after:bottom-[-5px]"
+        >
+          Evals
+        </TabsTrigger>
+      )}
     </TabsList>
   );
+}
+
+function getActiveSidebarSection(
+  mainView: MainView,
+  sidebarSection: SidebarSection,
+): SidebarSection {
+  if (mainView === 'eval') {
+    return 'evals';
+  }
+
+  return sidebarSection === 'collections' ? 'collections' : 'history';
 }
 
 export function Sidebar() {
@@ -47,9 +72,14 @@ export function Sidebar() {
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+  const mainView = useUiStore((s) => s.mainView);
   const sidebarSection = useUiStore((s) => s.sidebarSection);
   const setSidebarSection = useUiStore((s) => s.setSidebarSection);
   const [showDiscard, setShowDiscard] = useState(false);
+  const activeSidebarSection = getActiveSidebarSection(
+    mainView,
+    sidebarSection,
+  );
 
   const reset = useCallback(() => {
     resetComposer();
@@ -67,7 +97,7 @@ export function Sidebar() {
   return (
     <div className="bg-sidebar flex h-full flex-col">
       <Tabs
-        value={sidebarSection}
+        value={activeSidebarSection}
         onValueChange={(value) =>
           setSidebarSection(value as typeof sidebarSection)
         }
@@ -129,21 +159,29 @@ export function Sidebar() {
           aria-label="Main navigation"
           className="min-h-0 flex-1 overflow-hidden"
         >
-          <TabsContent
-            value="history"
-            className="min-h-0 flex-1 overflow-hidden"
-          >
-            <HistoryList headerSlot={<SidebarSectionTabs />} />
-          </TabsContent>
-          <TabsContent
-            value="collections"
-            className="min-h-0 flex-1 overflow-hidden"
-          >
-            <CollectionsList headerSlot={<SidebarSectionTabs />} />
-          </TabsContent>
-          <TabsContent value="evals" className="min-h-0 flex-1 overflow-hidden">
-            <EvalRunsList headerSlot={<SidebarSectionTabs />} />
-          </TabsContent>
+          {mainView === 'request' ? (
+            <>
+              <TabsContent
+                value="history"
+                className="min-h-0 flex-1 overflow-hidden"
+              >
+                <HistoryList headerSlot={<SidebarSectionTabs />} />
+              </TabsContent>
+              <TabsContent
+                value="collections"
+                className="min-h-0 flex-1 overflow-hidden"
+              >
+                <CollectionsList headerSlot={<SidebarSectionTabs />} />
+              </TabsContent>
+            </>
+          ) : (
+            <TabsContent
+              value="evals"
+              className="min-h-0 flex-1 overflow-hidden"
+            >
+              <EvalRunsList headerSlot={<SidebarSectionTabs />} />
+            </TabsContent>
+          )}
         </nav>
       </Tabs>
 
