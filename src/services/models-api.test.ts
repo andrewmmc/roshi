@@ -132,7 +132,7 @@ describe('models-api', () => {
       expect(result.openai).toHaveLength(2); // excludes embedding
       expect(result.anthropic).toHaveLength(1);
       expect(result.google).toHaveLength(2); // excludes embedding, deprecated, and non-text-output models
-      expect(result.openrouter).toHaveLength(4); // hardcoded (auto, free) + openai/ + anthropic/
+      expect(result.openrouter).toHaveLength(5); // hardcoded (auto, free) + all chat models
     });
 
     it('excludes embedding models', async () => {
@@ -181,7 +181,7 @@ describe('models-api', () => {
       expect(result.openai[1].id).toBe('gpt-3.5-turbo'); // 2023-01-01
     });
 
-    it('openrouter: hardcoded models first, then openai/, then anthropic/', async () => {
+    it('openrouter: hardcoded models first, then all chat models by release date', async () => {
       vi.stubGlobal(
         'fetch',
         vi.fn().mockResolvedValue({
@@ -191,10 +191,13 @@ describe('models-api', () => {
       );
 
       const result = await fetchModelsFromApi();
-      expect(result.openrouter[0].id).toBe('openrouter/auto');
-      expect(result.openrouter[1].id).toBe('openrouter/free');
-      expect(result.openrouter[2].id).toBe('openai/gpt-4');
-      expect(result.openrouter[3].id).toBe('anthropic/claude-3');
+      expect(result.openrouter.map((m) => m.id)).toEqual([
+        'openrouter/auto',
+        'openrouter/free',
+        'meta/llama-3', // 2024-04-18
+        'anthropic/claude-3', // 2024-03-04
+        'openai/gpt-4', // 2023-03-14
+      ]);
     });
 
     it('throws on non-ok response', async () => {

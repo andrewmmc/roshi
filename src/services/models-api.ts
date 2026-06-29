@@ -237,16 +237,8 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
           ...OPENROUTER_HARDCODED_MODELS,
           ...sortByReleaseDate(
             'openrouter',
-            collectModels(
-              data.openrouter.models,
-              (id, m) => id.startsWith('openai/') && isTextChatModel(m),
-            ),
-          ),
-          ...sortByReleaseDate(
-            'openrouter',
-            collectModels(
-              data.openrouter.models,
-              (id, m) => id.startsWith('anthropic/') && isTextChatModel(m),
+            collectModels(data.openrouter.models, (_id, m) =>
+              isTextChatModel(m),
             ),
           ),
         ]
