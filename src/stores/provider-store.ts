@@ -173,6 +173,7 @@ interface ProviderStore {
   selectModel: (id: string | null) => void;
   resetProvider: (id: string) => Promise<void>;
   resetAllProviders: () => Promise<void>;
+  resetModelPicks: () => Promise<void>;
   refreshModelCatalog: () => Promise<void>;
   addModelToProvider: (
     providerId: string,
@@ -387,6 +388,53 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
       chooseValidSelection(newProviders, { providerId: null, modelId: null });
     await saveSelection(selectedProviderId, selectedModelId);
     set({ providers: newProviders, selectedProviderId, selectedModelId });
+  },
+
+  resetModelPicks: async () => {
+    const providersWithPicks = get().providers.filter(
+      (provider) => provider.isBuiltIn && provider.models.length > 0,
+    );
+
+    if (providersWithPicks.length === 0) {
+      return;
+    }
+
+    for (const provider of providersWithPicks) {
+      await db.providers.update(provider.id, { models: [] });
+    }
+
+    let shouldPersistSelection = false;
+    let selectedProviderId: string | null = null;
+    let selectedModelId: string | null = null;
+    set((state) => {
+      const providers = state.providers.map((provider) =>
+        provider.isBuiltIn && provider.models.length > 0
+          ? { ...provider, models: [] }
+          : provider,
+      );
+      const selectedProvider = providers.find(
+        (provider) => provider.id === state.selectedProviderId,
+      );
+      const selectedModelStillExists = Boolean(
+        selectedProvider?.models.some(
+          (model) => model.id === state.selectedModelId,
+        ),
+      );
+      const updates: Partial<ProviderStore> = { providers };
+
+      if (state.selectedModelId && !selectedModelStillExists) {
+        shouldPersistSelection = true;
+        selectedProviderId = state.selectedProviderId;
+        selectedModelId = null;
+        updates.selectedModelId = null;
+      }
+
+      return updates;
+    });
+
+    if (shouldPersistSelection) {
+      await saveSelection(selectedProviderId, selectedModelId);
+    }
   },
 
   refreshModelCatalog: async () => {

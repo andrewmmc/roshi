@@ -684,6 +684,82 @@ describe('provider-store', () => {
     });
   });
 
+  describe('resetModelPicks', () => {
+    it('clears built-in model picks without deleting custom providers or credentials', async () => {
+      const builtin = makeProvider({
+        id: 'b1',
+        name: 'OpenAI',
+        isBuiltIn: true,
+        apiKey: 'secret',
+        models: [makeModel({ id: 'gpt-4o' })],
+      });
+      const custom = makeProvider({
+        id: 'c1',
+        name: 'My API',
+        isBuiltIn: false,
+        models: [makeModel({ id: 'custom-model' })],
+      });
+      useProviderStore.setState({
+        loaded: true,
+        providers: [builtin, custom],
+        selectedProviderId: 'b1',
+        selectedModelId: 'gpt-4o',
+      });
+
+      await getState().resetModelPicks();
+
+      expect(mockDb.providers.clear).not.toHaveBeenCalled();
+      expect(mockDb.providers.update).toHaveBeenCalledWith('b1', {
+        models: [],
+      });
+      expect(mockDb.providers.update).not.toHaveBeenCalledWith('c1', {
+        models: [],
+      });
+      expect(getState().providers.find((p) => p.id === 'b1')?.apiKey).toBe(
+        'secret',
+      );
+      expect(getState().providers.find((p) => p.id === 'b1')?.models).toEqual(
+        [],
+      );
+      expect(getState().providers.find((p) => p.id === 'c1')?.models).toEqual([
+        expect.objectContaining({ id: 'custom-model' }),
+      ]);
+      expect(getState().selectedProviderId).toBe('b1');
+      expect(getState().selectedModelId).toBeNull();
+      expect(mockDb.settings._store.get('provider-selection')).toEqual({
+        providerId: 'b1',
+        modelId: null,
+      });
+    });
+
+    it('keeps custom provider model selection when resetting built-in picks', async () => {
+      const builtin = makeProvider({
+        id: 'b1',
+        name: 'OpenAI',
+        isBuiltIn: true,
+        models: [makeModel({ id: 'gpt-4o' })],
+      });
+      const custom = makeProvider({
+        id: 'c1',
+        name: 'My API',
+        isBuiltIn: false,
+        models: [makeModel({ id: 'custom-model' })],
+      });
+      useProviderStore.setState({
+        loaded: true,
+        providers: [builtin, custom],
+        selectedProviderId: 'c1',
+        selectedModelId: 'custom-model',
+      });
+
+      await getState().resetModelPicks();
+
+      expect(getState().selectedProviderId).toBe('c1');
+      expect(getState().selectedModelId).toBe('custom-model');
+      expect(mockDb.settings.put).not.toHaveBeenCalled();
+    });
+  });
+
   describe('refreshModelCatalog', () => {
     it('does not mutate provider model lists', async () => {
       const providerModels = [makeModel({ id: 'gpt-4', source: 'models.dev' })];

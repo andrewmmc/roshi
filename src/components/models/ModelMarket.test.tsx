@@ -7,7 +7,7 @@ import type { ProviderModel } from '@/types/provider';
 const {
   addModelToProvider,
   removeModelFromProvider,
-  resetAllProviders,
+  resetModelPicks,
   refreshModelCatalog,
   loadProviders,
   loadCatalog,
@@ -17,7 +17,7 @@ const {
 } = vi.hoisted(() => ({
   addModelToProvider: vi.fn().mockResolvedValue(undefined),
   removeModelFromProvider: vi.fn().mockResolvedValue(undefined),
-  resetAllProviders: vi.fn().mockResolvedValue(undefined),
+  resetModelPicks: vi.fn().mockResolvedValue(undefined),
   refreshModelCatalog: vi.fn().mockResolvedValue(undefined),
   loadProviders: vi.fn().mockResolvedValue(undefined),
   loadCatalog: vi.fn().mockResolvedValue(undefined),
@@ -42,7 +42,7 @@ vi.mock('@/stores/provider-store', () => {
     load: typeof loadProviders;
     addModelToProvider: typeof addModelToProvider;
     removeModelFromProvider: typeof removeModelFromProvider;
-    resetAllProviders: typeof resetAllProviders;
+    resetModelPicks: typeof resetModelPicks;
     refreshModelCatalog: typeof refreshModelCatalog;
     refreshingCatalog: boolean;
   };
@@ -55,7 +55,7 @@ vi.mock('@/stores/provider-store', () => {
         load: loadProviders,
         addModelToProvider,
         removeModelFromProvider,
-        resetAllProviders,
+        resetModelPicks,
         refreshModelCatalog,
         refreshingCatalog: providerStoreState.refreshingCatalog,
       }),
@@ -190,7 +190,7 @@ describe('ModelMarket', () => {
     expect(screen.getByText('Reset all model picks?')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset all' }));
     await waitFor(() => {
-      expect(resetAllProviders).toHaveBeenCalledTimes(1);
+      expect(resetModelPicks).toHaveBeenCalledTimes(1);
     });
   });
 

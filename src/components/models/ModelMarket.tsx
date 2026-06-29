@@ -75,7 +75,7 @@ export function ModelMarket({
   const loaded = useProviderStore((s) => s.loaded);
   const seeding = useProviderStore((s) => s.seeding);
   const loadProviders = useProviderStore((s) => s.load);
-  const resetAllProviders = useProviderStore((s) => s.resetAllProviders);
+  const resetModelPicks = useProviderStore((s) => s.resetModelPicks);
   const refreshModelCatalog = useProviderStore((s) => s.refreshModelCatalog);
   const refreshing = useProviderStore((s) => s.refreshingCatalog);
   const catalogStatus = useModelCatalogStore((s) => s.status);
@@ -121,7 +121,7 @@ export function ModelMarket({
   const handleResetAll = async () => {
     setResettingAll(true);
     try {
-      await resetAllProviders();
+      await resetModelPicks();
       setShowResetDialog(false);
     } finally {
       setResettingAll(false);
