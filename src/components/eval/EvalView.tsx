@@ -15,6 +15,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
@@ -274,20 +275,10 @@ export function EvalView() {
       <ResizablePanelGroup orientation="vertical" className="flex-1">
         <ResizablePanel defaultSize="45%" minSize="22%">
           <ErrorBoundary panel>
-            <ScrollArea className="h-full">
-              <div className="flex flex-col gap-4 px-4 py-4">
-                <RunnerPicker />
-                <div className="border-border/60 border-t pt-3">
-                  <EvalComposer />
-                </div>
-                <div className="border-border/60 border-t pt-3">
-                  <JudgeConfig />
-                </div>
-              </div>
-            </ScrollArea>
+            <EvalSetupTabs />
           </ErrorBoundary>
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle />
         <ResizablePanel defaultSize="55%" minSize="25%">
           <ErrorBoundary panel>
             <div className="flex h-full flex-col">
@@ -324,5 +315,49 @@ export function EvalView() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function EvalSetupTabs() {
+  return (
+    <Tabs defaultValue="runners" className="flex h-full flex-col gap-0">
+      <div className="border-border/70 flex h-11 shrink-0 items-center border-b px-3">
+        <TabsList variant="line" className="h-7 gap-0">
+          <TabsTrigger value="runners" className="px-3 text-xs">
+            Runners
+          </TabsTrigger>
+          <TabsTrigger value="prompt" className="px-3 text-xs">
+            Prompt
+          </TabsTrigger>
+          <TabsTrigger value="judge" className="px-3 text-xs">
+            Judge
+          </TabsTrigger>
+        </TabsList>
+      </div>
+
+      <TabsContent value="runners" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <RunnerPicker />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="prompt" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <EvalComposer />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="judge" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <JudgeConfig />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
   );
 }
