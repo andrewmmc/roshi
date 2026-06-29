@@ -5,6 +5,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
+import { useToastStore } from '@/stores/toast-store';
 import { makeProvider, makeModel, makeMessage } from '@/__tests__/fixtures';
 
 const { mockSendRequest, MockRequestError, MockStreamError } = vi.hoisted(
@@ -169,6 +170,7 @@ describe('useSendRequest', () => {
       selectedEnvironmentId: null,
       loaded: true,
     });
+    useToastStore.setState({ toasts: [] });
   });
 
   describe('validation', () => {
@@ -255,7 +257,7 @@ describe('useSendRequest', () => {
       expect(mockSendRequest).not.toHaveBeenCalled();
     });
 
-    it('sets error when all messages are empty', async () => {
+    it('sets error and shows a toast when all messages are empty', async () => {
       useComposerStore.setState({ messages: [makeMessage({ content: '' })] });
       const { result } = renderHook(() => useSendRequest());
 
@@ -264,6 +266,9 @@ describe('useSendRequest', () => {
       });
 
       expect(useResponseStore.getState().error).toBe(
+        'Please enter at least one message',
+      );
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
         'Please enter at least one message',
       );
     });

@@ -4,6 +4,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
+import { toast } from '@/stores/toast-store';
 import {
   sendRequest,
   RequestError,
@@ -45,6 +46,8 @@ type RequestValidationResult =
     }
   | { ok: false; error: string };
 
+const MESSAGE_REQUIRED_ERROR = 'Please enter at least one message';
+
 function validateRequestInputs(
   provider: ProviderConfig | null,
   model: ProviderModel | null,
@@ -57,7 +60,7 @@ function validateRequestInputs(
 
   const messages = filterComposerMessages(composer.messages);
   if (messages.length === 0) {
-    return { ok: false, error: 'Please enter at least one message' };
+    return { ok: false, error: MESSAGE_REQUIRED_ERROR };
   }
 
   return { ok: true, provider, model, messages };
@@ -295,6 +298,9 @@ export function useSendRequest() {
     const validation = validateRequestInputs(provider, model, requestComposer);
     if (!validation.ok) {
       respStore.failValidation(validation.error, null);
+      if (validation.error === MESSAGE_REQUIRED_ERROR) {
+        toast(validation.error);
+      }
       sendInFlight = false;
       return;
     }
