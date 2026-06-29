@@ -52,6 +52,11 @@ function SaveRequestDialog({
   const [collectionName, setCollectionName] = useState('');
   const [requestName, setRequestName] = useState('');
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const selectedCollection =
+    collections.find((collection) => collection.id === selectedCollectionId) ??
+    collections[0] ??
+    null;
+  const effectiveSelectedCollectionId = selectedCollection?.id ?? '';
 
   const reset = useCallback(() => {
     setCollectionName('');
@@ -73,9 +78,9 @@ function SaveRequestDialog({
   }, [collectionName, onCreateCollection]);
 
   const handleSave = useCallback(async () => {
-    await onSaveRequest(selectedCollectionId, requestName);
+    await onSaveRequest(effectiveSelectedCollectionId, requestName);
     onOpenChange(false);
-  }, [onOpenChange, onSaveRequest, requestName, selectedCollectionId]);
+  }, [effectiveSelectedCollectionId, onOpenChange, onSaveRequest, requestName]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -129,19 +134,11 @@ function SaveRequestDialog({
               Save into
             </label>
             <Select
-              value={selectedCollectionId || collections[0]?.id || ''}
+              value={effectiveSelectedCollectionId}
               onValueChange={(value) => setSelectedCollectionId(value ?? '')}
             >
               <SelectTrigger aria-label="Select collection" className="w-full">
-                <SelectValue>
-                  {
-                    collections.find(
-                      (collection) =>
-                        collection.id ===
-                        (selectedCollectionId || collections[0]?.id),
-                    )?.name
-                  }
-                </SelectValue>
+                <SelectValue>{selectedCollection?.name}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {collections.map((collection) => (
