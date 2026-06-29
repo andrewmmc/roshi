@@ -64,7 +64,7 @@ export function SettingsDialog() {
         onOpenChange={(nextOpen) => setSettingsOpen(nextOpen)}
       >
         <DialogContent
-          className="border-border !flex max-h-[82vh] min-h-0 !max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border p-0 shadow-none ring-0 sm:max-w-3xl"
+          className="border-border !flex h-[720px] max-h-[82vh] min-h-0 !max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border p-0 shadow-none ring-0 sm:max-w-3xl"
           showCloseButton={false}
           showOverlay={false}
         >
