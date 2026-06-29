@@ -1,6 +1,26 @@
 import 'fake-indexeddb/auto';
 import '@testing-library/jest-dom/vitest';
 
+function createMemoryStorage(): Storage {
+  const items = new Map<string, string>();
+
+  return {
+    get length() {
+      return items.size;
+    },
+    clear: () => items.clear(),
+    getItem: (key) => items.get(key) ?? null,
+    key: (index) => Array.from(items.keys())[index] ?? null,
+    removeItem: (key) => items.delete(key),
+    setItem: (key, value) => items.set(key, String(value)),
+  };
+}
+
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: window.localStorage ?? createMemoryStorage(),
+});
+
 // jsdom does not implement matchMedia — provide a minimal stub
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

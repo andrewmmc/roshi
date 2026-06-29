@@ -68,6 +68,7 @@ vi.mock('@/stores/model-catalog-store', () => {
     status: 'idle' | 'loading' | 'ready' | 'error';
     error: string | null;
     load: typeof loadCatalog;
+    getModelsForProvider: (providerName: string) => ProviderModel[];
   };
   return {
     useModelCatalogStore: (selector: (s: CatalogLike) => unknown) =>
@@ -76,6 +77,8 @@ vi.mock('@/stores/model-catalog-store', () => {
         status: catalogState.status,
         error: catalogState.error,
         load: loadCatalog,
+        getModelsForProvider: (providerName) =>
+          catalogState.models[providerName] ?? [],
       }),
   };
 });

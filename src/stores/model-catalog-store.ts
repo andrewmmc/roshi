@@ -9,6 +9,8 @@ import { builtinProviders } from '@/providers/builtins';
 
 export type CatalogStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+const EMPTY_PROVIDER_MODELS: ProviderModel[] = [];
+
 export interface ModelCatalogStore {
   /** Map of built-in provider name -> available models from models.dev */
   models: Record<string, ProviderModel[]>;
@@ -65,6 +67,6 @@ export const useModelCatalogStore = create<ModelCatalogStore>((set, get) => ({
   },
 
   getModelsForProvider: (providerName: string) => {
-    return get().models[providerName] ?? [];
+    return get().models[providerName] ?? EMPTY_PROVIDER_MODELS;
   },
 }));

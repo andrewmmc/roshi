@@ -14,7 +14,9 @@ export function BuiltInProviderSection({
   provider: ProviderConfig;
   search: string;
 }) {
-  const catalog = useModelCatalogStore((s) => s.models[provider.name] ?? []);
+  const catalog = useModelCatalogStore((s) =>
+    s.getModelsForProvider(provider.name),
+  );
   const status = useModelCatalogStore((s) => s.status);
   const error = useModelCatalogStore((s) => s.error);
   const load = useModelCatalogStore((s) => s.load);

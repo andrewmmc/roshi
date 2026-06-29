@@ -90,4 +90,11 @@ describe('model-catalog-store', () => {
     expect(getState().getModelsForProvider('Anthropic')).toHaveLength(1);
     expect(getState().getModelsForProvider('Unknown')).toEqual([]);
   });
+
+  it('returns a stable empty list for missing providers', () => {
+    const first = getState().getModelsForProvider('Unknown');
+    const second = getState().getModelsForProvider('Unknown');
+
+    expect(first).toBe(second);
+  });
 });
