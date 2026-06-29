@@ -10,7 +10,6 @@ import { ResponsePanel } from '@/components/response/ResponsePanel';
 import { ProviderSelect } from '@/components/composer/ProviderSelect';
 import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
 import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentPreviewSheet';
-import { RequestCompatibilityWarning } from '@/components/composer/RequestCompatibilityWarning';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
@@ -185,9 +184,6 @@ function RequestView() {
             </Button>
           )}
         </div>
-      </div>
-      <div className="border-border/70 shrink-0 border-b px-4 py-2">
-        <RequestCompatibilityWarning />
       </div>
       <ResizablePanelGroup
         orientation="vertical"

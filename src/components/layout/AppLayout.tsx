@@ -8,11 +8,11 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useUiStore } from '@/stores/ui-store';
+import { AppBanner } from './AppBanner';
 
 const COLLAPSE_BREAKPOINT = 768;
 
@@ -53,7 +53,7 @@ export function AppLayout() {
       >
         Skip to main content
       </a>
-      <FirstRunChecklist />
+      <AppBanner />
       <ResizablePanelGroup
         orientation="horizontal"
         className="min-h-0 flex-1"
