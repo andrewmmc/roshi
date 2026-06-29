@@ -238,12 +238,12 @@ export function EnvironmentSelector() {
       return;
     }
 
-    selectEnvironment(value === 'none' ? null : value);
+    selectEnvironment(value);
   };
 
   return (
     <Select
-      value={selectedEnvironmentId ?? 'none'}
+      value={selectedEnvironmentId ?? ''}
       onValueChange={handleEnvironmentChange}
     >
       <SelectTrigger
@@ -252,17 +252,21 @@ export function EnvironmentSelector() {
         className="h-7 max-w-[150px] min-w-[80px] flex-1 text-xs"
       >
         <SelectValue placeholder="Environment">
-          {selectedEnvironment?.name ?? 'No environment'}
+          {selectedEnvironment?.name ?? 'Environment'}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="none">No environment</SelectItem>
-        {environments.length ? <SelectSeparator /> : null}
-        {environments.map((environment) => (
-          <SelectItem key={environment.id} value={environment.id}>
-            {environment.name}
-          </SelectItem>
-        ))}
+      <SelectContent className="min-w-56">
+        {environments.length ? (
+          environments.map((environment) => (
+            <SelectItem key={environment.id} value={environment.id}>
+              {environment.name}
+            </SelectItem>
+          ))
+        ) : (
+          <div className="text-muted-foreground px-2 py-3 text-center text-xs">
+            No environments available.
+          </div>
+        )}
         <SelectSeparator />
         <SelectItem value={MANAGE_ENVIRONMENTS_VALUE}>
           <Settings className="h-3 w-3" />

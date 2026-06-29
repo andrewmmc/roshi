@@ -33,7 +33,7 @@ describe('EnvironmentSelector', () => {
     });
   });
 
-  it('shows No environment and Manage environments when no environments are available', async () => {
+  it('shows Manage environments without making No environment selectable', async () => {
     const user = userEvent.setup();
 
     render(<EnvironmentSelector />);
@@ -42,8 +42,8 @@ describe('EnvironmentSelector', () => {
       name: /select environment/i,
     });
     expect(
-      screen.getByRole('option', { name: /no environment/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('option', { name: /no environment/i }),
+    ).not.toBeInTheDocument();
 
     await user.selectOptions(environmentSelect, '__manage_environments__');
 

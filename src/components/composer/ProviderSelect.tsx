@@ -86,7 +86,7 @@ export function ProviderSelect() {
             {selectedProvider?.name ?? 'Provider'}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-52">
           {sortProvidersByName(providers).map((p) => (
             <SelectItem key={p.id} value={p.id}>
               {p.name}
@@ -114,7 +114,7 @@ export function ProviderSelect() {
             {selectedModel?.displayName ?? 'Model'}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-64">
           {hasModels ? (
             selectedProvider?.models.map((m) => (
               <SelectItem key={m.id} value={m.id} title={m.displayName}>
@@ -128,7 +128,7 @@ export function ProviderSelect() {
           )}
           {showBrowseModels ? (
             <>
-              {hasModels ? <SelectSeparator /> : null}
+              <SelectSeparator />
               <SelectItem value={BROWSE_MODELS_VALUE}>
                 <Plus className="h-3 w-3" />
                 Browse models
