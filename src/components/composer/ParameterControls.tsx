@@ -27,7 +27,10 @@ function InfoTooltip({ content }: { content: string }) {
   return (
     <TooltipProvider delay={300}>
       <Tooltip>
-        <TooltipTrigger className="text-muted-foreground/40 hover:text-muted-foreground inline-flex cursor-default items-center">
+        <TooltipTrigger
+          aria-label="More information"
+          className="text-muted-foreground/40 hover:text-muted-foreground inline-flex cursor-default items-center"
+        >
           <svg
             width="11"
             height="11"
@@ -304,6 +307,7 @@ export function ParameterControls() {
                   variant="outline"
                   size="sm"
                   title={preset.title}
+                  aria-pressed={Math.abs(temperature - preset.value) < 0.001}
                   onClick={() => applyTempPreset(preset.value)}
                   className={`h-5 flex-1 px-0 text-[11px] transition-colors ${
                     Math.abs(temperature - preset.value) < 0.001

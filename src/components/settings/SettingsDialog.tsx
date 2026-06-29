@@ -140,6 +140,7 @@ export function SettingsDialog() {
                 <button
                   key={id}
                   type="button"
+                  aria-current={settingsPage === id ? 'page' : undefined}
                   onClick={() => setSettingsOpen(true, id)}
                   className={cn(
                     'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors',

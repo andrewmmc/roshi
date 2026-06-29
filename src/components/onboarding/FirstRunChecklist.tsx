@@ -74,7 +74,17 @@ export function FirstRunChecklist() {
   ];
 
   return (
-    <div className="border-border/70 bg-muted/20 shrink-0 border-b px-4 py-2.5">
+    <div className="border-border/70 bg-muted/20 relative shrink-0 border-b px-4 py-2.5">
+      {showCloseButton && (
+        <button
+          type="button"
+          aria-label="Close checklist"
+          onClick={() => setChecklistOpen(false)}
+          className="text-muted-foreground/60 hover:text-muted-foreground absolute top-2 right-2 inline-flex h-5 w-5 items-center justify-center rounded transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-foreground text-xs font-medium">
@@ -83,16 +93,6 @@ export function FirstRunChecklist() {
           <p className="text-muted-foreground mt-0.5 text-xs">
             Complete these steps to send your first request.
           </p>
-          {showCloseButton && (
-            <button
-              type="button"
-              aria-label="Close checklist"
-              onClick={() => setChecklistOpen(false)}
-              className="text-muted-foreground/60 hover:text-muted-foreground -mr-1 ml-auto inline-flex h-5 w-5 items-center justify-center rounded transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
         <ol className="flex min-w-[280px] flex-1 flex-col gap-1.5 sm:max-w-xl">
           {steps

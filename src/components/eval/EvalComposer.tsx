@@ -322,6 +322,7 @@ export function EvalHeadersEditor() {
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
             disabled={isRunning}
+            aria-label="Custom header name"
             className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <Input
@@ -329,6 +330,7 @@ export function EvalHeadersEditor() {
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
             disabled={isRunning}
+            aria-label="Custom header value"
             className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <IconButton
@@ -390,6 +392,9 @@ export function EvalParametersEditor() {
               variant="outline"
               size="sm"
               title={preset.title}
+              aria-pressed={
+                Math.abs(composer.temperature - preset.value) < 0.001
+              }
               onClick={() => setTemperature(preset.value)}
               disabled={isRunning}
               className={`h-5 flex-1 px-0 text-[11px] transition-colors ${

@@ -15,6 +15,7 @@ export function ProviderFilterChips({
       <button
         type="button"
         onClick={() => onChange(null)}
+        aria-pressed={activeProviderId === null}
         className={cn(
           'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
           activeProviderId === null
@@ -29,6 +30,7 @@ export function ProviderFilterChips({
           key={p.id}
           type="button"
           onClick={() => onChange(p.id)}
+          aria-pressed={activeProviderId === p.id}
           className={cn(
             'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
             activeProviderId === p.id

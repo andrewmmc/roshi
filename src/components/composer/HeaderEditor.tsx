@@ -57,12 +57,14 @@ export function HeaderEditor() {
                 value={key}
                 readOnly
                 disabled
+                aria-label={`Provider header name: ${key}`}
                 className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
               />
               <Input
                 value={maskHeaderValue(key, value, provider?.apiKey)}
                 readOnly
                 disabled
+                aria-label={`Provider header value for ${key}`}
                 className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
               />
               <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
@@ -81,12 +83,14 @@ export function HeaderEditor() {
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
             placeholder="Header name"
+            aria-label="Custom header name"
             className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
             placeholder="Header value"
+            aria-label="Custom header value"
             className="h-7 flex-1 font-mono text-[12px] md:text-[12px]"
           />
           <IconButton

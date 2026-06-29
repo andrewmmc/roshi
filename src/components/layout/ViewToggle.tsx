@@ -33,6 +33,7 @@ export function ViewToggle() {
             <button
               key={option}
               type="button"
+              aria-pressed={view === option}
               onClick={() => setView(option)}
               className={buttonCn}
             >
@@ -48,6 +49,7 @@ export function ViewToggle() {
                 render={
                   <button
                     type="button"
+                    aria-pressed={view === option}
                     onClick={() => setView(option)}
                     className={buttonCn}
                   />
