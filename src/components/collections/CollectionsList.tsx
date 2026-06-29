@@ -1,12 +1,20 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Folder, FolderOpen, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Field } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -46,16 +54,32 @@ function SaveRequestDialog({
   collections: ReturnType<typeof useCollections>['collections'];
   activeSavedRequestId: string | null;
   onOpenChange: (open: boolean) => void;
-  onCreateCollection: (name: string) => Promise<void>;
+  onCreateCollection: (name: string) => Promise<Collection>;
   onSaveRequest: (collectionId: string, name: string) => Promise<void>;
   onUpdateRequest: () => Promise<void>;
 }) {
   const [collectionName, setCollectionName] = useState('');
   const [requestName, setRequestName] = useState('');
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const [creatingCollection, setCreatingCollection] = useState(false);
+  const [createdCollections, setCreatedCollections] = useState<Collection[]>(
+    [],
+  );
+  const availableCollections = useMemo(
+    () => [
+      ...collections,
+      ...createdCollections.filter(
+        (created) =>
+          !collections.some((collection) => collection.id === created.id),
+      ),
+    ],
+    [collections, createdCollections],
+  );
   const selectedCollection =
-    collections.find((collection) => collection.id === selectedCollectionId) ??
-    collections[0] ??
+    availableCollections.find(
+      (collection) => collection.id === selectedCollectionId,
+    ) ??
+    availableCollections[0] ??
     null;
   const effectiveSelectedCollectionId = selectedCollection?.id ?? '';
 
@@ -63,6 +87,8 @@ function SaveRequestDialog({
     setCollectionName('');
     setRequestName('');
     setSelectedCollectionId(collections[0]?.id ?? '');
+    setCreatingCollection(false);
+    setCreatedCollections([]);
   }, [collections]);
 
   const handleOpenChange = useCallback(
@@ -74,8 +100,15 @@ function SaveRequestDialog({
   );
 
   const handleCreateCollection = useCallback(async () => {
-    await onCreateCollection(collectionName);
-    setCollectionName('');
+    setCreatingCollection(true);
+    try {
+      const collection = await onCreateCollection(collectionName);
+      setCreatedCollections((current) => [...current, collection]);
+      setSelectedCollectionId(collection.id);
+      setCollectionName('');
+    } finally {
+      setCreatingCollection(false);
+    }
   }, [collectionName, onCreateCollection]);
 
   const handleSave = useCallback(async () => {
@@ -94,7 +127,7 @@ function SaveRequestDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {activeSavedRequestId && (
             <Button
               variant="outline"
@@ -109,57 +142,97 @@ function SaveRequestDialog({
             </Button>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium">
-              New collection
-            </label>
-            <div className="flex gap-2">
-              <Input
-                value={collectionName}
-                onChange={(e) => setCollectionName(e.target.value)}
-                placeholder="Collection name"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCreateCollection}
-                disabled={!collectionName.trim()}
-              >
-                Add
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium">
-              Save into
-            </label>
-            <Select
-              value={effectiveSelectedCollectionId}
-              onValueChange={(value) => setSelectedCollectionId(value ?? '')}
-            >
-              <SelectTrigger aria-label="Select collection" className="w-full">
-                <SelectValue>{selectedCollection?.name}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium">
-              Request name
-            </label>
+          <Field label="Request name" required>
             <Input
               value={requestName}
               onChange={(e) => setRequestName(e.target.value)}
               placeholder="Summarize customer support prompt"
+              aria-label="Request name"
             />
+          </Field>
+
+          <div className="border-border/70 bg-muted/15 rounded-xl border p-3">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-2">
+                <span className="border-border/70 bg-background mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border">
+                  <Folder className="text-muted-foreground h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium tracking-tight">
+                    Destination
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    Pick an existing collection, or create a new one below.
+                  </p>
+                </div>
+              </div>
+              <span className="bg-background text-muted-foreground rounded-full border px-2 py-0.5 text-[11px] whitespace-nowrap">
+                {availableCollections.length} collection
+                {availableCollections.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <Field
+              label="Save into"
+              hint={
+                availableCollections.length
+                  ? 'The saved request will appear under this collection.'
+                  : 'Create a collection before saving this request.'
+              }
+            >
+              <Select
+                value={effectiveSelectedCollectionId}
+                onValueChange={(value) => setSelectedCollectionId(value ?? '')}
+              >
+                <SelectTrigger
+                  aria-label="Select collection"
+                  className="bg-background w-full"
+                  disabled={availableCollections.length === 0}
+                >
+                  <SelectValue>
+                    {selectedCollection?.name ?? 'Create a collection first'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCollections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <div className="border-border/70 mt-3 border-t pt-3">
+              <Field
+                label={
+                  <span className="flex items-center gap-1.5">
+                    <FolderPlus className="h-3 w-3" />
+                    Create new collection
+                  </span>
+                }
+                hint="Creates the collection and selects it as the destination."
+              >
+                <div className="flex gap-2">
+                  <Input
+                    value={collectionName}
+                    onChange={(e) => setCollectionName(e.target.value)}
+                    placeholder="Research prompts"
+                    aria-label="New collection name"
+                    className="bg-background"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={handleCreateCollection}
+                    disabled={!collectionName.trim() || creatingCollection}
+                  >
+                    {creatingCollection ? 'Creating…' : 'Create & select'}
+                  </Button>
+                </div>
+              </Field>
+            </div>
           </div>
         </div>
 
@@ -169,7 +242,11 @@ function SaveRequestDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!collections.length || !requestName.trim()}
+            disabled={
+              creatingCollection ||
+              !effectiveSelectedCollectionId ||
+              !requestName.trim()
+            }
           >
             Save request
           </Button>
@@ -309,8 +386,9 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
 
   const handleCreateCollection = useCallback(
     async (name: string) => {
-      await addCollection(name);
+      const collection = await addCollection(name);
       toast('Collection created');
+      return collection;
     },
     [addCollection],
   );
