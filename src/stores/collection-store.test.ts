@@ -285,4 +285,83 @@ describe('collection-store', () => {
       expect(useComposerStore.getState().activeCollectionId).toBeNull();
     });
   });
+
+  describe('renameSavedRequest', () => {
+    it('updates only the name and persists', async () => {
+      useCollectionStore.setState({
+        savedRequests: [makeSavedRequest({ id: 'r1', name: 'Old' })],
+      });
+
+      await getState().renameSavedRequest('r1', '  New Name  ');
+
+      expect(mockDb.savedRequests.update).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ name: 'New Name' }),
+      );
+      expect(getState().savedRequests[0].name).toBe('New Name');
+    });
+
+    it('rejects empty names', async () => {
+      useCollectionStore.setState({
+        savedRequests: [makeSavedRequest({ id: 'r1' })],
+      });
+
+      await expect(getState().renameSavedRequest('r1', '   ')).rejects.toThrow(
+        'SAVED_REQUEST_NAME_REQUIRED',
+      );
+    });
+
+    it('rejects unknown requests', async () => {
+      await expect(
+        getState().renameSavedRequest('missing', 'Name'),
+      ).rejects.toThrow('SAVED_REQUEST_NOT_FOUND');
+    });
+  });
+
+  describe('moveSavedRequest', () => {
+    it('re-parents the request and updates active composer context', async () => {
+      useCollectionStore.setState({
+        collections: [
+          makeCollection({ id: 'c1' }),
+          makeCollection({ id: 'c2', name: 'Other' }),
+        ],
+        savedRequests: [makeSavedRequest({ id: 'r1', collectionId: 'c1' })],
+      });
+      useComposerStore.setState({
+        activeCollectionId: 'c1',
+        activeSavedRequestId: 'r1',
+      });
+
+      await getState().moveSavedRequest('r1', 'c2');
+
+      expect(mockDb.savedRequests.update).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ collectionId: 'c2' }),
+      );
+      expect(getState().savedRequests[0].collectionId).toBe('c2');
+      expect(useComposerStore.getState().activeCollectionId).toBe('c2');
+    });
+
+    it('is a no-op when moving to the same collection', async () => {
+      useCollectionStore.setState({
+        collections: [makeCollection({ id: 'c1' })],
+        savedRequests: [makeSavedRequest({ id: 'r1', collectionId: 'c1' })],
+      });
+
+      await getState().moveSavedRequest('r1', 'c1');
+
+      expect(mockDb.savedRequests.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects moving to a missing collection', async () => {
+      useCollectionStore.setState({
+        collections: [makeCollection({ id: 'c1' })],
+        savedRequests: [makeSavedRequest({ id: 'r1', collectionId: 'c1' })],
+      });
+
+      await expect(getState().moveSavedRequest('r1', 'gone')).rejects.toThrow(
+        'COLLECTION_NOT_FOUND',
+      );
+    });
+  });
 });

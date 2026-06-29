@@ -32,6 +32,8 @@ interface CollectionStore {
     name: string,
   ) => Promise<SavedRequest>;
   updateSavedRequest: (id: string, name: string) => Promise<void>;
+  renameSavedRequest: (id: string, name: string) => Promise<void>;
+  moveSavedRequest: (id: string, collectionId: string) => Promise<void>;
   deleteSavedRequest: (id: string) => Promise<void>;
 }
 
@@ -275,6 +277,75 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
           prevComposerContext.collectionId,
           prevComposerContext.savedRequestId,
         );
+      set({ savedRequests: prevSavedRequests });
+      throw error;
+    }
+  },
+
+  renameSavedRequest: async (id, name) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) throw new AppError('SAVED_REQUEST_NAME_REQUIRED');
+
+    const existing = get().savedRequests.find((request) => request.id === id);
+    if (!existing || existing.isTemplate) {
+      throw new AppError('SAVED_REQUEST_NOT_FOUND');
+    }
+
+    const updates: Partial<SavedRequest> = {
+      name: trimmedName,
+      updatedAt: new Date(),
+    };
+
+    const prevSavedRequests = get().savedRequests;
+    try {
+      await db.savedRequests.update(id, updates);
+      set((state) => ({
+        savedRequests: sortedSavedRequests(
+          replaceById(state.savedRequests, id, (request) => ({
+            ...request,
+            ...updates,
+          })),
+        ),
+      }));
+    } catch (error) {
+      set({ savedRequests: prevSavedRequests });
+      throw error;
+    }
+  },
+
+  moveSavedRequest: async (id, collectionId) => {
+    const existing = get().savedRequests.find((request) => request.id === id);
+    if (!existing || existing.isTemplate) {
+      throw new AppError('SAVED_REQUEST_NOT_FOUND');
+    }
+    if (existing.collectionId === collectionId) return;
+    if (
+      !get().collections.some((collection) => collection.id === collectionId)
+    ) {
+      throw new AppError('COLLECTION_NOT_FOUND');
+    }
+
+    const updates: Partial<SavedRequest> = {
+      collectionId,
+      updatedAt: new Date(),
+    };
+
+    const prevSavedRequests = get().savedRequests;
+    const composer = useComposerStore.getState();
+    try {
+      await db.savedRequests.update(id, updates);
+      set((state) => ({
+        savedRequests: sortedSavedRequests(
+          replaceById(state.savedRequests, id, (request) => ({
+            ...request,
+            ...updates,
+          })),
+        ),
+      }));
+      if (composer.activeSavedRequestId === id) {
+        composer.setSavedRequestContext(collectionId, id);
+      }
+    } catch (error) {
       set({ savedRequests: prevSavedRequests });
       throw error;
     }

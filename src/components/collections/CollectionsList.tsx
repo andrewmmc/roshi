@@ -1,29 +1,35 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Folder, FolderOpen, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Field } from '@/components/ui/field';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
+import { ConfirmDeleteDialog } from '@/components/collections/ConfirmDeleteDialog';
+import { NameDialog } from '@/components/collections/NameDialog';
+import { SaveRequestDialog } from '@/components/collections/SaveRequestDialog';
 import { toast } from '@/stores/toast-store';
 import { useCollections } from '@/hooks/use-collections';
 import {
@@ -34,164 +40,82 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useResponseStore } from '@/stores/response-store';
 import type { SavedRequest, Collection } from '@/types/history';
 
-function SaveRequestDialog({
-  open,
-  collections,
-  activeSavedRequestId,
-  onOpenChange,
-  onSaveRequest,
-  onUpdateRequest,
-}: {
-  open: boolean;
-  collections: ReturnType<typeof useCollections>['collections'];
-  activeSavedRequestId: string | null;
-  onOpenChange: (open: boolean) => void;
-  onSaveRequest: (collectionId: string, name: string) => Promise<void>;
-  onUpdateRequest: () => Promise<void>;
-}) {
-  const [requestName, setRequestName] = useState('');
-  const [selectedCollectionId, setSelectedCollectionId] = useState('');
-  const selectedCollection =
-    collections.find((collection) => collection.id === selectedCollectionId) ??
-    collections[0] ??
-    null;
-  const effectiveSelectedCollectionId = selectedCollection?.id ?? '';
-
-  const reset = useCallback(() => {
-    setRequestName('');
-    setSelectedCollectionId(collections[0]?.id ?? '');
-  }, [collections]);
-
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen) reset();
-      onOpenChange(nextOpen);
-    },
-    [onOpenChange, reset],
-  );
-
-  const handleSave = useCallback(async () => {
-    await onSaveRequest(effectiveSelectedCollectionId, requestName);
-    onOpenChange(false);
-  }, [effectiveSelectedCollectionId, onOpenChange, onSaveRequest, requestName]);
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Save request</DialogTitle>
-          <DialogDescription>
-            Store the current composer in a collection so it can be reused
-            later.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {activeSavedRequestId && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={async () => {
-                await onUpdateRequest();
-                onOpenChange(false);
-              }}
-            >
-              Update current saved request
-            </Button>
-          )}
-
-          <Field label="Request name" required>
-            <Input
-              value={requestName}
-              onChange={(e) => setRequestName(e.target.value)}
-              placeholder="Summarize customer support prompt"
-              aria-label="Request name"
-            />
-          </Field>
-
-          <Field
-            label="Collection"
-            hint={
-              collections.length
-                ? 'Use the + button in the Collections sidebar to create folders.'
-                : 'Create a collection with the + button in the sidebar first.'
-            }
-          >
-            <Select
-              value={effectiveSelectedCollectionId}
-              onValueChange={(value) => setSelectedCollectionId(value ?? '')}
-            >
-              <SelectTrigger
-                aria-label="Select collection"
-                className="w-full"
-                disabled={collections.length === 0}
-              >
-                <SelectValue>
-                  {selectedCollection?.name ?? 'No collections yet'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!effectiveSelectedCollectionId || !requestName.trim()}
-          >
-            Save request
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+const TRIGGER_CLASS =
+  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
 
 function SavedRequestItem({
   request,
   active,
+  collections,
   onSelect,
+  onRename,
+  onMove,
   onDelete,
 }: {
   request: SavedRequest;
   active: boolean;
+  collections: Collection[];
   onSelect: (request: SavedRequest) => void;
-  onDelete: (id: string) => void;
+  onRename: (request: SavedRequest) => void;
+  onMove: (request: SavedRequest, collectionId: string) => void;
+  onDelete: (request: SavedRequest) => void;
 }) {
   const preview =
     request.request.messages.find((message) => message.role === 'user')
       ?.content ||
     request.request.systemPrompt ||
     'No prompt text';
+  const moveTargets = collections.filter(
+    (collection) => collection.id !== request.collectionId,
+  );
 
   return (
     <SidebarRow
       active={active}
       onClick={() => onSelect(request)}
       actions={
-        <IconButton
-          variant="ghost"
-          size="icon-xs"
-          className="text-muted-foreground hover:text-destructive"
-          tooltip="Delete saved request"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(request.id);
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </IconButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Saved request actions"
+            className={TRIGGER_CLASS}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onRename(request)}>
+              <Pencil className="h-3.5 w-3.5" />
+              Rename
+            </DropdownMenuItem>
+            {moveTargets.length > 0 && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  Move to
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {moveTargets.map((collection) => (
+                    <DropdownMenuItem
+                      key={collection.id}
+                      onClick={() => onMove(request, collection.id)}
+                    >
+                      <Folder className="h-3.5 w-3.5" />
+                      <span className="truncate">{collection.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDelete(request)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       }
     >
       <div className="min-w-0 flex-1 pr-8">
@@ -209,14 +133,120 @@ function SavedRequestItem({
   );
 }
 
+function CollectionSection({
+  collection,
+  requests,
+  collapsed,
+  activeSavedRequestId,
+  collections,
+  onToggle,
+  onRenameCollection,
+  onDeleteCollection,
+  onSelectRequest,
+  onRenameRequest,
+  onMoveRequest,
+  onDeleteRequest,
+}: {
+  collection: Collection;
+  requests: SavedRequest[];
+  collapsed: boolean;
+  activeSavedRequestId: string | null;
+  collections: Collection[];
+  onToggle: (id: string) => void;
+  onRenameCollection: (collection: Collection) => void;
+  onDeleteCollection: (collection: Collection) => void;
+  onSelectRequest: (request: SavedRequest) => void;
+  onRenameRequest: (request: SavedRequest) => void;
+  onMoveRequest: (request: SavedRequest, collectionId: string) => void;
+  onDeleteRequest: (request: SavedRequest) => void;
+}) {
+  return (
+    <section className="space-y-1">
+      <div className="group hover:bg-sidebar-accent/50 flex items-center gap-1 rounded-md px-1 py-1">
+        <button
+          type="button"
+          onClick={() => onToggle(collection.id)}
+          className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+          aria-expanded={!collapsed}
+        >
+          <ChevronRight
+            className={`text-muted-foreground h-3 w-3 shrink-0 transition-transform ${
+              collapsed ? '' : 'rotate-90'
+            }`}
+          />
+          <span className="text-muted-foreground flex-1 truncate text-[11px] font-medium tracking-wide uppercase">
+            {collection.name}
+          </span>
+          <span className="text-muted-foreground/60 text-[11px]">
+            {requests.length}
+          </span>
+        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Collection actions"
+            className={`${TRIGGER_CLASS} opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[popup-open]:opacity-100`}
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onRenameCollection(collection)}>
+              <Pencil className="h-3.5 w-3.5" />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDeleteCollection(collection)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {!collapsed &&
+        (requests.length === 0 ? (
+          <p className="text-muted-foreground/70 px-2.5 pb-1 pl-6 text-[11px]">
+            No saved requests
+          </p>
+        ) : (
+          requests.map((request) => (
+            <SavedRequestItem
+              key={request.id}
+              request={request}
+              active={request.id === activeSavedRequestId}
+              collections={collections}
+              onSelect={onSelectRequest}
+              onRename={onRenameRequest}
+              onMove={onMoveRequest}
+              onDelete={onDeleteRequest}
+            />
+          ))
+        ))}
+    </section>
+  );
+}
+
+type NameDialogState =
+  | { mode: 'create-collection' }
+  | { mode: 'rename-collection'; id: string; initialValue: string }
+  | { mode: 'rename-request'; id: string; initialValue: string };
+
+type ConfirmState =
+  | { kind: 'collection'; id: string; name: string }
+  | { kind: 'request'; id: string; name: string };
+
 export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const {
     collections,
     savedRequests,
     addCollection,
+    renameCollection,
     deleteCollection,
     saveCurrentRequest,
     updateSavedRequest,
+    renameSavedRequest,
+    moveSavedRequest,
     deleteSavedRequest,
   } = useCollections();
   const loadComposerFromHistory = useComposerStore(
@@ -232,11 +262,21 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const resetResponse = useResponseStore((s) => s.resetResponse);
   const [saveOpen, setSaveOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [nameDialog, setNameDialog] = useState<NameDialogState | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const pendingRequestRef = useRef<SavedRequest | null>(null);
 
   const userCollections = useMemo(
     () => collections.filter((collection) => collection.kind !== 'templates'),
     [collections],
+  );
+
+  const activeSavedRequest = useMemo(
+    () =>
+      savedRequests.find((request) => request.id === activeSavedRequestId) ??
+      null,
+    [savedRequests, activeSavedRequestId],
   );
 
   const requestsByCollection = useMemo(() => {
@@ -286,6 +326,15 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     }
   }, [applySavedRequest]);
 
+  const toggleCollapse = useCallback((id: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const handleCreateCollection = useCallback(
     async (name: string) => {
       const collection = await addCollection(name);
@@ -303,59 +352,78 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     [saveCurrentRequest],
   );
 
-  const handleUpdateRequest = useCallback(async () => {
-    const request = savedRequests.find(
-      (item) => item.id === activeSavedRequestId,
-    );
-    if (!request || request.isTemplate) return;
-    await updateSavedRequest(request.id, request.name);
-    toast('Saved request updated');
-  }, [activeSavedRequestId, savedRequests, updateSavedRequest]);
+  const handleUpdateRequest = useCallback(
+    async (name: string) => {
+      if (!activeSavedRequestId) return;
+      await updateSavedRequest(activeSavedRequestId, name);
+      toast('Saved request updated');
+    },
+    [activeSavedRequestId, updateSavedRequest],
+  );
 
-  const renderCollectionSection = (collection: Collection) => {
-    const requests = requestsByCollection.get(collection.id) ?? [];
-    const isTemplateCollection = collection.kind === 'templates';
+  const handleMoveRequest = useCallback(
+    async (request: SavedRequest, collectionId: string) => {
+      await moveSavedRequest(request.id, collectionId);
+      const target = collections.find(
+        (collection) => collection.id === collectionId,
+      );
+      toast(target ? `Moved to ${target.name}` : 'Request moved');
+    },
+    [collections, moveSavedRequest],
+  );
 
-    return (
-      <section key={collection.id} className="space-y-1">
-        <div className="group flex items-center gap-1 px-1.5 py-1">
-          <Folder className="text-muted-foreground h-3 w-3" />
-          <span className="text-muted-foreground flex-1 truncate text-[11px] font-medium tracking-wide uppercase">
-            {collection.name}
-          </span>
-          <span className="text-muted-foreground/60 text-[11px]">
-            {requests.length}
-          </span>
-          {!isTemplateCollection && (
-            <IconButton
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground hover:text-destructive opacity-0 transition-opacity group-hover:opacity-100"
-              tooltip="Delete collection"
-              onClick={() => deleteCollection(collection.id)}
-            >
-              <Trash2 className="h-3 w-3" />
-            </IconButton>
-          )}
-        </div>
-        {requests.length === 0 ? (
-          <p className="text-muted-foreground/70 px-2.5 pb-1 text-[11px]">
-            No saved requests
-          </p>
-        ) : (
-          requests.map((request) => (
-            <SavedRequestItem
-              key={request.id}
-              request={request}
-              active={request.id === activeSavedRequestId}
-              onSelect={handleSelect}
-              onDelete={deleteSavedRequest}
-            />
-          ))
-        )}
-      </section>
-    );
-  };
+  const handleNameSubmit = useCallback(
+    async (name: string) => {
+      if (!nameDialog) return;
+      if (nameDialog.mode === 'create-collection') {
+        await handleCreateCollection(name);
+      } else if (nameDialog.mode === 'rename-collection') {
+        await renameCollection(nameDialog.id, name);
+        toast('Collection renamed');
+      } else {
+        await renameSavedRequest(nameDialog.id, name);
+        toast('Request renamed');
+      }
+    },
+    [handleCreateCollection, nameDialog, renameCollection, renameSavedRequest],
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!confirm) return;
+    if (confirm.kind === 'collection') {
+      await deleteCollection(confirm.id);
+      toast('Collection deleted');
+    } else {
+      await deleteSavedRequest(confirm.id);
+      toast('Request deleted');
+    }
+  }, [confirm, deleteCollection, deleteSavedRequest]);
+
+  const nameDialogConfig = nameDialog
+    ? nameDialog.mode === 'create-collection'
+      ? {
+          title: 'New collection',
+          label: 'Collection name',
+          placeholder: 'Customer support prompts',
+          initialValue: '',
+          submitLabel: 'Create',
+        }
+      : nameDialog.mode === 'rename-collection'
+        ? {
+            title: 'Rename collection',
+            label: 'Collection name',
+            placeholder: 'Collection name',
+            initialValue: nameDialog.initialValue,
+            submitLabel: 'Rename',
+          }
+        : {
+            title: 'Rename request',
+            label: 'Request name',
+            placeholder: 'Request name',
+            initialValue: nameDialog.initialValue,
+            submitLabel: 'Rename',
+          }
+    : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -379,9 +447,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
-            onClick={async () => {
-              await handleCreateCollection('New collection');
-            }}
+            onClick={() => setNameDialog({ mode: 'create-collection' })}
             tooltip="New collection"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -396,32 +462,107 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               compact
               icon={FolderOpen}
               title="No collections yet"
-              description="Save requests into collections for quick reuse."
+              description="Create a collection, then save requests into it for quick reuse."
               actions={
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setSaveOpen(true)}
+                  onClick={() => setNameDialog({ mode: 'create-collection' })}
                 >
-                  Save current request
+                  <FolderPlus className="h-3.5 w-3.5" />
+                  New collection
                 </Button>
               }
             />
           )}
-          {userCollections.map((collection) =>
-            renderCollectionSection(collection),
-          )}
+          {userCollections.map((collection) => (
+            <CollectionSection
+              key={collection.id}
+              collection={collection}
+              requests={requestsByCollection.get(collection.id) ?? []}
+              collapsed={collapsed.has(collection.id)}
+              activeSavedRequestId={activeSavedRequestId}
+              collections={userCollections}
+              onToggle={toggleCollapse}
+              onRenameCollection={(target) =>
+                setNameDialog({
+                  mode: 'rename-collection',
+                  id: target.id,
+                  initialValue: target.name,
+                })
+              }
+              onDeleteCollection={(target) =>
+                setConfirm({
+                  kind: 'collection',
+                  id: target.id,
+                  name: target.name,
+                })
+              }
+              onSelectRequest={handleSelect}
+              onRenameRequest={(request) =>
+                setNameDialog({
+                  mode: 'rename-request',
+                  id: request.id,
+                  initialValue: request.name,
+                })
+              }
+              onMoveRequest={handleMoveRequest}
+              onDeleteRequest={(request) =>
+                setConfirm({
+                  kind: 'request',
+                  id: request.id,
+                  name: request.name,
+                })
+              }
+            />
+          ))}
         </div>
       </ScrollArea>
 
       <SaveRequestDialog
         open={saveOpen}
         collections={userCollections}
-        activeSavedRequestId={activeSavedRequestId}
+        activeSavedRequest={activeSavedRequest}
         onOpenChange={setSaveOpen}
         onSaveRequest={handleSaveRequest}
         onUpdateRequest={handleUpdateRequest}
+        onCreateCollection={handleCreateCollection}
+      />
+
+      {nameDialogConfig && (
+        <NameDialog
+          open={nameDialog !== null}
+          title={nameDialogConfig.title}
+          label={nameDialogConfig.label}
+          placeholder={nameDialogConfig.placeholder}
+          initialValue={nameDialogConfig.initialValue}
+          submitLabel={nameDialogConfig.submitLabel}
+          onOpenChange={(open) => {
+            if (!open) setNameDialog(null);
+          }}
+          onSubmit={handleNameSubmit}
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={confirm !== null}
+        title={
+          confirm?.kind === 'collection'
+            ? 'Delete collection?'
+            : 'Delete saved request?'
+        }
+        description={
+          confirm?.kind === 'collection'
+            ? `"${confirm.name}" and all of its saved requests will be permanently deleted.`
+            : confirm
+              ? `"${confirm.name}" will be permanently deleted.`
+              : ''
+        }
+        onOpenChange={(open) => {
+          if (!open) setConfirm(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
 
       <ConfirmDiscardDialog
