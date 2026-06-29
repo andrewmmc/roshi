@@ -186,20 +186,12 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('creates a named collection from the sidebar header button', async () => {
+  it('does not render a standalone new-collection button in the header', () => {
     render(<CollectionsList />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'New collection' }));
-    fireEvent.change(screen.getByLabelText('Collection name'), {
-      target: { value: 'Team prompts' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-
-    await waitFor(() => {
-      expect(mockCollectionState.addCollection).toHaveBeenCalledWith(
-        'Team prompts',
-      );
-    });
+    expect(
+      screen.queryByRole('button', { name: 'New collection' }),
+    ).not.toBeInTheDocument();
   });
 
   it('confirms before deleting a collection', async () => {

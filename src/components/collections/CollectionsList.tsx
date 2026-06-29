@@ -4,14 +4,11 @@ import {
   ChevronRight,
   Folder,
   FolderOpen,
-  FolderPlus,
   MoreHorizontal,
   Pencil,
-  Plus,
   Save,
   Trash2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarRow } from '@/components/ui/sidebar-row';
@@ -228,7 +225,6 @@ function CollectionSection({
 }
 
 type NameDialogState =
-  | { mode: 'create-collection' }
   | { mode: 'rename-collection'; id: string; initialValue: string }
   | { mode: 'rename-request'; id: string; initialValue: string };
 
@@ -375,9 +371,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const handleNameSubmit = useCallback(
     async (name: string) => {
       if (!nameDialog) return;
-      if (nameDialog.mode === 'create-collection') {
-        await handleCreateCollection(name);
-      } else if (nameDialog.mode === 'rename-collection') {
+      if (nameDialog.mode === 'rename-collection') {
         await renameCollection(nameDialog.id, name);
         toast('Collection renamed');
       } else {
@@ -385,7 +379,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         toast('Request renamed');
       }
     },
-    [handleCreateCollection, nameDialog, renameCollection, renameSavedRequest],
+    [nameDialog, renameCollection, renameSavedRequest],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -400,29 +394,21 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   }, [confirm, deleteCollection, deleteSavedRequest]);
 
   const nameDialogConfig = nameDialog
-    ? nameDialog.mode === 'create-collection'
+    ? nameDialog.mode === 'rename-collection'
       ? {
-          title: 'New collection',
+          title: 'Rename collection',
           label: 'Collection name',
-          placeholder: 'Customer support prompts',
-          initialValue: '',
-          submitLabel: 'Create',
+          placeholder: 'Collection name',
+          initialValue: nameDialog.initialValue,
+          submitLabel: 'Rename',
         }
-      : nameDialog.mode === 'rename-collection'
-        ? {
-            title: 'Rename collection',
-            label: 'Collection name',
-            placeholder: 'Collection name',
-            initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
-          }
-        : {
-            title: 'Rename request',
-            label: 'Request name',
-            placeholder: 'Request name',
-            initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
-          }
+      : {
+          title: 'Rename request',
+          label: 'Request name',
+          placeholder: 'Request name',
+          initialValue: nameDialog.initialValue,
+          submitLabel: 'Rename',
+        }
     : null;
 
   return (
@@ -443,15 +429,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
           >
             <Save className="h-3.5 w-3.5" />
           </IconButton>
-          <IconButton
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => setNameDialog({ mode: 'create-collection' })}
-            tooltip="New collection"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </IconButton>
         </div>
       </div>
 
@@ -462,18 +439,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               compact
               icon={FolderOpen}
               title="No collections yet"
-              description="Create a collection, then save requests into it for quick reuse."
-              actions={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setNameDialog({ mode: 'create-collection' })}
-                >
-                  <FolderPlus className="h-3.5 w-3.5" />
-                  New collection
-                </Button>
-              }
+              description="Use Save current request to store a prompt and create your first collection."
             />
           )}
           {userCollections.map((collection) => (
