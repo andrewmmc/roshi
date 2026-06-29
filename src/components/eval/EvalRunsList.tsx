@@ -39,7 +39,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {headerSlot && (
-        <div className="border-sidebar-border/60 flex shrink-0 items-center border-b px-3">
+        <div className="border-sidebar-border/60 flex h-11 shrink-0 items-center border-b px-3">
           {headerSlot}
         </div>
       )}
