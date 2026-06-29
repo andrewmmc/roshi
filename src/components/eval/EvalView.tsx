@@ -7,7 +7,6 @@ import {
   Play,
   Save,
   Square,
-  Upload,
 } from 'lucide-react';
 import {
   ResizableHandle,
@@ -22,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -68,9 +66,6 @@ export function EvalView() {
   const composer = useEvalStore((s) => s.composer);
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const judgeConfig = useEvalStore((s) => s.judgeConfig);
-  const judgeResult = useEvalStore((s) => s.judgeResult);
-  const loadIntoComposer = useEvalStore((s) => s.loadIntoComposer);
-  const setMainView = useUiStore((s) => s.setMainView);
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
@@ -102,12 +97,6 @@ export function EvalView() {
 
   const handleExportCsv = () => {
     exportEvalRunCsv(buildRecord());
-  };
-
-  const handleLoadIntoComposer = (runnerId?: string | null) => {
-    loadIntoComposer(runnerId);
-    setMainView('request');
-    toast('Loaded eval case into composer');
   };
 
   const secondaryDisabled = isRunning || runners.length === 0;
@@ -148,27 +137,6 @@ export function EvalView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleLoadIntoComposer()}
-                title="Load this eval prompt into the main composer"
-              >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                Load into composer
-              </Button>
-              {judgeResult?.winnerRunnerId && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleLoadIntoComposer(judgeResult.winnerRunnerId)
-                  }
-                  title="Load the judge winner into the main composer"
-                >
-                  Load winner
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
                 disabled={secondaryDisabled}
                 onClick={() => setSaveOpen(true)}
               >
@@ -205,21 +173,6 @@ export function EvalView() {
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleLoadIntoComposer()}>
-                  <Upload className="h-3.5 w-3.5" />
-                  Load into composer
-                </DropdownMenuItem>
-                {judgeResult?.winnerRunnerId && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      handleLoadIntoComposer(judgeResult.winnerRunnerId)
-                    }
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    Load winner
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   disabled={secondaryDisabled}
                   onClick={() => setSaveOpen(true)}

@@ -3,6 +3,14 @@ import { useProviderStore } from './provider-store';
 import { useEnvironmentStore } from './environment-store';
 import { emptyResult } from '@/types/eval';
 import { makeProvider, makeModel } from '@/__tests__/fixtures';
+import {
+  DEFAULT_FREQUENCY_PENALTY,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_PRESENCE_PENALTY,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_TOP_K,
+  DEFAULT_TOP_P,
+} from '@/constants/defaults';
 
 const { mockRunEval, mockRunJudge } = vi.hoisted(() => ({
   mockRunEval: vi.fn(),
@@ -95,6 +103,36 @@ describe('useEvalStore', () => {
     expect(useEvalStore.getState().results[runnerId].rating).toBe(4);
     expect(useEvalStore.getState().results[runnerId].thumbs).toBe('up');
     expect(useEvalStore.getState().results[runnerId].content).toBe('hello');
+  });
+
+  it('resets eval parameters without changing prompt content', () => {
+    const state = useEvalStore.getState();
+    state.setSystemPrompt('keep me');
+    state.updateMessage(0, { content: 'Hello' });
+    state.setCustomHeaders([{ id: 'h1', key: 'X-Test', value: '1' }]);
+    state.setTemperature(0.2);
+    state.setMaxTokens(123);
+    state.setTopP(0.4);
+    state.setTopK(40);
+    state.setFrequencyPenalty(0.6);
+    state.setPresencePenalty(0.7);
+    state.setStream(false);
+
+    useEvalStore.getState().resetParameters();
+
+    const composer = useEvalStore.getState().composer;
+    expect(composer.systemPrompt).toBe('keep me');
+    expect(composer.messages[0].content).toBe('Hello');
+    expect(composer.customHeaders).toEqual([
+      { id: 'h1', key: 'X-Test', value: '1' },
+    ]);
+    expect(composer.temperature).toBe(DEFAULT_TEMPERATURE);
+    expect(composer.maxTokens).toBe(DEFAULT_MAX_TOKENS);
+    expect(composer.topP).toBe(DEFAULT_TOP_P);
+    expect(composer.topK).toBe(DEFAULT_TOP_K);
+    expect(composer.frequencyPenalty).toBe(DEFAULT_FREQUENCY_PENALTY);
+    expect(composer.presencePenalty).toBe(DEFAULT_PRESENCE_PENALTY);
+    expect(composer.stream).toBe(true);
   });
 
   it('toggles compare selection and enforces the max size', () => {

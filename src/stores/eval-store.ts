@@ -85,6 +85,7 @@ interface EvalStoreActions {
   setFrequencyPenalty: (v: number) => void;
   setPresencePenalty: (v: number) => void;
   setStream: (stream: boolean) => void;
+  resetParameters: () => void;
   setCustomHeaders: (headers: HeaderEntry[]) => void;
 
   addRunner: (runner: { providerId: string; modelId: string }) => void;
@@ -110,7 +111,6 @@ interface EvalStoreActions {
   loadRun: (record: EvalRunRecord) => void;
   reset: () => void;
   seedFromMainComposer: () => void;
-  loadIntoComposer: (runnerId?: string | null) => void;
 
   /** Build a serializable EvalRunRecord from current state */
   buildRecord: (name?: string) => EvalRunRecord;
@@ -118,10 +118,17 @@ interface EvalStoreActions {
 
 export type EvalStore = EvalStoreState & EvalStoreActions;
 
-function createInitialComposer(): EvalComposerState {
+function createInitialParameterState(): Pick<
+  EvalComposerState,
+  | 'temperature'
+  | 'maxTokens'
+  | 'topP'
+  | 'topK'
+  | 'frequencyPenalty'
+  | 'presencePenalty'
+  | 'stream'
+> {
   return {
-    systemPrompt: '',
-    messages: [{ id: nanoid(), role: 'user', content: '' }],
     temperature: DEFAULT_TEMPERATURE,
     maxTokens: DEFAULT_MAX_TOKENS,
     topP: DEFAULT_TOP_P,
@@ -129,6 +136,14 @@ function createInitialComposer(): EvalComposerState {
     frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: DEFAULT_PRESENCE_PENALTY,
     stream: true,
+  };
+}
+
+function createInitialComposer(): EvalComposerState {
+  return {
+    systemPrompt: '',
+    messages: [{ id: nanoid(), role: 'user', content: '' }],
+    ...createInitialParameterState(),
     customHeaders: [createEmptyHeaderEntry()],
   };
 }
@@ -226,6 +241,10 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   setPresencePenalty: (presencePenalty) =>
     set((s) => ({ composer: { ...s.composer, presencePenalty } })),
   setStream: (stream) => set((s) => ({ composer: { ...s.composer, stream } })),
+  resetParameters: () =>
+    set((s) => ({
+      composer: { ...s.composer, ...createInitialParameterState() },
+    })),
   setCustomHeaders: (customHeaders) =>
     set((s) => ({ composer: { ...s.composer, customHeaders } })),
 
@@ -528,44 +547,6 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         judgeResult: null,
       };
     });
-  },
-
-  loadIntoComposer: (runnerId = null) => {
-    const state = get();
-    const providerStore = useProviderStore.getState();
-    const targetRunner =
-      (runnerId
-        ? state.runners.find((runner) => runner.id === runnerId)
-        : null) ??
-      (state.judgeResult?.winnerRunnerId
-        ? state.runners.find(
-            (runner) => runner.id === state.judgeResult?.winnerRunnerId,
-          )
-        : null) ??
-      state.runners[0] ??
-      null;
-
-    useComposerStore.getState().loadComposerFromHistory({
-      messages: state.composer.messages.map((message) => ({
-        id: message.id,
-        role: message.role,
-        content: message.content,
-      })),
-      systemPrompt: state.composer.systemPrompt,
-      temperature: state.composer.temperature,
-      maxTokens: state.composer.maxTokens,
-      topP: state.composer.topP,
-      topK: state.composer.topK,
-      frequencyPenalty: state.composer.frequencyPenalty,
-      presencePenalty: state.composer.presencePenalty,
-      stream: state.composer.stream,
-      customHeaders: headersToHistoryEntries(state.composer.customHeaders),
-    });
-
-    if (targetRunner) {
-      providerStore.selectProvider(targetRunner.providerId);
-      providerStore.selectModel(targetRunner.modelId);
-    }
   },
 
   buildRecord: (name) => {

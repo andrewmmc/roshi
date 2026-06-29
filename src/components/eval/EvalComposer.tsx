@@ -116,11 +116,11 @@ export function EvalMessagesEditor() {
               />
             </div>
             <Button
-              variant="ghost"
+              variant="destructive"
               size="icon-sm"
               onClick={() => removeMessage(index)}
               disabled={isRunning || composer.messages.length <= 1}
-              aria-label={`Remove eval message ${index + 1}`}
+              aria-label={`Delete eval message ${index + 1}`}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -315,6 +315,9 @@ export function EvalHeadersEditor() {
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
+        Custom
+      </p>
       {customHeaders.map((header, index) => (
         <div key={header.id} className="flex items-center gap-2">
           <Input
@@ -369,6 +372,7 @@ export function EvalParametersEditor() {
   const setFrequencyPenalty = useEvalStore((s) => s.setFrequencyPenalty);
   const setPresencePenalty = useEvalStore((s) => s.setPresencePenalty);
   const setStream = useEvalStore((s) => s.setStream);
+  const resetParameters = useEvalStore((s) => s.resetParameters);
 
   return (
     <div className="flex flex-col gap-3">
@@ -490,6 +494,17 @@ export function EvalParametersEditor() {
         onChange={setStream}
         disabled={isRunning}
       />
+
+      <div className="flex justify-end pt-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={resetParameters}
+          disabled={isRunning}
+        >
+          Reset to defaults
+        </Button>
+      </div>
     </div>
   );
 }

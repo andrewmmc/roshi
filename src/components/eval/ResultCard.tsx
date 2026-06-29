@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
-import { Trophy, Upload } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import type { EvalRunResult, EvalRunner, JudgeResult } from '@/types/eval';
 import { useEvalStore } from '@/stores/eval-store';
-import { useUiStore } from '@/stores/ui-store';
 import { MetricsBar } from './MetricsBar';
 import { RatingControl } from './RatingControl';
 
@@ -38,8 +36,6 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
   const setRating = useEvalStore((s) => s.setRating);
   const setThumbs = useEvalStore((s) => s.setThumbs);
   const isRunning = useEvalStore((s) => s.isRunning);
-  const loadIntoComposer = useEvalStore((s) => s.loadIntoComposer);
-  const setMainView = useUiStore((s) => s.setMainView);
 
   const compareChecked = compareSelection.includes(runner.id);
   const judgeScore = judgeResult?.scores?.[runner.id];
@@ -131,26 +127,9 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
             onRatingChange={(rating) => setRating(runner.id, rating)}
             onThumbsChange={(thumbs) => setThumbs(runner.id, thumbs)}
           />
-          <div className="flex items-center gap-2">
-            {(result.status === 'success' || result.status === 'partial') && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                disabled={isRunning}
-                onClick={() => {
-                  loadIntoComposer(runner.id);
-                  setMainView('request');
-                }}
-              >
-                <Upload className="mr-1 h-3 w-3" />
-                Use in composer
-              </Button>
-            )}
-            <span className="text-muted-foreground text-[11px]">
-              {wordCount} words
-            </span>
-          </div>
+          <span className="text-muted-foreground text-[11px]">
+            {wordCount} words
+          </span>
         </div>
 
         {judgeScore && (
