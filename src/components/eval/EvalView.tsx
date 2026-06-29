@@ -43,7 +43,12 @@ import { toast } from '@/stores/toast-store';
 import { exportEvalRunJson, exportEvalRunCsv } from '@/utils/export';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
-import { EvalComposer } from './EvalComposer';
+import {
+  EvalHeadersEditor,
+  EvalMessagesEditor,
+  EvalParametersEditor,
+  EvalSystemPromptEditor,
+} from './EvalComposer';
 import { RunnerPicker } from './RunnerPicker';
 import { JudgeConfig } from './JudgeConfig';
 import { ResultsGrid } from './ResultsGrid';
@@ -60,7 +65,9 @@ export function EvalView() {
   const isJudging = useEvalStore((s) => s.isJudging);
   const error = useEvalStore((s) => s.error);
   const runners = useEvalStore((s) => s.runners);
+  const composer = useEvalStore((s) => s.composer);
   const compareSelection = useEvalStore((s) => s.compareSelection);
+  const judgeConfig = useEvalStore((s) => s.judgeConfig);
   const judgeResult = useEvalStore((s) => s.judgeResult);
   const loadIntoComposer = useEvalStore((s) => s.loadIntoComposer);
   const setMainView = useUiStore((s) => s.setMainView);
@@ -275,7 +282,14 @@ export function EvalView() {
       <ResizablePanelGroup orientation="vertical" className="flex-1">
         <ResizablePanel defaultSize="45%" minSize="22%">
           <ErrorBoundary panel>
-            <EvalSetupTabs />
+            <EvalSetupTabs
+              runnerCount={runners.length}
+              hasSystemPrompt={composer.systemPrompt.trim().length > 0}
+              hasCustomHeaders={composer.customHeaders.some(
+                (header) => header.key.trim() !== '',
+              )}
+              judgeEnabled={judgeConfig.enabled}
+            />
           </ErrorBoundary>
         </ResizablePanel>
         <ResizableHandle withHandle />
@@ -318,19 +332,55 @@ export function EvalView() {
   );
 }
 
-function EvalSetupTabs() {
+function EvalSetupTabs({
+  runnerCount,
+  hasSystemPrompt,
+  hasCustomHeaders,
+  judgeEnabled,
+}: {
+  runnerCount: number;
+  hasSystemPrompt: boolean;
+  hasCustomHeaders: boolean;
+  judgeEnabled: boolean;
+}) {
   return (
-    <Tabs defaultValue="runners" className="flex h-full flex-col gap-0">
+    <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
       <div className="border-border/70 flex h-11 shrink-0 items-center border-b px-3">
-        <TabsList variant="line" className="h-7 gap-0">
+        <TabsList
+          variant="line"
+          className="h-7 max-w-full gap-0 overflow-x-auto"
+        >
           <TabsTrigger value="runners" className="px-3 text-xs">
             Runners
+            {runnerCount > 0 && (
+              <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none">
+                {runnerCount}
+              </span>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="prompt" className="px-3 text-xs">
-            Prompt
+          <TabsTrigger value="messages" className="px-3 text-xs">
+            Messages
+          </TabsTrigger>
+          <TabsTrigger value="system" className="px-3 text-xs">
+            System Prompt
+            {hasSystemPrompt && (
+              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="headers" className="px-3 text-xs">
+            Headers
+            {hasCustomHeaders && (
+              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="parameters" className="px-3 text-xs">
+            Parameters
           </TabsTrigger>
           <TabsTrigger value="judge" className="px-3 text-xs">
             Judge
+            {judgeEnabled && (
+              <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
+            )}
           </TabsTrigger>
         </TabsList>
       </div>
@@ -343,10 +393,37 @@ function EvalSetupTabs() {
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="prompt" className="min-h-0 flex-1 overflow-hidden">
+      <TabsContent value="messages" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
-            <EvalComposer />
+            <EvalMessagesEditor />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="system" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <EvalSystemPromptEditor />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="headers" className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <EvalHeadersEditor />
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent
+        value="parameters"
+        className="min-h-0 flex-1 overflow-hidden"
+      >
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <EvalParametersEditor />
           </div>
         </ScrollArea>
       </TabsContent>
