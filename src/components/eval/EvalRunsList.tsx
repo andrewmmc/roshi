@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { IconButton } from '@/components/ui/icon-button';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
@@ -53,15 +52,6 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
             <p className="text-muted-foreground text-[12px]">
               Compare one prompt across multiple models, then save the run here.
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 w-fit text-xs"
-              onClick={() => setMainView('eval')}
-            >
-              Open Eval view
-            </Button>
           </div>
         ) : (
           <ul className="flex flex-col">

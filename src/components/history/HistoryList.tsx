@@ -361,30 +361,6 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
               <p className="text-muted-foreground text-xs">
                 Every request you send is saved here for quick replay.
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => {
-                  const composer = useComposerStore.getState();
-                  const sample =
-                    'Explain what an LLM API request looks like in one short paragraph.';
-                  const firstUserIndex = composer.messages.findIndex(
-                    (message) => message.role === 'user',
-                  );
-                  if (firstUserIndex >= 0) {
-                    composer.updateMessage(firstUserIndex, {
-                      ...composer.messages[firstUserIndex],
-                      content: sample,
-                    });
-                  } else {
-                    composer.addMessage({ role: 'user', content: sample });
-                  }
-                }}
-              >
-                Insert sample prompt
-              </Button>
             </div>
           )}
           {entries.length > 0 && filtered.length === 0 && (
