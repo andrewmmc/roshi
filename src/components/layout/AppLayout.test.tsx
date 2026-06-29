@@ -9,6 +9,10 @@ vi.mock('./MainPanel', () => ({
   MainPanel: () => <div>MainPanel Mock</div>,
 }));
 
+vi.mock('@/components/onboarding/FirstRunChecklist', () => ({
+  FirstRunChecklist: () => <div>FirstRunChecklist Mock</div>,
+}));
+
 vi.mock('@/components/ui/resizable', () => ({
   ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
@@ -26,6 +30,7 @@ describe('AppLayout', () => {
     expect(
       screen.getByRole('link', { name: 'Skip to main content' }),
     ).toHaveAttribute('href', '#main-content');
+    expect(screen.getByText('FirstRunChecklist Mock')).toBeInTheDocument();
     expect(screen.getByText('Sidebar Mock')).toBeInTheDocument();
     expect(screen.getByText('MainPanel Mock')).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content');

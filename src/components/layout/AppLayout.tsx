@@ -8,6 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
+import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -45,15 +46,17 @@ export function AppLayout() {
   }, [setSidebarCollapsed]);
 
   return (
-    <div className="bg-sidebar h-screen w-screen overflow-hidden">
+    <div className="bg-sidebar flex h-screen w-screen flex-col overflow-hidden">
       <a
         href="#main-content"
         className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:p-2 focus:shadow-md"
       >
         Skip to main content
       </a>
+      <FirstRunChecklist />
       <ResizablePanelGroup
         orientation="horizontal"
+        className="min-h-0 flex-1"
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
       >

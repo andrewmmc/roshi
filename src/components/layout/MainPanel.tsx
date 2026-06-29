@@ -10,7 +10,6 @@ import { ResponsePanel } from '@/components/response/ResponsePanel';
 import { ProviderSelect } from '@/components/composer/ProviderSelect';
 import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
 import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentPreviewSheet';
-import { FirstRunChecklist } from '@/components/onboarding/FirstRunChecklist';
 import { RequestCompatibilityWarning } from '@/components/composer/RequestCompatibilityWarning';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -50,7 +49,6 @@ export function MainPanel() {
 
   return (
     <div className="bg-background flex h-full flex-col">
-      <FirstRunChecklist />
       {mainView === 'request' ? <RequestView /> : null}
       {mainView === 'eval' ? (
         <Suspense
