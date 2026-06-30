@@ -118,6 +118,60 @@ interface EvalStoreActions {
 
 export type EvalStore = EvalStoreState & EvalStoreActions;
 
+export function selectHasUnsavedEvalChanges(
+  state: Pick<
+    EvalStoreState,
+    | 'composer'
+    | 'runners'
+    | 'judgeConfig'
+    | 'judgeResult'
+    | 'activeRunId'
+    | 'compareSelection'
+    | 'lastSavedRecordId'
+  >,
+): boolean {
+  const { composer, runners, judgeConfig } = state;
+
+  if (composer.systemPrompt.trim() !== '') return true;
+  if (
+    composer.messages.length !== 1 ||
+    composer.messages[0]?.role !== 'user' ||
+    composer.messages[0]?.content.trim() !== ''
+  ) {
+    return true;
+  }
+  if (
+    composer.temperature !== DEFAULT_TEMPERATURE ||
+    composer.maxTokens !== DEFAULT_MAX_TOKENS ||
+    composer.topP !== DEFAULT_TOP_P ||
+    composer.topK !== DEFAULT_TOP_K ||
+    composer.frequencyPenalty !== DEFAULT_FREQUENCY_PENALTY ||
+    composer.presencePenalty !== DEFAULT_PRESENCE_PENALTY ||
+    composer.stream !== true
+  ) {
+    return true;
+  }
+  if (
+    composer.customHeaders.some(
+      (header) => header.key.trim() !== '' || header.value.trim() !== '',
+    )
+  ) {
+    return true;
+  }
+  if (runners.length > 0) return true;
+  if (
+    judgeConfig.enabled ||
+    judgeConfig.runner !== null ||
+    judgeConfig.rubric !== DEFAULT_JUDGE_RUBRIC
+  ) {
+    return true;
+  }
+  if (state.judgeResult !== null) return true;
+  if (state.activeRunId !== null || state.lastSavedRecordId !== null)
+    return true;
+  return state.compareSelection.length > 0;
+}
+
 function createInitialParameterState(): Pick<
   EvalComposerState,
   | 'temperature'
@@ -477,7 +531,12 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     });
   },
 
-  reset: () => set(createInitialState()),
+  reset: () => {
+    const { _runHandle, _judgeHandle } = get();
+    _runHandle?.cancel();
+    _judgeHandle?.cancel();
+    set(createInitialState());
+  },
 
   seedFromMainComposer: () => {
     const mainComposer = useComposerStore.getState();

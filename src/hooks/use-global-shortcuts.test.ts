@@ -3,6 +3,7 @@ import { useGlobalShortcuts } from './use-global-shortcuts';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useComposerStore } from '@/stores/composer-store';
+import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
 
@@ -35,10 +36,13 @@ describe('useGlobalShortcuts', () => {
     send.mockReset();
     cancel.mockReset();
     useResponseStore.getState().resetResponse();
+    useEvalStore.getState().reset();
     useUiStore.setState({
       settingsOpen: false,
       settingsPage: 'general',
       historySearchFocusGen: 0,
+      mainView: 'request',
+      newRequestDiscardOpen: false,
     });
     useThemeStore.getState().init();
     useProviderStore.setState({
@@ -155,6 +159,30 @@ describe('useGlobalShortcuts', () => {
       expect(useComposerStore.getState().messages).toBe(messagesBefore);
       // Discard dialog should have been opened
       expect(useUiStore.getState().newRequestDiscardOpen).toBe(true);
+    });
+
+    it('resets eval state in eval view when there are no unsaved eval changes', () => {
+      useUiStore.setState({ mainView: 'eval' });
+      useEvalStore.setState({ error: 'runner failed' });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('N', { metaKey: true, shiftKey: true });
+
+      expect(useEvalStore.getState().error).toBeNull();
+      expect(useEvalStore.getState().runners).toEqual([]);
+    });
+
+    it('opens the discard dialog for unsaved eval changes', () => {
+      useUiStore.setState({ mainView: 'eval', newRequestDiscardOpen: false });
+      useEvalStore.getState().updateMessage(0, { content: 'compare these' });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('N', { metaKey: true, shiftKey: true });
+
+      expect(useUiStore.getState().newRequestDiscardOpen).toBe(true);
+      expect(useEvalStore.getState().composer.messages[0].content).toBe(
+        'compare these',
+      );
     });
   });
 

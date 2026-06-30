@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { useComposerStore } from '@/stores/composer-store';
+import { useEvalStore } from '@/stores/eval-store';
 import { useResponseStore } from '@/stores/response-store';
 import { useUiStore } from '@/stores/ui-store';
 
@@ -39,6 +40,7 @@ vi.mock('@/components/eval/EvalRunsList', () => ({
 describe('Sidebar', () => {
   beforeEach(() => {
     useComposerStore.getState().resetComposer();
+    useEvalStore.getState().reset();
     useResponseStore.getState().resetResponse();
     useUiStore.setState({
       aboutOpen: false,
@@ -111,5 +113,24 @@ describe('Sidebar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New request' }));
 
     expect(screen.getByText('Discard unsent changes?')).toBeInTheDocument();
+  });
+
+  it('resets eval state after confirming discard in eval view', () => {
+    useUiStore.setState({ mainView: 'eval', sidebarSection: 'evals' });
+    useEvalStore.getState().setSystemPrompt('compare this');
+    useEvalStore.getState().updateMessage(0, { content: 'prompt' });
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+
+    render(<Sidebar />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'New request' }));
+
+    expect(screen.getByText('Discard current eval?')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+
+    expect(useEvalStore.getState().composer.systemPrompt).toBe('');
+    expect(useEvalStore.getState().composer.messages[0].content).toBe('');
+    expect(useEvalStore.getState().runners).toEqual([]);
   });
 });

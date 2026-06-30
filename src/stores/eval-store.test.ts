@@ -1,4 +1,8 @@
-import { useEvalStore, MAX_COMPARE_SELECTION } from './eval-store';
+import {
+  useEvalStore,
+  MAX_COMPARE_SELECTION,
+  selectHasUnsavedEvalChanges,
+} from './eval-store';
 import { useProviderStore } from './provider-store';
 import { useEnvironmentStore } from './environment-store';
 import { emptyResult } from '@/types/eval';
@@ -240,6 +244,36 @@ describe('useEvalStore', () => {
     useEvalStore.getState().cancelAll();
     expect(cancelRun).toHaveBeenCalled();
     expect(cancelJudge).toHaveBeenCalled();
+  });
+
+  it('reset cancels active handles and restores the initial state', () => {
+    const cancelRun = vi.fn();
+    const cancelJudge = vi.fn();
+
+    useEvalStore.getState().setSystemPrompt('draft');
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.setState({
+      _runHandle: { cancel: cancelRun },
+      _judgeHandle: { cancel: cancelJudge },
+      activeRunId: 'run-1',
+    });
+
+    useEvalStore.getState().reset();
+
+    const state = useEvalStore.getState();
+    expect(cancelRun).toHaveBeenCalled();
+    expect(cancelJudge).toHaveBeenCalled();
+    expect(state.composer.systemPrompt).toBe('');
+    expect(state.runners).toEqual([]);
+    expect(state.activeRunId).toBeNull();
+  });
+
+  it('treats eval errors alone as resettable but detects real eval changes', () => {
+    useEvalStore.setState({ error: 'runner failed' });
+    expect(selectHasUnsavedEvalChanges(useEvalStore.getState())).toBe(false);
+
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    expect(selectHasUnsavedEvalChanges(useEvalStore.getState())).toBe(true);
   });
 
   it('loadRun restores composer, runners, results, and judge result', () => {

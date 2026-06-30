@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
-import {
-  useComposerStore,
-  selectHasUnsavedChanges,
-} from '@/stores/composer-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { toast } from '@/stores/toast-store';
 import { useSendRequest } from '@/hooks/use-send-request';
+import {
+  activeWorkspaceHasUnsavedChanges,
+  resetActiveWorkspace,
+} from '@/utils/new-request';
 
 function isDialogOpen(): boolean {
   return Boolean(document.querySelector('[role="dialog"][data-open]'));
@@ -45,10 +45,8 @@ export function useGlobalShortcuts() {
       // Cmd/Ctrl+Shift+N — new request
       if (mod && e.shiftKey && e.key === 'N') {
         e.preventDefault();
-        const hasUnsaved = selectHasUnsavedChanges(useComposerStore.getState());
-        if (!hasUnsaved) {
-          useComposerStore.getState().resetComposer();
-          useResponseStore.getState().resetResponse();
+        if (!activeWorkspaceHasUnsavedChanges()) {
+          resetActiveWorkspace();
         } else {
           // Open the global discard-confirmation dialog (rendered by CommandPalette).
           useUiStore.getState().setNewRequestDiscardOpen(true);

@@ -14,10 +14,10 @@ import { HistoryList } from '@/components/history/HistoryList';
 import { CollectionsList } from '@/components/collections/CollectionsList';
 import { EvalRunsList } from '@/components/eval/EvalRunsList';
 import {
-  useComposerStore,
-  selectHasUnsavedChanges,
-} from '@/stores/composer-store';
-import { useResponseStore } from '@/stores/response-store';
+  activeWorkspaceHasUnsavedChanges,
+  getDiscardDialogCopy,
+  resetActiveWorkspace,
+} from '@/utils/new-request';
 
 function SidebarSectionTabs() {
   const mainView = useUiStore((s) => s.mainView);
@@ -63,9 +63,6 @@ function getActiveSidebarSection(
 }
 
 export function Sidebar() {
-  const resetComposer = useComposerStore((s) => s.resetComposer);
-  const resetResponse = useResponseStore((s) => s.resetResponse);
-  const hasUnsavedChanges = useComposerStore(selectHasUnsavedChanges);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
@@ -77,19 +74,19 @@ export function Sidebar() {
     mainView,
     sidebarSection,
   );
+  const discardDialogCopy = getDiscardDialogCopy(mainView);
 
   const reset = useCallback(() => {
-    resetComposer();
-    resetResponse();
-  }, [resetComposer, resetResponse]);
+    resetActiveWorkspace();
+  }, []);
 
   const handleNewRequest = useCallback(() => {
-    if (hasUnsavedChanges) {
+    if (activeWorkspaceHasUnsavedChanges()) {
       setShowDiscard(true);
     } else {
       reset();
     }
-  }, [hasUnsavedChanges, reset]);
+  }, [reset]);
 
   return (
     <div className="bg-sidebar flex h-full flex-col">
@@ -186,6 +183,8 @@ export function Sidebar() {
         open={showDiscard}
         onOpenChange={setShowDiscard}
         onConfirm={reset}
+        title={discardDialogCopy.title}
+        description={discardDialogCopy.description}
       />
     </div>
   );

@@ -10,12 +10,13 @@ import { useTabStore } from '@/stores/tab-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useResponseStore } from '@/stores/response-store';
-import {
-  useComposerStore,
-  selectHasUnsavedChanges,
-} from '@/stores/composer-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { toast } from '@/stores/toast-store';
+import {
+  activeWorkspaceHasUnsavedChanges,
+  getDiscardDialogCopy,
+  resetActiveWorkspace,
+} from '@/utils/new-request';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,14 +75,10 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         group: 'Actions',
         shortcut: { mac: '⌘⇧N', win: 'Ctrl+Shift+N' },
         action: () => {
-          const hasUnsaved = selectHasUnsavedChanges(
-            useComposerStore.getState(),
-          );
-          if (hasUnsaved) {
+          if (activeWorkspaceHasUnsavedChanges()) {
             useUiStore.getState().setNewRequestDiscardOpen(true);
           } else {
-            useComposerStore.getState().resetComposer();
-            useResponseStore.getState().resetResponse();
+            resetActiveWorkspace();
           }
         },
       },
@@ -349,6 +346,8 @@ export function CommandPalette() {
   const setNewRequestDiscardOpen = useUiStore(
     (s) => s.setNewRequestDiscardOpen,
   );
+  const mainView = useUiStore((s) => s.mainView);
+  const discardDialogCopy = getDiscardDialogCopy(mainView);
 
   // Register ⌘K / Ctrl+K globally to open the palette.
   useEffect(() => {
@@ -378,10 +377,9 @@ export function CommandPalette() {
       <ConfirmDiscardDialog
         open={newRequestDiscardOpen}
         onOpenChange={setNewRequestDiscardOpen}
-        onConfirm={() => {
-          useComposerStore.getState().resetComposer();
-          useResponseStore.getState().resetResponse();
-        }}
+        onConfirm={resetActiveWorkspace}
+        title={discardDialogCopy.title}
+        description={discardDialogCopy.description}
       />
     </>
   );
