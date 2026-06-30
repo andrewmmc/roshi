@@ -82,11 +82,11 @@ export function EnvironmentPreviewButton({
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
             {!preview.hasPlaceholders ? (
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground px-2 py-2 text-xs">
                 No {'{{variable}}'} placeholders in the current request.
               </p>
             ) : preview.variables.length === 0 ? (
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground px-2 py-2 text-xs">
                 Placeholders found, but no variables are defined in the selected
                 environment.
               </p>
