@@ -8,21 +8,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
+import { formatRelativeTime } from '@/utils/relative-time';
 
 interface EvalRunsListProps {
   headerSlot?: ReactNode;
-}
-
-function formatRelative(date: Date): string {
-  const diff = Date.now() - new Date(date).getTime();
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hour = Math.floor(min / 60);
-  if (hour < 24) return `${hour}h ago`;
-  const day = Math.floor(hour / 24);
-  return `${day}d ago`;
 }
 
 export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
@@ -98,7 +87,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                         {record.runners.length === 1 ? '' : 's'} ·{' '}
                         {successCount} ok
                       </span>
-                      <span>{formatRelative(record.createdAt)}</span>
+                      <span>{formatRelativeTime(record.createdAt)}</span>
                     </div>
                     {winnerLabel && (
                       <div className="text-muted-foreground text-[11px]">

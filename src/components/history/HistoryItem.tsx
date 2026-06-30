@@ -2,6 +2,7 @@ import { Trash2, Download, Check } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { exportHistoryEntry } from '@/utils/export';
+import { formatRelativeTime } from '@/utils/relative-time';
 import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/history';
 
@@ -93,7 +94,9 @@ export function HistoryItem({
           {preview}
         </div>
         <div className="text-muted-foreground/70 mt-0.5 text-[11px]">
-          {new Date(entry.createdAt).toLocaleString()}
+          <span title={new Date(entry.createdAt).toLocaleString()}>
+            {formatRelativeTime(entry.createdAt)}
+          </span>
           {entry.durationMs !== null && ` · ${entry.durationMs}ms`}
         </div>
       </div>
