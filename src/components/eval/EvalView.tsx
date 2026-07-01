@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Eye, MoreHorizontal, PanelLeftOpen, Play, Square } from 'lucide-react';
+import {
+  Download,
+  Eye,
+  FileDown,
+  MoreHorizontal,
+  PanelLeftOpen,
+  Play,
+  Square,
+} from 'lucide-react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -26,6 +34,7 @@ import { IS_MAC } from '@/lib/platform';
 import { ViewToggle } from '@/components/layout/ViewToggle';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
+import { exportEvalRunJson, exportEvalRunCsv } from '@/utils/export';
 import {
   EvalHeadersEditor,
   EvalMessagesEditor,
@@ -35,7 +44,7 @@ import {
 import { RunnerPicker } from './RunnerPicker';
 import { JudgeConfig } from './JudgeConfig';
 import { ResultsGrid } from './ResultsGrid';
-import { CompareDrawer } from './CompareDrawer';
+import { CompareView } from './CompareView';
 
 export function EvalView() {
   const loadProviders = useProviderStore((s) => s.load);
@@ -48,7 +57,6 @@ export function EvalView() {
   const error = useEvalStore((s) => s.error);
   const runners = useEvalStore((s) => s.runners);
   const composer = useEvalStore((s) => s.composer);
-  const compareSelection = useEvalStore((s) => s.compareSelection);
   const judgeConfig = useEvalStore((s) => s.judgeConfig);
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
@@ -162,14 +170,84 @@ export function EvalView() {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize="55%" minSize="25%">
           <ErrorBoundary panel>
-            <div className="flex h-full min-w-0 flex-col overflow-hidden">
-              <ResultsGrid />
-              {compareSelection.length === 2 && <CompareDrawer />}
-            </div>
+            <EvalResultsPanel />
           </ErrorBoundary>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
+  );
+}
+
+function EvalResultsPanel() {
+  const runners = useEvalStore((s) => s.runners);
+  const compareSelection = useEvalStore((s) => s.compareSelection);
+  const isRunning = useEvalStore((s) => s.isRunning);
+  const buildRecord = useEvalStore((s) => s.buildRecord);
+
+  const exportDisabled = isRunning || runners.length === 0;
+
+  const handleExportJson = () => {
+    exportEvalRunJson(buildRecord());
+  };
+
+  const handleExportCsv = () => {
+    exportEvalRunCsv(buildRecord());
+  };
+
+  return (
+    <Tabs defaultValue="results" className="flex h-full min-w-0 flex-col gap-0">
+      <PanelHeader className="justify-between">
+        <TabsList variant="line" className="h-7 gap-0">
+          <TabsTrigger value="results" className="px-3 text-xs">
+            Results
+          </TabsTrigger>
+          <TabsTrigger value="compare" className="px-3 text-xs">
+            Compare
+            {compareSelection.length > 0 && (
+              <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none">
+                {compareSelection.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        <div className="flex items-center gap-1">
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            tooltip="Export run as JSON"
+            onClick={handleExportJson}
+            disabled={exportDisabled}
+          >
+            <FileDown className="h-3.5 w-3.5" />
+          </IconButton>
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            tooltip="Export metrics as CSV"
+            onClick={handleExportCsv}
+            disabled={exportDisabled}
+          >
+            <Download className="h-3.5 w-3.5" />
+          </IconButton>
+        </div>
+      </PanelHeader>
+
+      <TabsContent
+        value="results"
+        className="mt-0 min-h-0 flex-1 overflow-hidden"
+      >
+        <ResultsGrid />
+      </TabsContent>
+
+      <TabsContent
+        value="compare"
+        className="mt-0 min-h-0 flex-1 overflow-hidden"
+      >
+        <CompareView />
+      </TabsContent>
+    </Tabs>
   );
 }
 

@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
-import { X } from 'lucide-react';
+import { GitCompare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useEvalStore } from '@/stores/eval-store';
 import { DiffText } from '@/components/ui/diff-text';
 import { diffWords, jaccardSimilarity } from '@/utils/diff';
 
-export function CompareDrawer() {
+export function CompareView() {
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const runners = useEvalStore((s) => s.runners);
   const results = useEvalStore((s) => s.results);
@@ -23,7 +24,24 @@ export function CompareDrawer() {
     };
   }, [compareSelection, runners, results]);
 
-  if (!pair || !pair.a.result || !pair.b.result) return null;
+  if (!pair || !pair.a.result || !pair.b.result) {
+    const selectedCount = Math.min(compareSelection.length, 2);
+    return (
+      <EmptyState
+        icon={GitCompare}
+        title={
+          selectedCount === 0
+            ? 'Select two results to compare.'
+            : 'Select one more result to compare.'
+        }
+        description={
+          selectedCount === 0
+            ? 'Check "Compare" on two result cards in the Results tab to see a side-by-side diff and metrics.'
+            : 'Check "Compare" on another result card in the Results tab.'
+        }
+      />
+    );
+  }
 
   const diff = diffWords(pair.a.result.content, pair.b.result.content);
   const similarity = jaccardSimilarity(
@@ -32,10 +50,10 @@ export function CompareDrawer() {
   );
 
   return (
-    <div className="border-border/70 bg-background min-w-0 overflow-hidden border-t">
+    <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <div className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-1.5">
         <div className="text-foreground min-w-0 truncate text-xs font-medium">
-          Compare: <span className="font-mono">{pair.a.runner.label}</span>{' '}
+          <span className="font-mono">{pair.a.runner.label}</span>{' '}
           <span className="text-muted-foreground">vs</span>{' '}
           <span className="font-mono">{pair.b.runner.label}</span>
           <span className="text-muted-foreground ml-3 text-[11px]">
@@ -44,21 +62,22 @@ export function CompareDrawer() {
         </div>
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="sm"
           onClick={clearCompare}
-          aria-label="Close compare drawer"
+          className="text-muted-foreground hover:text-foreground shrink-0"
         >
-          <X className="h-3 w-3" />
+          <X className="mr-1 h-3 w-3" />
+          Clear
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
-        <div className="border-border/60 max-h-72 overflow-auto border-b p-3 md:border-r md:border-b-0">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-auto md:grid-cols-2">
+        <div className="border-border/60 overflow-auto border-b p-3 md:border-r md:border-b-0">
           <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
             Differences
           </div>
           <DiffText segments={diff} />
         </div>
-        <div className="max-h-72 overflow-auto p-3">
+        <div className="overflow-auto p-3">
           <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
             Side-by-side metrics
           </div>
