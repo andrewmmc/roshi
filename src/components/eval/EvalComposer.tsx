@@ -1,27 +1,13 @@
 import { nanoid } from 'nanoid';
-import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { IconButton } from '@/components/ui/icon-button';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEvalStore } from '@/stores/eval-store';
+import { MessageEditorView } from '@/components/composer/message-editor-view';
+import type { NormalizedMessage } from '@/types/normalized';
 import {
   PARAM_INFO,
   TEMP_PRESETS,
@@ -77,121 +63,31 @@ export function EvalMessagesEditor() {
   const updateMessage = useEvalStore((s) => s.updateMessage);
   const addMessage = useEvalStore((s) => s.addMessage);
   const removeMessage = useEvalStore((s) => s.removeMessage);
-  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(
-    null,
-  );
+  const addAttachment = useEvalStore((s) => s.addAttachment);
+  const removeAttachment = useEvalStore((s) => s.removeAttachment);
 
   const handleAddMessage = () => {
     const lastRole = composer.messages[composer.messages.length - 1]?.role;
     addMessage(lastRole === 'user' ? 'assistant' : 'user');
   };
 
-  const handleRemoveMessage = (index: number) => {
-    if (composer.messages[index]?.content.trim()) {
-      setConfirmDeleteIndex(index);
-    } else {
-      removeMessage(index);
-    }
+  const handleUpdateMessage = (
+    index: number,
+    patch: Partial<NormalizedMessage>,
+  ) => {
+    updateMessage(index, patch);
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2">
-        {composer.messages.map((msg, index) => (
-          <div key={msg.id} className="flex items-start gap-2">
-            <Select
-              value={msg.role}
-              onValueChange={(role) => {
-                if (!role) return;
-                updateMessage(index, { role: role as 'user' | 'assistant' });
-              }}
-              disabled={isRunning}
-            >
-              <SelectTrigger
-                aria-label={`Role for eval message ${index + 1}`}
-                className="h-7 w-[100px] shrink-0 text-xs capitalize"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="assistant">Assistant</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="min-w-0 flex-1">
-              <Textarea
-                value={msg.content}
-                onChange={(e) =>
-                  updateMessage(index, { content: e.target.value })
-                }
-                disabled={isRunning}
-                aria-label={`${msg.role} eval message ${index + 1}`}
-                placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
-                rows={2}
-                className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-xs"
-              />
-            </div>
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-destructive shrink-0"
-              onClick={() => handleRemoveMessage(index)}
-              disabled={isRunning || composer.messages.length <= 1}
-              tooltip="Delete message"
-              aria-label={`Delete eval message ${index + 1}`}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </IconButton>
-          </div>
-        ))}
-      </div>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="self-start"
-        onClick={handleAddMessage}
-        disabled={isRunning}
-      >
-        <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add message
-      </Button>
-
-      <Dialog
-        open={confirmDeleteIndex !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirmDeleteIndex(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete message?</DialogTitle>
-            <DialogDescription>
-              This message has content that will be lost. This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteIndex(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (confirmDeleteIndex !== null)
-                  removeMessage(confirmDeleteIndex);
-                setConfirmDeleteIndex(null);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    <MessageEditorView
+      messages={composer.messages}
+      disabled={isRunning}
+      onUpdateMessage={handleUpdateMessage}
+      onRemoveMessage={removeMessage}
+      onAddMessage={handleAddMessage}
+      onAddAttachment={addAttachment}
+      onRemoveAttachment={removeAttachment}
+    />
   );
 }
 

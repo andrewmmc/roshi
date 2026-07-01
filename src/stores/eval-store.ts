@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { ProviderConfig } from '@/types/provider';
+import type { MessageAttachment, NormalizedMessage } from '@/types/normalized';
 import type {
   EvalRunRecord,
   EvalRunResult,
@@ -35,11 +36,7 @@ export const MAX_COMPARE_SELECTION = 2;
 
 export interface EvalComposerState {
   systemPrompt: string;
-  messages: {
-    id: string;
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }[];
+  messages: NormalizedMessage[];
   temperature: number;
   maxTokens: number;
   topP: number;
@@ -72,12 +69,11 @@ interface EvalStoreState {
 
 interface EvalStoreActions {
   setSystemPrompt: (prompt: string) => void;
-  updateMessage: (
-    index: number,
-    patch: Partial<EvalComposerState['messages'][number]>,
-  ) => void;
+  updateMessage: (index: number, patch: Partial<NormalizedMessage>) => void;
   addMessage: (role: 'user' | 'assistant') => void;
   removeMessage: (index: number) => void;
+  addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
+  removeAttachment: (messageIndex: number, attachmentId: string) => void;
   setTemperature: (v: number) => void;
   setMaxTokens: (v: number) => void;
   setTopP: (v: number) => void;
@@ -136,7 +132,8 @@ export function selectHasUnsavedEvalChanges(
   if (
     composer.messages.length !== 1 ||
     composer.messages[0]?.role !== 'user' ||
-    composer.messages[0]?.content.trim() !== ''
+    composer.messages[0]?.content.trim() !== '' ||
+    (composer.messages[0]?.attachments?.length ?? 0) > 0
   ) {
     return true;
   }
@@ -239,8 +236,14 @@ function composerToSharedRequest(
 ): EvalSharedRequest {
   return {
     messages: composer.messages
-      .filter((m) => m.content.trim())
-      .map((m) => ({ role: m.role, content: m.content })),
+      .filter(
+        (m) => m.content.trim() || (m.attachments && m.attachments.length > 0),
+      )
+      .map((m) => ({
+        role: m.role,
+        content: m.content,
+        attachments: m.attachments,
+      })),
     systemPrompt: composer.systemPrompt,
     temperature: composer.temperature,
     maxTokens: composer.maxTokens,
@@ -282,6 +285,33 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
           s.composer.messages.length <= 1
             ? s.composer.messages
             : s.composer.messages.filter((_, i) => i !== index),
+      },
+    })),
+  addAttachment: (messageIndex, attachment) =>
+    set((s) => ({
+      composer: {
+        ...s.composer,
+        messages: s.composer.messages.map((m, i) =>
+          i === messageIndex
+            ? { ...m, attachments: [...(m.attachments ?? []), attachment] }
+            : m,
+        ),
+      },
+    })),
+  removeAttachment: (messageIndex, attachmentId) =>
+    set((s) => ({
+      composer: {
+        ...s.composer,
+        messages: s.composer.messages.map((m, i) =>
+          i === messageIndex
+            ? {
+                ...m,
+                attachments: (m.attachments ?? []).filter(
+                  (a) => a.id !== attachmentId,
+                ),
+              }
+            : m,
+        ),
       },
     })),
   setTemperature: (temperature) =>
@@ -504,6 +534,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
               id: nanoid(),
               role: m.role,
               content: m.content,
+              attachments: m.attachments,
             }))
           : [{ id: nanoid(), role: 'user', content: '' }],
       temperature: record.request.temperature,
@@ -553,6 +584,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
                 id: message.id ?? nanoid(),
                 role: message.role,
                 content: message.content,
+                attachments: message.attachments,
               }))
             : [{ id: nanoid(), role: 'user', content: '' }],
         temperature: mainComposer.temperature,

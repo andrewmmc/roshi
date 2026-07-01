@@ -139,6 +139,55 @@ describe('useEvalStore', () => {
     expect(composer.stream).toBe(true);
   });
 
+  it('adds and removes attachments on a message', () => {
+    const attachment = {
+      id: 'a1',
+      filename: 'photo.png',
+      mimeType: 'image/png',
+      data: 'data:image/png;base64,xyz',
+    };
+
+    useEvalStore.getState().addAttachment(0, attachment);
+    expect(useEvalStore.getState().composer.messages[0].attachments).toEqual([
+      attachment,
+    ]);
+
+    useEvalStore.getState().removeAttachment(0, 'a1');
+    expect(useEvalStore.getState().composer.messages[0].attachments).toEqual(
+      [],
+    );
+  });
+
+  it('includes attachment-only messages in the shared request built for a run', async () => {
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.getState().updateMessage(0, { content: '' });
+    useEvalStore.getState().addAttachment(0, {
+      id: 'a1',
+      filename: 'notes.txt',
+      mimeType: 'text/plain',
+      data: 'data:text/plain;base64,aGVsbG8=',
+    });
+
+    mockRunEval.mockReturnValue({
+      promise: Promise.resolve([]),
+      cancel: vi.fn(),
+    });
+
+    await useEvalStore.getState().start();
+
+    expect(mockRunEval).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          messages: [
+            expect.objectContaining({
+              attachments: [expect.objectContaining({ filename: 'notes.txt' })],
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
   it('toggles compare selection and enforces the max size', () => {
     const { addRunner, toggleCompare } = useEvalStore.getState();
     addRunner({ providerId: 'p1', modelId: 'm1' });
