@@ -140,7 +140,7 @@ function EvalSetupTabs({
   judgeEnabled: boolean;
 }) {
   return (
-    <Tabs defaultValue="messages" className="flex h-full flex-col gap-0">
+    <Tabs defaultValue="runners" className="flex h-full flex-col gap-0">
       <div className="border-border/70 flex h-11 min-w-0 shrink-0 items-center border-b px-3">
         <div className="min-w-0 flex-1 overflow-x-auto">
           <TabsList
