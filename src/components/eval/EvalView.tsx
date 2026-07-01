@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { PanelLeftOpen, Play, Square } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Eye, MoreHorizontal, PanelLeftOpen, Play, Square } from 'lucide-react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -11,12 +11,21 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Kbd } from '@/components/ui/kbd';
 import { PanelHeader } from '@/components/ui/panel-header';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { EnvironmentSelector } from '@/components/environments/EnvironmentManager';
+import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentPreviewSheet';
 import { useEvalStore } from '@/stores/eval-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { IS_MAC } from '@/lib/platform';
 import { ViewToggle } from '@/components/layout/ViewToggle';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
 import {
   EvalHeadersEditor,
   EvalMessagesEditor,
@@ -44,6 +53,9 @@ export function EvalView() {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
+  const [envPreviewOpen, setEnvPreviewOpen] = useState(false);
+  const { containerRef, narrow } = useContainerBreakpoint(640);
+
   useEffect(() => {
     if (!loaded) loadProviders();
   }, [loaded, loadProviders]);
@@ -54,7 +66,7 @@ export function EvalView() {
 
   return (
     <div className="bg-background flex h-full min-w-0 flex-col overflow-hidden">
-      <PanelHeader className="justify-between gap-3">
+      <PanelHeader ref={containerRef} className="justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
@@ -69,8 +81,16 @@ export function EvalView() {
             </IconButton>
           )}
           <ViewToggle />
-          <span className="text-muted-foreground hidden truncate text-xs md:inline">
-            Run one prompt against multiple model providers
+          <EnvironmentSelector />
+          {/* Always render so the sheet portal stays mounted; hide trigger when narrow */}
+          <span className={narrow ? 'hidden' : undefined}>
+            <EnvironmentPreviewButton
+              open={envPreviewOpen}
+              onOpenChange={setEnvPreviewOpen}
+              messages={composer.messages}
+              systemPrompt={composer.systemPrompt}
+              customHeaders={composer.customHeaders}
+            />
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -78,6 +98,22 @@ export function EvalView() {
             <span className="text-muted-foreground animate-pulse text-xs">
               Judging…
             </span>
+          )}
+          {narrow && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                aria-label="More actions"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
+                  <Eye className="h-3.5 w-3.5" />
+                  Env preview
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {isRunning ? (
             <Button variant="destructive" size="sm" onClick={cancelAll}>

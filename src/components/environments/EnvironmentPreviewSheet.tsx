@@ -12,6 +12,8 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
 import { buildEnvironmentPreview, maskSecretValue } from '@/utils/variables';
 import { cn } from '@/lib/utils';
+import type { NormalizedMessage } from '@/types/normalized';
+import type { HeaderEntry } from '@/utils/headers';
 
 function formatPreviewValue(value: string | null, masked: boolean): string {
   if (value === null) return '—';
@@ -22,9 +24,16 @@ function formatPreviewValue(value: string | null, masked: boolean): string {
 export function EnvironmentPreviewButton({
   open: openProp,
   onOpenChange: onOpenChangeProp,
+  messages: messagesProp,
+  systemPrompt: systemPromptProp,
+  customHeaders: customHeadersProp,
 }: {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Defaults to the Request composer; pass explicitly to preview another composer (e.g. Eval). */
+  messages?: NormalizedMessage[];
+  systemPrompt?: string;
+  customHeaders?: HeaderEntry[];
 } = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = openProp !== undefined;
@@ -37,9 +46,12 @@ export function EnvironmentPreviewButton({
     }
   };
 
-  const messages = useComposerStore((s) => s.messages);
-  const systemPrompt = useComposerStore((s) => s.systemPrompt);
-  const customHeaders = useComposerStore((s) => s.customHeaders);
+  const composerMessages = useComposerStore((s) => s.messages);
+  const composerSystemPrompt = useComposerStore((s) => s.systemPrompt);
+  const composerCustomHeaders = useComposerStore((s) => s.customHeaders);
+  const messages = messagesProp ?? composerMessages;
+  const systemPrompt = systemPromptProp ?? composerSystemPrompt;
+  const customHeaders = customHeadersProp ?? composerCustomHeaders;
   const environment = useEnvironmentStore((s) => s.getSelectedEnvironment());
 
   const preview = useMemo(
