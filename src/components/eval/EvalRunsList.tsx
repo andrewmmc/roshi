@@ -1,13 +1,24 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BarChart2, Trash2 } from 'lucide-react';
+import { BarChart2, Save, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { IconButton } from '@/components/ui/icon-button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { EmptyState } from '@/components/ui/empty-state';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
+import { toast } from '@/stores/toast-store';
 import { formatRelativeTime } from '@/utils/relative-time';
 
 interface EvalRunsListProps {
@@ -20,21 +31,48 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const load = useEvalRunsStore((s) => s.load);
   const remove = useEvalRunsStore((s) => s.remove);
   const loadRun = useEvalStore((s) => s.loadRun);
+  const buildRecord = useEvalStore((s) => s.buildRecord);
+  const runners = useEvalStore((s) => s.runners);
+  const isRunning = useEvalStore((s) => s.isRunning);
+  const saveRecord = useEvalRunsStore((s) => s.save);
   const setMainView = useUiStore((s) => s.setMainView);
+
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
 
   useEffect(() => {
     if (!loaded) load();
   }, [loaded, load]);
 
+  const handleSave = async () => {
+    const record = buildRecord(saveName.trim() || undefined);
+    await saveRecord(record);
+    setSaveOpen(false);
+    setSaveName('');
+    toast('Saved eval run');
+  };
+
+  const saveDisabled = isRunning || runners.length === 0;
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       {headerSlot && (
-        <div className="border-sidebar-border flex h-11 shrink-0 items-center border-b px-3">
+        <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
           {headerSlot}
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => setSaveOpen(true)}
+            tooltip="Save current eval run"
+            disabled={saveDisabled}
+          >
+            <Save className="h-3.5 w-3.5" />
+          </IconButton>
         </div>
       )}
       <div className="text-muted-foreground border-sidebar-border flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[11px] font-medium tracking-wide uppercase">
-        <span>Saved eval runs</span>
+        <span>Collection</span>
         <span>{records.length}</span>
       </div>
       <ScrollArea className="min-h-0 flex-1">
@@ -101,6 +139,30 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
           </div>
         )}
       </ScrollArea>
+
+      <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save eval run</DialogTitle>
+            <DialogDescription>
+              The current prompt, runners, and results will be persisted
+              locally.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            placeholder="Optional name (e.g. 'Pricing wording variants')"
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

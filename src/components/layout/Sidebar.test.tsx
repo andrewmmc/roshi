@@ -65,7 +65,7 @@ describe('Sidebar', () => {
 
     render(<Sidebar />);
 
-    expect(screen.getByText('Evals')).toBeInTheDocument();
+    expect(screen.getByText('Collection')).toBeInTheDocument();
     expect(screen.queryByText('History')).not.toBeInTheDocument();
     expect(screen.queryByText('Collections')).not.toBeInTheDocument();
     expect(screen.getByText('EvalRunsList Mock')).toBeInTheDocument();
