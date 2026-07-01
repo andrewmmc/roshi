@@ -80,7 +80,7 @@ export function EnvironmentPreviewButton({
               {preview.environmentName ?? 'no environment selected'}.
             </SheetDescription>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
             {!preview.hasPlaceholders ? (
               <p className="text-muted-foreground px-2 py-2 text-xs">
                 No {'{{variable}}'} placeholders in the current request.
