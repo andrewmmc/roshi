@@ -50,7 +50,7 @@ export function EvalView() {
   };
 
   return (
-    <div className="bg-background flex h-full flex-col">
+    <div className="bg-background flex h-full min-w-0 flex-col overflow-hidden">
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3">
         <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
@@ -117,7 +117,7 @@ export function EvalView() {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize="55%" minSize="25%">
           <ErrorBoundary panel>
-            <div className="flex h-full flex-col">
+            <div className="flex h-full min-w-0 flex-col overflow-hidden">
               <ResultsGrid />
               {compareSelection.length === 2 && <CompareDrawer />}
             </div>

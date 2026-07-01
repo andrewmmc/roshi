@@ -32,7 +32,7 @@ export function CompareDrawer() {
   );
 
   return (
-    <div className="border-border/70 bg-background border-t">
+    <div className="border-border/70 bg-background min-w-0 overflow-hidden border-t">
       <div className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-1.5">
         <div className="text-foreground min-w-0 truncate text-xs font-medium">
           Compare: <span className="font-mono">{pair.a.runner.label}</span>{' '}
