@@ -44,7 +44,7 @@ function SidebarSectionTabs() {
         </>
       ) : (
         <TabsTrigger value="evals" className="px-3 text-xs after:bottom-[-5px]">
-          Collection
+          Collections
         </TabsTrigger>
       )}
     </TabsList>

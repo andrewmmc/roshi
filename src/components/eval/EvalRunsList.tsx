@@ -56,9 +56,13 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {headerSlot && (
-        <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
-          {headerSlot}
+      <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
+        {headerSlot ?? (
+          <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+            Collections
+          </span>
+        )}
+        <div className="flex items-center">
           <IconButton
             variant="ghost"
             size="icon-sm"
@@ -70,10 +74,6 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
             <Save className="h-3.5 w-3.5" />
           </IconButton>
         </div>
-      )}
-      <div className="text-muted-foreground border-sidebar-border flex shrink-0 items-center justify-between border-b px-3 py-1.5 text-[11px] font-medium tracking-wide uppercase">
-        <span>Collection</span>
-        <span>{records.length}</span>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         {records.length === 0 ? (
