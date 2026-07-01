@@ -279,7 +279,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">

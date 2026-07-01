@@ -25,20 +25,16 @@ export function HistoryCompareDrawer({
   }, [entryA, entryB]);
 
   return (
-    <div className="border-border/70 bg-background border-t">
-      <div className="border-border/60 flex items-center justify-between border-b px-3 py-1.5">
-        <div className="text-foreground min-w-0 text-xs font-medium">
-          <span className="truncate">
-            {entryA.providerName} / {entryA.modelId}
-          </span>
+    <div className="border-border/70 bg-background min-w-0 overflow-hidden border-t">
+      <div className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-1.5">
+        <div className="text-foreground min-w-0 truncate text-xs font-medium">
+          {entryA.providerName} / {entryA.modelId}
           <span className="text-muted-foreground mx-2">vs</span>
-          <span className="truncate">
-            {entryB.providerName} / {entryB.modelId}
-          </span>
-          <span className="text-muted-foreground ml-3 text-[11px]">
-            Jaccard similarity: {(diff.similarity * 100).toFixed(1)}%
-          </span>
+          {entryB.providerName} / {entryB.modelId}
         </div>
+        <span className="text-muted-foreground shrink-0 text-[11px]">
+          similarity: {(diff.similarity * 100).toFixed(1)}%
+        </span>
         <Button
           variant="ghost"
           size="icon-xs"
