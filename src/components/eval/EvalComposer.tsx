@@ -135,7 +135,7 @@ export function EvalMessagesEditor() {
         disabled={isRunning}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add Message
+        Add message
       </Button>
     </div>
   );
@@ -209,7 +209,7 @@ export function EvalHeadersEditor() {
         disabled={isRunning}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add Header
+        Add header
       </Button>
     </div>
   );

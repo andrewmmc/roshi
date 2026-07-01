@@ -133,12 +133,7 @@ function RequestView() {
             </DropdownMenu>
           )}
           {isLoading ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={cancel}
-            >
+            <Button variant="destructive" size="sm" onClick={cancel}>
               <Square className="mr-1.5 h-3.5 w-3.5" />
               Stop
               <Kbd className="ml-1.5">Esc</Kbd>
@@ -147,7 +142,7 @@ function RequestView() {
             <div className="flex items-center">
               <Button
                 size="sm"
-                className="h-7 rounded-r-none text-xs shadow-sm"
+                className="rounded-r-none shadow-sm"
                 onClick={send}
                 disabled={!hasProvider}
               >

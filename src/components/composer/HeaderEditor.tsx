@@ -112,7 +112,7 @@ export function HeaderEditor() {
         onClick={addHeader}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add Header
+        Add header
       </Button>
     </div>
   );

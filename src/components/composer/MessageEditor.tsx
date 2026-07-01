@@ -326,7 +326,7 @@ export function MessageEditor() {
         onClick={handleAddMessage}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add Message
+        Add message
       </Button>
 
       <Dialog

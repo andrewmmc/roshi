@@ -9,10 +9,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { Kbd } from '@/components/ui/kbd';
 import { PanelHeader } from '@/components/ui/panel-header';
 import { useEvalStore } from '@/stores/eval-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { IS_MAC } from '@/lib/platform';
 import { ViewToggle } from '@/components/layout/ViewToggle';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
@@ -81,6 +83,7 @@ export function EvalView() {
             <Button variant="destructive" size="sm" onClick={cancelAll}>
               <Square className="mr-1.5 h-3.5 w-3.5" />
               Stop all
+              <Kbd className="ml-1.5">Esc</Kbd>
             </Button>
           ) : (
             <Button
@@ -91,6 +94,11 @@ export function EvalView() {
             >
               <Play className="mr-1.5 h-3.5 w-3.5" />
               Run eval
+              <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
+                {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
+                  <Kbd key={i}>{k}</Kbd>
+                ))}
+              </span>
             </Button>
           )}
         </div>

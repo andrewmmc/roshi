@@ -23,8 +23,8 @@ const MAC_SECTIONS: ShortcutSection[] = [
   {
     label: 'Requests',
     rows: [
-      { keys: ['⌘', '↵'], description: 'Send request' },
-      { keys: ['Esc'], description: 'Cancel running request' },
+      { keys: ['⌘', '↵'], description: 'Send request / run eval' },
+      { keys: ['Esc'], description: 'Cancel running request / eval' },
       { keys: ['⌘', '⇧', 'N'], description: 'New request' },
     ],
   },
@@ -57,8 +57,8 @@ const WIN_SECTIONS: ShortcutSection[] = [
   {
     label: 'Requests',
     rows: [
-      { keys: ['Ctrl', 'Enter'], description: 'Send request' },
-      { keys: ['Esc'], description: 'Cancel running request' },
+      { keys: ['Ctrl', 'Enter'], description: 'Send request / run eval' },
+      { keys: ['Esc'], description: 'Cancel running request / eval' },
       { keys: ['Ctrl', 'Shift', 'N'], description: 'New request' },
     ],
   },

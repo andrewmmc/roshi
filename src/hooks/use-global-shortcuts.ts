@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useEvalStore } from '@/stores/eval-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { toast } from '@/stores/toast-store';
 import { useSendRequest } from '@/hooks/use-send-request';
@@ -20,9 +21,18 @@ export function useGlobalShortcuts() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
+      const isEval = useUiStore.getState().mainView === 'eval';
 
-      // Cmd/Ctrl+Enter — send request
+      // Cmd/Ctrl+Enter — send request / run eval
       if (mod && e.key === 'Enter') {
+        if (isEval) {
+          const { isRunning, runners } = useEvalStore.getState();
+          if (!isRunning && runners.length > 0) {
+            e.preventDefault();
+            useEvalStore.getState().start();
+          }
+          return;
+        }
         const { isLoading } = useResponseStore.getState();
         const { providers } = useProviderStore.getState();
         if (!isLoading && providers.length > 0) {
@@ -32,8 +42,16 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      // Escape — cancel running request (only when no dialog is open)
+      // Escape — cancel running request/eval (only when no dialog is open)
       if (e.key === 'Escape' && !isDialogOpen()) {
+        if (isEval) {
+          const { isRunning } = useEvalStore.getState();
+          if (isRunning) {
+            e.preventDefault();
+            useEvalStore.getState().cancelAll();
+          }
+          return;
+        }
         const { isLoading } = useResponseStore.getState();
         if (isLoading) {
           e.preventDefault();
