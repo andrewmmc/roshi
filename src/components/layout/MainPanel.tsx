@@ -12,6 +12,7 @@ import { EnvironmentSelector } from '@/components/environments/EnvironmentManage
 import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentPreviewSheet';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { PanelHeader } from '@/components/ui/panel-header';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,10 +89,7 @@ function RequestView() {
   return (
     <>
       <TabBar />
-      <div
-        ref={containerRef}
-        className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3"
-      >
+      <PanelHeader ref={containerRef} className="justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
@@ -181,7 +179,7 @@ function RequestView() {
             </div>
           )}
         </div>
-      </div>
+      </PanelHeader>
       <ResizablePanelGroup
         orientation="vertical"
         className="flex-1"

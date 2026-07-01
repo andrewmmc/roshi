@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { PanelHeader } from '@/components/ui/panel-header';
 import { useEvalStore } from '@/stores/eval-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
@@ -51,7 +52,7 @@ export function EvalView() {
 
   return (
     <div className="bg-background flex h-full min-w-0 flex-col overflow-hidden">
-      <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3">
+      <PanelHeader className="justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
@@ -93,7 +94,7 @@ export function EvalView() {
             </Button>
           )}
         </div>
-      </div>
+      </PanelHeader>
 
       {error && (
         <div className="bg-destructive/10 text-destructive border-destructive/40 border-b px-4 py-1.5 text-xs">
@@ -141,7 +142,7 @@ function EvalSetupTabs({
 }) {
   return (
     <Tabs defaultValue="runners" className="flex h-full flex-col gap-0">
-      <div className="border-border/70 flex h-11 min-w-0 shrink-0 items-center border-b px-3">
+      <PanelHeader className="min-w-0">
         <div className="min-w-0 flex-1 overflow-x-auto">
           <TabsList
             variant="line"
@@ -181,7 +182,7 @@ function EvalSetupTabs({
             </TabsTrigger>
           </TabsList>
         </div>
-      </div>
+      </PanelHeader>
 
       <TabsContent value="runners" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
