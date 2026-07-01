@@ -52,7 +52,7 @@ export function EvalView() {
   return (
     <div className="bg-background flex h-full flex-col">
       <div className="border-border/70 flex h-11 shrink-0 items-center justify-between gap-3 border-b px-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {sidebarCollapsed && (
             <IconButton
               variant="ghost"
@@ -66,11 +66,11 @@ export function EvalView() {
             </IconButton>
           )}
           <ViewToggle />
-          <span className="text-muted-foreground hidden text-xs md:inline">
+          <span className="text-muted-foreground hidden truncate text-xs md:inline">
             Run one prompt against multiple model providers
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {isJudging && (
             <span className="text-muted-foreground animate-pulse text-xs">
               Judging…
