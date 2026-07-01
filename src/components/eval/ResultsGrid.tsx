@@ -1,6 +1,7 @@
-import { Download, FileDown } from 'lucide-react';
+import { Download, FileDown, FlaskConical } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { PanelHeader } from '@/components/ui/panel-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useEvalStore } from '@/stores/eval-store';
 import { exportEvalRunJson, exportEvalRunCsv } from '@/utils/export';
 import { emptyResult } from '@/types/eval';
@@ -25,9 +26,11 @@ export function ResultsGrid() {
 
   if (runners.length === 0) {
     return (
-      <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-        Add at least one runner to start evaluating.
-      </div>
+      <EmptyState
+        icon={FlaskConical}
+        title="Add at least one runner to start evaluating."
+        description="Pick a provider + model in the Runners tab, then run the eval to compare results here."
+      />
     );
   }
 

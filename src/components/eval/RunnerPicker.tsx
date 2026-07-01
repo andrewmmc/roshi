@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, Server, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Select,
   SelectContent,
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { useProviderStore } from '@/stores/provider-store';
 import { useEvalStore } from '@/stores/eval-store';
+import { useUiStore } from '@/stores/ui-store';
 import { sortProvidersByName } from '@/utils/sort-providers';
 
 export function RunnerPicker() {
@@ -18,6 +20,7 @@ export function RunnerPicker() {
   const addRunner = useEvalStore((s) => s.addRunner);
   const removeRunner = useEvalStore((s) => s.removeRunner);
   const isRunning = useEvalStore((s) => s.isRunning);
+  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
 
   const sortedProviders = useMemo(
     () => sortProvidersByName(providers),
@@ -54,6 +57,27 @@ export function RunnerPicker() {
   const handleModelChange = (id: string | null) => {
     setModelId(id ?? '');
   };
+
+  if (providers.length === 0) {
+    return (
+      <EmptyState
+        compact
+        icon={Server}
+        title="Add a provider API key to create runners."
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setSettingsOpen(true, 'providers')}
+          >
+            <Server className="h-3 w-3" />
+            Add API key
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
