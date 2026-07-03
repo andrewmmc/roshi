@@ -10,10 +10,12 @@ import { useTabStore } from '@/stores/tab-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useResponseStore } from '@/stores/response-store';
+import { useEvalStore } from '@/stores/eval-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { toast } from '@/stores/toast-store';
 import {
   activeWorkspaceHasUnsavedChanges,
+  getActiveResponseText,
   getDiscardDialogCopy,
   resetActiveWorkspace,
 } from '@/utils/new-request';
@@ -43,6 +45,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
   const { send, cancel } = useSendRequest();
   const providers = useProviderStore((s) => s.providers);
   const selectedProviderId = useProviderStore((s) => s.selectedProviderId);
+  const mainView = useUiStore((s) => s.mainView);
+  const isEval = mainView === 'eval';
 
   // Build the full command list. Dynamic provider/model entries are derived
   // from store state at memo time; actions read live state via getState().
@@ -50,10 +54,17 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     const cmds: Command[] = [
       {
         id: 'send',
-        label: 'Send Request',
+        label: isEval ? 'Run Eval' : 'Send Request',
         group: 'Actions',
         shortcut: { mac: '⌘↵', win: 'Ctrl+↵' },
         action: () => {
+          if (isEval) {
+            const { isRunning, runners } = useEvalStore.getState();
+            if (!isRunning && runners.length > 0) {
+              void useEvalStore.getState().start();
+            }
+            return;
+          }
           const { isLoading } = useResponseStore.getState();
           const { providers: ps } = useProviderStore.getState();
           if (!isLoading && ps.length > 0) send();
@@ -61,17 +72,22 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       },
       {
         id: 'cancel',
-        label: 'Stop Request',
+        label: isEval ? 'Stop Eval' : 'Stop Request',
         group: 'Actions',
         shortcut: { mac: 'Esc', win: 'Esc' },
         action: () => {
+          if (isEval) {
+            const { isRunning } = useEvalStore.getState();
+            if (isRunning) useEvalStore.getState().cancelAll();
+            return;
+          }
           const { isLoading } = useResponseStore.getState();
           if (isLoading) cancel();
         },
       },
       {
         id: 'new-request',
-        label: 'New Request',
+        label: isEval ? 'New Eval' : 'New Request',
         group: 'Actions',
         shortcut: { mac: '⌘⇧N', win: 'Ctrl+Shift+N' },
         action: () => {
@@ -82,18 +98,23 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
           }
         },
       },
-      {
-        id: 'new-tab',
-        label: 'New Tab',
-        group: 'Actions',
-        action: () => useTabStore.getState().createTab(),
-      },
-      {
-        id: 'duplicate-tab',
-        label: 'Duplicate Tab',
-        group: 'Actions',
-        action: () => useTabStore.getState().duplicateActiveTab(),
-      },
+      // Tabs only exist in request mode.
+      ...(isEval
+        ? []
+        : [
+            {
+              id: 'new-tab',
+              label: 'New Tab',
+              group: 'Actions',
+              action: () => useTabStore.getState().createTab(),
+            },
+            {
+              id: 'duplicate-tab',
+              label: 'Duplicate Tab',
+              group: 'Actions',
+              action: () => useTabStore.getState().duplicateActiveTab(),
+            },
+          ]),
       {
         id: 'toggle-theme',
         label: 'Toggle Theme',
@@ -103,12 +124,11 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       },
       {
         id: 'copy-response',
-        label: 'Copy Response',
+        label: isEval ? 'Copy Results' : 'Copy Response',
         group: 'Actions',
         shortcut: { mac: '⌥C', win: 'Alt+C' },
         action: () => {
-          const { response, streamingContent } = useResponseStore.getState();
-          const text = response?.content ?? streamingContent;
+          const text = getActiveResponseText();
           if (text) {
             navigator.clipboard
               .writeText(text)
@@ -117,13 +137,18 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
           }
         },
       },
-      {
-        id: 'focus-history',
-        label: 'Search History',
-        group: 'Navigation',
-        shortcut: { mac: '⌘P', win: 'Ctrl+P' },
-        action: () => useUiStore.getState().focusHistorySearch(),
-      },
+      // History search only exists in request mode.
+      ...(isEval
+        ? []
+        : [
+            {
+              id: 'focus-history',
+              label: 'Search History',
+              group: 'Navigation',
+              shortcut: { mac: '⌘P', win: 'Ctrl+P' },
+              action: () => useUiStore.getState().focusHistorySearch(),
+            },
+          ]),
       {
         id: 'settings-general',
         label: 'Settings: General',
@@ -189,7 +214,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     }
 
     return cmds;
-  }, [providers, selectedProviderId, send, cancel]);
+  }, [providers, selectedProviderId, send, cancel, isEval]);
 
   const filteredCommands = useMemo(() => {
     if (!query.trim()) return allCommands;

@@ -75,6 +75,7 @@ export function TabBar() {
                 <button
                   type="button"
                   aria-label={`Close tab: ${label}`}
+                  title={`Close tab: ${label}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     closeTab(tab.id);

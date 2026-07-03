@@ -12,11 +12,15 @@ import { useUiStore } from '@/stores/ui-store';
 interface ShortcutRow {
   keys: string[];
   description: string;
+  /** Only relevant in request mode (hidden while the eval workspace is active). */
+  requestOnly?: boolean;
 }
 
 interface ShortcutSection {
   label: string;
   rows: ShortcutRow[];
+  /** Only relevant in request mode (hidden while the eval workspace is active). */
+  requestOnly?: boolean;
 }
 
 const MAC_SECTIONS: ShortcutSection[] = [
@@ -32,12 +36,13 @@ const MAC_SECTIONS: ShortcutSection[] = [
     label: 'Composer',
     rows: [
       { keys: ['⌘', 'K'], description: 'Open command palette' },
-      { keys: ['⌘', 'P'], description: 'Search history' },
+      { keys: ['⌘', 'P'], description: 'Search history', requestOnly: true },
       { keys: ['⌘', '⇧', ','], description: 'Open settings' },
     ],
   },
   {
     label: 'Tabs',
+    requestOnly: true,
     rows: [
       { keys: ['⌘K', '→', 'New Tab'], description: 'Open new tab' },
       { keys: ['⌘K', '→', 'Duplicate Tab'], description: 'Duplicate tab' },
@@ -66,12 +71,13 @@ const WIN_SECTIONS: ShortcutSection[] = [
     label: 'Composer',
     rows: [
       { keys: ['Ctrl', 'K'], description: 'Open command palette' },
-      { keys: ['Ctrl', 'P'], description: 'Search history' },
+      { keys: ['Ctrl', 'P'], description: 'Search history', requestOnly: true },
       { keys: ['Ctrl', 'Shift', ','], description: 'Open settings' },
     ],
   },
   {
     label: 'Tabs',
+    requestOnly: true,
     rows: [
       { keys: ['Ctrl+K', '→', 'New Tab'], description: 'Open new tab' },
       { keys: ['Ctrl+K', '→', 'Duplicate Tab'], description: 'Duplicate tab' },
@@ -111,6 +117,15 @@ function KbdSequence({ keys }: { keys: string[] }) {
 export function ShortcutsDialog() {
   const open = useUiStore((s) => s.shortcutsOpen);
   const setOpen = useUiStore((s) => s.setShortcutsOpen);
+  const isEval = useUiStore((s) => s.mainView === 'eval');
+
+  // In eval mode, drop request-only sections/rows (tabs, history search).
+  const sections = SECTIONS.filter((section) => !isEval || !section.requestOnly)
+    .map((section) => ({
+      ...section,
+      rows: section.rows.filter((row) => !isEval || !row.requestOnly),
+    }))
+    .filter((section) => section.rows.length > 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -120,7 +135,7 @@ export function ShortcutsDialog() {
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <div key={section.label} className="flex flex-col gap-1.5">
               <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
                 {section.label}

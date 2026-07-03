@@ -24,6 +24,35 @@ export function activeWorkspaceHasUnsavedChanges(): boolean {
   return selectHasUnsavedChanges(useComposerStore.getState());
 }
 
+/**
+ * Returns the response text for the active workspace, so shortcuts like
+ * "Copy response" work in both request and eval mode.
+ *
+ * - Request mode: the current response (or in-flight streaming buffer).
+ * - Eval mode: the runner result(s). A single populated runner returns its
+ *   raw content; multiple runners are concatenated with `## {label}` headings.
+ */
+export function getActiveResponseText(): string {
+  if (useUiStore.getState().mainView === 'eval') {
+    const { runners, results } = useEvalStore.getState();
+    const parts = runners
+      .map((runner) => ({
+        label: runner.label,
+        content: results[runner.id]?.content?.trim() ?? '',
+      }))
+      .filter((part) => part.content !== '');
+
+    if (parts.length === 0) return '';
+    if (parts.length === 1) return parts[0].content;
+    return parts
+      .map((part) => `## ${part.label}\n\n${part.content}`)
+      .join('\n\n');
+  }
+
+  const { response, streamingContent } = useResponseStore.getState();
+  return response?.content || streamingContent;
+}
+
 export function getDiscardDialogCopy(mainView: MainView): {
   title: string;
   description: string;

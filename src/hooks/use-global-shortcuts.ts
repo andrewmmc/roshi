@@ -8,6 +8,7 @@ import { toast } from '@/stores/toast-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import {
   activeWorkspaceHasUnsavedChanges,
+  getActiveResponseText,
   resetActiveWorkspace,
 } from '@/utils/new-request';
 
@@ -86,10 +87,15 @@ export function useGlobalShortcuts() {
         }
       }
 
-      // Cmd/Ctrl+P — focus history search
+      // Cmd/Ctrl+P — focus history search (request mode only; the eval
+      // sidebar has no history search). We still preventDefault in both modes
+      // so the app consistently owns this shortcut instead of the browser's
+      // print dialog.
       if (mod && !e.shiftKey && !e.altKey && e.key === 'p') {
         e.preventDefault();
-        useUiStore.getState().focusHistorySearch();
+        if (!isEval) {
+          useUiStore.getState().focusHistorySearch();
+        }
         return;
       }
 
@@ -109,11 +115,11 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      // Alt/Opt+C — copy response to clipboard
+      // Alt/Opt+C — copy response to clipboard (request response or eval
+      // runner result(s), depending on the active workspace)
       if (e.altKey && !mod && e.code === 'KeyC') {
         e.preventDefault();
-        const { response, streamingContent } = useResponseStore.getState();
-        const text = response?.content || streamingContent;
+        const text = getActiveResponseText();
         if (text) {
           navigator.clipboard
             .writeText(text)
