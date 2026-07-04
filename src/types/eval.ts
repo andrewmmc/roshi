@@ -82,10 +82,19 @@ export interface JudgeConfig {
   rubric: string;
 }
 
+export interface EvalCollection {
+  id: string;
+  name: string;
+  sortOrder: number;
+  createdAt: Date;
+}
+
 export interface EvalRunRecord {
   id: string;
   createdAt: Date;
   name?: string;
+  /** Folder this run belongs to. Undefined = ungrouped. */
+  collectionId?: string;
   request: EvalSharedRequest;
   runners: EvalRunner[];
   results: EvalRunResult[];

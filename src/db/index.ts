@@ -6,7 +6,7 @@ import type {
   Environment,
   SavedRequest,
 } from '@/types/history';
-import type { EvalRunRecord } from '@/types/eval';
+import type { EvalCollection, EvalRunRecord } from '@/types/eval';
 
 export interface AppSetting {
   key: string;
@@ -21,6 +21,7 @@ const db = new Dexie('llm-tester') as Dexie & {
   environments: EntityTable<Environment, 'id'>;
   settings: EntityTable<AppSetting, 'key'>;
   evalRuns: EntityTable<EvalRunRecord, 'id'>;
+  evalCollections: EntityTable<EvalCollection, 'id'>;
 };
 
 db.version(1).stores({
@@ -61,6 +62,17 @@ db.version(5).stores({
   environments: 'id, name, updatedAt',
   settings: 'key',
   evalRuns: 'id, createdAt',
+});
+
+db.version(6).stores({
+  providers: 'id, name, type, isBuiltIn',
+  history: 'id, providerId, collectionId, savedRequestId, createdAt',
+  collections: 'id, parentId, sortOrder',
+  savedRequests: 'id, collectionId, providerId, modelId, updatedAt',
+  environments: 'id, name, updatedAt',
+  settings: 'key',
+  evalRuns: 'id, collectionId, createdAt',
+  evalCollections: 'id, sortOrder',
 });
 
 export { db };
