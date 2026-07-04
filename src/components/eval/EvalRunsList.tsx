@@ -72,6 +72,7 @@ function EvalRunItem({
   const moveTargets = collections.filter(
     (collection) => collection.id !== currentCollectionId,
   );
+  const canMove = moveTargets.length > 0 || currentCollectionId !== null;
 
   return (
     <SidebarRow
@@ -91,7 +92,7 @@ function EvalRunItem({
               Rename
             </DropdownMenuItem>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
+              <DropdownMenuSubTrigger disabled={!canMove}>
                 <FolderOpen className="h-3.5 w-3.5" />
                 Move to
               </DropdownMenuSubTrigger>
