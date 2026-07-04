@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Folder,
   FolderOpen,
+  FolderPlus,
   MoreHorizontal,
   Pencil,
   Save,
@@ -225,6 +226,7 @@ function CollectionSection({
 }
 
 type NameDialogState =
+  | { mode: 'create-collection' }
   | { mode: 'rename-collection'; id: string; initialValue: string }
   | { mode: 'rename-request'; id: string; initialValue: string };
 
@@ -253,6 +255,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   );
   const activeSavedRequestId = useComposerStore((s) => s.activeSavedRequestId);
   const hasUnsavedChanges = useComposerStore(selectHasUnsavedChanges);
+  const isLoading = useResponseStore((s) => s.isLoading);
+  const sentRequest = useResponseStore((s) => s.sentRequest);
   const selectProvider = useProviderStore((s) => s.selectProvider);
   const selectModel = useProviderStore((s) => s.selectModel);
   const resetResponse = useResponseStore((s) => s.resetResponse);
@@ -371,7 +375,9 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const handleNameSubmit = useCallback(
     async (name: string) => {
       if (!nameDialog) return;
-      if (nameDialog.mode === 'rename-collection') {
+      if (nameDialog.mode === 'create-collection') {
+        await handleCreateCollection(name);
+      } else if (nameDialog.mode === 'rename-collection') {
         await renameCollection(nameDialog.id, name);
         toast('Collection renamed');
       } else {
@@ -379,7 +385,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         toast('Request renamed');
       }
     },
-    [nameDialog, renameCollection, renameSavedRequest],
+    [handleCreateCollection, nameDialog, renameCollection, renameSavedRequest],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -394,22 +400,33 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   }, [confirm, deleteCollection, deleteSavedRequest]);
 
   const nameDialogConfig = nameDialog
-    ? nameDialog.mode === 'rename-collection'
+    ? nameDialog.mode === 'create-collection'
       ? {
-          title: 'Rename collection',
-          label: 'Collection name',
-          placeholder: 'Collection name',
-          initialValue: nameDialog.initialValue,
-          submitLabel: 'Rename',
+          title: 'New folder',
+          label: 'Folder name',
+          placeholder: 'Folder name',
+          initialValue: '',
+          submitLabel: 'Create',
         }
-      : {
-          title: 'Rename request',
-          label: 'Request name',
-          placeholder: 'Request name',
-          initialValue: nameDialog.initialValue,
-          submitLabel: 'Rename',
-        }
+      : nameDialog.mode === 'rename-collection'
+        ? {
+            title: 'Rename collection',
+            label: 'Collection name',
+            placeholder: 'Collection name',
+            initialValue: nameDialog.initialValue,
+            submitLabel: 'Rename',
+          }
+        : {
+            title: 'Rename request',
+            label: 'Request name',
+            placeholder: 'Request name',
+            initialValue: nameDialog.initialValue,
+            submitLabel: 'Rename',
+          }
     : null;
+
+  const saveDisabled =
+    isLoading || (sentRequest === null && activeSavedRequestId === null);
 
   return (
     <div className="flex h-full flex-col">
@@ -424,8 +441,18 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
+            onClick={() => setNameDialog({ mode: 'create-collection' })}
+            tooltip="New folder"
+          >
+            <FolderPlus className="h-3.5 w-3.5" />
+          </IconButton>
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setSaveOpen(true)}
             tooltip="Save current request"
+            disabled={saveDisabled}
           >
             <Save className="h-3.5 w-3.5" />
           </IconButton>

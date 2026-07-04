@@ -8,6 +8,7 @@ import {
 import type { ReactNode } from 'react';
 import { CollectionsList } from './CollectionsList';
 import { useComposerStore } from '@/stores/composer-store';
+import { useResponseStore } from '@/stores/response-store';
 import type { Collection, SavedRequest } from '@/types/history';
 
 const { mockCollectionState } = vi.hoisted(() => ({
@@ -114,6 +115,16 @@ describe('CollectionsList', () => {
     mockCollectionState.moveSavedRequest.mockResolvedValue(undefined);
     mockCollectionState.deleteSavedRequest.mockResolvedValue(undefined);
     useComposerStore.getState().resetComposer();
+    useResponseStore.getState().resetResponse();
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
+        model: 'gpt-4',
+        stream: true,
+        temperature: 1,
+        maxTokens: 4096,
+      },
+    });
   });
 
   function openSaveDialog() {
@@ -121,6 +132,36 @@ describe('CollectionsList', () => {
       screen.getByRole('button', { name: 'Save current request' }),
     );
   }
+
+  it('disables save when no prompt has been sent', () => {
+    useResponseStore.setState({ sentRequest: null });
+    render(<CollectionsList />);
+
+    expect(
+      screen.getByRole('button', { name: 'Save current request' }),
+    ).toBeDisabled();
+  });
+
+  it('disables save while a request is in flight', () => {
+    useResponseStore.setState({ isLoading: true });
+    render(<CollectionsList />);
+
+    expect(
+      screen.getByRole('button', { name: 'Save current request' }),
+    ).toBeDisabled();
+  });
+
+  it('enables save when editing an active saved request without sending', () => {
+    useResponseStore.setState({ sentRequest: null });
+    useComposerStore
+      .getState()
+      .setSavedRequestContext('collection-1', 'saved-1');
+    render(<CollectionsList />);
+
+    expect(
+      screen.getByRole('button', { name: 'Save current request' }),
+    ).toBeEnabled();
+  });
 
   it('saves into the displayed default collection when the dropdown is unchanged', async () => {
     render(<CollectionsList />);
@@ -186,12 +227,20 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('does not render a standalone new-collection button in the header', () => {
+  it('creates a collection from the new folder button in the header', async () => {
     render(<CollectionsList />);
 
-    expect(
-      screen.queryByRole('button', { name: 'New collection' }),
-    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'New folder' }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Folder name'), {
+      target: { value: 'Prompts' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(mockCollectionState.addCollection).toHaveBeenCalledWith('Prompts');
+    });
   });
 
   it('confirms before deleting a collection', async () => {
