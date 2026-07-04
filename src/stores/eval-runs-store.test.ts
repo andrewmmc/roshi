@@ -37,8 +37,9 @@ function makeRecord(overrides: Partial<EvalRunRecord> = {}): EvalRunRecord {
 
 describe('useEvalRunsStore', () => {
   beforeEach(async () => {
-    useEvalRunsStore.setState({ records: [], loaded: false });
+    useEvalRunsStore.setState({ records: [], collections: [], loaded: false });
     await db.evalRuns.clear();
+    await db.evalCollections.clear();
   });
 
   it('saves a record and surfaces it through the store', async () => {
@@ -91,5 +92,83 @@ describe('useEvalRunsStore', () => {
     await useEvalRunsStore.getState().save(makeRecord({ id: 'b' }));
     await useEvalRunsStore.getState().clearAll();
     expect(useEvalRunsStore.getState().records).toEqual([]);
+  });
+
+  it('creates, renames, and persists a collection', async () => {
+    const collection = await useEvalRunsStore
+      .getState()
+      .addCollection('  Pricing  ');
+    expect(collection.name).toBe('Pricing');
+    expect(useEvalRunsStore.getState().collections).toHaveLength(1);
+    expect(await db.evalCollections.get(collection.id)).toBeDefined();
+
+    await useEvalRunsStore
+      .getState()
+      .renameCollection(collection.id, 'Pricing v2');
+    expect(useEvalRunsStore.getState().collections[0].name).toBe('Pricing v2');
+  });
+
+  it('rejects blank collection names', async () => {
+    await expect(
+      useEvalRunsStore.getState().addCollection('   '),
+    ).rejects.toThrow();
+  });
+
+  it('moves a run into and out of a collection', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    await useEvalRunsStore.getState().save(makeRecord());
+
+    await useEvalRunsStore.getState().moveRun('rec-1', collection.id);
+    expect(useEvalRunsStore.getState().records[0].collectionId).toBe(
+      collection.id,
+    );
+    expect((await db.evalRuns.get('rec-1'))?.collectionId).toBe(collection.id);
+
+    await useEvalRunsStore.getState().moveRun('rec-1', null);
+    expect(useEvalRunsStore.getState().records[0].collectionId).toBeUndefined();
+    expect((await db.evalRuns.get('rec-1'))?.collectionId).toBeUndefined();
+  });
+
+  it('throws when moving to a non-existent collection', async () => {
+    await useEvalRunsStore.getState().save(makeRecord());
+    await expect(
+      useEvalRunsStore.getState().moveRun('rec-1', 'missing'),
+    ).rejects.toThrow();
+  });
+
+  it('cascades delete of a collection to its runs', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    await useEvalRunsStore
+      .getState()
+      .save(makeRecord({ id: 'in', collectionId: collection.id }));
+    await useEvalRunsStore.getState().save(makeRecord({ id: 'out' }));
+
+    await useEvalRunsStore.getState().deleteCollection(collection.id);
+
+    expect(useEvalRunsStore.getState().collections).toEqual([]);
+    expect(useEvalRunsStore.getState().records.map((r) => r.id)).toEqual([
+      'out',
+    ]);
+    expect(await db.evalRuns.get('in')).toBeUndefined();
+    expect(await db.evalRuns.get('out')).toBeDefined();
+  });
+
+  it('loads records and collections together', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    await useEvalRunsStore
+      .getState()
+      .save(makeRecord({ id: 'in', collectionId: collection.id }));
+
+    useEvalRunsStore.setState({
+      records: [],
+      collections: [],
+      loaded: false,
+    });
+    await useEvalRunsStore.getState().load();
+
+    expect(useEvalRunsStore.getState().collections).toHaveLength(1);
+    expect(useEvalRunsStore.getState().records[0].collectionId).toBe(
+      collection.id,
+    );
   });
 });
