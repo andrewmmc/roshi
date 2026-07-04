@@ -57,8 +57,16 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenuSub: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
   ),
-  DropdownMenuSubTrigger: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
+  DropdownMenuSubTrigger: ({
+    children,
+    disabled,
+  }: {
+    children: ReactNode;
+    disabled?: boolean;
+  }) => (
+    <button type="button" disabled={disabled}>
+      {children}
+    </button>
   ),
   DropdownMenuSubContent: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
@@ -293,12 +301,106 @@ describe('CollectionsList', () => {
     ];
     render(<CollectionsList />);
 
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Saved request actions' }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Other' }));
 
     await waitFor(() => {
       expect(mockCollectionState.moveSavedRequest).toHaveBeenCalledWith(
         'saved-1',
         'collection-2',
+      );
+    });
+  });
+
+  it('disables Move to when a request is ungrouped and there are no other folders', () => {
+    mockCollectionState.collections = [];
+    mockCollectionState.savedRequests = [
+      makeSavedRequest({
+        id: 'saved-1',
+        name: 'Loose request',
+        collectionId: undefined,
+      }),
+    ];
+    render(<CollectionsList />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Saved request actions' }),
+    );
+
+    expect(screen.getByRole('button', { name: /move to/i })).toBeDisabled();
+  });
+
+  it('enables Move to when the request is already in a folder', () => {
+    mockCollectionState.collections = [makeCollection()];
+    mockCollectionState.savedRequests = [
+      makeSavedRequest({
+        id: 'saved-1',
+        name: 'Folder request',
+        collectionId: 'collection-1',
+      }),
+    ];
+    render(<CollectionsList />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Saved request actions' }),
+    );
+
+    expect(screen.getByRole('button', { name: /move to/i })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Ungrouped' }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders folders with their requests and an ungrouped section', () => {
+    mockCollectionState.collections = [makeCollection()];
+    mockCollectionState.savedRequests = [
+      makeSavedRequest({
+        id: 'saved-folder',
+        name: 'Folder request',
+        collectionId: 'collection-1',
+      }),
+      makeSavedRequest({
+        id: 'saved-loose',
+        name: 'Loose request',
+        collectionId: undefined,
+      }),
+    ];
+    render(<CollectionsList />);
+
+    const [folderSection, ungroupedSection] =
+      document.querySelectorAll('section');
+    expect(
+      within(folderSection as HTMLElement).getByText('My Collection'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Folder request')).toBeInTheDocument();
+    expect(
+      within(ungroupedSection as HTMLElement).getByText('Ungrouped'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Loose request')).toBeInTheDocument();
+  });
+
+  it('moves a saved request to ungrouped from the actions menu', async () => {
+    mockCollectionState.collections = [makeCollection()];
+    mockCollectionState.savedRequests = [
+      makeSavedRequest({
+        id: 'saved-1',
+        name: 'Folder request',
+        collectionId: 'collection-1',
+      }),
+    ];
+    render(<CollectionsList />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Saved request actions' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Ungrouped' }));
+
+    await waitFor(() => {
+      expect(mockCollectionState.moveSavedRequest).toHaveBeenCalledWith(
+        'saved-1',
+        null,
       );
     });
   });

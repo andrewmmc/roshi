@@ -58,7 +58,7 @@ export interface SavedRequestSnapshot {
 
 export interface SavedRequest {
   id: string;
-  collectionId: string;
+  collectionId?: string;
   name: string;
   providerId: string;
   providerName: string;

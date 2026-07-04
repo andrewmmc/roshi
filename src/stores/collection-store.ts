@@ -33,7 +33,7 @@ interface CollectionStore {
   ) => Promise<SavedRequest>;
   updateSavedRequest: (id: string, name: string) => Promise<void>;
   renameSavedRequest: (id: string, name: string) => Promise<void>;
-  moveSavedRequest: (id: string, collectionId: string) => Promise<void>;
+  moveSavedRequest: (id: string, collectionId: string | null) => Promise<void>;
   deleteSavedRequest: (id: string) => Promise<void>;
 }
 
@@ -93,7 +93,8 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
         const visibleSavedRequests = savedRequests.filter(
           (request) =>
             !request.isTemplate &&
-            visibleCollectionIds.has(request.collectionId),
+            (request.collectionId == null ||
+              visibleCollectionIds.has(request.collectionId)),
         );
 
         set({
@@ -261,7 +262,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       await db.savedRequests.update(id, updates);
       useComposerStore
         .getState()
-        .setSavedRequestContext(existing.collectionId, existing.id);
+        .setSavedRequestContext(existing.collectionId ?? null, existing.id);
       set((state) => ({
         savedRequests: sortedSavedRequests(
           replaceById(state.savedRequests, id, (request) => ({
@@ -318,15 +319,16 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
     if (!existing || existing.isTemplate) {
       throw new AppError('SAVED_REQUEST_NOT_FOUND');
     }
-    if (existing.collectionId === collectionId) return;
+    if ((existing.collectionId ?? null) === collectionId) return;
     if (
+      collectionId !== null &&
       !get().collections.some((collection) => collection.id === collectionId)
     ) {
       throw new AppError('COLLECTION_NOT_FOUND');
     }
 
     const updates: Partial<SavedRequest> = {
-      collectionId,
+      collectionId: collectionId ?? undefined,
       updatedAt: new Date(),
     };
 

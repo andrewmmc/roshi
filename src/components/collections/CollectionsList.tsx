@@ -41,6 +41,8 @@ import type { SavedRequest, Collection } from '@/types/history';
 const TRIGGER_CLASS =
   'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
 
+const UNGROUPED_ID = '__ungrouped__';
+
 function SavedRequestItem({
   request,
   active,
@@ -55,7 +57,7 @@ function SavedRequestItem({
   collections: Collection[];
   onSelect: (request: SavedRequest) => void;
   onRename: (request: SavedRequest) => void;
-  onMove: (request: SavedRequest, collectionId: string) => void;
+  onMove: (request: SavedRequest, collectionId: string | null) => void;
   onDelete: (request: SavedRequest) => void;
 }) {
   const preview =
@@ -63,9 +65,11 @@ function SavedRequestItem({
       ?.content ||
     request.request.systemPrompt ||
     'No prompt text';
+  const currentCollectionId = request.collectionId ?? null;
   const moveTargets = collections.filter(
-    (collection) => collection.id !== request.collectionId,
+    (collection) => collection.id !== currentCollectionId,
   );
+  const canMove = moveTargets.length > 0 || currentCollectionId !== null;
 
   return (
     <SidebarRow
@@ -85,25 +89,29 @@ function SavedRequestItem({
               <Pencil className="h-3.5 w-3.5" />
               Rename
             </DropdownMenuItem>
-            {moveTargets.length > 0 && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <FolderOpen className="h-3.5 w-3.5" />
-                  Move to
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {moveTargets.map((collection) => (
-                    <DropdownMenuItem
-                      key={collection.id}
-                      onClick={() => onMove(request, collection.id)}
-                    >
-                      <Folder className="h-3.5 w-3.5" />
-                      <span className="truncate">{collection.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            )}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger disabled={!canMove}>
+                <FolderOpen className="h-3.5 w-3.5" />
+                Move to
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {currentCollectionId !== null && (
+                  <DropdownMenuItem onClick={() => onMove(request, null)}>
+                    <Folder className="h-3.5 w-3.5" />
+                    <span className="truncate">Ungrouped</span>
+                  </DropdownMenuItem>
+                )}
+                {moveTargets.map((collection) => (
+                  <DropdownMenuItem
+                    key={collection.id}
+                    onClick={() => onMove(request, collection.id)}
+                  >
+                    <Folder className="h-3.5 w-3.5" />
+                    <span className="truncate">{collection.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
@@ -155,7 +163,7 @@ function CollectionSection({
   onDeleteCollection: (collection: Collection) => void;
   onSelectRequest: (request: SavedRequest) => void;
   onRenameRequest: (request: SavedRequest) => void;
-  onMoveRequest: (request: SavedRequest, collectionId: string) => void;
+  onMoveRequest: (request: SavedRequest, collectionId: string | null) => void;
   onDeleteRequest: (request: SavedRequest) => void;
 }) {
   return (
@@ -282,20 +290,24 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const requestsByCollection = useMemo(() => {
     const grouped = new Map<string, SavedRequest[]>();
     for (const request of savedRequests.filter((item) => !item.isTemplate)) {
-      grouped.set(request.collectionId, [
-        ...(grouped.get(request.collectionId) ?? []),
-        request,
-      ]);
+      const key = request.collectionId ?? UNGROUPED_ID;
+      grouped.set(key, [...(grouped.get(key) ?? []), request]);
     }
     return grouped;
   }, [savedRequests]);
+
+  const ungroupedRequests = requestsByCollection.get(UNGROUPED_ID) ?? [];
+  const visibleRequestCount = savedRequests.filter(
+    (request) => !request.isTemplate,
+  ).length;
+  const isEmpty = visibleRequestCount === 0 && userCollections.length === 0;
 
   const applySavedRequest = useCallback(
     (request: SavedRequest) => {
       selectProvider(request.providerId);
       selectModel(request.modelId);
       loadComposerFromHistory(request.request);
-      setSavedRequestContext(request.collectionId, request.id);
+      setSavedRequestContext(request.collectionId ?? null, request.id);
       resetResponse();
     },
     [
@@ -362,12 +374,12 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   );
 
   const handleMoveRequest = useCallback(
-    async (request: SavedRequest, collectionId: string) => {
+    async (request: SavedRequest, collectionId: string | null) => {
       await moveSavedRequest(request.id, collectionId);
-      const target = collections.find(
-        (collection) => collection.id === collectionId,
-      );
-      toast(target ? `Moved to ${target.name}` : 'Request moved');
+      const target = collectionId
+        ? collections.find((collection) => collection.id === collectionId)
+        : null;
+      toast(target ? `Moved to ${target.name}` : 'Moved to Ungrouped');
     },
     [collections, moveSavedRequest],
   );
@@ -460,57 +472,108 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-2 p-2">
-          {userCollections.length === 0 && (
-            <EmptyState
-              compact
-              icon={FolderOpen}
-              title="No collections yet"
-              description="Use Save current request to store a prompt and create your first collection."
-            />
-          )}
-          {userCollections.map((collection) => (
-            <CollectionSection
-              key={collection.id}
-              collection={collection}
-              requests={requestsByCollection.get(collection.id) ?? []}
-              collapsed={collapsed.has(collection.id)}
-              activeSavedRequestId={activeSavedRequestId}
-              collections={userCollections}
-              onToggle={toggleCollapse}
-              onRenameCollection={(target) =>
-                setNameDialog({
-                  mode: 'rename-collection',
-                  id: target.id,
-                  initialValue: target.name,
-                })
-              }
-              onDeleteCollection={(target) =>
-                setConfirm({
-                  kind: 'collection',
-                  id: target.id,
-                  name: target.name,
-                })
-              }
-              onSelectRequest={handleSelect}
-              onRenameRequest={(request) =>
-                setNameDialog({
-                  mode: 'rename-request',
-                  id: request.id,
-                  initialValue: request.name,
-                })
-              }
-              onMoveRequest={handleMoveRequest}
-              onDeleteRequest={(request) =>
-                setConfirm({
-                  kind: 'request',
-                  id: request.id,
-                  name: request.name,
-                })
-              }
-            />
-          ))}
-        </div>
+        {isEmpty ? (
+          <EmptyState
+            compact
+            icon={FolderOpen}
+            title="No collections yet"
+            description="Use Save current request to store a prompt and create your first collection."
+          />
+        ) : (
+          <div className="flex flex-col gap-2 p-2">
+            {userCollections.map((collection) => (
+              <CollectionSection
+                key={collection.id}
+                collection={collection}
+                requests={requestsByCollection.get(collection.id) ?? []}
+                collapsed={collapsed.has(collection.id)}
+                activeSavedRequestId={activeSavedRequestId}
+                collections={userCollections}
+                onToggle={toggleCollapse}
+                onRenameCollection={(target) =>
+                  setNameDialog({
+                    mode: 'rename-collection',
+                    id: target.id,
+                    initialValue: target.name,
+                  })
+                }
+                onDeleteCollection={(target) =>
+                  setConfirm({
+                    kind: 'collection',
+                    id: target.id,
+                    name: target.name,
+                  })
+                }
+                onSelectRequest={handleSelect}
+                onRenameRequest={(request) =>
+                  setNameDialog({
+                    mode: 'rename-request',
+                    id: request.id,
+                    initialValue: request.name,
+                  })
+                }
+                onMoveRequest={handleMoveRequest}
+                onDeleteRequest={(request) =>
+                  setConfirm({
+                    kind: 'request',
+                    id: request.id,
+                    name: request.name,
+                  })
+                }
+              />
+            ))}
+
+            {ungroupedRequests.length > 0 && (
+              <section className="space-y-1">
+                <div className="group hover:bg-sidebar-accent/50 flex items-center gap-1 rounded-md px-1 py-1">
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse(UNGROUPED_ID)}
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                    aria-expanded={!collapsed.has(UNGROUPED_ID)}
+                  >
+                    <ChevronRight
+                      className={`text-muted-foreground h-3 w-3 shrink-0 transition-transform ${
+                        collapsed.has(UNGROUPED_ID) ? '' : 'rotate-90'
+                      }`}
+                    />
+                    <span className="text-muted-foreground flex-1 truncate text-[11px] font-medium tracking-wide uppercase">
+                      Ungrouped
+                    </span>
+                    <span className="text-muted-foreground/60 text-[11px]">
+                      {ungroupedRequests.length}
+                    </span>
+                  </button>
+                </div>
+                {!collapsed.has(UNGROUPED_ID) &&
+                  ungroupedRequests.map((request) => (
+                    <SavedRequestItem
+                      key={request.id}
+                      request={request}
+                      active={request.id === activeSavedRequestId}
+                      collections={userCollections}
+                      onSelect={handleSelect}
+                      onRename={(target) =>
+                        setNameDialog({
+                          mode: 'rename-request',
+                          id: target.id,
+                          initialValue: target.name,
+                        })
+                      }
+                      onMove={handleMoveRequest}
+                      onDelete={(target) =>
+                        setConfirm({
+                          kind: 'request',
+                          id: target.id,
+                          name: target.name,
+                        })
+                      }
+                    />
+                  ))}
+              </section>
+            )}
+          </div>
+        )}
       </ScrollArea>
 
       <SaveRequestDialog

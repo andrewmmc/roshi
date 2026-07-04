@@ -159,6 +159,23 @@ describe('collection-store', () => {
       expect(mockDb.savedRequests.bulkAdd).not.toHaveBeenCalled();
     });
 
+    it('loads ungrouped saved requests without a collection', async () => {
+      mockDb.collections.toArray.mockResolvedValue([
+        makeCollection({ id: 'a' }),
+      ]);
+      mockDb.savedRequests.toArray.mockResolvedValue([
+        makeSavedRequest({ id: 'grouped', collectionId: 'a' }),
+        makeSavedRequest({ id: 'loose', collectionId: undefined }),
+      ]);
+
+      await getState().load();
+
+      expect(getState().savedRequests.map((request) => request.id)).toEqual([
+        'grouped',
+        'loose',
+      ]);
+    });
+
     it('is idempotent when already loaded', async () => {
       useCollectionStore.setState({ loaded: true });
       await getState().load();
@@ -362,6 +379,26 @@ describe('collection-store', () => {
       await expect(getState().moveSavedRequest('r1', 'gone')).rejects.toThrow(
         'COLLECTION_NOT_FOUND',
       );
+    });
+
+    it('moves a request to ungrouped and clears active collection context', async () => {
+      useCollectionStore.setState({
+        collections: [makeCollection({ id: 'c1' })],
+        savedRequests: [makeSavedRequest({ id: 'r1', collectionId: 'c1' })],
+      });
+      useComposerStore.setState({
+        activeCollectionId: 'c1',
+        activeSavedRequestId: 'r1',
+      });
+
+      await getState().moveSavedRequest('r1', null);
+
+      expect(mockDb.savedRequests.update).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ collectionId: undefined }),
+      );
+      expect(getState().savedRequests[0].collectionId).toBeUndefined();
+      expect(useComposerStore.getState().activeCollectionId).toBeNull();
     });
   });
 });

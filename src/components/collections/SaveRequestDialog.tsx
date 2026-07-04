@@ -54,7 +54,9 @@ export function SaveRequestDialog({
     setNewCollectionName('');
     if (activeSavedRequest) {
       setRequestName(activeSavedRequest.name);
-      setSelectedCollectionId(activeSavedRequest.collectionId);
+      setSelectedCollectionId(
+        activeSavedRequest.collectionId ?? collections[0]?.id ?? '',
+      );
       setCreating(false);
     } else {
       setRequestName('');
