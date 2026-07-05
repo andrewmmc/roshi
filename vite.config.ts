@@ -58,10 +58,18 @@ export default defineConfig({
     chunkSizeWarningLimit: 2100,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-markdown': ['react-markdown'],
-          'gpt-tokenizer': ['gpt-tokenizer'],
-          dexie: ['dexie'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react-markdown/'))
+            return 'react-markdown';
+          if (id.includes('node_modules/gpt-tokenizer/'))
+            return 'gpt-tokenizer';
+          if (id.includes('node_modules/dexie/')) return 'dexie';
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/')
+          )
+            return 'react';
         },
       },
     },
