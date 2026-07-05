@@ -292,19 +292,21 @@ export function ProviderForm({
           />
         </div>
 
-        <Field label="Chat Endpoint" htmlFor="provider-chat-endpoint">
-          <Input
-            id="provider-chat-endpoint"
-            value={form.endpoints.chat}
-            onChange={(e) =>
-              updateField('endpoints', {
-                ...form.endpoints,
-                chat: e.target.value,
-              })
-            }
-            placeholder="/chat/completions"
-          />
-        </Field>
+        {form.protocol !== 'openai-responses' && (
+          <Field label="Chat Endpoint" htmlFor="provider-chat-endpoint">
+            <Input
+              id="provider-chat-endpoint"
+              value={form.endpoints.chat}
+              onChange={(e) =>
+                updateField('endpoints', {
+                  ...form.endpoints,
+                  chat: e.target.value,
+                })
+              }
+              placeholder="/chat/completions"
+            />
+          </Field>
+        )}
 
         {form.type === 'openai-compatible' &&
           (form.protocol === 'openai-responses' ||
