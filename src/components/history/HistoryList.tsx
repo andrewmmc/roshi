@@ -329,24 +329,6 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             >
               <GitCompare className="h-3.5 w-3.5" />
             </IconButton>
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => exportHistory(entries)}
-              tooltip="Export all history as JSON"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </IconButton>
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-destructive"
-              onClick={() => setShowConfirm(true)}
-              tooltip="Clear all history"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </IconButton>
           </div>
         )}
       </div>
@@ -387,6 +369,29 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
           ))}
         </div>
       </ScrollArea>
+
+      {entries.length > 0 && (
+        <div className="border-sidebar-border flex shrink-0 items-center gap-1 border-t px-3 py-2">
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => exportHistory(entries)}
+            tooltip="Export all history as JSON"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </IconButton>
+          <IconButton
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={() => setShowConfirm(true)}
+            tooltip="Clear all history"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </IconButton>
+        </div>
+      )}
 
       {compareEntries && (
         <HistoryCompareDrawer
