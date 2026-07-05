@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Plus, Server, X } from 'lucide-react';
+import { supportsModelSelection } from '@/types/provider';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -14,6 +16,9 @@ import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
 import { sortProvidersByName } from '@/utils/sort-providers';
 
+const ADD_PROVIDER_VALUE = '__add_provider__';
+const BROWSE_MODELS_VALUE = '__browse_models__';
+
 export function RunnerPicker() {
   const providers = useProviderStore((s) => s.providers);
   const runners = useEvalStore((s) => s.runners);
@@ -21,6 +26,7 @@ export function RunnerPicker() {
   const removeRunner = useEvalStore((s) => s.removeRunner);
   const isRunning = useEvalStore((s) => s.isRunning);
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
+  const openModelMarket = useUiStore((s) => s.openModelMarket);
 
   const sortedProviders = useMemo(
     () => sortProvidersByName(providers),
@@ -41,6 +47,10 @@ export function RunnerPicker() {
   );
   const availableModels = selectedProvider?.models ?? [];
   const selectedModel = availableModels.find((m) => m.id === effectiveModelId);
+  const providerSupportsModels = supportsModelSelection(
+    selectedProvider?.type ?? 'openai-compatible',
+  );
+  const showBrowseModels = Boolean(selectedProvider && providerSupportsModels);
 
   const handleAdd = () => {
     if (!effectiveProviderId || !effectiveModelId) return;
@@ -48,6 +58,10 @@ export function RunnerPicker() {
   };
 
   const handleProviderChange = (id: string | null) => {
+    if (id === ADD_PROVIDER_VALUE) {
+      setSettingsOpen(true, 'providers');
+      return;
+    }
     const next = id ?? '';
     setProviderId(next);
     const found = sortedProviders.find((p) => p.id === next);
@@ -55,6 +69,10 @@ export function RunnerPicker() {
   };
 
   const handleModelChange = (id: string | null) => {
+    if (id === BROWSE_MODELS_VALUE) {
+      openModelMarket(effectiveProviderId || null);
+      return;
+    }
     setModelId(id ?? '');
   };
 
@@ -105,6 +123,11 @@ export function RunnerPicker() {
                   {p.name}
                 </SelectItem>
               ))}
+              {sortedProviders.length ? <SelectSeparator /> : null}
+              <SelectItem value={ADD_PROVIDER_VALUE}>
+                <Plus />
+                Add provider
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -129,6 +152,15 @@ export function RunnerPicker() {
                   {m.displayName}
                 </SelectItem>
               ))}
+              {showBrowseModels ? (
+                <>
+                  <SelectSeparator />
+                  <SelectItem value={BROWSE_MODELS_VALUE}>
+                    <Plus />
+                    Browse models
+                  </SelectItem>
+                </>
+              ) : null}
             </SelectContent>
           </Select>
         </div>
