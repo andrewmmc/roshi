@@ -9,10 +9,13 @@ import {
   MoreHorizontal,
   Pencil,
   Save,
+  Search,
   Trash2,
+  X,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { IconButton } from '@/components/ui/icon-button';
+import { Input } from '@/components/ui/input';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -223,6 +226,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [nameDialog, setNameDialog] = useState<NameDialogState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!loaded) load();
@@ -237,7 +241,41 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
     return grouped;
   }, [records]);
 
-  const ungroupedRecords = recordsByCollection.get(UNGROUPED_ID) ?? [];
+  const query = searchQuery.trim().toLowerCase();
+  const isSearching = query.length > 0;
+
+  const filteredRecordsByCollection = useMemo(() => {
+    if (!isSearching) return recordsByCollection;
+    const filtered = new Map<string, EvalRunRecord[]>();
+    for (const [key, recs] of recordsByCollection) {
+      const collectionName =
+        key === UNGROUPED_ID
+          ? 'ungrouped'
+          : (collections.find((c) => c.id === key)?.name.toLowerCase() ?? '');
+      const collectionMatches = collectionName.includes(query);
+      const matchingRecords = collectionMatches
+        ? recs
+        : recs.filter((r) =>
+            (r.name ?? 'Untitled eval run').toLowerCase().includes(query),
+          );
+      if (matchingRecords.length > 0 || collectionMatches) {
+        filtered.set(key, matchingRecords);
+      }
+    }
+    return filtered;
+  }, [isSearching, recordsByCollection, collections, query]);
+
+  const filteredCollections = useMemo(() => {
+    if (!isSearching) return collections;
+    return collections.filter((c) => {
+      const nameMatch = c.name.toLowerCase().includes(query);
+      const hasMatchingRecords =
+        (filteredRecordsByCollection.get(c.id)?.length ?? 0) > 0;
+      return nameMatch || hasMatchingRecords;
+    });
+  }, [isSearching, collections, query, filteredRecordsByCollection]);
+
+  const ungroupedRecords = filteredRecordsByCollection.get(UNGROUPED_ID) ?? [];
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -367,6 +405,34 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
         </div>
       </div>
 
+      {!isEmpty && (
+        <div className="shrink-0 px-3 pt-2.5 pb-1.5">
+          <div className="relative">
+            <Search
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
+              aria-hidden="true"
+            />
+            <Input
+              placeholder="Search collections..."
+              aria-label="Search collections"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <ScrollArea className="min-h-0 flex-1">
         {isEmpty ? (
           <EmptyState
@@ -375,17 +441,26 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
             title="No saved runs"
             description="Compare one prompt across multiple models, then save the run here."
           />
+        ) : isSearching &&
+          filteredCollections.length === 0 &&
+          ungroupedRecords.length === 0 ? (
+          <EmptyState
+            compact
+            icon={Search}
+            title="No results"
+            description="Try a different search term."
+          />
         ) : (
           <div className="flex flex-col gap-2 p-2">
-            {collections.map((collection) => {
+            {filteredCollections.map((collection) => {
               const folderRecords =
-                recordsByCollection.get(collection.id) ?? [];
+                filteredRecordsByCollection.get(collection.id) ?? [];
               return (
                 <EvalRunSection
                   key={collection.id}
                   name={collection.name}
                   count={folderRecords.length}
-                  collapsed={collapsed.has(collection.id)}
+                  collapsed={!isSearching && collapsed.has(collection.id)}
                   onToggle={() => toggleCollapse(collection.id)}
                   actions={
                     <DropdownMenu>
@@ -463,7 +538,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
               <EvalRunSection
                 name="Ungrouped"
                 count={ungroupedRecords.length}
-                collapsed={collapsed.has(UNGROUPED_ID)}
+                collapsed={!isSearching && collapsed.has(UNGROUPED_ID)}
                 onToggle={() => toggleCollapse(UNGROUPED_ID)}
               >
                 {ungroupedRecords.map((record) => (

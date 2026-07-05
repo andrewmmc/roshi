@@ -8,9 +8,12 @@ import {
   MoreHorizontal,
   Pencil,
   Save,
+  Search,
   Trash2,
+  X,
 } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarRow } from '@/components/ui/sidebar-row';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -273,6 +276,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [nameDialog, setNameDialog] = useState<NameDialogState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const pendingRequestRef = useRef<SavedRequest | null>(null);
 
   const userCollections = useMemo(
@@ -296,7 +300,41 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     return grouped;
   }, [savedRequests]);
 
-  const ungroupedRequests = requestsByCollection.get(UNGROUPED_ID) ?? [];
+  const query = searchQuery.trim().toLowerCase();
+  const isSearching = query.length > 0;
+
+  const filteredRequestsByCollection = useMemo(() => {
+    if (!isSearching) return requestsByCollection;
+    const filtered = new Map<string, SavedRequest[]>();
+    for (const [key, requests] of requestsByCollection) {
+      const collectionName =
+        key === UNGROUPED_ID
+          ? 'ungrouped'
+          : (userCollections.find((c) => c.id === key)?.name.toLowerCase() ??
+            '');
+      const collectionMatches = collectionName.includes(query);
+      const matchingRequests = collectionMatches
+        ? requests
+        : requests.filter((r) => r.name.toLowerCase().includes(query));
+      if (matchingRequests.length > 0 || collectionMatches) {
+        filtered.set(key, matchingRequests);
+      }
+    }
+    return filtered;
+  }, [isSearching, requestsByCollection, userCollections, query]);
+
+  const filteredCollections = useMemo(() => {
+    if (!isSearching) return userCollections;
+    return userCollections.filter((c) => {
+      const nameMatch = c.name.toLowerCase().includes(query);
+      const hasMatchingRequests =
+        (filteredRequestsByCollection.get(c.id)?.length ?? 0) > 0;
+      return nameMatch || hasMatchingRequests;
+    });
+  }, [isSearching, userCollections, query, filteredRequestsByCollection]);
+
+  const ungroupedRequests =
+    filteredRequestsByCollection.get(UNGROUPED_ID) ?? [];
   const visibleRequestCount = savedRequests.filter(
     (request) => !request.isTemplate,
   ).length;
@@ -471,6 +509,34 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         </div>
       </div>
 
+      {!isEmpty && (
+        <div className="shrink-0 px-3 pt-2.5 pb-1.5">
+          <div className="relative">
+            <Search
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
+              aria-hidden="true"
+            />
+            <Input
+              placeholder="Search collections..."
+              aria-label="Search collections"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <ScrollArea className="flex-1">
         {isEmpty ? (
           <EmptyState
@@ -479,14 +545,23 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             title="No saved requests"
             description="Use Save current request to store a prompt in a folder or leave it ungrouped."
           />
+        ) : isSearching &&
+          filteredCollections.length === 0 &&
+          ungroupedRequests.length === 0 ? (
+          <EmptyState
+            compact
+            icon={Search}
+            title="No results"
+            description="Try a different search term."
+          />
         ) : (
           <div className="flex flex-col gap-2 p-2">
-            {userCollections.map((collection) => (
+            {filteredCollections.map((collection) => (
               <CollectionSection
                 key={collection.id}
                 collection={collection}
-                requests={requestsByCollection.get(collection.id) ?? []}
-                collapsed={collapsed.has(collection.id)}
+                requests={filteredRequestsByCollection.get(collection.id) ?? []}
+                collapsed={!isSearching && collapsed.has(collection.id)}
                 activeSavedRequestId={activeSavedRequestId}
                 collections={userCollections}
                 onToggle={toggleCollapse}
@@ -545,7 +620,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
                     </span>
                   </button>
                 </div>
-                {!collapsed.has(UNGROUPED_ID) &&
+                {(!collapsed.has(UNGROUPED_ID) || isSearching) &&
                   ungroupedRequests.map((request) => (
                     <SavedRequestItem
                       key={request.id}
