@@ -44,6 +44,10 @@ export function BuiltInProviderSection({
   const isLoading = status === 'loading' && catalog.length === 0;
   const isError = status === 'error';
 
+  if (addedOnly && filtered.length === 0) {
+    return null;
+  }
+
   const handleAdd = async (model: ProviderModel) => {
     setPendingId(model.id);
     try {
