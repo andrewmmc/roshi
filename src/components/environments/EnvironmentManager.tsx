@@ -94,6 +94,15 @@ function EnvironmentEditor({
         </Field>
 
         <div className="space-y-2">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <span className="text-muted-foreground text-xs font-medium">
+              Key
+            </span>
+            <span className="text-muted-foreground text-xs font-medium">
+              Value
+            </span>
+            <span className="w-7" />
+          </div>
           {variables.map((variable) => (
             <div
               key={variable.id}
