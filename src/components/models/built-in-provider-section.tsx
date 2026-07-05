@@ -10,9 +10,11 @@ import type { ProviderConfig, ProviderModel } from '@/types/provider';
 export function BuiltInProviderSection({
   provider,
   search,
+  addedOnly,
 }: {
   provider: ProviderConfig;
   search: string;
+  addedOnly?: boolean;
 }) {
   const catalog = useModelCatalogStore((s) =>
     s.getModelsForProvider(provider.name),
@@ -31,10 +33,13 @@ export function BuiltInProviderSection({
     [provider.models],
   );
 
-  const filtered = useMemo(
-    () => filterModelsBySearch(catalog, search),
-    [catalog, search],
-  );
+  const filtered = useMemo(() => {
+    const searched = filterModelsBySearch(catalog, search);
+    if (addedOnly) {
+      return searched.filter((m) => pickedIds.has(m.id));
+    }
+    return searched;
+  }, [catalog, search, addedOnly, pickedIds]);
 
   const isLoading = status === 'loading' && catalog.length === 0;
   const isError = status === 'error';

@@ -66,6 +66,7 @@ export function ModelMarket({
   const setFilterProviderId = useUiStore((s) => s.setSettingsModelsProviderId);
 
   const [search, setSearch] = useState('');
+  const [addedOnly, setAddedOnly] = useState(false);
 
   useEffect(() => {
     if (!loaded) {
@@ -140,12 +141,26 @@ export function ModelMarket({
             </IconButton>
           )}
         </div>
-        <div className="mt-2">
+        <div className="mt-2 flex items-center gap-3">
           <ProviderFilterChips
             providers={sorted}
             activeProviderId={filterProviderId}
             onChange={setFilterProviderId}
           />
+          <div className="border-border/60 h-4 border-l" />
+          <button
+            type="button"
+            onClick={() => setAddedOnly((v) => !v)}
+            aria-pressed={addedOnly}
+            className={cn(
+              'rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap transition-colors',
+              addedOnly
+                ? 'border-foreground/20 bg-foreground/5 text-foreground'
+                : 'border-border text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Added only
+          </button>
         </div>
       </div>
 
@@ -162,6 +177,7 @@ export function ModelMarket({
                 key={provider.id}
                 provider={provider}
                 search={search}
+                addedOnly={addedOnly}
               />
             ) : (
               <CustomProviderSection
