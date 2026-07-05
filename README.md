@@ -108,6 +108,13 @@ The Mac App Store version is a one-time purchase that includes automatic updates
 - **Verified in CI** — every push and pull request runs lint, format checks, tests, and a production build in [CI](https://github.com/andrewmmc/roshi/actions/workflows/ci.yml)
 - **No hidden hosted dependency** — the desktop app calls provider APIs directly, and the browser workflow remains client-side for development
 
+## Security model
+
+Roshi stores API keys **unencrypted** in browser IndexedDB. This is an accepted tradeoff for the local-first desktop app, where only your code and your OS have access to local storage.
+
+- **Desktop (recommended for real keys)** — keys never leave your machine; the Tauri app calls provider APIs directly with a restrictive Content-Security-Policy.
+- **Web / self-hosted** — the same CSP applies via a `<meta>` tag, but any XSS on the hosting origin could read stored keys. Treat the web build as a convenience for development and testing, not as the primary way to hold production secrets.
+
 ## Development
 
 > **Note:** This section is for contributors and developers only. If you just want to use Roshi, [download the app](#download) instead.
