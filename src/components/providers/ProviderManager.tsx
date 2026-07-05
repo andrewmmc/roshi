@@ -70,18 +70,14 @@ function healthStatusLabel(result: ProviderHealthResult): string {
 
 function ProviderList({
   providers,
-  canAddCustomProvider,
   checkingProviderId,
-  onAddCustomProvider,
   onEditProvider,
   onDeleteProvider,
   onManageModels,
   onHealthCheck,
 }: {
   providers: ProviderConfig[];
-  canAddCustomProvider: boolean;
   checkingProviderId: string | null;
-  onAddCustomProvider: () => void;
   onEditProvider: (provider: ProviderConfig) => void;
   onDeleteProvider: (provider: ProviderConfig) => void;
   onManageModels: (provider: ProviderConfig) => void;
@@ -89,30 +85,6 @@ function ProviderList({
 }) {
   return (
     <div className="flex flex-col gap-2 px-3 py-3">
-      <div className="flex flex-col gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full justify-center gap-1.5"
-          disabled={!canAddCustomProvider}
-          onClick={onAddCustomProvider}
-          title={
-            canAddCustomProvider
-              ? undefined
-              : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
-          }
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add custom provider
-        </Button>
-        {!canAddCustomProvider && (
-          <p className="text-muted-foreground px-0.5 text-center text-xs leading-snug">
-            Maximum {MAX_CUSTOM_PROVIDERS} custom providers. Remove one to add
-            another.
-          </p>
-        )}
-      </div>
       {sortProvidersByName(providers).map((provider) => (
         <div
           key={provider.id}
@@ -443,25 +415,41 @@ export function ProviderSettings({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Subheader */}
-      <div className="bg-muted/20 relative shrink-0 border-b px-5 py-4">
-        <h2 className="text-[15px] font-medium tracking-tight">
-          {view === 'list' && 'Providers'}
-          {view === 'edit' && 'Edit Provider'}
-          {view === 'add' && 'Add custom provider'}
-        </h2>
-        <p className="text-muted-foreground mt-0.5 text-xs">
-          {view === 'list' &&
-            'Tune credentials and endpoints for each provider. Pick models from the Models tab.'}
-          {view === 'edit' &&
-            'Update keys, headers, endpoints, and model entries without leaving the composer.'}
-          {view === 'add' &&
-            'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
-        </p>
+      <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
+        <div>
+          <h2 className="text-[15px] font-medium tracking-tight">
+            {view === 'list' && 'Providers'}
+            {view === 'edit' && 'Edit Provider'}
+            {view === 'add' && 'Add custom provider'}
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {view === 'list' &&
+              'Tune credentials and endpoints for each provider. Pick models from the Models tab.'}
+            {view === 'edit' &&
+              'Update keys, headers, endpoints, and model entries without leaving the composer.'}
+            {view === 'add' &&
+              'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
+          </p>
+        </div>
+        {view === 'list' && (
+          <Button
+            size="sm"
+            disabled={!canAddCustomProvider}
+            onClick={openAddCustomProvider}
+            title={
+              canAddCustomProvider
+                ? undefined
+                : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
+            }
+          >
+            <Plus className="h-3 w-3" />
+            Add
+          </Button>
+        )}
         {view !== 'list' && (
           <IconButton
             variant="ghost"
             size="icon-sm"
-            className="absolute top-3 right-3"
             onClick={handleBackToList}
             tooltip="Back to provider list"
           >
@@ -475,9 +463,7 @@ export function ProviderSettings({
         {view === 'list' && (
           <ProviderList
             providers={providers}
-            canAddCustomProvider={canAddCustomProvider}
             checkingProviderId={checkingProviderId}
-            onAddCustomProvider={openAddCustomProvider}
             onEditProvider={openEditProvider}
             onDeleteProvider={handleDeleteProvider}
             onManageModels={handleManageModels}

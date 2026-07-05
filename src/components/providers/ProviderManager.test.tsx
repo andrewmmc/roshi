@@ -189,9 +189,7 @@ describe('ProviderSettings', () => {
 
     renderProviderSettings();
 
-    await user.click(
-      screen.getByRole('button', { name: /add custom provider/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /^add$/i }));
     expect(await screen.findByText('Add custom provider')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
@@ -260,17 +258,12 @@ describe('ProviderSettings', () => {
     );
     renderProviderSettings();
 
-    expect(
-      screen.getByRole('button', { name: /add custom provider/i }),
-    ).toBeDisabled();
-    expect(screen.getByText(/Maximum 3 custom providers/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^add$/i })).toBeDisabled();
 
     mockProviders.value = [];
     addProvider.mockRejectedValue(new Error('MAX_CUSTOM_PROVIDERS'));
     renderProviderSettings();
-    await user.click(
-      screen.getAllByRole('button', { name: /add custom provider/i })[1],
-    );
+    await user.click(screen.getAllByRole('button', { name: /^add$/i })[1]);
     await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
 
     await waitFor(() => {
