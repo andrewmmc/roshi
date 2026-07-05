@@ -210,6 +210,10 @@ const OPENROUTER_HARDCODED_MODELS: ProviderModel[] = [
   },
 ];
 
+const OPENROUTER_HARDCODED_IDS = new Set(
+  OPENROUTER_HARDCODED_MODELS.map((m) => m.id),
+);
+
 function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
   return {
     openai: data.openai?.models
@@ -237,8 +241,10 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
           ...OPENROUTER_HARDCODED_MODELS,
           ...sortByReleaseDate(
             'openrouter',
-            collectModels(data.openrouter.models, (_id, m) =>
-              isTextChatModel(m),
+            collectModels(
+              data.openrouter.models,
+              (id, m) =>
+                isTextChatModel(m) && !OPENROUTER_HARDCODED_IDS.has(id),
             ),
           ),
         ]
