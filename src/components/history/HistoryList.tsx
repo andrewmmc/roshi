@@ -60,6 +60,7 @@ function HistorySearchControls({
   totalCount,
   searchInputRef,
   onSearchChange,
+  onFilterClick,
 }: {
   searchQuery: string;
   isFiltering: boolean;
@@ -67,32 +68,51 @@ function HistorySearchControls({
   totalCount: number;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   onSearchChange: (value: string) => void;
+  onFilterClick: () => void;
 }) {
   return (
     <div className="shrink-0 px-3 pt-2.5 pb-1.5">
-      <div className="relative">
-        <Search
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
-          aria-hidden="true"
-        />
-        <Input
-          ref={searchInputRef}
-          placeholder="Search history..."
-          aria-label="Search history"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
-            aria-label="Clear search"
-            title="Clear search"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        )}
+      <div className="flex items-center gap-1">
+        <div className="relative flex-1">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2"
+            aria-hidden="true"
+          />
+          <Input
+            ref={searchInputRef}
+            placeholder="Search history..."
+            aria-label="Search history"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+              aria-label="Clear search"
+              title="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        <IconButton
+          variant="ghost"
+          size="icon-sm"
+          className={`relative shrink-0 ${
+            isFiltering
+              ? 'bg-sidebar-accent text-primary hover:text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={onFilterClick}
+          tooltip="Filter history"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          {isFiltering && (
+            <span className="bg-primary absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
+          )}
+        </IconButton>
       </div>
       {isFiltering && (
         <div className="flex items-center pt-1">
@@ -312,22 +332,6 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              className={`relative ${
-                isFiltering
-                  ? 'bg-sidebar-accent text-primary hover:text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => setShowFilters(true)}
-              tooltip="Filter history"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              {isFiltering && (
-                <span className="bg-primary absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
-              )}
-            </IconButton>
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
               className="text-muted-foreground hover:text-foreground"
               onClick={() => exportHistory(entries)}
               tooltip="Export all history as JSON"
@@ -354,6 +358,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
           totalCount={entries.length}
           searchInputRef={searchInputRef}
           onSearchChange={(searchQuery) => handleFilterChange({ searchQuery })}
+          onFilterClick={() => setShowFilters(true)}
         />
       )}
       <ScrollArea className="flex-1">
