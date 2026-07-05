@@ -271,6 +271,15 @@ describe('collection-store', () => {
       expect(useComposerStore.getState().activeSavedRequestId).toBe(result.id);
     });
 
+    it('saves without a collection when collectionId is null', async () => {
+      const result = await getState().saveCurrentRequest(null, 'Loose request');
+
+      expect(result.name).toBe('Loose request');
+      expect(result.collectionId).toBeUndefined();
+      expect(useComposerStore.getState().activeCollectionId).toBeNull();
+      expect(useComposerStore.getState().activeSavedRequestId).toBe(result.id);
+    });
+
     it('requires a selected provider', async () => {
       useProviderStore.setState({
         providers: [],

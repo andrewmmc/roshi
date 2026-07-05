@@ -357,7 +357,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   );
 
   const handleSaveRequest = useCallback(
-    async (collectionId: string, name: string) => {
+    async (collectionId: string | null, name: string) => {
       await saveCurrentRequest(collectionId, name);
       toast('Request saved');
     },

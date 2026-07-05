@@ -30,6 +30,11 @@ vi.mock('@/hooks/use-collections', () => ({
   useCollections: () => mockCollectionState,
 }));
 
+vi.mock('@/components/ui/select', async () => {
+  const mocks = await import('@/__tests__/mock-select');
+  return mocks;
+});
+
 // Render the base-ui dropdown menu inline so menu items are always present and
 // clickable in jsdom (avoids portal / pointer-event complexity).
 vi.mock('@/components/ui/dropdown-menu', () => ({
@@ -171,10 +176,31 @@ describe('CollectionsList', () => {
     ).toBeEnabled();
   });
 
-  it('saves into the displayed default collection when the dropdown is unchanged', async () => {
+  it('saves to ungrouped by default when the dropdown is unchanged', async () => {
     render(<CollectionsList />);
 
     openSaveDialog();
+    fireEvent.change(
+      screen.getByPlaceholderText('Summarize customer support prompt'),
+      { target: { value: 'Reusable prompt' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save request' }));
+
+    await waitFor(() => {
+      expect(mockCollectionState.saveCurrentRequest).toHaveBeenCalledWith(
+        null,
+        'Reusable prompt',
+      );
+    });
+  });
+
+  it('saves into a selected collection', async () => {
+    render(<CollectionsList />);
+
+    openSaveDialog();
+    fireEvent.change(screen.getByLabelText('Select collection'), {
+      target: { value: 'collection-1' },
+    });
     fireEvent.change(
       screen.getByPlaceholderText('Summarize customer support prompt'),
       { target: { value: 'Reusable prompt' } },
@@ -189,7 +215,7 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('disables save when there are no collections', () => {
+  it('saves to ungrouped when there are no collections', async () => {
     mockCollectionState.collections = [];
     render(<CollectionsList />);
 
@@ -199,10 +225,17 @@ describe('CollectionsList', () => {
       { target: { value: 'Reusable prompt' } },
     );
 
-    expect(screen.getByRole('button', { name: 'Save request' })).toBeDisabled();
     expect(screen.getByLabelText('Select collection')).toHaveTextContent(
-      'No collections yet',
+      'Ungrouped',
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Save request' }));
+
+    await waitFor(() => {
+      expect(mockCollectionState.saveCurrentRequest).toHaveBeenCalledWith(
+        null,
+        'Reusable prompt',
+      );
+    });
   });
 
   it('shows Update and Save as new when editing an existing saved request', async () => {

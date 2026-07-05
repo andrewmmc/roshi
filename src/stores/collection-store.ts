@@ -28,7 +28,7 @@ interface CollectionStore {
   renameCollection: (id: string, name: string) => Promise<void>;
   deleteCollection: (id: string) => Promise<void>;
   saveCurrentRequest: (
-    collectionId: string,
+    collectionId: string | null,
     name: string,
   ) => Promise<SavedRequest>;
   updateSavedRequest: (id: string, name: string) => Promise<void>;
@@ -188,7 +188,7 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
     const now = new Date();
     const savedRequest: SavedRequest = {
       id: nanoid(),
-      collectionId,
+      collectionId: collectionId ?? undefined,
       name: trimmedName,
       providerId: provider.id,
       providerName: provider.name,

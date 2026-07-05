@@ -19,12 +19,14 @@ import {
 } from '@/components/ui/dialog';
 import type { Collection, SavedRequest } from '@/types/history';
 
+const UNGROUPED_VALUE = '__ungrouped__';
+
 interface SaveRequestDialogProps {
   open: boolean;
   collections: Collection[];
   activeSavedRequest: SavedRequest | null;
   onOpenChange: (open: boolean) => void;
-  onSaveRequest: (collectionId: string, name: string) => Promise<void>;
+  onSaveRequest: (collectionId: string | null, name: string) => Promise<void>;
   onUpdateRequest: (name: string) => Promise<void>;
 }
 
@@ -37,7 +39,8 @@ export function SaveRequestDialog({
   onUpdateRequest,
 }: SaveRequestDialogProps) {
   const [requestName, setRequestName] = useState('');
-  const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const [selectedCollectionId, setSelectedCollectionId] =
+    useState(UNGROUPED_VALUE);
   const [busy, setBusy] = useState(false);
 
   const isEditing = Boolean(activeSavedRequest);
@@ -48,19 +51,22 @@ export function SaveRequestDialog({
     if (activeSavedRequest) {
       setRequestName(activeSavedRequest.name);
       setSelectedCollectionId(
-        activeSavedRequest.collectionId ?? collections[0]?.id ?? '',
+        activeSavedRequest.collectionId ?? UNGROUPED_VALUE,
       );
     } else {
       setRequestName('');
-      setSelectedCollectionId(collections[0]?.id ?? '');
+      setSelectedCollectionId(UNGROUPED_VALUE);
     }
   }, [open, activeSavedRequest, collections]);
 
   const handleSaveNew = useCallback(async () => {
-    if (!selectedCollectionId || !requestName.trim()) return;
+    if (!requestName.trim()) return;
     setBusy(true);
     try {
-      await onSaveRequest(selectedCollectionId, requestName);
+      await onSaveRequest(
+        selectedCollectionId === UNGROUPED_VALUE ? null : selectedCollectionId,
+        requestName,
+      );
       onOpenChange(false);
     } finally {
       setBusy(false);
@@ -81,7 +87,7 @@ export function SaveRequestDialog({
   const selectedCollection = collections.find(
     (collection) => collection.id === selectedCollectionId,
   );
-  const saveDisabled = busy || !selectedCollectionId || !requestName.trim();
+  const saveDisabled = busy || !requestName.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,17 +115,17 @@ export function SaveRequestDialog({
           <Field label="Collection">
             <Select
               value={selectedCollectionId}
-              onValueChange={(value) => setSelectedCollectionId(value ?? '')}
+              onValueChange={(value) =>
+                setSelectedCollectionId(value ?? UNGROUPED_VALUE)
+              }
             >
               <SelectTrigger aria-label="Select collection" className="w-full">
                 <SelectValue>
-                  {selectedCollection?.name ??
-                    (collections.length === 0
-                      ? 'No collections yet'
-                      : 'Select a collection')}
+                  {selectedCollection?.name ?? 'Ungrouped'}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={UNGROUPED_VALUE}>Ungrouped</SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.name}
@@ -137,7 +143,7 @@ export function SaveRequestDialog({
           {isEditing ? (
             <>
               <Button
-                variant="secondary"
+                variant="outline"
                 onClick={handleSaveNew}
                 disabled={saveDisabled}
               >
