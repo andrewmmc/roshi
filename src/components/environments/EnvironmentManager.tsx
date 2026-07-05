@@ -281,7 +281,7 @@ export function EnvironmentSettingsFooter({
   return (
     <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
       <Button type="button" variant="outline" onClick={onClose}>
-        Done
+        Close
       </Button>
     </div>
   );
