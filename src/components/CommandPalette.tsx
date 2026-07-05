@@ -285,6 +285,10 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     [filteredCommands, effectiveIndex, runAndClose],
   );
 
+  const activeOptionId = filteredCommands[effectiveIndex]
+    ? `command-option-${filteredCommands[effectiveIndex].id}`
+    : undefined;
+
   return (
     <>
       {/* Search input row */}
@@ -292,7 +296,11 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         <SearchIcon className="text-muted-foreground h-4 w-4 shrink-0" />
         <input
           autoFocus
+          role="combobox"
           aria-label="Search commands"
+          aria-controls="command-palette-listbox"
+          aria-expanded="true"
+          aria-activedescendant={activeOptionId}
           className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
           placeholder="Search commands…"
           value={query}
@@ -311,7 +319,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
             No commands found.
           </p>
         ) : (
-          <div role="listbox" className="py-1">
+          <div role="listbox" id="command-palette-listbox" className="py-1">
             {displayGroups.map((group) => (
               <div key={group.label}>
                 <p className="text-muted-foreground px-3 pt-2 pb-0.5 text-[11px] font-medium tracking-wide uppercase first:pt-1">
@@ -321,6 +329,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
                   <button
                     type="button"
                     key={cmd.id}
+                    id={`command-option-${cmd.id}`}
                     ref={(el) => {
                       itemRefs.current[flatIdx] = el;
                     }}

@@ -543,4 +543,28 @@ describe('openaiAdapter', () => {
       expect(result?.content).toBe('');
     });
   });
+
+  describe('parseStreamError', () => {
+    it('surfaces a top-level error object message', () => {
+      const data = JSON.stringify({
+        error: { message: 'context length exceeded', type: 'invalid_request' },
+      });
+      expect(openaiAdapter.parseStreamError?.(data)).toBe(
+        'context length exceeded',
+      );
+    });
+
+    it('returns null for [DONE] and normal chunks', () => {
+      expect(openaiAdapter.parseStreamError?.('[DONE]')).toBeNull();
+      expect(
+        openaiAdapter.parseStreamError?.(
+          JSON.stringify({ choices: [{ delta: { content: 'hi' } }] }),
+        ),
+      ).toBeNull();
+    });
+
+    it('returns null for invalid JSON', () => {
+      expect(openaiAdapter.parseStreamError?.('not-json')).toBeNull();
+    });
+  });
 });

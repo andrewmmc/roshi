@@ -1,19 +1,12 @@
 import type { ProviderConfig } from '@/types/provider';
-import type { NormalizedMessage } from '@/types/normalized';
+import type { NormalizedRequest } from '@/types/normalized';
 
 export interface CodeGenParams {
   provider: ProviderConfig;
-  model: string;
-  messages: NormalizedMessage[];
-  systemPrompt: string;
-  temperature: number;
-  maxTokens: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
-  stream: boolean;
-  effort?: string;
-  verbosity?: string;
+  /** Capability-filtered request matching what the client sends on the wire. */
+  request: NormalizedRequest;
+  /** Composer/request-level headers merged over provider defaults. */
+  customHeaders?: Record<string, string>;
 }
 
 export interface CodeGenerator {

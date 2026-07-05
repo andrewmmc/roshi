@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { JsonHighlight } from '@/components/ui/json-highlight';
 import { buildCurlCommand } from '@/utils/curl';
 import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
+import { redactHeaders, redactUrlQueryParams } from '@/utils/redact';
 
 const JsonBlock = memo(function JsonBlock({
   data,
@@ -40,14 +41,20 @@ export function RawJsonView() {
     () => (activeData ? JSON.stringify(activeData, null, 2) : ''),
     [activeData],
   );
+  // Credentials must not be exposed in the inspector. Redact query-param keys
+  // in the URL and auth header values before display / copy / cURL.
+  const safeRequestUrl = useMemo(
+    () => redactUrlQueryParams(requestUrl),
+    [requestUrl],
+  );
   const curlCommand = useMemo(
     () =>
       buildCurlCommand({
-        url: requestUrl,
-        headers: requestHeaders,
+        url: safeRequestUrl,
+        headers: redactHeaders(requestHeaders),
         body: rawRequest,
       }),
-    [requestUrl, requestHeaders, rawRequest],
+    [safeRequestUrl, requestHeaders, rawRequest],
   );
 
   return (
@@ -98,13 +105,13 @@ export function RawJsonView() {
         value="request"
         className="mt-0 min-h-0 flex-1 overflow-y-auto"
       >
-        {requestUrl && (
+        {safeRequestUrl && (
           <div className="flex items-center justify-between border-b px-4 py-2">
             <div className="font-mono text-[13px] break-all">
               <span className="text-muted-foreground">POST </span>
-              <span>{requestUrl}</span>
+              <span>{safeRequestUrl}</span>
             </div>
-            <CopyButton text={requestUrl} className="ml-2 shrink-0" />
+            <CopyButton text={safeRequestUrl} className="ml-2 shrink-0" />
           </div>
         )}
         <JsonBlock data={rawRequest} label="request" />

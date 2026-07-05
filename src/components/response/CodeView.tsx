@@ -3,7 +3,6 @@ import { Download } from 'lucide-react';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedProvider, useSelectedModel } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
-import { getSendableMessages } from '@/services/codegen/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -11,6 +10,9 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { exportCodeSnippet } from '@/utils/export';
 import { cn } from '@/lib/utils';
+import { buildCompatibleRequestFromComposer } from '@/utils/build-normalized-request';
+import { getSendableMessages } from '@/services/codegen/shared';
+import { headersToRecord } from '@/utils/headers';
 
 export function CodeView() {
   const provider = useSelectedProvider();
@@ -21,10 +23,14 @@ export function CodeView() {
   const temperature = useComposerStore((s) => s.temperature);
   const maxTokens = useComposerStore((s) => s.maxTokens);
   const topP = useComposerStore((s) => s.topP);
+  const topK = useComposerStore((s) => s.topK);
   const frequencyPenalty = useComposerStore((s) => s.frequencyPenalty);
   const presencePenalty = useComposerStore((s) => s.presencePenalty);
+  const thinkingEnabled = useComposerStore((s) => s.thinkingEnabled);
+  const thinkingBudgetTokens = useComposerStore((s) => s.thinkingBudgetTokens);
   const effort = useComposerStore((s) => s.effort);
   const verbosity = useComposerStore((s) => s.verbosity);
+  const customHeaders = useComposerStore((s) => s.customHeaders);
   const streamDefault = useComposerStore((s) => s.stream);
   const [overrideStream, setOverrideStream] = useState<boolean | null>(null);
   const stream = overrideStream ?? streamDefault;
@@ -42,40 +48,58 @@ export function CodeView() {
       ? selectedTab
       : (generators[0]?.label ?? '');
 
-  const activeCode = useMemo(() => {
-    if (!provider || !model || !activeTab) return '';
-    const gen = generators.find((g) => g.label === activeTab);
-    if (!gen) return '';
-    return gen.generate({
-      provider,
-      model: model.id,
+  const compatibleRequest = useMemo(() => {
+    if (!provider || !model) return null;
+    return buildCompatibleRequestFromComposer({
+      composer: {
+        messages,
+        systemPrompt,
+        temperature,
+        maxTokens,
+        topP,
+        topK,
+        frequencyPenalty,
+        presencePenalty,
+        stream,
+        thinkingEnabled,
+        thinkingBudgetTokens,
+        effort,
+        verbosity,
+      },
       messages: getSendableMessages(messages),
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      frequencyPenalty,
-      presencePenalty,
-      stream,
-      effort,
-      verbosity,
+      model,
+      provider,
+      selectedModelId: model.id,
+      streamOverride: stream,
     });
   }, [
     provider,
     model,
-    activeTab,
     messages,
     systemPrompt,
     temperature,
     maxTokens,
     topP,
+    topK,
     frequencyPenalty,
     presencePenalty,
+    stream,
+    thinkingEnabled,
+    thinkingBudgetTokens,
     effort,
     verbosity,
-    stream,
-    generators,
   ]);
+
+  const activeCode = useMemo(() => {
+    if (!provider || !compatibleRequest || !activeTab) return '';
+    const gen = generators.find((g) => g.label === activeTab);
+    if (!gen) return '';
+    return gen.generate({
+      provider,
+      request: compatibleRequest.request,
+      customHeaders: headersToRecord(customHeaders),
+    });
+  }, [provider, compatibleRequest, activeTab, customHeaders, generators]);
 
   if (!provider || !model) {
     return <EmptyState title="Select a provider and model to see code" />;

@@ -1,20 +1,27 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-import { escapePythonString, getSendableMessages } from './shared';
+import {
+  buildAnthropicThinkingPythonKwargs,
+  escapePythonString,
+  getSendableMessages,
+  isOpus47OrNewer,
+} from './shared';
 
 export const anthropicPythonGenerator: CodeGenerator = {
   label: 'Python',
   language: 'python',
 
   generate(params: CodeGenParams): string {
+    const { request } = params;
     const {
       model,
       messages,
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      stream,
-    } = params;
+      systemPrompt = '',
+      temperature = 1,
+      maxTokens = 4096,
+      topP = 1,
+      topK,
+      stream = false,
+    } = request;
 
     const messageLines: string[] = [];
     for (const msg of getSendableMessages(messages)) {
@@ -32,8 +39,14 @@ export const anthropicPythonGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       kwargs.push(`    system=${escapePythonString(systemPrompt)},`);
     }
-    kwargs.push(`    temperature=${temperature},`);
-    kwargs.push(`    top_p=${topP},`);
+    if (!isOpus47OrNewer(model)) {
+      kwargs.push(`    temperature=${temperature},`);
+      kwargs.push(`    top_p=${topP},`);
+      if (topK !== undefined && topK > 0) {
+        kwargs.push(`    top_k=${topK},`);
+      }
+    }
+    kwargs.push(...buildAnthropicThinkingPythonKwargs(request));
     if (stream) {
       kwargs.push(`    stream=True,`);
     }

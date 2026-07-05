@@ -622,8 +622,52 @@ describe('anthropicAdapter', () => {
       expect(anthropicAdapter.parseStreamChunk(data)).toBeNull();
     });
 
+    it('parses message_delta usage when input_tokens is absent (real API shape)', () => {
+      const data = JSON.stringify({
+        type: 'message_delta',
+        delta: { stop_reason: 'end_turn' },
+        usage: { output_tokens: 15 },
+      });
+      const result = anthropicAdapter.parseStreamChunk(data);
+
+      expect(result?.usage).toEqual({
+        promptTokens: 0,
+        completionTokens: 15,
+        totalTokens: 15,
+      });
+    });
+
     it('returns null for invalid JSON', () => {
       expect(anthropicAdapter.parseStreamChunk('not-json')).toBeNull();
+    });
+  });
+
+  describe('parseStreamError', () => {
+    it('surfaces an error event message', () => {
+      const data = JSON.stringify({
+        type: 'error',
+        error: { type: 'overloaded_error', message: 'Overloaded' },
+      });
+      expect(anthropicAdapter.parseStreamError?.(data)).toBe('Overloaded');
+    });
+
+    it('falls back to the error type when no message', () => {
+      const data = JSON.stringify({
+        type: 'error',
+        error: { type: 'overloaded_error' },
+      });
+      expect(anthropicAdapter.parseStreamError?.(data)).toBe(
+        'overloaded_error',
+      );
+    });
+
+    it('returns null for a normal event', () => {
+      const data = JSON.stringify({ type: 'message_start' });
+      expect(anthropicAdapter.parseStreamError?.(data)).toBeNull();
+    });
+
+    it('returns null for invalid JSON', () => {
+      expect(anthropicAdapter.parseStreamError?.('not-json')).toBeNull();
     });
   });
 });

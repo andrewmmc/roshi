@@ -1,8 +1,9 @@
 [package]
 name = "roshi"
-version = "1.0.0"
+version = "1.0.6"
 description = "MIT-licensed local-first workbench for testing LLM APIs"
-authors = [""]
+authors = ["Andrew MMC"]
+license = "MIT"
 edition = "2021"
 
 [lib]

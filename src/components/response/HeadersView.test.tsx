@@ -33,6 +33,20 @@ describe('HeadersView', () => {
     expect(screen.getByText('authorization')).toBeVisible();
   });
 
+  it('masks sensitive request header values', () => {
+    useResponseStore.setState({
+      requestHeaders: { Authorization: 'Bearer sk-supersecret-value' },
+    });
+
+    render(<HeadersView />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Request' }));
+
+    expect(
+      screen.queryByText('Bearer sk-supersecret-value'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Bearer sk-s/)).toBeInTheDocument();
+  });
+
   it('shows empty state text when no headers are available', () => {
     render(<HeadersView />);
 

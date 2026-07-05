@@ -200,6 +200,26 @@ function newBlankTab(): RequestTab {
 
 const firstTab = newBlankTab();
 
+/** Returns true when closing the tab would discard composer or response work. */
+export function tabHasStoredWork(
+  tab: Pick<RequestTab, 'composer' | 'response'>,
+): boolean {
+  const c = tab.composer;
+  const hasComposer =
+    c.systemPrompt.trim() !== '' ||
+    c.messages.some(
+      (m) => m.content.trim() !== '' || (m.attachments?.length ?? 0) > 0,
+    ) ||
+    c.customHeaders.some((h) => h.key.trim() !== '' || h.value.trim() !== '');
+  const r = tab.response;
+  const hasResponse =
+    r.response !== null ||
+    r.error !== null ||
+    r.streamingContent !== '' ||
+    r.rawResponse !== null;
+  return hasComposer || hasResponse;
+}
+
 interface TabStore {
   tabs: RequestTab[];
   activeTabId: string;

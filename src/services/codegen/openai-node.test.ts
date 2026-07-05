@@ -44,9 +44,7 @@ describe('openaiNodeGenerator', () => {
         provider: makeProvider({ auth: { type: 'api-key-header' } }),
       });
       const code = openaiNodeGenerator.generate(params);
-      expect(code).toContain(
-        'defaultHeaders: { "x-api-key": process.env.API_KEY }',
-      );
+      expect(code).toContain('"x-api-key": process.env.API_KEY');
     });
 
     it('uses custom header name', () => {

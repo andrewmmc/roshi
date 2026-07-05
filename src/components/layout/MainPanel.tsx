@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useResponseStore } from '@/stores/response-store';
 import { useSendRequest } from '@/hooks/use-send-request';
-import { useProviderStore } from '@/stores/provider-store';
+import { useSelectedModel, useSelectedProvider } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { IS_MAC } from '@/lib/platform';
@@ -70,7 +70,16 @@ export function MainPanel() {
 function RequestView() {
   const isLoading = useResponseStore((s) => s.isLoading);
   const { send, cancel } = useSendRequest();
-  const hasProvider = useProviderStore((s) => s.providers.length > 0);
+  const provider = useSelectedProvider();
+  const model = useSelectedModel();
+  const canSend = Boolean(provider && model && provider.apiKey.trim());
+  const sendDisabledReason = !provider
+    ? 'Select a provider'
+    : !model
+      ? 'Select a model'
+      : !provider.apiKey.trim()
+        ? 'Add an API key in provider settings'
+        : undefined;
   const setMainView = useUiStore((s) => s.setMainView);
   const seedFromMainComposer = useEvalStore((s) => s.seedFromMainComposer);
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
@@ -144,7 +153,8 @@ function RequestView() {
                 size="sm"
                 className="rounded-r-none shadow-sm"
                 onClick={send}
-                disabled={!hasProvider}
+                disabled={!canSend}
+                title={sendDisabledReason}
               >
                 <Send className="mr-1.5 h-3.5 w-3.5" />
                 Send

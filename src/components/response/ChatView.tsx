@@ -157,7 +157,17 @@ export function ChatView() {
                   shortcut={{ mac: '⌥C', win: 'Alt+C' }}
                 />
               )}
-              <Markdown>{displayContent}</Markdown>
+              <Markdown
+                components={{
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {displayContent}
+              </Markdown>
               {isStreaming && <StreamingIndicator />}
             </div>
           </MessageRow>

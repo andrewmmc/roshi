@@ -1,20 +1,28 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-import { escapeJSString, getSendableMessages } from './shared';
+import {
+  buildAnthropicThinkingArgs,
+  escapeJSString,
+  getSendableMessages,
+  isOpus47OrNewer,
+  mergeCodegenCustomHeaders,
+} from './shared';
 
 export const anthropicNodeGenerator: CodeGenerator = {
   label: 'Node.js',
   language: 'javascript',
 
   generate(params: CodeGenParams): string {
+    const { provider, request, customHeaders } = params;
     const {
       model,
       messages,
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      stream,
-    } = params;
+      systemPrompt = '',
+      temperature = 1,
+      maxTokens = 4096,
+      topP = 1,
+      topK,
+      stream = false,
+    } = request;
 
     const messageLines: string[] = [];
     for (const msg of getSendableMessages(messages)) {
@@ -32,16 +40,31 @@ export const anthropicNodeGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       args.push(`  system: ${escapeJSString(systemPrompt)},`);
     }
-    args.push(`  temperature: ${temperature},`);
-    args.push(`  top_p: ${topP},`);
+    if (!isOpus47OrNewer(model)) {
+      args.push(`  temperature: ${temperature},`);
+      args.push(`  top_p: ${topP},`);
+      if (topK !== undefined && topK > 0) {
+        args.push(`  top_k: ${topK},`);
+      }
+    }
+    args.push(...buildAnthropicThinkingArgs(request));
     if (stream) {
       args.push(`  stream: true,`);
     }
 
+    const mergedHeaders = mergeCodegenCustomHeaders(provider, customHeaders);
+    const headerBlock =
+      Object.keys(mergedHeaders).length > 0
+        ? `\n  defaultHeaders: {\n${Object.entries(mergedHeaders)
+            .map(([key, value]) => `    "${key}": ${escapeJSString(value)},`)
+            .join('\n')}\n  },`
+        : '';
+
     if (stream) {
       return `import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic();
+const client = new Anthropic({${headerBlock}
+});
 
 const stream = client.messages.stream({
 ${args.join('\n')}
@@ -60,7 +83,8 @@ for await (const event of stream) {
 
     return `import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic();
+const client = new Anthropic({${headerBlock}
+});
 
 const message = await client.messages.create({
 ${args.join('\n')}

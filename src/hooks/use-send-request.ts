@@ -17,6 +17,7 @@ import {
   type ProviderModel,
 } from '@/types/provider';
 import { headersToHistoryEntries, headersToRecord } from '@/utils/headers';
+import { redactApiKeyInString, redactHeaders } from '@/utils/redact';
 import type { ComposerStore } from '@/stores/composer-store';
 import type { ResponseStore } from '@/stores/response-store';
 import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
@@ -109,6 +110,25 @@ function createBaseHistoryEntry({
     savedRequestId: savedRequestId ?? undefined,
     request: { ...request },
     customHeaders: headersToHistoryEntries(customHeaders),
+  };
+}
+
+/**
+ * History is persisted to IndexedDB, so credentials must never be written in
+ * the clear. Redact auth headers and any API key embedded in the request URL
+ * (query-param auth) before storing. The live values remain available in the
+ * transient response-store for the current run's display.
+ */
+function redactPersistedRequestFields(
+  apiKey: string,
+  fields: {
+    requestUrl: string;
+    requestHeaders: Record<string, string>;
+  },
+): { requestUrl: string; requestHeaders: Record<string, string> } {
+  return {
+    requestUrl: redactApiKeyInString(fields.requestUrl, apiKey),
+    requestHeaders: redactHeaders(fields.requestHeaders, apiKey),
   };
 }
 
@@ -359,8 +379,10 @@ export function useSendRequest() {
       useHistoryStore.getState().addEntry({
         ...baseHistoryEntry,
         rawRequest: result.rawRequest,
-        requestUrl: result.requestUrl,
-        requestHeaders: result.requestHeaders,
+        ...redactPersistedRequestFields(validation.provider.apiKey, {
+          requestUrl: result.requestUrl,
+          requestHeaders: result.requestHeaders,
+        }),
         responseHeaders: result.responseHeaders,
         response: result.response,
         rawResponse: result.rawResponse,
@@ -388,8 +410,10 @@ export function useSendRequest() {
         useHistoryStore.getState().addEntry({
           ...baseHistoryEntry,
           rawRequest: err.rawRequest,
-          requestUrl: err.requestUrl,
-          requestHeaders: err.requestHeaders,
+          ...redactPersistedRequestFields(validation.provider.apiKey, {
+            requestUrl: err.requestUrl,
+            requestHeaders: err.requestHeaders,
+          }),
           responseHeaders: err.responseHeaders,
           response: err.partialResponse,
           rawResponse: err.rawResponse,
@@ -403,8 +427,10 @@ export function useSendRequest() {
         useHistoryStore.getState().addEntry({
           ...baseHistoryEntry,
           rawRequest: err.rawRequest,
-          requestUrl: err.requestUrl,
-          requestHeaders: err.requestHeaders,
+          ...redactPersistedRequestFields(validation.provider.apiKey, {
+            requestUrl: err.requestUrl,
+            requestHeaders: err.requestHeaders,
+          }),
           responseHeaders: err.responseHeaders,
           response: null,
           rawResponse: err.rawResponse,
@@ -416,6 +442,7 @@ export function useSendRequest() {
         respStore.completeWithError({
           error: 'Request timed out',
           errorDetail:
+            err.message ||
             'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
         });
       } else if (err instanceof DOMException && err.name === 'AbortError') {

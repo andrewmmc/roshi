@@ -1,4 +1,9 @@
 import type { CodeGenerator, CodeGenParams } from './types';
+import {
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_TOP_P,
+} from '@/constants/defaults';
 import { escapeJSString, getSendableMessages } from './shared';
 
 export const geminiNodeGenerator: CodeGenerator = {
@@ -6,17 +11,19 @@ export const geminiNodeGenerator: CodeGenerator = {
   language: 'javascript',
 
   generate(params: CodeGenParams): string {
+    const { request } = params;
     const {
       model,
       messages,
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      frequencyPenalty,
-      presencePenalty,
-      stream,
-    } = params;
+      systemPrompt = '',
+      temperature = DEFAULT_TEMPERATURE,
+      maxTokens = DEFAULT_MAX_TOKENS,
+      topP = DEFAULT_TOP_P,
+      topK,
+      frequencyPenalty = 0,
+      presencePenalty = 0,
+      stream = false,
+    } = request;
 
     const contentLines: string[] = [];
     for (const msg of getSendableMessages(messages)) {
@@ -33,6 +40,9 @@ export const geminiNodeGenerator: CodeGenerator = {
     configArgs.push(`      temperature: ${temperature},`);
     configArgs.push(`      maxOutputTokens: ${maxTokens},`);
     configArgs.push(`      topP: ${topP},`);
+    if (topK !== undefined && topK > 0) {
+      configArgs.push(`      topK: ${topK},`);
+    }
     configArgs.push(`      frequencyPenalty: ${frequencyPenalty},`);
     configArgs.push(`      presencePenalty: ${presencePenalty},`);
 

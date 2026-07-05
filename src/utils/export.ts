@@ -5,6 +5,7 @@ import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 import type { EvalRunRecord } from '@/types/eval';
 import { isTauri } from '@tauri-apps/api/core';
 import { normalizeProviderConfig } from '@/stores/provider-store';
+import { redactHeaders, redactUrlQueryParams } from '@/utils/redact';
 
 const EXPORT_VERSION = 1;
 
@@ -64,21 +65,12 @@ function dateTag(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-const SENSITIVE_HEADERS = new Set(['authorization', 'x-api-key']);
-
-function redactHeaders(
-  headers: Record<string, string> | null,
-): Record<string, string> | null {
-  if (!headers) return null;
-  return Object.fromEntries(
-    Object.entries(headers).map(([k, v]) =>
-      SENSITIVE_HEADERS.has(k.toLowerCase()) ? [k, 'REDACTED'] : [k, v],
-    ),
-  );
-}
-
 function redactHistoryEntry(entry: HistoryEntry): HistoryEntry {
-  return { ...entry, requestHeaders: redactHeaders(entry.requestHeaders) };
+  return {
+    ...entry,
+    requestUrl: redactUrlQueryParams(entry.requestUrl ?? null),
+    requestHeaders: redactHeaders(entry.requestHeaders),
+  };
 }
 
 export function exportProviders(
@@ -142,7 +134,11 @@ export function exportCurrentRequest(data: CurrentRequestExport): void {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     type: 'history-entry',
-    data: { ...data, requestHeaders: redactHeaders(data.requestHeaders) },
+    data: {
+      ...data,
+      requestUrl: redactUrlQueryParams(data.requestUrl),
+      requestHeaders: redactHeaders(data.requestHeaders),
+    },
   };
   downloadJson(envelope, `roshi-entry-${dateTag()}.json`);
 }
@@ -167,7 +163,7 @@ export function buildRawResponseExportPayload(
 
 export function buildHeadersExportPayload(data: HeadersExport): HeadersExport {
   return {
-    requestUrl: data.requestUrl,
+    requestUrl: redactUrlQueryParams(data.requestUrl),
     requestHeaders: redactHeaders(data.requestHeaders),
     responseHeaders: data.responseHeaders,
   };

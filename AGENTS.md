@@ -80,7 +80,7 @@ Provider `type` is `openai-compatible | anthropic | google-gemini`; the optional
 ### Other subsystems
 
 - **Eval mode** — `src/components/eval/` with `services/eval-runner.ts` (runs prompts across multiple provider/model runners) and `services/judge-runner.ts` (LLM-as-judge scoring).
-- **Code generation** — `src/services/codegen/` produces cURL / Node / Python snippets per provider for the active request.
+- **Code generation** — `src/services/codegen/` produces Node / Python snippets per provider for the active request; cURL is available in the Raw JSON inspector.
 - **Model market** — `src/components/models/` browses/adds models sourced from the models.dev catalog.
 
 ### Dev proxy

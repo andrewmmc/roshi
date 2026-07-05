@@ -11,6 +11,7 @@ import { isImageMimeType } from '@/utils/mime';
 import {
   appendApiKeyQueryParam,
   buildJsonRequestHeaders,
+  extractErrorMessage,
   joinBaseUrlAndEndpoint,
 } from './shared';
 
@@ -191,5 +192,43 @@ export const openaiResponsesAdapter: ProviderAdapter = {
     } catch {
       return null;
     }
+  },
+
+  parseStreamError(data: string): string | null {
+    try {
+      const parsed = JSON.parse(data) as {
+        type?: string;
+        message?: string;
+        error?: unknown;
+        response?: {
+          error?: unknown;
+          incomplete_details?: { reason?: string };
+        };
+      };
+
+      if (parsed.type === 'error') {
+        return extractErrorMessage(
+          parsed.error ?? parsed.message,
+          'Responses stream error',
+        );
+      }
+
+      if (parsed.type === 'response.failed') {
+        return extractErrorMessage(
+          parsed.response?.error,
+          'Response generation failed',
+        );
+      }
+
+      if (parsed.type === 'response.incomplete') {
+        const reason = parsed.response?.incomplete_details?.reason;
+        return reason
+          ? `Response incomplete: ${reason}`
+          : 'Response incomplete';
+      }
+    } catch {
+      // Not JSON; nothing to surface.
+    }
+    return null;
   },
 };

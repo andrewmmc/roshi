@@ -149,7 +149,10 @@ export function EvalView() {
       </PanelHeader>
 
       {error && (
-        <div className="bg-destructive/10 text-destructive border-destructive/40 border-b px-4 py-1.5 text-xs">
+        <div
+          role="alert"
+          className="bg-destructive/10 text-destructive border-destructive/40 border-b px-4 py-1.5 text-xs"
+        >
           {error}
         </div>
       )}

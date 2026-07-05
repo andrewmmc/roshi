@@ -10,6 +10,7 @@ import { isImageMimeType } from '@/utils/mime';
 import {
   buildJsonRequestHeaders,
   extractDataUriBase64,
+  extractErrorMessage,
   joinBaseUrlAndEndpoint,
   mapAnthropicUsage,
 } from './shared';
@@ -225,5 +226,17 @@ export const anthropicAdapter: ProviderAdapter = {
     } catch {
       return null;
     }
+  },
+
+  parseStreamError(data: string): string | null {
+    try {
+      const parsed = JSON.parse(data) as { type?: string; error?: unknown };
+      if (parsed?.type === 'error') {
+        return extractErrorMessage(parsed.error, 'Anthropic stream error');
+      }
+    } catch {
+      // Not JSON; nothing to surface.
+    }
+    return null;
   },
 };

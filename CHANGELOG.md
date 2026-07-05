@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-07-05
+
+### Fixed
+
+- Release/version sync across npm, Tauri bundle, and Cargo metadata
+- CI release workflow deduplication and App Store pre-release guard
+
+## [1.0.5] - 2026-06-20
+
+### Changed
+
+- Eval mode refinements and judge runner improvements
+
+## [1.0.4] - 2026-06-01
+
+### Changed
+
+- Model market and provider catalog updates
+
+## [1.0.3] - 2026-05-15
+
+### Fixed
+
+- Streaming and adapter edge cases across OpenAI, Anthropic, and Gemini
+
+## [1.0.2] - 2026-04-20
+
+### Changed
+
+- Collections, environments, and tab UX improvements
+
+## [1.0.1] - 2026-04-05
+
+### Fixed
+
+- Desktop (Tauri) packaging and provider health checks
+
 ## [1.0.0] - 2026-03-30
 
 ### ✨ Initial v1 Release
@@ -26,7 +63,7 @@ Roshi ships as a fully functional, client-side web app for testing LLM provider 
 - **Chat interface** — multi-turn conversations with role-based message composer
 - **Request composer** — temperature, top-p, frequency penalty, presence penalty, max tokens, custom headers, system prompt, image attachments (for vision models)
 - **Response viewer** — streaming buffer, raw JSON, error details
-- **Code snippet generation** — auto-generated cURL, Python, JavaScript snippets for active request
+- **Code snippet generation** — auto-generated Node.js and Python snippets for the active request (cURL available in the Raw JSON inspector)
 
 #### Local History & Persistence
 
@@ -69,9 +106,9 @@ Roshi ships as a fully functional, client-side web app for testing LLM provider 
 
 ### 📋 What's Included
 
-✅ **290+ tests** (100% pass rate)
+✅ **900+ tests** (100% pass rate)
 ✅ **Clean lint & typecheck** (zero warnings)
-✅ **91.77% test coverage** (exceeds thresholds: 85% lines/functions/statements, 80% branches)
+✅ **98% test coverage** on scoped logic modules
 ✅ **Pre-commit hooks** via Lefthook
 ✅ **SEO meta tags** (description, OG tags for link previews)
 ✅ **MIT License**

@@ -1,11 +1,20 @@
 import type { CodeGenerator, CodeGenParams } from './types';
 import {
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_TOP_P,
+} from '@/constants/defaults';
+import {
   escapeJSString,
   getSendableMessages,
+  mergeCodegenCustomHeaders,
   shouldGenerateOpenAIResponses,
 } from './shared';
 
-function buildClientArgs(provider: CodeGenParams['provider']): string[] {
+function buildClientArgs(
+  provider: CodeGenParams['provider'],
+  customHeaders?: Record<string, string>,
+): string[] {
   const isDefaultOpenAI = provider.baseUrl === 'https://api.openai.com/v1';
   const clientArgs: string[] = [];
 
@@ -13,24 +22,39 @@ function buildClientArgs(provider: CodeGenParams['provider']): string[] {
     clientArgs.push(`  baseURL: "${provider.baseUrl.replace(/\/$/, '')}",`);
   }
 
+  const mergedHeaders = mergeCodegenCustomHeaders(provider, customHeaders);
   if (provider.auth.type === 'api-key-header') {
     const headerName = provider.auth.headerName || 'x-api-key';
-    clientArgs.push(
-      `  defaultHeaders: { "${headerName}": process.env.API_KEY },`,
-    );
+    mergedHeaders[headerName] = '__API_KEY__';
+  }
+
+  const headerEntries = Object.entries(mergedHeaders);
+  if (headerEntries.length > 0) {
+    clientArgs.push(`  defaultHeaders: {`);
+    for (const [key, value] of headerEntries) {
+      clientArgs.push(
+        value === '__API_KEY__'
+          ? `    "${key}": process.env.API_KEY,`
+          : `    "${key}": ${escapeJSString(value)},`,
+      );
+    }
+    clientArgs.push(`  },`);
   }
 
   return clientArgs;
 }
 
-function buildChatMessageLines(params: CodeGenParams): string[] {
+function buildChatMessageLines(
+  messages: CodeGenParams['request']['messages'],
+  systemPrompt: string,
+): string[] {
   const messageLines: string[] = [];
-  if (params.systemPrompt.trim()) {
+  if (systemPrompt.trim()) {
     messageLines.push(
-      `    { role: "system", content: ${escapeJSString(params.systemPrompt)} },`,
+      `    { role: "system", content: ${escapeJSString(systemPrompt)} },`,
     );
   }
-  for (const msg of getSendableMessages(params.messages)) {
+  for (const msg of getSendableMessages(messages)) {
     messageLines.push(
       `    { role: "${msg.role}", content: ${escapeJSString(msg.content)} },`,
     );
@@ -38,8 +62,10 @@ function buildChatMessageLines(params: CodeGenParams): string[] {
   return messageLines;
 }
 
-function buildResponsesInputLines(params: CodeGenParams): string[] {
-  return getSendableMessages(params.messages).map(
+function buildResponsesInputLines(
+  messages: CodeGenParams['request']['messages'],
+): string[] {
+  return getSendableMessages(messages).map(
     (msg) =>
       `    { role: "${msg.role}", content: ${escapeJSString(msg.content)} },`,
   );
@@ -50,19 +76,22 @@ export const openaiNodeGenerator: CodeGenerator = {
   language: 'javascript',
 
   generate(params: CodeGenParams): string {
+    const { provider, request, customHeaders } = params;
     const {
-      provider,
       model,
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      frequencyPenalty,
-      presencePenalty,
-      stream,
-    } = params;
+      messages,
+      systemPrompt = '',
+      temperature = DEFAULT_TEMPERATURE,
+      maxTokens = DEFAULT_MAX_TOKENS,
+      topP = DEFAULT_TOP_P,
+      frequencyPenalty = 0,
+      presencePenalty = 0,
+      stream = false,
+      effort,
+      verbosity,
+    } = request;
 
-    const clientArgs = buildClientArgs(provider);
+    const clientArgs = buildClientArgs(provider, customHeaders);
     const isResponses = shouldGenerateOpenAIResponses(provider, model);
 
     const args: string[] = [];
@@ -73,13 +102,13 @@ export const openaiNodeGenerator: CodeGenerator = {
       }
       args.push(`  max_output_tokens: ${maxTokens},`);
       args.push(`  input: [`);
-      args.push(buildResponsesInputLines(params).join('\n'));
+      args.push(buildResponsesInputLines(messages).join('\n'));
       args.push(`  ],`);
-      if (params.effort) {
-        args.push(`  reasoning: { effort: "${params.effort}" },`);
+      if (effort) {
+        args.push(`  reasoning: { effort: "${effort}" },`);
       }
-      if (params.verbosity) {
-        args.push(`  text: { verbosity: "${params.verbosity}" },`);
+      if (verbosity) {
+        args.push(`  text: { verbosity: "${verbosity}" },`);
       }
     } else {
       args.push(`  temperature: ${temperature},`);
@@ -88,11 +117,14 @@ export const openaiNodeGenerator: CodeGenerator = {
       args.push(`  frequency_penalty: ${frequencyPenalty},`);
       args.push(`  presence_penalty: ${presencePenalty},`);
       args.push(`  messages: [`);
-      args.push(buildChatMessageLines(params).join('\n'));
+      args.push(buildChatMessageLines(messages, systemPrompt).join('\n'));
       args.push(`  ],`);
     }
     if (stream) {
       args.push(`  stream: true,`);
+      if (!isResponses) {
+        args.push(`  stream_options: { include_usage: true },`);
+      }
     }
 
     const clientArgsStr =

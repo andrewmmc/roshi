@@ -33,6 +33,20 @@ describe('RawJsonView', () => {
     expect(screen.getByText(/"gpt-4o-mini"/)).toBeInTheDocument();
   });
 
+  it('redacts an API key embedded in the request URL query string', () => {
+    useResponseStore.setState({
+      rawRequest: { contents: [] },
+      requestUrl:
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini:generateContent?key=SECRETKEY',
+    });
+
+    render(<RawJsonView />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Request' }));
+
+    expect(screen.queryByText(/SECRETKEY/)).not.toBeInTheDocument();
+    expect(screen.getByText(/key=REDACTED/)).toBeInTheDocument();
+  });
+
   it('shows the empty state when no raw payloads are available', () => {
     render(<RawJsonView />);
 

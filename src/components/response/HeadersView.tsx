@@ -6,11 +6,14 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useResponseStore } from '@/stores/response-store';
 import { exportHeadersJson } from '@/utils/export';
+import { maskHeaderValueForDisplay } from '@/components/ui/header-utils';
 
 const HeadersTable = memo(function HeadersTable({
   headers,
+  maskSensitive = false,
 }: {
   headers: Record<string, string> | null;
+  maskSensitive?: boolean;
 }) {
   if (!headers || Object.keys(headers).length === 0) {
     return <EmptyState title="No headers available" compact />;
@@ -25,22 +28,27 @@ const HeadersTable = memo(function HeadersTable({
         </tr>
       </thead>
       <tbody>
-        {Object.entries(headers).map(([key, value]) => (
-          <tr key={key} className="border-border/50 border-b last:border-0">
-            <td className="text-muted-foreground w-1/3 px-3 py-1 align-top">
-              <div className="flex items-center justify-between gap-1">
-                <span className="break-all">{key}</span>
-                <CopyButton text={key} className="shrink-0" />
-              </div>
-            </td>
-            <td className="px-3 py-1 align-top">
-              <div className="flex items-center justify-between gap-1">
-                <span className="break-all">{value}</span>
-                <CopyButton text={value} className="shrink-0" />
-              </div>
-            </td>
-          </tr>
-        ))}
+        {Object.entries(headers).map(([key, value]) => {
+          const displayValue = maskSensitive
+            ? maskHeaderValueForDisplay(key, value)
+            : value;
+          return (
+            <tr key={key} className="border-border/50 border-b last:border-0">
+              <td className="text-muted-foreground w-1/3 px-3 py-1 align-top">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="break-all">{key}</span>
+                  <CopyButton text={key} className="shrink-0" />
+                </div>
+              </td>
+              <td className="px-3 py-1 align-top">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="break-all">{displayValue}</span>
+                  <CopyButton text={displayValue} className="shrink-0" />
+                </div>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -93,7 +101,7 @@ export function HeadersView() {
         value="request"
         className="mt-0 min-h-0 flex-1 overflow-y-auto"
       >
-        <HeadersTable headers={requestHeaders} />
+        <HeadersTable headers={requestHeaders} maskSensitive />
       </TabsContent>
     </Tabs>
   );

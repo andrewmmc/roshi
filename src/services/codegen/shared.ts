@@ -1,5 +1,6 @@
-import type { NormalizedMessage } from '@/types/normalized';
-import { resolveProviderProtocol, type ProviderConfig } from '@/types/provider';
+import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
+import { resolveProviderProtocol } from '@/types/provider';
+import type { CodeGenParams } from './types';
 
 export function escapeJSString(s: string): string {
   if (s.includes('\n')) {
@@ -36,7 +37,7 @@ export function getSendableMessages(
 }
 
 export function shouldGenerateOpenAIResponses(
-  provider: ProviderConfig,
+  provider: CodeGenParams['provider'],
   model: string,
 ): boolean {
   return (
@@ -45,4 +46,66 @@ export function shouldGenerateOpenAIResponses(
       provider.type === 'openai-compatible' &&
       /^gpt-5(?:\.|-|$)/.test(model))
   );
+}
+
+/** Merge provider + request custom headers for codegen output. */
+export function mergeCodegenCustomHeaders(
+  provider: CodeGenParams['provider'],
+  customHeaders?: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries({ ...provider.customHeaders, ...customHeaders }).filter(
+      ([key, value]) => key.trim() !== '' && value.trim() !== '',
+    ),
+  );
+}
+
+export function formatJsHeaderEntries(
+  headers: Record<string, string>,
+): string[] {
+  return Object.entries(headers).map(
+    ([key, value]) => `    "${key}": ${escapeJSString(value)},`,
+  );
+}
+
+export function formatPythonHeaderEntries(
+  headers: Record<string, string>,
+): string[] {
+  return Object.entries(headers).map(
+    ([key, value]) => `        "${key}": ${escapePythonString(value)},`,
+  );
+}
+
+export function isOpus47OrNewer(model: string): boolean {
+  return /claude-opus-4-7(?:\.|-|$)/.test(model);
+}
+
+export function buildAnthropicThinkingArgs(
+  request: NormalizedRequest,
+): string[] {
+  if (!request.thinking?.enabled) return [];
+  if (isOpus47OrNewer(request.model)) {
+    return [
+      `  thinking: { type: "adaptive" },`,
+      `  output_config: { effort: "${request.effort ?? 'high'}" },`,
+    ];
+  }
+  return [
+    `  thinking: { type: "enabled", budget_tokens: ${request.thinking.budgetTokens} },`,
+  ];
+}
+
+export function buildAnthropicThinkingPythonKwargs(
+  request: NormalizedRequest,
+): string[] {
+  if (!request.thinking?.enabled) return [];
+  if (isOpus47OrNewer(request.model)) {
+    return [
+      `    thinking={"type": "adaptive"},`,
+      `    output_config={"effort": "${request.effort ?? 'high'}"},`,
+    ];
+  }
+  return [
+    `    thinking={"type": "enabled", "budget_tokens": ${request.thinking.budgetTokens}},`,
+  ];
 }

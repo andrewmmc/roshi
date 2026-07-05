@@ -12,6 +12,7 @@ import {
   buildJsonRequestHeaders,
   extractDataUriBase64,
   mapGeminiUsage,
+  parseTopLevelStreamError,
 } from './shared';
 
 function buildInlineData(att: MessageAttachment): Record<string, unknown> {
@@ -180,5 +181,9 @@ export const geminiAdapter: ProviderAdapter = {
     } catch {
       return null;
     }
+  },
+
+  parseStreamError(data: string): string | null {
+    return parseTopLevelStreamError(data);
   },
 };

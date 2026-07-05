@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -78,7 +78,9 @@ jobs:
     needs:
       - ci
       - release
-    if: needs.ci.outputs.version_tag != ''
+    # Never upload pre-releases (tags containing a hyphen, e.g. v1.1.0-beta) to
+    # App Store Connect.
+    if: needs.ci.outputs.version_tag != '' && !contains(needs.ci.outputs.version_tag, '-')
     uses: ./.github/workflows/appstore.yml
     with:
       ref: ${{ needs.ci.outputs.version_tag }}

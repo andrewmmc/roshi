@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/tooltip';
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { guessMimeType, SUPPORTED_FILE_ACCEPT } from '@/utils/mime';
+import { toast } from '@/stores/toast-store';
 import type { MessageAttachment, NormalizedMessage } from '@/types/normalized';
 
 /**
@@ -118,8 +119,17 @@ export function MessageEditorView({
     onUpdateMessage(index, { content });
   };
 
+  const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+
   const handleFileSelect = (index: number, file: File) => {
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      toast('Attachment must be 5 MB or smaller.');
+      return;
+    }
     const reader = new FileReader();
+    reader.onerror = () => {
+      toast('Could not read the selected file.');
+    };
     reader.onload = () => {
       const dataUri = reader.result as string;
       onAddAttachment(index, {

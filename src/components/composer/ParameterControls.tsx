@@ -73,7 +73,7 @@ function SelectRow({
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <Label
             htmlFor={inputId}
-            className={`text-xs ${disabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
+            className={`text-xs ${disabled ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
             title={disabledReason}
           >
             {label}
@@ -194,7 +194,7 @@ export function ParameterControls() {
           <div className="flex flex-1 items-center gap-1.5">
             <Label
               htmlFor="param-max-tokens"
-              className={`text-xs ${!canEditMaxTokens ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
+              className={`text-xs ${!canEditMaxTokens ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
               title={
                 !canEditMaxTokens
                   ? 'Max tokens is not supported by the selected model.'
@@ -222,7 +222,7 @@ export function ParameterControls() {
           />
         </div>
         {capabilities?.tokenLimits?.output && (
-          <p className="text-muted-foreground/40 text-right text-xs">
+          <p className="text-muted-foreground/60 text-right text-xs">
             model limit: {capabilities.tokenLimits.output.toLocaleString()}
           </p>
         )}

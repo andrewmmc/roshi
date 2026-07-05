@@ -12,6 +12,7 @@ import {
   buildJsonRequestHeaders,
   joinBaseUrlAndEndpoint,
   mapOpenAIUsage,
+  parseTopLevelStreamError,
 } from './shared';
 
 function isGpt5Family(model: string): boolean {
@@ -156,5 +157,10 @@ export const openaiAdapter: ProviderAdapter = {
     } catch {
       return null;
     }
+  },
+
+  parseStreamError(data: string): string | null {
+    if (data === '[DONE]') return null;
+    return parseTopLevelStreamError(data);
   },
 };

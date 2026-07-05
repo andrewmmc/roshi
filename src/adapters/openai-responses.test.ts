@@ -179,4 +179,55 @@ describe('openaiResponsesAdapter', () => {
       expect(openaiResponsesAdapter.parseStreamChunk('not json')).toBeNull();
     });
   });
+
+  describe('parseStreamError', () => {
+    it('surfaces an error event', () => {
+      const data = JSON.stringify({
+        type: 'error',
+        message: 'server error',
+      });
+      expect(openaiResponsesAdapter.parseStreamError?.(data)).toBe(
+        'server error',
+      );
+    });
+
+    it('surfaces response.failed with error details', () => {
+      const data = JSON.stringify({
+        type: 'response.failed',
+        response: { error: { message: 'model overloaded' } },
+      });
+      expect(openaiResponsesAdapter.parseStreamError?.(data)).toBe(
+        'model overloaded',
+      );
+    });
+
+    it('surfaces response.incomplete with a reason', () => {
+      const data = JSON.stringify({
+        type: 'response.incomplete',
+        response: { incomplete_details: { reason: 'max_output_tokens' } },
+      });
+      expect(openaiResponsesAdapter.parseStreamError?.(data)).toBe(
+        'Response incomplete: max_output_tokens',
+      );
+    });
+
+    it('surfaces response.incomplete without a reason', () => {
+      const data = JSON.stringify({
+        type: 'response.incomplete',
+        response: {},
+      });
+      expect(openaiResponsesAdapter.parseStreamError?.(data)).toBe(
+        'Response incomplete',
+      );
+    });
+
+    it('returns null for a normal event and invalid JSON', () => {
+      expect(
+        openaiResponsesAdapter.parseStreamError?.(
+          JSON.stringify({ type: 'response.completed' }),
+        ),
+      ).toBeNull();
+      expect(openaiResponsesAdapter.parseStreamError?.('not json')).toBeNull();
+    });
+  });
 });

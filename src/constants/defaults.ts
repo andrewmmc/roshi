@@ -18,4 +18,8 @@ export const FREQUENCY_PENALTY_MAX = 2;
 export const PRESENCE_PENALTY_MIN = 0;
 export const PRESENCE_PENALTY_MAX = 2;
 
+/** Wall-clock timeout for non-streaming requests. */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 120_000;
+
+/** Idle timeout between SSE chunks for streaming requests. */
+export const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 120_000;

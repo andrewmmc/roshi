@@ -7,9 +7,13 @@ import type {
 } from '@/types/normalized';
 import { getAdapter } from '@/adapters';
 import type { ProviderAdapter } from '@/adapters/types';
-import { DEFAULT_REQUEST_TIMEOUT_MS } from '@/constants/defaults';
+import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  DEFAULT_STREAM_IDLE_TIMEOUT_MS,
+} from '@/constants/defaults';
 import { filterRequestByCapabilities } from '@/models/compatibility';
 import { resolveModelCapabilities } from '@/models/resolver';
+import { mergeUsage } from '@/adapters/shared';
 import { runtimeFetch } from './runtime-fetch';
 
 export interface SendRequestOptions {
@@ -69,9 +73,12 @@ export async function sendRequest(
 
   const startTime = performance.now();
 
-  const combinedSignal = signal
-    ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
-    : AbortSignal.timeout(timeoutMs);
+  const isStreaming = compatibleRequest.stream;
+  const combinedSignal = isStreaming
+    ? signal
+    : signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
+      : AbortSignal.timeout(timeoutMs);
 
   const fetchResponse = await runtimeFetch(url, {
     method: 'POST',
@@ -122,6 +129,7 @@ export async function sendRequest(
       startTime,
       fetchResponse.status,
       onStreamChunk,
+      timeoutMs ?? DEFAULT_STREAM_IDLE_TIMEOUT_MS,
     );
   }
 
@@ -255,6 +263,7 @@ async function handleStream(
   startTime: number,
   statusCode: number,
   onStreamChunk?: (chunk: NormalizedStreamChunk) => void,
+  idleTimeoutMs = DEFAULT_STREAM_IDLE_TIMEOUT_MS,
 ): Promise<SendRequestResult> {
   const textStream = new TextDecoderStream();
   const pipePromise = body.pipeTo(
@@ -272,7 +281,28 @@ async function handleStream(
 
   let pipeError: unknown;
   let readError: unknown;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const clearIdleTimer = () => {
+    if (idleTimer !== undefined) {
+      clearTimeout(idleTimer);
+      idleTimer = undefined;
+    }
+  };
+
+  const armIdleTimer = () => {
+    clearIdleTimer();
+    idleTimer = setTimeout(() => {
+      readError = new DOMException(
+        'The stream stopped receiving data before completion. The provider may be overloaded or unreachable.',
+        'TimeoutError',
+      );
+      void reader.cancel();
+    }, idleTimeoutMs);
+  };
+
   try {
+    armIdleTimer();
     while (true) {
       let done: boolean;
       let value: { data?: string } | undefined;
@@ -284,11 +314,19 @@ async function handleStream(
       }
       if (done) break;
 
+      armIdleTimer();
+
       const data = value?.data;
       if (!data || data === '[DONE]') continue;
 
       const parsed = parseJsonObject(data);
       if (parsed) allChunks.push(parsed);
+
+      const streamErrorMessage = adapter.parseStreamError?.(data);
+      if (streamErrorMessage) {
+        readError = new Error(streamErrorMessage);
+        break;
+      }
 
       const chunk = adapter.parseStreamChunk(data);
       if (chunk) {
@@ -296,11 +334,12 @@ async function handleStream(
         if (chunk.id) lastId = chunk.id;
         if (chunk.model) lastModel = chunk.model;
         if (chunk.finishReason) finishReason = chunk.finishReason;
-        if (chunk.usage) usage = chunk.usage;
+        if (chunk.usage) usage = mergeUsage(usage, chunk.usage);
         onStreamChunk?.(chunk);
       }
     }
   } finally {
+    clearIdleTimer();
     reader.releaseLock();
     await pipePromise.catch((error) => {
       pipeError = error;

@@ -576,4 +576,24 @@ describe('geminiAdapter', () => {
       expect(geminiAdapter.parseStreamChunk('not-json')).toBeNull();
     });
   });
+
+  describe('parseStreamError', () => {
+    it('surfaces a top-level error message', () => {
+      const data = JSON.stringify({
+        error: { code: 429, message: 'Resource exhausted' },
+      });
+      expect(geminiAdapter.parseStreamError?.(data)).toBe('Resource exhausted');
+    });
+
+    it('returns null for a normal chunk', () => {
+      const data = JSON.stringify({
+        candidates: [{ content: { parts: [{ text: 'Hi' }] } }],
+      });
+      expect(geminiAdapter.parseStreamError?.(data)).toBeNull();
+    });
+
+    it('returns null for invalid JSON', () => {
+      expect(geminiAdapter.parseStreamError?.('not-json')).toBeNull();
+    });
+  });
 });

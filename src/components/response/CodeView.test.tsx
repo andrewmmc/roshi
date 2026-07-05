@@ -97,14 +97,18 @@ describe('CodeView', () => {
 
     expect(screen.getByText('node code')).toBeInTheDocument();
     expect(generateNode).toHaveBeenCalledWith(
-      expect.objectContaining({ stream: true }),
+      expect.objectContaining({
+        request: expect.objectContaining({ stream: true }),
+      }),
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'stream' }));
 
     expect(screen.getByRole('button', { name: 'sync' })).toBeInTheDocument();
     expect(generateNode).toHaveBeenLastCalledWith(
-      expect.objectContaining({ stream: false }),
+      expect.objectContaining({
+        request: expect.objectContaining({ stream: false }),
+      }),
     );
   });
 });

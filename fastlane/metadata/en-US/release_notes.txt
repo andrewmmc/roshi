@@ -1,5 +1,9 @@
-Thanks for using Roshi!
+Roshi 1.0.6 hardens streaming reliability, protects API keys in history and the response inspector, and fixes release/version sync for desktop builds.
 
-This update includes bug fixes, performance improvements, and small refinements to keep your LLM API workbench fast, focused, and dependable.
+Highlights:
+- Anthropic streaming usage and mid-stream provider errors are surfaced correctly
+- Auth headers and query-param keys are redacted before history/export
+- Streaming requests use an idle timeout instead of a wall-clock cap
+- Version files, CI release triggers, and App Store upload guards are aligned
 
-If Roshi helps your workflow, please consider leaving a review — it really helps. Got feedback or found an issue? Open an issue on GitHub from the About menu.
+If Roshi helps your workflow, please consider leaving a review. Got feedback? Open an issue on GitHub from the About menu.

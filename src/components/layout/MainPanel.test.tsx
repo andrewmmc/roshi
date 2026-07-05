@@ -4,6 +4,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useToastStore } from '@/stores/toast-store';
 import { useUiStore } from '@/stores/ui-store';
+import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
 const { send, cancel, seedFromMainComposer } = vi.hoisted(() => ({
   send: vi.fn(),
@@ -85,7 +86,17 @@ describe('MainPanel', () => {
   });
 
   it('sends on button click when a provider exists', () => {
-    useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'p1',
+          apiKey: 'test-key',
+          models: [makeModel({ id: 'm1' })],
+        }),
+      ],
+      selectedProviderId: 'p1',
+      selectedModelId: 'm1',
+    });
 
     render(<MainPanel />);
 

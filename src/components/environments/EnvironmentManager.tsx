@@ -6,6 +6,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import {
   Select,
   SelectContent,
@@ -32,7 +33,7 @@ function EnvironmentCard({
 }: {
   environment: Environment;
   onEdit: () => void;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string) => void;
 }) {
   const variableCount = environment.variables.filter((v) => v.key).length;
 
@@ -61,15 +62,26 @@ function EnvironmentCard({
           size="icon-sm"
           className="text-muted-foreground hover:text-destructive"
           tooltip="Delete environment"
-          onClick={async () => {
-            await onDelete(environment.id);
-            toast('Environment deleted');
-          }}
+          onClick={() => onDelete(environment.id)}
         >
           <Trash2 className="h-3 w-3" />
         </IconButton>
       </div>
     </div>
+  );
+}
+
+function environmentIsDirty(
+  original: Environment,
+  name: string,
+  variables: EnvironmentVariable[],
+): boolean {
+  if (name !== original.name) return true;
+  if (variables.length !== original.variables.length) return true;
+  return variables.some(
+    (variable, index) =>
+      variable.key !== original.variables[index]?.key ||
+      variable.value !== original.variables[index]?.value,
   );
 }
 
@@ -89,6 +101,15 @@ function EnvironmentEditor({
   const [variables, setVariables] = useState<EnvironmentVariable[]>(
     environment.variables.length ? environment.variables : [createVariable()],
   );
+  const [showDiscard, setShowDiscard] = useState(false);
+
+  const handleCancel = () => {
+    if (environmentIsDirty(environment, name, variables)) {
+      setShowDiscard(true);
+      return;
+    }
+    onCancel();
+  };
 
   const updateVariable = useCallback(
     (id: string, updates: Partial<EnvironmentVariable>) => {
@@ -178,7 +199,7 @@ function EnvironmentEditor({
           Variable
         </Button>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+          <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
           <Button
@@ -194,6 +215,14 @@ function EnvironmentEditor({
           </Button>
         </div>
       </div>
+
+      <ConfirmDiscardDialog
+        open={showDiscard}
+        onOpenChange={setShowDiscard}
+        onConfirm={onCancel}
+        title="Discard environment changes?"
+        description="Your edits to this environment have not been saved."
+      />
     </div>
   );
 }
@@ -207,6 +236,8 @@ export function EnvironmentSettings() {
     selectEnvironment,
   } = useEnvironments();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleAdd = useCallback(async () => {
     const environment = await addEnvironment('New Environment');
@@ -221,6 +252,18 @@ export function EnvironmentSettings() {
     },
     [deleteEnvironment, editingId],
   );
+
+  const requestDelete = useCallback((id: string) => {
+    setPendingDeleteId(id);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!pendingDeleteId) return;
+    await handleDelete(pendingDeleteId);
+    toast('Environment deleted');
+    setPendingDeleteId(null);
+  }, [handleDelete, pendingDeleteId]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -262,13 +305,21 @@ export function EnvironmentSettings() {
                   key={environment.id}
                   environment={environment}
                   onEdit={() => setEditingId(environment.id)}
-                  onDelete={handleDelete}
+                  onDelete={requestDelete}
                 />
               ),
             )}
           </div>
         )}
       </div>
+
+      <ConfirmDiscardDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmDelete}
+        title="Delete environment?"
+        description="This environment and its variables will be removed permanently."
+      />
     </div>
   );
 }

@@ -162,21 +162,65 @@ export function makeHistoryEntry(
 }
 
 export function makeCodeGenParams(
-  overrides?: Partial<CodeGenParams>,
+  overrides?: Partial<CodeGenParams> & {
+    model?: string;
+    messages?: NormalizedMessage[];
+    systemPrompt?: string;
+    temperature?: number;
+    maxTokens?: number;
+    topP?: number;
+    topK?: number;
+    frequencyPenalty?: number;
+    presencePenalty?: number;
+    stream?: boolean;
+    effort?: string;
+    verbosity?: string;
+    thinking?: NormalizedRequest['thinking'];
+  },
 ): CodeGenParams {
+  if (overrides?.request) {
+    return {
+      provider: overrides.provider ?? makeProvider(),
+      request: overrides.request,
+      customHeaders: overrides.customHeaders,
+    };
+  }
+
+  const {
+    provider,
+    customHeaders,
+    model = 'gpt-4',
+    messages = [makeMessage()],
+    systemPrompt = '',
+    temperature = 1,
+    maxTokens = 4096,
+    topP = 1,
+    topK,
+    frequencyPenalty = 0,
+    presencePenalty = 0,
+    stream = false,
+    effort,
+    verbosity,
+    thinking,
+  } = overrides ?? {};
+
   return {
-    provider: makeProvider(),
-    model: 'gpt-4',
-    messages: [makeMessage()],
-    systemPrompt: '',
-    temperature: 1,
-    maxTokens: 4096,
-    topP: 1,
-    frequencyPenalty: 0,
-    presencePenalty: 0,
-    stream: false,
-    effort: 'medium',
-    verbosity: 'medium',
-    ...overrides,
+    provider: provider ?? makeProvider(),
+    request: makeRequest({
+      model,
+      messages,
+      systemPrompt,
+      temperature,
+      maxTokens,
+      topP,
+      topK,
+      frequencyPenalty,
+      presencePenalty,
+      stream,
+      effort,
+      verbosity,
+      thinking,
+    }),
+    customHeaders,
   };
 }

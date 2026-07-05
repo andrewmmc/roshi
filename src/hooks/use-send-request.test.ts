@@ -965,9 +965,7 @@ describe('useSendRequest', () => {
       });
 
       expect(useResponseStore.getState().error).toBe('Request timed out');
-      expect(useResponseStore.getState().errorDetail).toContain(
-        '120-second timeout',
-      );
+      expect(useResponseStore.getState().errorDetail).toBe('Timed out');
     });
 
     it('handles AbortError', async () => {

@@ -309,6 +309,45 @@ describe('llm-client', () => {
       );
     });
 
+    it('does not apply a wall-clock timeout to streaming fetch requests', async () => {
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValue(null),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        body: createSSEStream([]),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+      });
+
+      expect(mockFetch.mock.calls[0][1].signal).toBeUndefined();
+    });
+
+    it('applies a wall-clock timeout to non-streaming fetch requests', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        text: () => Promise.resolve('{}'),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: false }),
+      });
+
+      expect(mockFetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+    });
+
     it('passes signal to fetch', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -479,6 +518,90 @@ describe('llm-client', () => {
       expect(chunks).toHaveLength(3);
       expect(result.rawResponse).toHaveProperty('chunks');
       expect(result.rawResponse).toHaveProperty('reconstructed');
+    });
+
+    it('merges usage across chunks instead of overwriting (Anthropic-style split)', async () => {
+      const startEvent = JSON.stringify({ type: 'message_start' });
+      const deltaEvent = JSON.stringify({ type: 'message_delta' });
+
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi
+          .fn()
+          .mockReturnValueOnce({
+            content: '',
+            finishReason: null,
+            usage: { promptTokens: 100, completionTokens: 0, totalTokens: 100 },
+          })
+          .mockReturnValueOnce({
+            content: 'Hi',
+            finishReason: 'end_turn',
+            usage: { promptTokens: 0, completionTokens: 42, totalTokens: 42 },
+          }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream([startEvent, deltaEvent]),
+        }),
+      );
+
+      const result = await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+      });
+
+      expect(result.response.usage).toEqual({
+        promptTokens: 100,
+        completionTokens: 42,
+        totalTokens: 142,
+      });
+    });
+
+    it('surfaces a mid-stream provider error as StreamError with partial content', async () => {
+      const contentEvent = JSON.stringify({ delta: 'Partial' });
+      const errorEvent = JSON.stringify({
+        error: { message: 'rate limit exceeded' },
+      });
+
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi
+          .fn()
+          .mockReturnValueOnce({ content: 'Partial', finishReason: null })
+          .mockReturnValue(null),
+        parseStreamError: vi
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce('rate limit exceeded'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream([contentEvent, errorEvent]),
+        }),
+      );
+
+      try {
+        await sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        });
+        expect.fail('should have thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(StreamError);
+        const streamErr = err as StreamError;
+        expect(streamErr.message).toBe('rate limit exceeded');
+        expect(streamErr.partialResponse.content).toBe('Partial');
+      }
     });
 
     it('throws StreamError with partial content when the stream fails mid-read', async () => {
