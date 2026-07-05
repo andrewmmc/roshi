@@ -65,6 +65,78 @@ describe('useGlobalShortcuts', () => {
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
   });
 
+  describe('Cmd/Ctrl+Enter — eval run', () => {
+    beforeEach(() => {
+      useUiStore.setState({ mainView: 'eval' });
+      useEvalStore.getState().reset();
+    });
+
+    it('starts eval when runners exist and eval is idle', () => {
+      useEvalStore.setState({
+        runners: [{ id: 'r1', providerId: 'p1', modelId: 'm1' } as never],
+      });
+      useEvalStore.getState().updateMessage(0, { content: 'Run this prompt' });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Enter', { metaKey: true });
+
+      expect(useEvalStore.getState().isRunning).toBe(true);
+    });
+
+    it('does not start eval when there are no runners', () => {
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Enter', { metaKey: true });
+
+      expect(useEvalStore.getState().isRunning).toBe(false);
+      expect(useEvalStore.getState().error).toBeNull();
+    });
+
+    it('does not start eval when a run is already in progress', () => {
+      useEvalStore.setState({
+        isRunning: true,
+        runners: [{ id: 'r1', providerId: 'p1', modelId: 'm1' } as never],
+      });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Enter', { metaKey: true });
+
+      expect(useEvalStore.getState().isRunning).toBe(true);
+    });
+  });
+
+  describe('Escape — cancel eval', () => {
+    beforeEach(() => {
+      useUiStore.setState({ mainView: 'eval' });
+      useEvalStore.getState().reset();
+    });
+
+    it('cancels eval when running and no dialog is open', () => {
+      const cancel = vi.fn();
+      useEvalStore.setState({
+        isRunning: true,
+        _runHandle: { cancel },
+      });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Escape');
+
+      expect(cancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not cancel eval when idle', () => {
+      const cancel = vi.fn();
+      useEvalStore.setState({
+        isRunning: false,
+        _runHandle: { cancel },
+      });
+
+      renderHook(() => useGlobalShortcuts());
+      fireKey('Escape');
+
+      expect(cancel).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Cmd/Ctrl+Enter — send', () => {
     it('does not send when no provider is available', () => {
       renderHook(() => useGlobalShortcuts());

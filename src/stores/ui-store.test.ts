@@ -94,6 +94,27 @@ describe('ui-store', () => {
     });
   });
 
+  describe('sidebarSection', () => {
+    it('defaults to history', () => {
+      expect(getState().sidebarSection).toBe('history');
+    });
+
+    it('updates the active sidebar section', () => {
+      getState().setSidebarSection('collections');
+      expect(getState().sidebarSection).toBe('collections');
+    });
+
+    it('opens a sidebar section and expands the sidebar', () => {
+      useUiStore.setState({
+        sidebarCollapsed: true,
+        sidebarSection: 'history',
+      });
+      getState().openSidebarSection('evals');
+      expect(getState().sidebarSection).toBe('evals');
+      expect(getState().sidebarCollapsed).toBe(false);
+    });
+  });
+
   describe('sidebarCollapsed', () => {
     it('defaults to false in test environment', () => {
       expect(getState().sidebarCollapsed).toBe(false);

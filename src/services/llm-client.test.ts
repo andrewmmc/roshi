@@ -847,6 +847,33 @@ describe('llm-client', () => {
       expect(mockAdapter.parseStreamChunk).toHaveBeenCalledTimes(1);
       expect(result.response.content).toBe('Hi');
     });
+
+    it('throws StreamError when the stream idles past the timeout', async () => {
+      vi.useFakeTimers();
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: new ReadableStream<Uint8Array>({ start() {} }),
+        }),
+      );
+
+      const requestPromise = sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+        timeoutMs: 50,
+      });
+
+      const rejection =
+        expect(requestPromise).rejects.toBeInstanceOf(StreamError);
+      await vi.runAllTimersAsync();
+      await rejection;
+
+      vi.useRealTimers();
+    });
   });
 
   describe('getRequestUrl — dev proxy', () => {

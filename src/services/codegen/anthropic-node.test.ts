@@ -69,4 +69,38 @@ describe('anthropicNodeGenerator', () => {
 
     expect(code).toContain('content: `line1\nline2`');
   });
+
+  it('includes custom headers and thinking args', () => {
+    const code = anthropicNodeGenerator.generate(
+      makeCodeGenParams({
+        model: 'claude-sonnet-4-20250514',
+        topP: 1,
+        topK: 40,
+        thinking: { enabled: true, budgetTokens: 1024 },
+        customHeaders: { 'X-Request': 'trace' },
+      }),
+    );
+
+    expect(code).toContain('"X-Request": "trace"');
+    expect(code).toContain(
+      'thinking: { type: "enabled", budget_tokens: 1024 }',
+    );
+    expect(code).toContain('top_k: 40');
+  });
+
+  it('omits temperature controls for opus 4.7 and newer', () => {
+    const code = anthropicNodeGenerator.generate(
+      makeCodeGenParams({
+        model: 'claude-opus-4-7',
+        topP: 0.5,
+        thinking: { enabled: true, budgetTokens: 1024 },
+        effort: 'low',
+      }),
+    );
+
+    expect(code).not.toContain('temperature:');
+    expect(code).not.toContain('top_p:');
+    expect(code).toContain('thinking: { type: "adaptive" }');
+    expect(code).toContain('output_config: { effort: "low" }');
+  });
 });

@@ -66,4 +66,17 @@ describe('anthropicPythonGenerator', () => {
 
     expect(code).toContain('"content": r"""line1\nline2"""');
   });
+
+  it('uses adaptive thinking for opus 4.7 models', () => {
+    const code = anthropicPythonGenerator.generate(
+      makeCodeGenParams({
+        model: 'claude-opus-4-7',
+        topP: 0.5,
+        thinking: { enabled: true, budgetTokens: 1024 },
+      }),
+    );
+
+    expect(code).toContain('thinking={"type": "adaptive"}');
+    expect(code).not.toContain('top_p=');
+  });
 });
