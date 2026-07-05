@@ -16,6 +16,7 @@ import {
   removeById,
   replaceById,
 } from '@/stores/store-helpers';
+import { useModelCatalogStore } from './model-catalog-store';
 
 const providerLoadGuard = createLoadGuard();
 
@@ -393,7 +394,6 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     if (get().refreshingCatalog) return;
     set({ refreshingCatalog: true });
     try {
-      const { useModelCatalogStore } = await import('./model-catalog-store');
       await useModelCatalogStore.getState().load(true);
     } finally {
       set({ refreshingCatalog: false });

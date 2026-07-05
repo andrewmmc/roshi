@@ -1,4 +1,5 @@
 import { db } from '@/db';
+import { useProviderStore } from '@/stores/provider-store';
 
 export async function resetApplication(): Promise<void> {
   await db.delete();
@@ -7,6 +8,5 @@ export async function resetApplication(): Promise<void> {
 }
 
 export async function resetProviders(): Promise<void> {
-  const { useProviderStore } = await import('@/stores/provider-store');
   await useProviderStore.getState().resetAllProviders();
 }
