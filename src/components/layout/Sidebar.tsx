@@ -151,7 +151,7 @@ export function Sidebar() {
         </div>
         <nav
           aria-label="Main navigation"
-          className="min-h-0 flex-1 overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {mainView === 'request' ? (
             <>
