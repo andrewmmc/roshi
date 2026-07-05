@@ -187,7 +187,17 @@ export function ProviderForm({
         </div>
 
         {form.type === 'openai-compatible' && (
-          <Field label="Protocol" htmlFor="provider-protocol">
+          <Field
+            label="Protocol"
+            htmlFor="provider-protocol"
+            hint={
+              form.protocol === 'openai-chat-completions'
+                ? 'For the official OpenAI API. Automatically uses the Responses API for GPT-5 models.'
+                : form.protocol === 'openai-responses'
+                  ? 'Uses the OpenAI Responses API format directly for all models.'
+                  : undefined
+            }
+          >
             <Select
               value={form.protocol ?? 'openai-compatible-chat'}
               onValueChange={(val) =>
@@ -200,14 +210,12 @@ export function ProviderForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="openai-compatible-chat">
-                  OpenAI-compatible Chat Completions
+                  Chat Completions
                 </SelectItem>
                 <SelectItem value="openai-chat-completions">
-                  OpenAI Chat Completions
+                  Chat Completions (OpenAI)
                 </SelectItem>
-                <SelectItem value="openai-responses">
-                  OpenAI Responses
-                </SelectItem>
+                <SelectItem value="openai-responses">Responses API</SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -298,24 +306,26 @@ export function ProviderForm({
           />
         </Field>
 
-        {form.type === 'openai-compatible' && (
-          <Field
-            label="Responses Endpoint"
-            htmlFor="provider-responses-endpoint"
-          >
-            <Input
-              id="provider-responses-endpoint"
-              value={form.endpoints.responses ?? ''}
-              onChange={(e) =>
-                updateField('endpoints', {
-                  ...form.endpoints,
-                  responses: e.target.value,
-                })
-              }
-              placeholder="/responses"
-            />
-          </Field>
-        )}
+        {form.type === 'openai-compatible' &&
+          (form.protocol === 'openai-responses' ||
+            form.protocol === 'openai-chat-completions') && (
+            <Field
+              label="Responses Endpoint"
+              htmlFor="provider-responses-endpoint"
+            >
+              <Input
+                id="provider-responses-endpoint"
+                value={form.endpoints.responses ?? ''}
+                onChange={(e) =>
+                  updateField('endpoints', {
+                    ...form.endpoints,
+                    responses: e.target.value,
+                  })
+                }
+                placeholder="/responses"
+              />
+            </Field>
+          )}
 
         {!isBuiltIn && (
           <div className="flex flex-col gap-2">

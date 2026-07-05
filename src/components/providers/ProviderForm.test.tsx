@@ -192,7 +192,10 @@ describe('ProviderForm', () => {
   it('updates auth type, endpoints, API key, and display name fields', () => {
     const onSubmit = vi.fn();
     const { container } = render(
-      <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
+      <ProviderForm
+        onSubmit={onSubmit}
+        initialData={makeProvider({ protocol: 'openai-chat-completions' })}
+      />,
     );
 
     fireEvent.change(screen.getAllByLabelText('select')[2], {
