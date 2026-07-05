@@ -7,8 +7,6 @@ import {
   Boxes,
   Plus,
   Trash2,
-  Activity,
-  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -23,11 +21,6 @@ import {
 } from '@/constants/providers';
 import { exportProviders } from '@/utils/export';
 import { sortProvidersByName } from '@/utils/sort-providers';
-import {
-  checkProviderHealth,
-  type ProviderHealthResult,
-} from '@/services/provider-health';
-import { toast } from '@/stores/toast-store';
 import type { ProviderConfig } from '@/types/provider';
 
 type View = 'list' | 'edit' | 'add';
@@ -58,30 +51,16 @@ function getProviderDetails(provider: ProviderConfig): string {
     .join(' · ');
 }
 
-function healthStatusLabel(result: ProviderHealthResult): string {
-  if (result.status === 'success') {
-    return `Healthy via ${result.modelId} (${result.durationMs}ms)`;
-  }
-  if (result.status === 'skipped') {
-    return result.message;
-  }
-  return result.message;
-}
-
 function ProviderList({
   providers,
-  checkingProviderId,
   onEditProvider,
   onDeleteProvider,
   onManageModels,
-  onHealthCheck,
 }: {
   providers: ProviderConfig[];
-  checkingProviderId: string | null;
   onEditProvider: (provider: ProviderConfig) => void;
   onDeleteProvider: (provider: ProviderConfig) => void;
   onManageModels: (provider: ProviderConfig) => void;
-  onHealthCheck: (provider: ProviderConfig) => void;
 }) {
   return (
     <div className="flex flex-col gap-2 px-3 py-3">
@@ -104,26 +83,6 @@ function ProviderList({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
-            <IconButton
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground shrink-0"
-              onClick={() => onHealthCheck(provider)}
-              disabled={checkingProviderId === provider.id}
-              tooltip={
-                checkingProviderId === provider.id
-                  ? 'Checking provider...'
-                  : 'Run health check'
-              }
-              aria-label={`Run health check for ${provider.name}`}
-            >
-              {checkingProviderId === provider.id ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Activity className="h-3.5 w-3.5" />
-              )}
-            </IconButton>
             <IconButton
               type="button"
               variant="ghost"
@@ -264,9 +223,6 @@ export function ProviderSettings({
     null,
   );
   const [resettingProvider, setResettingProvider] = useState(false);
-  const [checkingProviderId, setCheckingProviderId] = useState<string | null>(
-    null,
-  );
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
@@ -345,23 +301,6 @@ export function ProviderSettings({
     openModelMarket(provider.id);
   };
 
-  const handleHealthCheck = async (provider: ProviderConfig) => {
-    setCheckingProviderId(provider.id);
-    try {
-      const result = await checkProviderHealth(provider);
-      const label = healthStatusLabel(result);
-      if (result.status === 'success') {
-        toast(`${provider.name}: ${label}`, 4000);
-      } else if (result.status === 'skipped') {
-        toast(`${provider.name}: ${label}`, 4000);
-      } else {
-        toast(`${provider.name}: ${label}`, 6000);
-      }
-    } finally {
-      setCheckingProviderId(null);
-    }
-  };
-
   const handleResetProvider = async () => {
     if (!editingProvider) return;
     setResettingProvider(true);
@@ -436,11 +375,9 @@ export function ProviderSettings({
         {view === 'list' && (
           <ProviderList
             providers={providers}
-            checkingProviderId={checkingProviderId}
             onEditProvider={openEditProvider}
             onDeleteProvider={handleDeleteProvider}
             onManageModels={handleManageModels}
-            onHealthCheck={(provider) => void handleHealthCheck(provider)}
           />
         )}
 
