@@ -1,10 +1,19 @@
-import { Trash2, Download, Check } from 'lucide-react';
-import { IconButton } from '@/components/ui/icon-button';
+import { Trash2, Download, Check, MoreHorizontal } from 'lucide-react';
 import { SidebarRow } from '@/components/ui/sidebar-row';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { exportHistoryEntry } from '@/utils/export';
 import { formatRelativeTime } from '@/utils/relative-time';
 import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/history';
+
+const TRIGGER_CLASS =
+  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
 
 interface HistoryItemProps {
   entry: HistoryEntry;
@@ -42,32 +51,29 @@ export function HistoryItem({
       active={compareSelected}
       onClick={handleClick}
       actions={
-        <>
-          <IconButton
-            variant="ghost"
-            size="icon-xs"
-            className="text-muted-foreground hover:text-foreground"
-            tooltip="Export as JSON"
-            onClick={(e) => {
-              e.stopPropagation();
-              exportHistoryEntry(entry);
-            }}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="History entry actions"
+            className={TRIGGER_CLASS}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Download className="h-3 w-3" />
-          </IconButton>
-          <IconButton
-            variant="ghost"
-            size="icon-xs"
-            className="text-muted-foreground hover:text-destructive"
-            tooltip="Delete history entry"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(entry.id);
-            }}
-          >
-            <Trash2 className="h-3 w-3" />
-          </IconButton>
-        </>
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-auto min-w-40">
+            <DropdownMenuItem onClick={() => exportHistoryEntry(entry)}>
+              <Download className="h-3.5 w-3.5" />
+              Export as JSON
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDelete(entry.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       }
     >
       {compareMode && (
@@ -82,7 +88,7 @@ export function HistoryItem({
           {compareSelected ? <Check className="h-2.5 w-2.5" /> : null}
         </span>
       )}
-      <div className="min-w-0 flex-1 pr-12">
+      <div className="min-w-0 flex-1 pr-8">
         <div className="text-muted-foreground flex items-center gap-1 text-[11px]">
           <span className="truncate">{entry.providerName}</span>
           {entry.modelId && <span className="opacity-40">/</span>}

@@ -50,8 +50,9 @@ describe('HistoryItem', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Delete history entry' }),
+      screen.getByRole('button', { name: 'History entry actions' }),
     );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
     expect(onDelete).toHaveBeenCalledWith('h1');
     expect(onSelect).not.toHaveBeenCalled();
