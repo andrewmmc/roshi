@@ -1,9 +1,34 @@
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, MonitorCog, Server, Settings, Variable, X } from 'lucide-react';
+import {
+  Boxes,
+  ChevronDown,
+  MonitorCog,
+  RotateCcw,
+  Server,
+  Settings,
+  Variable,
+  X,
+} from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ProviderSettings } from '@/components/providers/ProviderManager';
 import { ModelMarket } from '@/components/models/ModelMarket';
 import {
@@ -12,6 +37,7 @@ import {
 } from '@/components/environments/EnvironmentManager';
 import { useUiStore, type SettingsPage } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { resetApplication, resetProviders } from '@/services/reset';
 import type { ProviderConfig } from '@/types/provider';
 import { cn } from '@/lib/utils';
 
@@ -28,10 +54,62 @@ const SECTIONS: SettingsSection[] = [
   { id: 'environments', label: 'Environments', icon: Variable },
 ];
 
+function ResetConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogClose render={<Button variant="outline" size="sm" />}>
+            Cancel
+          </AlertDialogClose>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+          >
+            Reset
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function GeneralSettings() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const darkMode = theme === 'dark';
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    mode: 'all' | 'providers';
+  }>({ open: false, mode: 'all' });
+
+  const handleConfirmReset = () => {
+    if (confirmDialog.mode === 'all') {
+      void resetApplication();
+    } else {
+      void resetProviders();
+    }
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -42,7 +120,7 @@ function GeneralSettings() {
         </p>
       </div>
 
-      <div className="flex-1 px-5 py-4">
+      <div className="flex-1 space-y-3 px-5 py-4">
         <div className="border-border/70 bg-muted/20 flex items-center justify-between gap-4 rounded-lg border p-3">
           <div>
             <div className="text-sm font-medium">Dark mode</div>
@@ -69,7 +147,75 @@ function GeneralSettings() {
             />
           </button>
         </div>
+
+        <div className="border-border/70 bg-muted/20 flex items-center justify-between gap-4 rounded-lg border p-3">
+          <div>
+            <div className="text-sm font-medium">Reset application</div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Clear all data and return to the initial state.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive rounded-r-none border-r-0"
+              onClick={() => setConfirmDialog({ open: true, mode: 'all' })}
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive rounded-l-none px-1.5"
+                    aria-label="More reset options"
+                  />
+                }
+              >
+                <ChevronDown className="h-3 w-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setConfirmDialog({ open: true, mode: 'all' })}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset entire application
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() =>
+                    setConfirmDialog({ open: true, mode: 'providers' })
+                  }
+                >
+                  <Server className="h-3.5 w-3.5" />
+                  Reset providers only
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
+
+      <ResetConfirmDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        title={
+          confirmDialog.mode === 'all'
+            ? 'Reset entire application?'
+            : 'Reset providers?'
+        }
+        description={
+          confirmDialog.mode === 'all'
+            ? 'This will permanently delete all providers, history, saved requests, environments, and settings. The app will reload in its initial state.'
+            : 'This will reset all providers to their defaults and remove any custom providers. History and other data will be kept.'
+        }
+        onConfirm={handleConfirmReset}
+      />
     </div>
   );
 }

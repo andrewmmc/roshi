@@ -169,10 +169,8 @@ function ProviderList({
 export function ProviderSettingsFooter({
   view,
   editingProvider,
-  resettingAll,
   resettingProvider,
   providers,
-  onResetAll,
   onClose,
   onBackToList,
   onResetProvider,
@@ -180,10 +178,8 @@ export function ProviderSettingsFooter({
 }: {
   view: View;
   editingProvider: ProviderConfig | null;
-  resettingAll: boolean;
   resettingProvider: boolean;
   providers: ProviderConfig[];
-  onResetAll: () => void;
   onClose: () => void;
   onBackToList: () => void;
   onResetProvider: () => void;
@@ -194,30 +190,18 @@ export function ProviderSettingsFooter({
       {view === 'list' && (
         <>
           <Button
+            type="button"
             variant="ghost"
             size="sm"
-            className="text-destructive hover:text-destructive text-xs"
-            disabled={resettingAll}
-            onClick={onResetAll}
+            className="text-muted-foreground hover:text-foreground text-xs"
+            onClick={() => exportProviders(providers)}
           >
-            <RotateCcw className="mr-1 h-3 w-3" />
-            {resettingAll ? 'Resetting...' : 'Reset all to default'}
+            <Download className="mr-1 h-3 w-3" />
+            Export JSON
           </Button>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground text-xs"
-              onClick={() => exportProviders(providers)}
-            >
-              <Download className="mr-1 h-3 w-3" />
-              Export JSON
-            </Button>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </div>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </>
       )}
 
@@ -279,7 +263,6 @@ export function ProviderSettings({
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
     null,
   );
-  const [resettingAll, setResettingAll] = useState(false);
   const [resettingProvider, setResettingProvider] = useState(false);
   const [checkingProviderId, setCheckingProviderId] = useState<string | null>(
     null,
@@ -294,7 +277,6 @@ export function ProviderSettings({
     updateProvider,
     deleteProvider,
     resetProvider,
-    resetAllProviders,
     selectProvider,
   } = useProviders();
 
@@ -377,15 +359,6 @@ export function ProviderSettings({
       }
     } finally {
       setCheckingProviderId(null);
-    }
-  };
-
-  const handleResetAll = async () => {
-    setResettingAll(true);
-    try {
-      await resetAllProviders();
-    } finally {
-      setResettingAll(false);
     }
   };
 
@@ -495,10 +468,8 @@ export function ProviderSettings({
       <ProviderSettingsFooter
         view={view}
         editingProvider={editingProvider}
-        resettingAll={resettingAll}
         resettingProvider={resettingProvider}
         providers={providers}
-        onResetAll={() => void handleResetAll()}
         onClose={handleClose}
         onBackToList={handleBackToList}
         onResetProvider={() => void handleResetProvider()}

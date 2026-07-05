@@ -137,19 +137,13 @@ describe('ProviderSettings', () => {
     });
   });
 
-  it('renders provider details in list view and resets all providers', async () => {
-    const user = userEvent.setup();
+  it('renders provider details in list view', async () => {
     renderProviderSettings();
 
     expect(screen.getByText('Providers')).toBeInTheDocument();
     expect(
       screen.getByText(/API key configured · Custom headers/),
     ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('button', { name: /reset all to default/i }),
-    );
-    expect(resetAllProviders).toHaveBeenCalledTimes(1);
   });
 
   it('opens the Model Market for a provider via the Manage models entry', async () => {
