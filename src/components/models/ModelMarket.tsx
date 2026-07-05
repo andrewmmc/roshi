@@ -26,25 +26,23 @@ export function ModelMarketFooter({
   onClose: () => void;
 }) {
   return (
-    <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-foreground text-xs"
-          disabled={refreshing}
-          onClick={onRefresh}
-        >
-          <RefreshCw
-            className={cn('mr-1 h-3 w-3', refreshing && 'animate-spin')}
-          />
-          {refreshing ? 'Refreshing…' : 'Refresh catalogue'}
-        </Button>
-        <Button type="button" variant="outline" onClick={onClose}>
-          Close
-        </Button>
-      </div>
+    <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-foreground text-xs"
+        disabled={refreshing}
+        onClick={onRefresh}
+      >
+        <RefreshCw
+          className={cn('mr-1 h-3 w-3', refreshing && 'animate-spin')}
+        />
+        {refreshing ? 'Refreshing…' : 'Refresh catalogue'}
+      </Button>
+      <Button type="button" variant="outline" onClick={onClose}>
+        Close
+      </Button>
     </div>
   );
 }
