@@ -48,15 +48,18 @@ The app sends HTTP requests with `fetch`, streams SSE with `eventsource-parser`,
 4. **response-store** holds loading, streaming text, errors, and raw request/response payloads.
 5. A **history** entry is written to IndexedDB; UI updates via Zustand selectors.
 
-`request-store.ts` is a thin re-export of `composer-store` and `response-store` for backward compatibility; prefer importing those stores directly.
+Import `composer-store` and `response-store` directly. (An older `request-store.ts` re-export shim has been removed.)
 
 ### Provider adapters
 
-`ProviderAdapter` is defined in `src/adapters/types.ts`. `getAdapter()` in `src/adapters/index.ts` picks the implementation by `ProviderConfig.type`:
+`ProviderAdapter` is defined in `src/adapters/types.ts`. `getAdapter()` in `src/adapters/index.ts` picks the implementation by the provider's resolved **protocol** (`resolveProviderProtocol()` in `src/types/provider.ts`), not directly by `ProviderConfig.type`:
 
-- **`openai-compatible`** and **`custom`** → `openaiAdapter` (Chat Completions–style JSON).
-- **`anthropic`** → `anthropicAdapter` (Anthropic Messages API).
-- **`google-gemini`** → currently the same as OpenAI-compatible (fallback until a dedicated adapter exists).
+- **`openai-chat-completions`** / **`openai-compatible-chat`** → `openaiChatAdapter` (Chat Completions–style JSON). This is the default fallback.
+- **`openai-responses`** → `openaiResponsesAdapter` (OpenAI Responses API). Also selected automatically for OpenAI GPT-5 models even when the provider protocol is Chat Completions.
+- **`anthropic-messages`** → `anthropicAdapter` (Anthropic Messages API).
+- **`gemini-generate-content`** → `geminiAdapter` (Google Gemini `generateContent`).
+
+Provider `type` is `openai-compatible | anthropic | google-gemini`; the optional `protocol` field refines it (see `getDefaultProtocolForProviderType()`).
 
 ### State (Zustand, no middleware)
 
@@ -65,6 +68,20 @@ The app sends HTTP requests with `fetch`, streams SSE with `eventsource-parser`,
 - **response-store** — last run: streaming buffer, parsed response, errors, raw JSON.
 - **history-store** — history list from IndexedDB.
 - **theme-store** — light/dark; preference persisted in **localStorage** (`llm-tester-theme`).
+- **tab-store** — open request tabs (max 8) with per-tab composer snapshots.
+- **collection-store** — request collections and saved requests (IndexedDB).
+- **environment-store** — named variable environments for `{{var}}` substitution (IndexedDB).
+- **eval-store** — eval-mode composer, runners, and compare selection.
+- **eval-runs-store** — saved eval runs / results (IndexedDB `evalRuns`, `evalCollections`).
+- **model-catalog-store** — cached models.dev catalog for the model market.
+- **ui-store** — transient UI state (dialogs, active view, etc.).
+- **toast-store** — toast notifications.
+
+### Other subsystems
+
+- **Eval mode** — `src/components/eval/` with `services/eval-runner.ts` (runs prompts across multiple provider/model runners) and `services/judge-runner.ts` (LLM-as-judge scoring).
+- **Code generation** — `src/services/codegen/` produces cURL / Node / Python snippets per provider for the active request.
+- **Model market** — `src/components/models/` browses/adds models sourced from the models.dev catalog.
 
 ### Dev proxy
 
@@ -76,7 +93,7 @@ Built-in provider models are loaded from the external **models.dev** API, filter
 
 ### Built-in provider templates
 
-Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, OpenRouter (see that file for base URLs and auth). Users can add more providers in the UI.
+Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, Google Gemini, OpenRouter (see that file for base URLs and auth). Users can add more providers in the UI.
 
 ## Conventions
 
