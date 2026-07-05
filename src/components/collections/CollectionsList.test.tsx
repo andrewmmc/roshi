@@ -198,7 +198,7 @@ describe('CollectionsList', () => {
     render(<CollectionsList />);
 
     openSaveDialog();
-    fireEvent.change(screen.getByLabelText('Select collection'), {
+    fireEvent.change(screen.getByLabelText('Select folder'), {
       target: { value: 'collection-1' },
     });
     fireEvent.change(
@@ -225,7 +225,7 @@ describe('CollectionsList', () => {
       { target: { value: 'Reusable prompt' } },
     );
 
-    expect(screen.getByLabelText('Select collection')).toHaveTextContent(
+    expect(screen.getByLabelText('Select folder')).toHaveTextContent(
       'Ungrouped',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save request' }));
@@ -276,13 +276,14 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('confirms before deleting a collection', async () => {
+  it('confirms before deleting a folder', async () => {
     render(<CollectionsList />);
 
-    // Collection actions menu is first in DOM order.
+    // Folder actions menu is first in DOM order.
     fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
 
     const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Delete folder?')).toBeInTheDocument();
     expect(within(dialog).getByText(/all of its saved requests/i)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
 

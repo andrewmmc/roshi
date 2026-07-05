@@ -64,10 +64,10 @@ export function HistoryFiltersSheet({
   const modelLabel = filters.modelId === 'all' ? 'All models' : filters.modelId;
   const collectionLabel =
     filters.collectionId === 'all'
-      ? 'All collections'
+      ? 'All folders'
       : (collectionOptions.find(
           (collection) => collection.id === filters.collectionId,
-        )?.name ?? 'Collection');
+        )?.name ?? 'Folder');
   const savedRequestLabel =
     filters.savedRequestId === 'all'
       ? 'All requests'
@@ -86,8 +86,8 @@ export function HistoryFiltersSheet({
         <SheetHeader className="pr-12">
           <SheetTitle>History filters</SheetTitle>
           <SheetDescription id="history-filters-description">
-            Narrow history by provider, model, date, response, collection, or
-            saved request.
+            Narrow history by provider, model, date, response, folder, or saved
+            request.
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
@@ -211,7 +211,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Collection
+              Folder
             </span>
             <Select
               value={filters.collectionId}
@@ -220,13 +220,13 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by collection"
+                aria-label="Filter by folder"
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{collectionLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All collections</SelectItem>
+                <SelectItem value="all">All folders</SelectItem>
                 {collectionOptions.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.name}

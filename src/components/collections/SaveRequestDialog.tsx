@@ -97,7 +97,7 @@ export function SaveRequestDialog({
           <DialogDescription>
             {isEditing
               ? 'Update this saved request with the current composer, or save it as a new request.'
-              : 'Store the current composer in a collection so it can be reused later.'}
+              : 'Store the current composer in a folder so it can be reused later.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,14 +112,14 @@ export function SaveRequestDialog({
             />
           </Field>
 
-          <Field label="Collection">
+          <Field label="Folder">
             <Select
               value={selectedCollectionId}
               onValueChange={(value) =>
                 setSelectedCollectionId(value ?? UNGROUPED_VALUE)
               }
             >
-              <SelectTrigger aria-label="Select collection" className="w-full">
+              <SelectTrigger aria-label="Select folder" className="w-full">
                 <SelectValue>
                   {selectedCollection?.name ?? 'Ungrouped'}
                 </SelectValue>

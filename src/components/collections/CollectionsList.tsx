@@ -189,7 +189,7 @@ function CollectionSection({
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Collection actions"
+            aria-label="Folder actions"
             className={`${TRIGGER_CLASS} opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[popup-open]:opacity-100`}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
@@ -350,7 +350,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const handleCreateCollection = useCallback(
     async (name: string) => {
       const collection = await addCollection(name);
-      toast('Collection created');
+      toast('Folder created');
       return collection;
     },
     [addCollection],
@@ -391,7 +391,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         await handleCreateCollection(name);
       } else if (nameDialog.mode === 'rename-collection') {
         await renameCollection(nameDialog.id, name);
-        toast('Collection renamed');
+        toast('Folder renamed');
       } else {
         await renameSavedRequest(nameDialog.id, name);
         toast('Request renamed');
@@ -404,7 +404,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     if (!confirm) return;
     if (confirm.kind === 'collection') {
       await deleteCollection(confirm.id);
-      toast('Collection deleted');
+      toast('Folder deleted');
     } else {
       await deleteSavedRequest(confirm.id);
       toast('Request deleted');
@@ -422,9 +422,9 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         }
       : nameDialog.mode === 'rename-collection'
         ? {
-            title: 'Rename collection',
-            label: 'Collection name',
-            placeholder: 'Collection name',
+            title: 'Rename folder',
+            label: 'Folder name',
+            placeholder: 'Folder name',
             initialValue: nameDialog.initialValue,
             submitLabel: 'Rename',
           }
@@ -476,8 +476,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
           <EmptyState
             compact
             icon={FolderOpen}
-            title="No collections yet"
-            description="Use Save current request to store a prompt and create your first collection."
+            title="No saved requests"
+            description="Use Save current request to store a prompt in a folder or leave it ungrouped."
           />
         ) : (
           <div className="flex flex-col gap-2 p-2">
@@ -604,7 +604,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         open={confirm !== null}
         title={
           confirm?.kind === 'collection'
-            ? 'Delete collection?'
+            ? 'Delete folder?'
             : 'Delete saved request?'
         }
         description={
