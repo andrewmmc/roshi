@@ -141,7 +141,7 @@ function GeneralSettings() {
           >
             <span
               className={cn(
-                'bg-background absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow-sm transition-transform',
+                'bg-background absolute inset-y-0 left-0.5 my-auto h-5 w-5 rounded-full shadow-sm transition-transform',
                 darkMode && 'translate-x-4',
               )}
             />
@@ -178,7 +178,12 @@ function GeneralSettings() {
               >
                 <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+                sideOffset={4}
+                className="min-w-52"
+              >
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setConfirmDialog({ open: true, mode: 'all' })}
