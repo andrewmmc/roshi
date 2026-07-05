@@ -34,19 +34,14 @@ export function BuiltInProviderSection({
   );
 
   const filtered = useMemo(() => {
-    const searched = filterModelsBySearch(catalog, search);
     if (addedOnly) {
-      return searched.filter((m) => pickedIds.has(m.id));
+      return filterModelsBySearch(provider.models, search);
     }
-    return searched;
-  }, [catalog, search, addedOnly, pickedIds]);
+    return filterModelsBySearch(catalog, search);
+  }, [catalog, provider.models, search, addedOnly]);
 
-  const isLoading = status === 'loading' && catalog.length === 0;
-  const isError = status === 'error';
-
-  if (addedOnly && filtered.length === 0) {
-    return null;
-  }
+  const isLoading = !addedOnly && status === 'loading' && catalog.length === 0;
+  const isError = !addedOnly && status === 'error';
 
   const handleAdd = async (model: ProviderModel) => {
     setPendingId(model.id);
@@ -102,9 +97,13 @@ export function BuiltInProviderSection({
 
       {!isLoading && !isError && filtered.length === 0 && (
         <div className="text-muted-foreground rounded-xl border border-dashed px-3 py-4 text-center text-xs">
-          {catalog.length === 0
-            ? 'No models available from the catalogue.'
-            : 'No models match your search.'}
+          {addedOnly
+            ? provider.models.length === 0
+              ? 'No models added yet.'
+              : 'No added models match your search.'
+            : catalog.length === 0
+              ? 'No models available from the catalogue.'
+              : 'No models match your search.'}
         </div>
       )}
 

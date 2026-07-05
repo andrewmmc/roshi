@@ -81,15 +81,13 @@ export function ModelMarket({
   }, [catalogStatus, loadCatalog]);
 
   const sorted = useMemo(() => sortProvidersByName(providers), [providers]);
-  const visible = useMemo(() => {
-    let list = filterProviderId
-      ? sorted.filter((p) => p.id === filterProviderId)
-      : sorted;
-    if (addedOnly) {
-      list = list.filter((p) => p.models.length > 0);
-    }
-    return list;
-  }, [sorted, filterProviderId, addedOnly]);
+  const visible = useMemo(
+    () =>
+      filterProviderId
+        ? sorted.filter((p) => p.id === filterProviderId)
+        : sorted,
+    [sorted, filterProviderId],
+  );
 
   useEffect(() => {
     if (filterProviderId && !sorted.some((p) => p.id === filterProviderId)) {
