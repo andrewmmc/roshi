@@ -279,15 +279,6 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
     [buildRecord, saveRecord],
   );
 
-  const handleCreateCollection = useCallback(
-    async (name: string) => {
-      const collection = await addCollection(name);
-      toast('Folder created');
-      return collection;
-    },
-    [addCollection],
-  );
-
   const handleNameSubmit = useCallback(
     async (name: string) => {
       if (!nameDialog) return;
@@ -509,7 +500,6 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
         collections={collections}
         onOpenChange={setSaveOpen}
         onSave={handleSave}
-        onCreateCollection={handleCreateCollection}
       />
 
       {nameDialogConfig && (

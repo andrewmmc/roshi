@@ -189,28 +189,20 @@ describe('CollectionsList', () => {
     });
   });
 
-  it('creates a collection inline from the save dialog', async () => {
-    render(<CollectionsList />);
-
-    openSaveDialog();
-    fireEvent.click(screen.getByRole('button', { name: 'New' }));
-    fireEvent.change(screen.getByLabelText('New collection name'), {
-      target: { value: 'Prompts' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Create collection' }));
-
-    await waitFor(() => {
-      expect(mockCollectionState.addCollection).toHaveBeenCalledWith('Prompts');
-    });
-  });
-
-  it('starts in inline-create mode when there are no collections', () => {
+  it('disables save when there are no collections', () => {
     mockCollectionState.collections = [];
     render(<CollectionsList />);
 
     openSaveDialog();
+    fireEvent.change(
+      screen.getByPlaceholderText('Summarize customer support prompt'),
+      { target: { value: 'Reusable prompt' } },
+    );
 
-    expect(screen.getByLabelText('New collection name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save request' })).toBeDisabled();
+    expect(screen.getByLabelText('Select collection')).toHaveTextContent(
+      'No collections yet',
+    );
   });
 
   it('shows Update and Save as new when editing an existing saved request', async () => {

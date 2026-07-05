@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import {
@@ -28,7 +26,6 @@ interface SaveEvalRunDialogProps {
   collections: EvalCollection[];
   onOpenChange: (open: boolean) => void;
   onSave: (name: string, collectionId: string | null) => Promise<void>;
-  onCreateCollection: (name: string) => Promise<EvalCollection>;
 }
 
 export function SaveEvalRunDialog({
@@ -36,36 +33,17 @@ export function SaveEvalRunDialog({
   collections,
   onOpenChange,
   onSave,
-  onCreateCollection,
 }: SaveEvalRunDialogProps) {
   const [name, setName] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string>(UNGROUPED_VALUE);
-  const [creating, setCreating] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setName('');
     setSelectedFolder(UNGROUPED_VALUE);
-    setCreating(false);
-    setNewFolderName('');
     setBusy(false);
   }, [open]);
-
-  const handleCreateFolder = useCallback(async () => {
-    const folderName = newFolderName.trim();
-    if (!folderName) return;
-    setBusy(true);
-    try {
-      const collection = await onCreateCollection(folderName);
-      setSelectedFolder(collection.id);
-      setCreating(false);
-      setNewFolderName('');
-    } finally {
-      setBusy(false);
-    }
-  }, [newFolderName, onCreateCollection]);
 
   const handleSave = useCallback(async () => {
     setBusy(true);
@@ -106,80 +84,26 @@ export function SaveEvalRunDialog({
           </Field>
 
           <Field label="Folder">
-            {creating ? (
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      void handleCreateFolder();
-                    }
-                  }}
-                  placeholder="New folder name"
-                  aria-label="New folder name"
-                  autoFocus
-                />
-                <IconButton
-                  variant="default"
-                  size="icon-sm"
-                  tooltip="Create folder"
-                  aria-label="Create folder"
-                  onClick={handleCreateFolder}
-                  disabled={!newFolderName.trim() || busy}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                </IconButton>
-                <IconButton
-                  variant="ghost"
-                  size="icon-sm"
-                  tooltip="Cancel"
-                  aria-label="Cancel new folder"
-                  onClick={() => {
-                    setCreating(false);
-                    setNewFolderName('');
-                  }}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </IconButton>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Select
-                  value={selectedFolder}
-                  onValueChange={(value) =>
-                    setSelectedFolder(value ?? UNGROUPED_VALUE)
-                  }
-                >
-                  <SelectTrigger aria-label="Select folder" className="w-full">
-                    <SelectValue>
-                      {selectedCollection?.name ?? 'Ungrouped'}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UNGROUPED_VALUE}>Ungrouped</SelectItem>
-                    {collections.map((collection) => (
-                      <SelectItem key={collection.id} value={collection.id}>
-                        {collection.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setCreating(true);
-                    setNewFolderName('');
-                  }}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  New
-                </Button>
-              </div>
-            )}
+            <Select
+              value={selectedFolder}
+              onValueChange={(value) =>
+                setSelectedFolder(value ?? UNGROUPED_VALUE)
+              }
+            >
+              <SelectTrigger aria-label="Select folder" className="w-full">
+                <SelectValue>
+                  {selectedCollection?.name ?? 'Ungrouped'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNGROUPED_VALUE}>Ungrouped</SelectItem>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         </div>
 
@@ -187,7 +111,7 @@ export function SaveEvalRunDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={busy || creating}>
+          <Button onClick={handleSave} disabled={busy}>
             Save
           </Button>
         </DialogFooter>

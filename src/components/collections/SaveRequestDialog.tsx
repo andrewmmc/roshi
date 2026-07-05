@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import {
@@ -28,7 +26,6 @@ interface SaveRequestDialogProps {
   onOpenChange: (open: boolean) => void;
   onSaveRequest: (collectionId: string, name: string) => Promise<void>;
   onUpdateRequest: (name: string) => Promise<void>;
-  onCreateCollection: (name: string) => Promise<Collection>;
 }
 
 export function SaveRequestDialog({
@@ -38,12 +35,9 @@ export function SaveRequestDialog({
   onOpenChange,
   onSaveRequest,
   onUpdateRequest,
-  onCreateCollection,
 }: SaveRequestDialogProps) {
   const [requestName, setRequestName] = useState('');
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
   const [busy, setBusy] = useState(false);
 
   const isEditing = Boolean(activeSavedRequest);
@@ -51,33 +45,16 @@ export function SaveRequestDialog({
   useEffect(() => {
     if (!open) return;
     setBusy(false);
-    setNewCollectionName('');
     if (activeSavedRequest) {
       setRequestName(activeSavedRequest.name);
       setSelectedCollectionId(
         activeSavedRequest.collectionId ?? collections[0]?.id ?? '',
       );
-      setCreating(false);
     } else {
       setRequestName('');
       setSelectedCollectionId(collections[0]?.id ?? '');
-      setCreating(collections.length === 0);
     }
   }, [open, activeSavedRequest, collections]);
-
-  const handleCreateCollection = useCallback(async () => {
-    const name = newCollectionName.trim();
-    if (!name) return;
-    setBusy(true);
-    try {
-      const collection = await onCreateCollection(name);
-      setSelectedCollectionId(collection.id);
-      setCreating(false);
-      setNewCollectionName('');
-    } finally {
-      setBusy(false);
-    }
-  }, [newCollectionName, onCreateCollection]);
 
   const handleSaveNew = useCallback(async () => {
     if (!selectedCollectionId || !requestName.trim()) return;
@@ -104,8 +81,7 @@ export function SaveRequestDialog({
   const selectedCollection = collections.find(
     (collection) => collection.id === selectedCollectionId,
   );
-  const saveDisabled =
-    busy || creating || !selectedCollectionId || !requestName.trim();
+  const saveDisabled = busy || !selectedCollectionId || !requestName.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,84 +107,26 @@ export function SaveRequestDialog({
           </Field>
 
           <Field label="Collection">
-            {creating ? (
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={newCollectionName}
-                  onChange={(e) => setNewCollectionName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      void handleCreateCollection();
-                    }
-                  }}
-                  placeholder="New collection name"
-                  aria-label="New collection name"
-                  autoFocus
-                />
-                <IconButton
-                  variant="default"
-                  size="icon-sm"
-                  tooltip="Create collection"
-                  aria-label="Create collection"
-                  onClick={handleCreateCollection}
-                  disabled={!newCollectionName.trim() || busy}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                </IconButton>
-                {collections.length > 0 && (
-                  <IconButton
-                    variant="ghost"
-                    size="icon-sm"
-                    tooltip="Cancel"
-                    aria-label="Cancel new collection"
-                    onClick={() => {
-                      setCreating(false);
-                      setNewCollectionName('');
-                    }}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </IconButton>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Select
-                  value={selectedCollectionId}
-                  onValueChange={(value) =>
-                    setSelectedCollectionId(value ?? '')
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Select collection"
-                    className="w-full"
-                  >
-                    <SelectValue>
-                      {selectedCollection?.name ?? 'Select a collection'}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {collections.map((collection) => (
-                      <SelectItem key={collection.id} value={collection.id}>
-                        {collection.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setCreating(true);
-                    setNewCollectionName('');
-                  }}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  New
-                </Button>
-              </div>
-            )}
+            <Select
+              value={selectedCollectionId}
+              onValueChange={(value) => setSelectedCollectionId(value ?? '')}
+            >
+              <SelectTrigger aria-label="Select collection" className="w-full">
+                <SelectValue>
+                  {selectedCollection?.name ??
+                    (collections.length === 0
+                      ? 'No collections yet'
+                      : 'Select a collection')}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         </div>
 

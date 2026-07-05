@@ -583,7 +583,6 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         onOpenChange={setSaveOpen}
         onSaveRequest={handleSaveRequest}
         onUpdateRequest={handleUpdateRequest}
-        onCreateCollection={handleCreateCollection}
       />
 
       {nameDialogConfig && (
