@@ -161,9 +161,15 @@ export function MessageEditorView({
             >
               <SelectTrigger
                 aria-label={`Role for message ${index + 1}`}
-                className="h-7 w-[100px] shrink-0 text-xs capitalize"
+                className="h-7 w-[100px] shrink-0 text-xs"
               >
-                <SelectValue />
+                <SelectValue>
+                  {msg.role === 'user'
+                    ? 'User'
+                    : msg.role === 'assistant'
+                      ? 'Assistant'
+                      : msg.role}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>

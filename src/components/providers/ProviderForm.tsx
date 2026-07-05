@@ -36,6 +36,30 @@ interface ProviderFormProps {
   isBuiltIn?: boolean;
 }
 
+const PROVIDER_TYPE_LABELS: Record<ProviderConfig['type'], string> = {
+  'openai-compatible': 'OpenAI Compatible',
+  anthropic: 'Anthropic',
+  'google-gemini': 'Google Gemini',
+};
+
+const PROTOCOL_LABELS: Record<
+  NonNullable<ProviderConfig['protocol']>,
+  string
+> = {
+  'openai-compatible-chat': 'Chat Completions',
+  'openai-chat-completions': 'Chat Completions (OpenAI)',
+  'openai-responses': 'Responses API',
+  'anthropic-messages': 'Anthropic Messages',
+  'gemini-generate-content': 'Gemini Generate Content',
+};
+
+const AUTH_TYPE_LABELS: Record<ProviderConfig['auth']['type'], string> = {
+  bearer: 'Bearer Token',
+  'api-key-header': 'API Key Header',
+  'query-param': 'Query Parameter',
+  none: 'None',
+};
+
 const defaultFormData: ProviderFormData = {
   name: '',
   type: 'openai-compatible',
@@ -173,7 +197,9 @@ export function ProviderForm({
               disabled={isBuiltIn}
             >
               <SelectTrigger id="provider-type" className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {PROVIDER_TYPE_LABELS[form.type] ?? form.type}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="openai-compatible">
@@ -206,7 +232,10 @@ export function ProviderForm({
               disabled={isBuiltIn}
             >
               <SelectTrigger id="provider-protocol" className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {PROTOCOL_LABELS[form.protocol ?? 'openai-compatible-chat'] ??
+                    form.protocol}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="openai-compatible-chat">
@@ -244,7 +273,9 @@ export function ProviderForm({
               disabled={isBuiltIn}
             >
               <SelectTrigger id="provider-auth-type">
-                <SelectValue />
+                <SelectValue>
+                  {AUTH_TYPE_LABELS[form.auth.type] ?? form.auth.type}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="bearer">Bearer Token</SelectItem>

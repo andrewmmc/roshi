@@ -39,6 +39,15 @@ function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
   );
 }
 
+const LEVEL_LABELS: Record<string, string> = {
+  none: 'None',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  xhigh: 'Extra High',
+  max: 'Max',
+};
+
 function SelectRow({
   label,
   paramKey,
@@ -81,15 +90,15 @@ function SelectRow({
           <SelectTrigger
             id={inputId}
             size="sm"
-            className="h-6 w-28 font-mono text-xs"
+            className="h-6 w-28 text-xs"
             title={disabledReason}
           >
-            <SelectValue />
+            <SelectValue>{LEVEL_LABELS[value] ?? value}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {values.map((item) => (
               <SelectItem key={item} value={item}>
-                {item}
+                {LEVEL_LABELS[item] ?? item}
               </SelectItem>
             ))}
           </SelectContent>
