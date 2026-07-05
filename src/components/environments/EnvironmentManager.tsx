@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
-import { Plus, Settings, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -25,17 +25,65 @@ function createVariable(): EnvironmentVariable {
   return { id: nanoid(), key: '', value: '' };
 }
 
+function EnvironmentCard({
+  environment,
+  onEdit,
+  onDelete,
+}: {
+  environment: Environment;
+  onEdit: () => void;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const variableCount = environment.variables.filter((v) => v.key).length;
+
+  return (
+    <div className="bg-muted/20 flex items-center justify-between rounded-lg border px-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">{environment.name}</div>
+        <p className="text-muted-foreground text-xs">
+          {variableCount === 0
+            ? 'No variables'
+            : `${variableCount} variable${variableCount > 1 ? 's' : ''}`}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <IconButton
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-foreground"
+          tooltip="Edit environment"
+          onClick={onEdit}
+        >
+          <Pencil className="h-3 w-3" />
+        </IconButton>
+        <IconButton
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-destructive"
+          tooltip="Delete environment"
+          onClick={async () => {
+            await onDelete(environment.id);
+            toast('Environment deleted');
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </IconButton>
+      </div>
+    </div>
+  );
+}
+
 function EnvironmentEditor({
   environment,
   onSave,
-  onDelete,
+  onCancel,
 }: {
   environment: Environment;
   onSave: (
     id: string,
     updates: Pick<Environment, 'name' | 'variables'>,
   ) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onCancel: () => void;
 }) {
   const [name, setName] = useState(environment.name);
   const [variables, setVariables] = useState<EnvironmentVariable[]>(
@@ -61,104 +109,88 @@ function EnvironmentEditor({
   }, []);
 
   return (
-    <div className="bg-muted/20 rounded-xl border">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <span className="truncate text-xs font-medium">
-          {name || 'Untitled'}
-        </span>
-        <IconButton
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground hover:text-destructive shrink-0"
-          tooltip="Delete environment"
-          onClick={async () => {
-            await onDelete(environment.id);
-            toast('Environment deleted');
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </IconButton>
+    <div className="bg-muted/20 rounded-xl border p-3">
+      <Field
+        label="Name"
+        htmlFor={`env-name-${environment.id}`}
+        className="mb-3"
+      >
+        <Input
+          id={`env-name-${environment.id}`}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+      </Field>
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <span className="text-muted-foreground text-xs font-medium">Key</span>
+          <span className="text-muted-foreground text-xs font-medium">
+            Value
+          </span>
+          <span className="w-7" />
+        </div>
+        {variables.map((variable) => (
+          <div
+            key={variable.id}
+            className="grid grid-cols-[1fr_1fr_auto] gap-2"
+          >
+            <Input
+              value={variable.key}
+              onChange={(event) =>
+                updateVariable(variable.id, { key: event.target.value })
+              }
+              placeholder="name"
+              aria-label="Variable key"
+              className="font-mono text-xs"
+            />
+            <Input
+              value={variable.value}
+              onChange={(event) =>
+                updateVariable(variable.id, { value: event.target.value })
+              }
+              placeholder="value"
+              aria-label="Variable value"
+              className="font-mono text-xs"
+            />
+            <IconButton
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-destructive"
+              tooltip="Remove variable"
+              onClick={() => removeVariable(variable.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </IconButton>
+          </div>
+        ))}
       </div>
 
-      <div className="p-3">
-        <Field
-          label="Name"
-          htmlFor={`env-name-${environment.id}`}
-          className="mb-3"
+      <div className="mt-3 flex justify-between gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            setVariables((current) => [...current, createVariable()])
+          }
         >
-          <Input
-            id={`env-name-${environment.id}`}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </Field>
-
-        <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-            <span className="text-muted-foreground text-xs font-medium">
-              Key
-            </span>
-            <span className="text-muted-foreground text-xs font-medium">
-              Value
-            </span>
-            <span className="w-7" />
-          </div>
-          {variables.map((variable) => (
-            <div
-              key={variable.id}
-              className="grid grid-cols-[1fr_1fr_auto] gap-2"
-            >
-              <Input
-                value={variable.key}
-                onChange={(event) =>
-                  updateVariable(variable.id, { key: event.target.value })
-                }
-                placeholder="name"
-                aria-label="Variable key"
-                className="font-mono text-xs"
-              />
-              <Input
-                value={variable.value}
-                onChange={(event) =>
-                  updateVariable(variable.id, { value: event.target.value })
-                }
-                placeholder="value"
-                aria-label="Variable value"
-                className="font-mono text-xs"
-              />
-              <IconButton
-                variant="ghost"
-                size="icon-sm"
-                className="text-muted-foreground hover:text-destructive"
-                tooltip="Remove variable"
-                onClick={() => removeVariable(variable.id)}
-              >
-                <Trash2 className="h-3 w-3" />
-              </IconButton>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 flex justify-between gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setVariables((current) => [...current, createVariable()])
-            }
-          >
-            <Plus className="h-3 w-3" />
-            Variable
+          <Plus className="h-3 w-3" />
+          Variable
+        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            Cancel
           </Button>
           <Button
             size="sm"
             onClick={async () => {
               await onSave(environment.id, { name, variables });
               toast('Environment saved');
+              onCancel();
             }}
             disabled={!name.trim()}
           >
-            Save changes
+            Save
           </Button>
         </div>
       </div>
@@ -174,41 +206,41 @@ export function EnvironmentSettings() {
     deleteEnvironment,
     selectEnvironment,
   } = useEnvironments();
-  const [draftName, setDraftName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleAdd = useCallback(async () => {
-    const environment = await addEnvironment(draftName || 'Local');
+    const environment = await addEnvironment('New Environment');
     selectEnvironment(environment.id);
-    setDraftName('');
-    toast('Environment created');
-  }, [addEnvironment, draftName, selectEnvironment]);
+    setEditingId(environment.id);
+  }, [addEnvironment, selectEnvironment]);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      await deleteEnvironment(id);
+      if (editingId === id) setEditingId(null);
+    },
+    [deleteEnvironment, editingId],
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Subheader */}
-      <div className="bg-muted/20 shrink-0 border-b px-5 py-4">
-        <h2 className="text-[15px] font-medium tracking-tight">Environments</h2>
-        <p className="text-muted-foreground mt-0.5 text-xs">
-          Define variables and reference them in prompts or headers with{' '}
-          {'{{variableName}}'}.
-        </p>
+      <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
+        <div>
+          <h2 className="text-[15px] font-medium tracking-tight">
+            Environments
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Define variables and reference them in prompts or headers with{' '}
+            {'{{variableName}}'}.
+          </p>
+        </div>
+        <Button size="sm" onClick={handleAdd}>
+          <Plus className="h-3 w-3" />
+          Add
+        </Button>
       </div>
 
-      {/* Scrollable content */}
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-        <div className="mb-3 flex gap-2">
-          <Input
-            value={draftName}
-            onChange={(event) => setDraftName(event.target.value)}
-            placeholder="Environment name"
-            className="h-8 text-sm"
-          />
-          <Button size="sm" onClick={handleAdd}>
-            <Plus className="h-3 w-3" />
-            Add
-          </Button>
-        </div>
-
         {environments.length === 0 ? (
           <EmptyState
             compact
@@ -216,15 +248,24 @@ export function EnvironmentSettings() {
             description="Create one to start using variables."
           />
         ) : (
-          <div className="space-y-3">
-            {environments.map((environment) => (
-              <EnvironmentEditor
-                key={environment.id}
-                environment={environment}
-                onSave={updateEnvironment}
-                onDelete={deleteEnvironment}
-              />
-            ))}
+          <div className="space-y-2">
+            {environments.map((environment) =>
+              editingId === environment.id ? (
+                <EnvironmentEditor
+                  key={environment.id}
+                  environment={environment}
+                  onSave={updateEnvironment}
+                  onCancel={() => setEditingId(null)}
+                />
+              ) : (
+                <EnvironmentCard
+                  key={environment.id}
+                  environment={environment}
+                  onEdit={() => setEditingId(environment.id)}
+                  onDelete={handleDelete}
+                />
+              ),
+            )}
           </div>
         )}
       </div>
