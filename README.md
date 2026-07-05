@@ -87,7 +87,7 @@ The Mac App Store version is a one-time purchase that includes automatic updates
 3. On first launch, macOS may block the app. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
 4. Add your API key for any provider in the app and start testing.
 
-> You can also use Roshi as a [web app](#development) in the browser — no install required.
+> You can also use Roshi as a [web app](#development) in the browser — no install required. Note: the browser build only works with CORS-enabled providers; most major providers (OpenAI, Anthropic) block browser-origin requests. Use the desktop app for full provider compatibility.
 
 ## Features
 
@@ -130,6 +130,8 @@ Roshi stores API keys **unencrypted** in browser IndexedDB. This is an accepted 
 npm install
 npm run dev          # http://localhost:5173
 ```
+
+> **CORS note:** The dev server includes a proxy (`/api/proxy`) that bypasses browser CORS restrictions. A production web build (`npm run build`) does not include this proxy — provider calls will fail for endpoints that don't send CORS headers (most major providers). For full provider compatibility in production, use the Tauri desktop app.
 
 ### Commands
 
