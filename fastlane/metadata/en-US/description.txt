@@ -1,0 +1,25 @@
+Roshi is a local-first workspace for testing and debugging LLM APIs. Send prompts, inspect streaming responses, tune model settings, test image inputs, switch between providers, and review raw request and response payloads from one focused interface.
+
+No backend. No account. No telemetry. Your API keys, settings, and request history stay on your machine.
+
+Whether you are debugging prompts, testing custom endpoints, or comparing model behavior, Roshi gives you a dedicated workspace for multi-turn conversations, provider-specific settings, and fast iteration without bending a generic API client into shape.
+
+WHY ROSHI
+
+- Purpose-built for LLM APIs — test chat-style payloads, streaming, image inputs, and provider-specific settings without forcing them into a generic HTTP client
+- Local-first by default — no signup, no telemetry, and no hosted key storage
+- Multi-provider workflow — built-in templates for OpenAI, Anthropic, Google Gemini, and OpenRouter, plus custom OpenAI-compatible endpoints
+- Debuggable and reproducible — inspect raw payloads, save local history, and generate Python and Node.js snippets for supported requests
+
+FEATURES
+
+- Real-time streaming responses with token usage and timing
+- Raw request and response inspection, plus copy-as-cURL
+- Multi-turn composer with adjustable parameters and custom headers
+- Image inputs for vision-capable models
+- Eval mode to compare prompts across multiple providers and models, with metrics and LLM-as-judge scoring
+- Collections, environments, request tabs, and a command palette for fast iteration
+- Local history you can search, filter, and export
+- Light and dark themes
+
+Bring your own API keys from OpenAI, Anthropic, Google Gemini, OpenRouter, or any OpenAI-compatible endpoint. Keys are stored locally on your device.

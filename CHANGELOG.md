@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-07
+
+### Added
+
+- Mac App Store distribution: sandboxed, universal (Apple Silicon + Intel) build with App Store metadata (name, subtitle, description, keywords, support/marketing/privacy URLs)
+
+### Changed
+
+- Version bumped to 2.0.0 to mark the first Mac App Store release
+- Aligned Content-Security-Policy between the web (`index.html`) and desktop (`tauri.conf.json`) builds so the desktop IPC/asset origins are never blocked by the stricter web policy
+
+### Fixed
+
+- File exports can now be saved to any user-selected location, not just Downloads/Desktop/Documents
+
 ## [1.0.6] - 2026-07-05
 
 ### Fixed
