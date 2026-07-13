@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Download } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +22,15 @@ const CodeView = lazy(() =>
   import('./CodeView').then((m) => ({ default: m.CodeView })),
 );
 
+type ResponseTab = 'chat' | 'raw' | 'headers' | 'code';
+
+interface RetainedTabs {
+  snapshot: ReturnType<typeof useResponseStore.getState>['sentRequest'];
+  visited: ReadonlySet<ResponseTab>;
+}
+
+const EMPTY_TABS: ReadonlySet<ResponseTab> = new Set();
+
 function TabLoadingFallback() {
   return (
     <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
@@ -44,6 +53,43 @@ export function ResponsePanel() {
   const requestHeaders = useResponseStore((s) => s.requestHeaders);
   const responseHeaders = useResponseStore((s) => s.responseHeaders);
 
+  const [activeTab, setActiveTab] = useState<ResponseTab>('chat');
+  const [retention, setRetention] = useState<RetainedTabs>(() => ({
+    snapshot: sentRequest,
+    visited: EMPTY_TABS,
+  }));
+  const busy = isLoading || isStreaming;
+  const retained =
+    !busy && retention.snapshot === sentRequest
+      ? retention.visited
+      : EMPTY_TABS;
+
+  const handleTabChange = (value: string) => {
+    const nextTab = value as ResponseTab;
+    setActiveTab(nextTab);
+
+    setRetention((current) => {
+      if (busy) {
+        if (current.snapshot === sentRequest && current.visited.size === 0) {
+          return current;
+        }
+
+        return { snapshot: sentRequest, visited: EMPTY_TABS };
+      }
+
+      const visited =
+        current.snapshot === sentRequest
+          ? new Set(current.visited)
+          : new Set<ResponseTab>();
+      visited.add(activeTab);
+      visited.add(nextTab);
+      return { snapshot: sentRequest, visited };
+    });
+  };
+
+  const shouldRenderTab = (tab: ResponseTab) =>
+    tab === activeTab || retained.has(tab);
+
   const hasContent = response || error || isStreaming || isLoading;
   const isInterrupted =
     error === 'Response interrupted' && Boolean(response?.content);
@@ -61,9 +107,17 @@ export function ResponsePanel() {
           : '';
 
   return (
-    <Tabs defaultValue="chat" className="flex h-full flex-col">
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex h-full flex-col"
+    >
       <PanelHeader className="justify-between">
-        <TabsList variant="line" className="h-7 gap-0">
+        <TabsList
+          variant="line"
+          className="h-7 gap-0"
+          aria-label="Response views"
+        >
           <TabsTrigger value="chat" className="px-3 text-xs">
             Chat
           </TabsTrigger>
@@ -140,52 +194,73 @@ export function ResponsePanel() {
         {statusText}
       </div>
 
-      <TabsContent value="chat" className="mt-0 min-h-0 flex-1 overflow-hidden">
-        {hasContent ? (
+      {shouldRenderTab('chat') && (
+        <TabsContent
+          value="chat"
+          keepMounted
+          className="mt-0 min-h-0 flex-1 overflow-hidden"
+        >
+          {hasContent ? (
+            <ErrorBoundary panel>
+              <Suspense fallback={<TabLoadingFallback />}>
+                <ChatView />
+              </Suspense>
+            </ErrorBoundary>
+          ) : (
+            <ResponseEmptyState />
+          )}
+        </TabsContent>
+      )}
+
+      {shouldRenderTab('raw') && (
+        <TabsContent
+          value="raw"
+          keepMounted
+          className="mt-0 min-h-0 flex-1 overflow-hidden"
+        >
+          {hasContent ? (
+            <ErrorBoundary panel>
+              <Suspense fallback={<TabLoadingFallback />}>
+                <RawJsonView />
+              </Suspense>
+            </ErrorBoundary>
+          ) : (
+            <ResponseEmptyState />
+          )}
+        </TabsContent>
+      )}
+
+      {shouldRenderTab('headers') && (
+        <TabsContent
+          value="headers"
+          keepMounted
+          className="mt-0 min-h-0 flex-1 overflow-hidden"
+        >
+          {hasContent ? (
+            <ErrorBoundary panel>
+              <Suspense fallback={<TabLoadingFallback />}>
+                <HeadersView />
+              </Suspense>
+            </ErrorBoundary>
+          ) : (
+            <ResponseEmptyState />
+          )}
+        </TabsContent>
+      )}
+
+      {shouldRenderTab('code') && (
+        <TabsContent
+          value="code"
+          keepMounted
+          className="mt-0 min-h-0 flex-1 overflow-hidden"
+        >
           <ErrorBoundary panel>
             <Suspense fallback={<TabLoadingFallback />}>
-              <ChatView />
+              <CodeView />
             </Suspense>
           </ErrorBoundary>
-        ) : (
-          <ResponseEmptyState />
-        )}
-      </TabsContent>
-
-      <TabsContent value="raw" className="mt-0 min-h-0 flex-1 overflow-hidden">
-        {hasContent ? (
-          <ErrorBoundary panel>
-            <Suspense fallback={<TabLoadingFallback />}>
-              <RawJsonView />
-            </Suspense>
-          </ErrorBoundary>
-        ) : (
-          <ResponseEmptyState />
-        )}
-      </TabsContent>
-
-      <TabsContent
-        value="headers"
-        className="mt-0 min-h-0 flex-1 overflow-hidden"
-      >
-        {hasContent ? (
-          <ErrorBoundary panel>
-            <Suspense fallback={<TabLoadingFallback />}>
-              <HeadersView />
-            </Suspense>
-          </ErrorBoundary>
-        ) : (
-          <ResponseEmptyState />
-        )}
-      </TabsContent>
-
-      <TabsContent value="code" className="mt-0 min-h-0 flex-1 overflow-hidden">
-        <ErrorBoundary panel>
-          <Suspense fallback={<TabLoadingFallback />}>
-            <CodeView />
-          </Suspense>
-        </ErrorBoundary>
-      </TabsContent>
+        </TabsContent>
+      )}
     </Tabs>
   );
 }
