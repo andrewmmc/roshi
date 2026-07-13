@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { CodeView } from './CodeView';
 import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
@@ -32,6 +32,20 @@ describe('CodeView', () => {
     generateNode.mockReturnValue('node code');
     generatePython.mockReturnValue('python code');
   });
+
+  function seedValidState() {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] }),
+      ],
+      selectedProviderId: 'p1',
+      selectedModelId: 'm1',
+    });
+    useComposerStore.setState({
+      messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
+      stream: true,
+    });
+  }
 
   it('prompts for provider and model when they are missing', () => {
     render(<CodeView />);
@@ -81,17 +95,7 @@ describe('CodeView', () => {
   });
 
   it('renders generated code and toggles stream mode', () => {
-    useProviderStore.setState({
-      providers: [
-        makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] }),
-      ],
-      selectedProviderId: 'p1',
-      selectedModelId: 'm1',
-    });
-    useComposerStore.setState({
-      messages: [{ id: 'm1', role: 'user', content: 'Hello' }],
-      stream: true,
-    });
+    seedValidState();
 
     render(<CodeView />);
 
@@ -110,5 +114,46 @@ describe('CodeView', () => {
         request: expect.objectContaining({ stream: false }),
       }),
     );
+  });
+
+  it('does not regenerate while hidden and refreshes on activation after inputs change', () => {
+    seedValidState();
+
+    const { rerender } = render(<CodeView isActive />);
+
+    expect(generateNode).toHaveBeenCalledTimes(1);
+
+    rerender(<CodeView isActive={false} />);
+    act(() => {
+      useComposerStore.setState({
+        messages: [{ id: 'm1', role: 'user', content: 'Updated prompt' }],
+      });
+    });
+
+    expect(generateNode).toHaveBeenCalledTimes(1);
+
+    rerender(<CodeView isActive />);
+
+    expect(generateNode).toHaveBeenCalledTimes(2);
+    expect(generateNode).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          messages: [expect.objectContaining({ content: 'Updated prompt' })],
+        }),
+      }),
+    );
+  });
+
+  it('reuses cached code when reactivated without input changes', () => {
+    seedValidState();
+
+    const { rerender } = render(<CodeView isActive />);
+
+    expect(generateNode).toHaveBeenCalledTimes(1);
+
+    rerender(<CodeView isActive={false} />);
+    rerender(<CodeView isActive />);
+
+    expect(generateNode).toHaveBeenCalledTimes(1);
   });
 });

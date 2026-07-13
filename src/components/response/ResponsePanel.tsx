@@ -47,11 +47,6 @@ export function ResponsePanel() {
   const durationMs = useResponseStore((s) => s.durationMs);
   const statusCode = useResponseStore((s) => s.statusCode);
   const sentRequest = useResponseStore((s) => s.sentRequest);
-  const rawRequest = useResponseStore((s) => s.rawRequest);
-  const rawResponse = useResponseStore((s) => s.rawResponse);
-  const requestUrl = useResponseStore((s) => s.requestUrl);
-  const requestHeaders = useResponseStore((s) => s.requestHeaders);
-  const responseHeaders = useResponseStore((s) => s.responseHeaders);
 
   const [activeTab, setActiveTab] = useState<ResponseTab>('chat');
   const [retention, setRetention] = useState<RetainedTabs>(() => ({
@@ -169,20 +164,7 @@ export function ResponsePanel() {
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground"
               tooltip="Export request and response as JSON"
-              onClick={() =>
-                exportCurrentRequest({
-                  sentRequest,
-                  response,
-                  rawRequest,
-                  rawResponse,
-                  requestUrl,
-                  requestHeaders,
-                  responseHeaders,
-                  error,
-                  durationMs,
-                  statusCode,
-                })
-              }
+              onClick={() => exportCurrentRequest(useResponseStore.getState())}
             >
               <Download className="h-3.5 w-3.5" />
             </IconButton>
@@ -256,7 +238,7 @@ export function ResponsePanel() {
         >
           <ErrorBoundary panel>
             <Suspense fallback={<TabLoadingFallback />}>
-              <CodeView />
+              <CodeView isActive={activeTab === 'code'} />
             </Suspense>
           </ErrorBoundary>
         </TabsContent>
