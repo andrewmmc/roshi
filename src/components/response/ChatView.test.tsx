@@ -1,11 +1,65 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ChatView } from './ChatView';
 import { useResponseStore } from '@/stores/response-store';
 
+let animationFrameQueue: FrameRequestCallback[] = [];
+
+function flushAnimationFrame(time = 0) {
+  const callbacks = animationFrameQueue;
+  animationFrameQueue = [];
+  callbacks.forEach((callback) => callback(time));
+}
+
 describe('ChatView', () => {
+  beforeAll(() => {
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      animationFrameQueue.push(callback);
+      return animationFrameQueue.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  });
+
   beforeEach(() => {
     useResponseStore.getState().resetResponse();
-    Element.prototype.scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
+      configurable: true,
+      get: () => 1000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      get: () => 400,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
+      configurable: true,
+      get() {
+        return (
+          (this as HTMLElement & { __scrollTop?: number }).__scrollTop ?? 600
+        );
+      },
+      set(value: number) {
+        (this as HTMLElement & { __scrollTop?: number }).__scrollTop = value;
+      },
+    });
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
+      configurable: true,
+      value: vi.fn(function scrollTo(
+        this: HTMLElement & { __scrollTop?: number },
+        {
+          top,
+        }: {
+          top: number;
+          behavior?: ScrollBehavior;
+        },
+      ) {
+        this.__scrollTop = top;
+      }),
+    });
+    animationFrameQueue = [];
+  });
+
+  afterEach(() => {
+    flushAnimationFrame();
+    vi.clearAllMocks();
   });
 
   it('renders system prompt, sent messages, and completed assistant response', () => {
@@ -51,28 +105,6 @@ describe('ChatView', () => {
     expect(screen.getByText('Hi there')).toBeInTheDocument();
   });
 
-  it('shows loading and streaming states', () => {
-    useResponseStore.setState({
-      sentRequest: {
-        messages: [],
-        model: 'gpt-4',
-        stream: true,
-        systemPrompt: '',
-        temperature: 1,
-        maxTokens: 4096,
-      },
-      isLoading: true,
-      isStreaming: true,
-      streamingContent: 'Partial answer',
-    });
-
-    const { container } = render(<ChatView />);
-
-    expect(screen.getByText('Partial answer')).toBeInTheDocument();
-    expect(screen.getByLabelText('Response is streaming')).toBeInTheDocument();
-    expect(container.querySelector('.animate-spin')).toBeNull();
-  });
-
   it('shows a loader while waiting for the first response token', () => {
     useResponseStore.setState({
       sentRequest: {
@@ -91,6 +123,154 @@ describe('ChatView', () => {
     const { container } = render(<ChatView />);
 
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('coalesces streaming updates to animation frames and preserves the final text', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [],
+        model: 'gpt-4',
+        stream: true,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+      isLoading: true,
+      isStreaming: true,
+      streamingContent: '',
+    });
+
+    render(<ChatView />);
+
+    act(() => {
+      useResponseStore.getState().setStreamChunk('Hello');
+      useResponseStore.getState().setStreamChunk(' there');
+      useResponseStore.getState().setStreamChunk(' friend');
+    });
+
+    expect(screen.queryByText('Hello there friend')).not.toBeInTheDocument();
+
+    act(() => {
+      flushAnimationFrame();
+    });
+
+    expect(screen.getByText('Hello there friend')).toBeInTheDocument();
+    expect(screen.getByLabelText('Response is streaming')).toBeInTheDocument();
+  });
+
+  it('renders streaming content as plain text and swaps to markdown once on completion', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [],
+        model: 'gpt-4',
+        stream: true,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+      isLoading: true,
+      isStreaming: true,
+      streamingContent: '',
+    });
+
+    render(<ChatView />);
+
+    act(() => {
+      useResponseStore.getState().setStreamChunk('[Docs](https://example.com)');
+      flushAnimationFrame();
+    });
+
+    expect(screen.getByText('[Docs](https://example.com)')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Docs' }),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      useResponseStore.getState().completeResponse({
+        response: {
+          id: 'resp_1',
+          model: 'gpt-4',
+          content: '[Docs](https://example.com)',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: null,
+        rawResponse: null,
+        requestUrl: 'https://api.example.com',
+        requestHeaders: null,
+        responseHeaders: null,
+        durationMs: 123,
+        statusCode: 200,
+      });
+      useResponseStore.getState().finishRequest();
+      flushAnimationFrame();
+    });
+
+    const link = screen.getByRole('link', { name: 'Docs' });
+    expect(link).toHaveAttribute('href', 'https://example.com');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('pauses auto-follow while scrolled away from the bottom and resumes when returned', () => {
+    useResponseStore.setState({
+      sentRequest: {
+        messages: [],
+        model: 'gpt-4',
+        stream: true,
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 4096,
+      },
+      isLoading: true,
+      isStreaming: true,
+      streamingContent: '',
+    });
+
+    const { container } = render(<ChatView />);
+    const viewport = container.querySelector<HTMLElement>(
+      '[data-slot="scroll-area-viewport"]',
+    );
+    expect(viewport).not.toBeNull();
+    const scrollTo = vi.mocked(viewport!.scrollTo);
+
+    act(() => {
+      useResponseStore.getState().setStreamChunk('chunk 1');
+      flushAnimationFrame();
+      flushAnimationFrame();
+    });
+
+    expect(scrollTo).toHaveBeenCalled();
+    scrollTo.mockClear();
+    animationFrameQueue = [];
+
+    viewport!.scrollTop = 100;
+    fireEvent.scroll(viewport!);
+
+    act(() => {
+      useResponseStore.getState().setStreamChunk('chunk 2');
+      flushAnimationFrame();
+      flushAnimationFrame();
+    });
+
+    expect(scrollTo).not.toHaveBeenCalled();
+
+    viewport!.scrollTop = 600;
+    fireEvent.scroll(viewport!);
+
+    act(() => {
+      useResponseStore.getState().setStreamChunk('chunk 3');
+      flushAnimationFrame();
+      flushAnimationFrame();
+      flushAnimationFrame();
+    });
+
+    act(() => {
+      flushAnimationFrame();
+    });
+
+    expect(scrollTo).toHaveBeenCalled();
   });
 
   it('renders assistant and system messages', () => {
