@@ -1,12 +1,6 @@
-Roshi 2.0 is the Mac App Store release of the local-first workbench for testing LLM APIs.
+This patch improves response viewing performance and consistency:
 
-Highlights:
-- Multi-provider support: OpenAI, Anthropic, Google Gemini, OpenRouter, and custom OpenAI-compatible endpoints
-- Real-time streaming with raw request/response inspection and copy-as-cURL
-- Eval mode to compare prompts across models with metrics and LLM-as-judge scoring
-- Collections, environments, request tabs, and a command palette for fast iteration
-- Local-first and private: API keys, history, and settings stay on your device — no account, no telemetry
-
-This release also lets you save exports to any location you choose, aligns the content-security policy across web and desktop builds, and includes streaming and API-key privacy hardening.
-
-If Roshi helps your workflow, please consider leaving a review. Got feedback? Open an issue on GitHub from the About menu.
+- Response panels retain the content associated with each request snapshot
+- Streaming chat updates render more smoothly
+- Large raw JSON responses use bounded syntax highlighting
+- Generated code views are cached until their source changes
