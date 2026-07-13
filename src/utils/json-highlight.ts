@@ -11,47 +11,90 @@ export interface JsonToken {
   value: string;
 }
 
+export interface TokenizeJsonResult {
+  tokens: JsonToken[];
+  truncated: boolean;
+}
+
+export interface TokenizeJsonOptions {
+  maxTokens?: number;
+}
+
+export const JSON_HIGHLIGHT_MAX_CHARS = 200_000;
+export const JSON_HIGHLIGHT_MAX_TOKENS = 10_000;
+
 function isWhitespace(char: string): boolean {
   return char === ' ' || char === '\n' || char === '\r' || char === '\t';
 }
 
-function readString(
-  input: string,
-  start: number,
-): { value: string; end: number } {
-  let value = input[start];
+function isNumberChar(char: string): boolean {
+  return (
+    (char >= '0' && char <= '9') ||
+    char === '-' ||
+    char === '+' ||
+    char === '.' ||
+    char === 'e' ||
+    char === 'E'
+  );
+}
+
+function readStringEnd(input: string, start: number): number {
   let index = start + 1;
 
   while (index < input.length) {
     const char = input[index];
-    value += char;
-    index++;
-    if (char === '\\' && index < input.length) {
-      value += input[index];
-      index++;
+    if (char === '\\') {
+      index = Math.min(index + 2, input.length);
       continue;
     }
-    if (char === '"') break;
+    index++;
+    if (char === '"') {
+      break;
+    }
   }
 
-  return { value, end: index };
+  return index;
 }
 
-function readWord(
-  input: string,
-  start: number,
-): { value: string; end: number } {
+function readNumberEnd(input: string, start: number): number {
   let index = start;
-  while (index < input.length && /[a-z0-9.+-]/i.test(input[index])) {
+  while (index < input.length && isNumberChar(input[index])) {
     index++;
   }
-  return { value: input.slice(start, index), end: index };
+  return index;
 }
 
-export function tokenizeJson(input: string): JsonToken[] {
+function nextNonWhitespaceChar(input: string, start: number): string | null {
+  let index = start;
+
+  while (index < input.length) {
+    const char = input[index];
+    if (!isWhitespace(char)) {
+      return char;
+    }
+    index++;
+  }
+
+  return null;
+}
+
+export function tokenizeJsonWithLimit(
+  input: string,
+  options: TokenizeJsonOptions = {},
+): TokenizeJsonResult {
+  const { maxTokens } = options;
   const tokens: JsonToken[] = [];
   let index = 0;
   let expectKey = false;
+
+  const pushToken = (type: JsonTokenType, start: number, end: number) => {
+    if (maxTokens !== undefined && tokens.length >= maxTokens) {
+      return false;
+    }
+
+    tokens.push({ type, value: input.slice(start, end) });
+    return true;
+  };
 
   while (index < input.length) {
     const char = input[index];
@@ -59,24 +102,30 @@ export function tokenizeJson(input: string): JsonToken[] {
     if (isWhitespace(char)) {
       let end = index + 1;
       while (end < input.length && isWhitespace(input[end])) end++;
-      tokens.push({ type: 'punctuation', value: input.slice(index, end) });
+      if (!pushToken('punctuation', index, end)) {
+        return { tokens, truncated: true };
+      }
       index = end;
       continue;
     }
 
     if (char === '"') {
-      const { value, end } = readString(input, index);
-      const nextNonSpace = input.slice(end).match(/^\s*([,:}\]])/);
-      const isKey = expectKey || nextNonSpace?.[1] === ':';
-      tokens.push({ type: isKey ? 'key' : 'string', value });
+      const end = readStringEnd(input, index);
+      const nextNonSpace = nextNonWhitespaceChar(input, end);
+      const isKey = expectKey || nextNonSpace === ':';
+      if (!pushToken(isKey ? 'key' : 'string', index, end)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index = end;
       continue;
     }
 
     if (/[-0-9]/.test(char)) {
-      const { value, end } = readWord(input, index);
-      tokens.push({ type: 'number', value });
+      const end = readNumberEnd(input, index);
+      if (!pushToken('number', index, end)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index = end;
       continue;
@@ -84,51 +133,70 @@ export function tokenizeJson(input: string): JsonToken[] {
 
     if (input.startsWith('true', index) || input.startsWith('false', index)) {
       const value = input.startsWith('true', index) ? 'true' : 'false';
-      tokens.push({ type: 'boolean', value });
+      if (!pushToken('boolean', index, index + value.length)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index += value.length;
       continue;
     }
 
     if (input.startsWith('null', index)) {
-      tokens.push({ type: 'null', value: 'null' });
+      if (!pushToken('null', index, index + 4)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index += 4;
       continue;
     }
 
     if (char === '{' || char === '[') {
-      tokens.push({ type: 'punctuation', value: char });
+      if (!pushToken('punctuation', index, index + 1)) {
+        return { tokens, truncated: true };
+      }
       expectKey = char === '{';
       index++;
       continue;
     }
 
     if (char === '}' || char === ']') {
-      tokens.push({ type: 'punctuation', value: char });
+      if (!pushToken('punctuation', index, index + 1)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index++;
       continue;
     }
 
     if (char === ',') {
-      tokens.push({ type: 'punctuation', value: char });
+      if (!pushToken('punctuation', index, index + 1)) {
+        return { tokens, truncated: true };
+      }
       expectKey = true;
       index++;
       continue;
     }
 
     if (char === ':') {
-      tokens.push({ type: 'punctuation', value: char });
+      if (!pushToken('punctuation', index, index + 1)) {
+        return { tokens, truncated: true };
+      }
       expectKey = false;
       index++;
       continue;
     }
 
-    tokens.push({ type: 'punctuation', value: char });
+    if (!pushToken('punctuation', index, index + 1)) {
+      return { tokens, truncated: true };
+    }
     expectKey = false;
     index++;
   }
 
+  return { tokens, truncated: false };
+}
+
+export function tokenizeJson(input: string): JsonToken[] {
+  const { tokens } = tokenizeJsonWithLimit(input);
   return tokens;
 }

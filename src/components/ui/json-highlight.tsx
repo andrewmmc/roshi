@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { tokenizeJson, type JsonTokenType } from '@/utils/json-highlight';
+import {
+  JSON_HIGHLIGHT_MAX_CHARS,
+  JSON_HIGHLIGHT_MAX_TOKENS,
+  tokenizeJsonWithLimit,
+  type JsonTokenType,
+} from '@/utils/json-highlight';
 import { cn } from '@/lib/utils';
 
 const TOKEN_CLASS: Record<JsonTokenType, string> = {
@@ -18,7 +23,38 @@ export function JsonHighlight({
   json: string;
   className?: string;
 }) {
-  const tokens = useMemo(() => tokenizeJson(json), [json]);
+  const highlightState = useMemo(() => {
+    if (json.length > JSON_HIGHLIGHT_MAX_CHARS) {
+      return { highlighted: false as const };
+    }
+
+    const tokenization = tokenizeJsonWithLimit(json, {
+      maxTokens: JSON_HIGHLIGHT_MAX_TOKENS,
+    });
+    if (tokenization.truncated) {
+      return { highlighted: false as const };
+    }
+
+    return { highlighted: true as const, tokens: tokenization.tokens };
+  }, [json]);
+
+  if (!highlightState.highlighted) {
+    return (
+      <div className="flex flex-col">
+        <div className="text-muted-foreground border-b px-4 py-2 text-xs">
+          Syntax highlighting disabled for large payload
+        </div>
+        <pre
+          className={cn(
+            'overflow-x-auto p-4 font-mono text-[13px] whitespace-pre',
+            className,
+          )}
+        >
+          {json}
+        </pre>
+      </div>
+    );
+  }
 
   return (
     <pre
@@ -27,7 +63,7 @@ export function JsonHighlight({
         className,
       )}
     >
-      {tokens.map((token, index) => (
+      {highlightState.tokens.map((token, index) => (
         <span key={index} className={TOKEN_CLASS[token.type]}>
           {token.value}
         </span>

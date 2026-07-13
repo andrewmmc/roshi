@@ -11,23 +11,22 @@ import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
 import { redactHeaders, redactUrlQueryParams } from '@/utils/redact';
 
 const JsonBlock = memo(function JsonBlock({
-  data,
+  json,
   label,
 }: {
-  data: unknown;
+  json: string;
   label: string;
 }) {
-  const jsonStr = useMemo(
-    () => (data ? JSON.stringify(data, null, 2) : ''),
-    [data],
-  );
-
-  if (!data) {
+  if (!json) {
     return <EmptyState title={`No ${label} data available`} compact />;
   }
 
-  return <JsonHighlight json={jsonStr} />;
+  return <JsonHighlight json={json} />;
 });
+
+function serializeJson(data: unknown): string {
+  return data ? JSON.stringify(data, null, 2) : '';
+}
 
 export function RawJsonView() {
   const rawRequest = useResponseStore((s) => s.rawRequest);
@@ -36,25 +35,37 @@ export function RawJsonView() {
   const requestHeaders = useResponseStore((s) => s.requestHeaders);
 
   const [activeTab, setActiveTab] = useState('response');
+  const responseJson = useMemo(() => serializeJson(rawResponse), [rawResponse]);
+  const requestJson = useMemo(() => serializeJson(rawRequest), [rawRequest]);
   const activeData = activeTab === 'response' ? rawResponse : rawRequest;
-  const activeJson = useMemo(
-    () => (activeData ? JSON.stringify(activeData, null, 2) : ''),
-    [activeData],
-  );
+  const activeJson = activeTab === 'response' ? responseJson : requestJson;
   // Credentials must not be exposed in the inspector. Redact query-param keys
   // in the URL and auth header values before display / copy / cURL.
   const safeRequestUrl = useMemo(
     () => redactUrlQueryParams(requestUrl),
     [requestUrl],
   );
+  const redactedRequestHeaders = useMemo(
+    () => redactHeaders(requestHeaders),
+    [requestHeaders],
+  );
   const curlCommand = useMemo(
     () =>
-      buildCurlCommand({
-        url: safeRequestUrl,
-        headers: redactHeaders(requestHeaders),
-        body: rawRequest,
-      }),
-    [safeRequestUrl, requestHeaders, rawRequest],
+      activeTab === 'request'
+        ? buildCurlCommand({
+            url: safeRequestUrl,
+            headers: redactedRequestHeaders,
+            body: rawRequest,
+            bodyJson: requestJson || null,
+          })
+        : null,
+    [
+      activeTab,
+      safeRequestUrl,
+      redactedRequestHeaders,
+      rawRequest,
+      requestJson,
+    ],
   );
 
   return (
@@ -99,7 +110,7 @@ export function RawJsonView() {
         value="response"
         className="mt-0 min-h-0 flex-1 overflow-y-auto"
       >
-        <JsonBlock data={rawResponse} label="response" />
+        <JsonBlock json={responseJson} label="response" />
       </TabsContent>
       <TabsContent
         value="request"
@@ -114,7 +125,7 @@ export function RawJsonView() {
             <CopyButton text={safeRequestUrl} className="ml-2 shrink-0" />
           </div>
         )}
-        <JsonBlock data={rawRequest} label="request" />
+        <JsonBlock json={requestJson} label="request" />
       </TabsContent>
     </Tabs>
   );

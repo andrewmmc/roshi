@@ -7,10 +7,12 @@ export function buildCurlCommand({
   url,
   headers,
   body,
+  bodyJson,
 }: {
   url: string | null;
   headers: Record<string, string> | null;
   body: Record<string, unknown> | null;
+  bodyJson?: string | null;
 }): string | null {
   if (!url) return null;
 
@@ -25,7 +27,7 @@ export function buildCurlCommand({
   }
 
   if (body) {
-    const bodyStr = JSON.stringify(body, null, 2);
+    const bodyStr = bodyJson ?? JSON.stringify(body, null, 2);
     lines.push(`  -d '${shellEscapeSingleQuote(bodyStr)}'`);
   }
 
