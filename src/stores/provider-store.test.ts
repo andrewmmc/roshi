@@ -458,6 +458,25 @@ describe('provider-store', () => {
       });
       expect(getState().providers[0].name).toBe('Updated');
     });
+
+    it('selects the first model when the selected provider was empty', async () => {
+      useProviderStore.setState({
+        loaded: true,
+        providers: [makeProvider({ id: 'p1', models: [] })],
+        selectedProviderId: 'p1',
+        selectedModelId: null,
+      });
+      const models = [makeModel({ id: 'new-model' })];
+
+      await getState().updateProvider('p1', { models });
+
+      expect(getState().selectedModelId).toBe('new-model');
+      const saved = mockDb.settings._store.get('provider-selection') as {
+        providerId: string;
+        modelId: string;
+      };
+      expect(saved).toEqual({ providerId: 'p1', modelId: 'new-model' });
+    });
   });
 
   describe('deleteProvider', () => {

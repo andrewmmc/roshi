@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ProviderSelect } from './ProviderSelect';
 import { useProviderStore } from '@/stores/provider-store';
@@ -125,6 +125,34 @@ describe('ProviderSelect', () => {
     expect(
       screen.getByRole('option', { name: /browse models/i }),
     ).toBeInTheDocument();
+  });
+
+  it('refreshes after the selected provider receives its first model', async () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'p1',
+          name: 'OpenAI',
+          models: [],
+        }),
+      ],
+      selectedProviderId: 'p1',
+      selectedModelId: null,
+    });
+
+    render(<ProviderSelect />);
+
+    const modelSelect = screen.getByRole('combobox', { name: /select model/i });
+    expect(screen.queryByRole('option', { name: 'GPT-4.1' })).toBeNull();
+
+    await act(async () => {
+      await useProviderStore.getState().updateProvider('p1', {
+        models: [makeModel({ id: 'm1', displayName: 'GPT-4.1' })],
+      });
+    });
+
+    expect(modelSelect).toHaveValue('m1');
+    expect(screen.getByRole('option', { name: 'GPT-4.1' })).toBeInTheDocument();
   });
 
   it('enables model selection for google gemini and displays available models', async () => {

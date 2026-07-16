@@ -303,9 +303,33 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
 
   updateProvider: async (id, updates) => {
     await db.providers.update(id, updates);
-    set((state) => ({
-      providers: replaceById(state.providers, id, updates),
-    }));
+
+    let selectionChanged = false;
+    let newSelectedModelId: string | null = null;
+    set((state) => {
+      const providers = replaceById(state.providers, id, updates);
+      const storeUpdates: Partial<ProviderStore> = { providers };
+
+      if (state.selectedProviderId === id && updates.models) {
+        const selectedModelStillExists = updates.models.some(
+          (model) => model.id === state.selectedModelId,
+        );
+        const fallbackModelId = updates.models[0]?.id ?? null;
+        if (
+          !selectedModelStillExists &&
+          state.selectedModelId !== fallbackModelId
+        ) {
+          selectionChanged = true;
+          newSelectedModelId = fallbackModelId;
+          storeUpdates.selectedModelId = newSelectedModelId;
+        }
+      }
+
+      return storeUpdates;
+    });
+    if (selectionChanged) {
+      await saveSelection(id, newSelectedModelId);
+    }
   },
 
   deleteProvider: async (id) => {
