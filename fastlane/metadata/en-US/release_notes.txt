@@ -1,6 +1,1 @@
-This patch improves response viewing performance and consistency:
-
-- Response panels retain the content associated with each request snapshot
-- Streaming chat updates render more smoothly
-- Large raw JSON responses use bounded syntax highlighting
-- Generated code views are cached until their source changes
+This patch fixes the request model picker so it refreshes and selects the first model after one is added to a provider with an empty model list.
