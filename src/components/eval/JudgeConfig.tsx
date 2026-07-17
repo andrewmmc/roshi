@@ -97,7 +97,7 @@ export function JudgeConfig() {
           <Select
             value={judgeConfig.runner?.modelId ?? ''}
             onValueChange={handleModelChange}
-            disabled={!judgeConfig.enabled || isRunning || models.length === 0}
+            disabled={!judgeConfig.enabled || isRunning}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
               <SelectValue placeholder="Model">
@@ -105,11 +105,17 @@ export function JudgeConfig() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {models.map((m) => (
-                <SelectItem key={m.id} value={m.id} title={m.displayName}>
-                  {m.displayName}
-                </SelectItem>
-              ))}
+              {models.length > 0 ? (
+                models.map((m) => (
+                  <SelectItem key={m.id} value={m.id} title={m.displayName}>
+                    {m.displayName}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="text-muted-foreground px-2 py-3 text-center text-xs">
+                  No models available.
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>

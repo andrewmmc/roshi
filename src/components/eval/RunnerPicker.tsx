@@ -139,7 +139,7 @@ export function RunnerPicker() {
           <Select
             value={effectiveModelId}
             onValueChange={handleModelChange}
-            disabled={isRunning || availableModels.length === 0}
+            disabled={isRunning}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
               <SelectValue placeholder="Model">
@@ -147,11 +147,17 @@ export function RunnerPicker() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {availableModels.map((m) => (
-                <SelectItem key={m.id} value={m.id} title={m.displayName}>
-                  {m.displayName}
-                </SelectItem>
-              ))}
+              {availableModels.length > 0 ? (
+                availableModels.map((m) => (
+                  <SelectItem key={m.id} value={m.id} title={m.displayName}>
+                    {m.displayName}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="text-muted-foreground px-2 py-3 text-center text-xs">
+                  No models available.
+                </div>
+              )}
               {showBrowseModels ? (
                 <>
                   <SelectSeparator />
