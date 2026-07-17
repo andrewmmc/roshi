@@ -18,12 +18,12 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -64,12 +64,12 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -101,7 +101,7 @@ jobs:
           echo "API_KEY_PATH=$HOME/private_keys/AuthKey_${{ vars.APPLE_API_KEY }}.p8" >> $GITHUB_ENV
 
       - name: Build Tauri app (Developer ID signed + notarized)
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_APP_VERSION: ${{ env.APP_VERSION }}
