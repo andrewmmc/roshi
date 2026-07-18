@@ -562,6 +562,36 @@ describe('llm-client', () => {
       });
     });
 
+    it('bounds captured raw stream chunks to protect local history storage', async () => {
+      const events = Array.from({ length: 201 }, (_, index) =>
+        JSON.stringify({ index }),
+      );
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValue({
+          content: '',
+          finishReason: null,
+        }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream(events),
+        }),
+      );
+
+      const result = await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: true }),
+      });
+
+      expect(result.rawResponse).toMatchObject({ chunksTruncated: true });
+      expect(result.rawResponse.chunks).toHaveLength(200);
+    });
+
     it('surfaces a mid-stream provider error as StreamError with partial content', async () => {
       const contentEvent = JSON.stringify({ delta: 'Partial' });
       const errorEvent = JSON.stringify({

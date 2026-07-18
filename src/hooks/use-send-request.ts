@@ -113,6 +113,18 @@ function createBaseHistoryEntry({
   };
 }
 
+function saveHistoryEntry(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): void {
+  void useHistoryStore
+    .getState()
+    .addEntry(entry)
+    .catch(() => {
+      toast(
+        'Response completed, but history could not be saved locally.',
+        4000,
+      );
+    });
+}
+
 /**
  * History is persisted to IndexedDB, so credentials must never be written in
  * the clear. Redact auth headers and any API key embedded in the request URL
@@ -376,7 +388,7 @@ export function useSendRequest() {
       addMessage({ role: 'assistant', content: result.response.content });
       addMessage({ role: 'user', content: '' });
 
-      useHistoryStore.getState().addEntry({
+      saveHistoryEntry({
         ...baseHistoryEntry,
         rawRequest: result.rawRequest,
         ...redactPersistedRequestFields(validation.provider.apiKey, {
@@ -407,7 +419,7 @@ export function useSendRequest() {
           addMessage({ role: 'user', content: '' });
         }
 
-        useHistoryStore.getState().addEntry({
+        saveHistoryEntry({
           ...baseHistoryEntry,
           rawRequest: err.rawRequest,
           ...redactPersistedRequestFields(validation.provider.apiKey, {
@@ -424,7 +436,7 @@ export function useSendRequest() {
       } else if (err instanceof RequestError) {
         const { summary, detail } = completeRequestError(respStore, err);
 
-        useHistoryStore.getState().addEntry({
+        saveHistoryEntry({
           ...baseHistoryEntry,
           rawRequest: err.rawRequest,
           ...redactPersistedRequestFields(validation.provider.apiKey, {

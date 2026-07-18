@@ -373,6 +373,35 @@ describe('useSendRequest', () => {
       );
     });
 
+    it('keeps a completed response and reports a history persistence failure', async () => {
+      mockDb.history.add.mockRejectedValueOnce(new Error('Quota exceeded'));
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'ok',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 100,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+        await Promise.resolve();
+      });
+
+      expect(useResponseStore.getState().response?.content).toBe('ok');
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
+        'Response completed, but history could not be saved locally.',
+      );
+    });
+
     it('filters custom headers by non-empty key', async () => {
       useComposerStore.setState({
         ...useComposerStore.getState(),

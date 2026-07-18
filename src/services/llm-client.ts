@@ -36,6 +36,9 @@ export interface SendRequestResult {
   statusCode: number;
 }
 
+const MAX_CAPTURED_STREAM_CHUNKS = 200;
+const MAX_CAPTURED_STREAM_BYTES = 1_000_000;
+
 export async function sendRequest(
   options: SendRequestOptions,
 ): Promise<SendRequestResult> {
@@ -278,6 +281,8 @@ async function handleStream(
   let finishReason: string | null = null;
   let usage: NormalizedResponse['usage'] = null;
   const allChunks: unknown[] = [];
+  let capturedChunkBytes = 0;
+  let rawChunksTruncated = false;
 
   let pipeError: unknown;
   let readError: unknown;
@@ -320,7 +325,18 @@ async function handleStream(
       if (!data || data === '[DONE]') continue;
 
       const parsed = parseJsonObject(data);
-      if (parsed) allChunks.push(parsed);
+      if (parsed) {
+        const dataBytes = new TextEncoder().encode(data).byteLength;
+        if (
+          allChunks.length < MAX_CAPTURED_STREAM_CHUNKS &&
+          capturedChunkBytes + dataBytes <= MAX_CAPTURED_STREAM_BYTES
+        ) {
+          allChunks.push(parsed);
+          capturedChunkBytes += dataBytes;
+        } else {
+          rawChunksTruncated = true;
+        }
+      }
 
       const streamErrorMessage = adapter.parseStreamError?.(data);
       if (streamErrorMessage) {
@@ -354,6 +370,9 @@ async function handleStream(
     usage,
     allChunks,
   );
+  if (rawChunksTruncated) {
+    rawResponse.chunksTruncated = true;
+  }
 
   const streamFailure = readError ?? pipeError;
   if (streamFailure) {
