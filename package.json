@@ -14,6 +14,7 @@
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:integration": "vitest run src/services/llm-client.integration.test.ts src/hooks/use-send-request.integration.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "tauri": "tauri",

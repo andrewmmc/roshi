@@ -237,6 +237,14 @@ function extractProviderErrorDetail(
   return null;
 }
 
+function isAbortError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { name?: string }).name === 'AbortError'
+  );
+}
+
 function isLikelyNetworkFailure(message: string): boolean {
   const normalized = message.toLowerCase();
   return [
@@ -457,7 +465,7 @@ export function useSendRequest() {
             err.message ||
             'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
         });
-      } else if (err instanceof DOMException && err.name === 'AbortError') {
+      } else if (isAbortError(err)) {
         respStore.completeWithError({
           error: 'Request cancelled',
           errorDetail: null,
