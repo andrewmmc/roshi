@@ -95,13 +95,11 @@ describe('devProxyPlugin', () => {
     });
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(body, {
-            headers: { 'content-type': 'text/event-stream' },
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        new Response(body, {
+          headers: { 'content-type': 'text/event-stream' },
+        }),
+      ),
     );
     const response = new MockResponse();
 
