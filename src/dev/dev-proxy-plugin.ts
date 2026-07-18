@@ -1,6 +1,9 @@
 import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
-import { DEFAULT_REQUEST_TIMEOUT_MS } from '../constants/defaults';
+import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  DEFAULT_STREAM_IDLE_TIMEOUT_MS,
+} from '../constants/defaults';
 
 const PROXY_TIMEOUT_MS = DEFAULT_REQUEST_TIMEOUT_MS;
 const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
@@ -63,10 +66,25 @@ export function devProxyPlugin() {
         }
 
         let timedOut = false;
-        const timeoutId = setTimeout(() => {
-          timedOut = true;
-          abortController.abort();
-        }, PROXY_TIMEOUT_MS);
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const clearTimeoutTimer = () => {
+          if (timeoutId !== undefined) {
+            clearTimeout(timeoutId);
+            timeoutId = undefined;
+          }
+        };
+        const armTimeout = (timeoutMs: number) => {
+          clearTimeoutTimer();
+          timeoutId = setTimeout(() => {
+            timedOut = true;
+            abortController.abort();
+          }, timeoutMs);
+        };
+
+        // Limit time to first upstream response headers. Once an SSE stream is
+        // established, reset the timer for each received chunk so a healthy
+        // long-running stream is not cut off by a wall-clock deadline.
+        armTimeout(PROXY_TIMEOUT_MS);
 
         try {
           let requestBody: Uint8Array | undefined;
@@ -86,6 +104,14 @@ export function devProxyPlugin() {
             body: requestBody as NonNullable<RequestInit['body']> | undefined,
             signal: abortController.signal,
           });
+
+          const isSse = upstreamResponse.headers
+            .get('content-type')
+            ?.toLowerCase()
+            .includes('text/event-stream');
+          if (isSse) {
+            armTimeout(DEFAULT_STREAM_IDLE_TIMEOUT_MS);
+          }
 
           const contentLength = upstreamResponse.headers.get('content-length');
           if (
@@ -119,6 +145,7 @@ export function devProxyPlugin() {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            if (isSse) armTimeout(DEFAULT_STREAM_IDLE_TIMEOUT_MS);
             bytesRead += value.byteLength;
             if (bytesRead > MAX_RESPONSE_BYTES) {
               reader.cancel();
@@ -144,6 +171,10 @@ export function devProxyPlugin() {
           }
 
           if (timedOut) {
+            if (res.headersSent) {
+              res.destroy();
+              return;
+            }
             res.statusCode = 504;
             res.setHeader('content-type', 'application/json');
             res.end(JSON.stringify({ error: 'Proxy request timed out' }));
@@ -156,7 +187,7 @@ export function devProxyPlugin() {
           res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify({ error: message }));
         } finally {
-          clearTimeout(timeoutId);
+          clearTimeoutTimer();
         }
       });
     },
