@@ -3315,7 +3315,7 @@ dependencies = [
 
 [[package]]
 name = "roshi"
-version = "2.0.3"
+version = "2.0.4"
 dependencies = [
  "serde",
  "serde_json",
