@@ -8,6 +8,12 @@ import {
 const PROXY_TIMEOUT_MS = DEFAULT_REQUEST_TIMEOUT_MS;
 const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
 
+interface DevProxyOptions {
+  requestTimeoutMs?: number;
+  streamIdleTimeoutMs?: number;
+  maxResponseBytes?: number;
+}
+
 const SKIP_REQUEST_HEADERS = new Set([
   'host',
   'origin',
@@ -30,7 +36,12 @@ function collectBody(req: IncomingMessage): Promise<Buffer> {
   });
 }
 
-export function devProxyPlugin() {
+export function devProxyPlugin(options: DevProxyOptions = {}) {
+  const requestTimeoutMs = options.requestTimeoutMs ?? PROXY_TIMEOUT_MS;
+  const streamIdleTimeoutMs =
+    options.streamIdleTimeoutMs ?? DEFAULT_STREAM_IDLE_TIMEOUT_MS;
+  const maxResponseBytes = options.maxResponseBytes ?? MAX_RESPONSE_BYTES;
+
   return {
     name: 'dev-dynamic-proxy',
     configureServer(server: ViteDevServer) {
@@ -84,7 +95,7 @@ export function devProxyPlugin() {
         // Limit time to first upstream response headers. Once an SSE stream is
         // established, reset the timer for each received chunk so a healthy
         // long-running stream is not cut off by a wall-clock deadline.
-        armTimeout(PROXY_TIMEOUT_MS);
+        armTimeout(requestTimeoutMs);
 
         try {
           let requestBody: Uint8Array | undefined;
@@ -110,20 +121,20 @@ export function devProxyPlugin() {
             ?.toLowerCase()
             .includes('text/event-stream');
           if (isSse) {
-            armTimeout(DEFAULT_STREAM_IDLE_TIMEOUT_MS);
+            armTimeout(streamIdleTimeoutMs);
           }
 
           const contentLength = upstreamResponse.headers.get('content-length');
           if (
             contentLength &&
-            Number.parseInt(contentLength, 10) > MAX_RESPONSE_BYTES
+            Number.parseInt(contentLength, 10) > maxResponseBytes
           ) {
             abortController.abort();
             res.statusCode = 413;
             res.setHeader('content-type', 'application/json');
             res.end(
               JSON.stringify({
-                error: `Response exceeds ${MAX_RESPONSE_BYTES} byte limit`,
+                error: `Response exceeds ${maxResponseBytes} byte limit`,
               }),
             );
             return;
@@ -145,18 +156,24 @@ export function devProxyPlugin() {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            if (isSse) armTimeout(DEFAULT_STREAM_IDLE_TIMEOUT_MS);
+            if (isSse) armTimeout(streamIdleTimeoutMs);
             bytesRead += value.byteLength;
-            if (bytesRead > MAX_RESPONSE_BYTES) {
+            if (bytesRead > maxResponseBytes) {
               reader.cancel();
               abortController.abort();
-              if (!res.headersSent) {
-                res.statusCode = 413;
-                res.setHeader('content-type', 'application/json');
+              if (res.headersSent) {
+                // The upstream response has already started. Appending a JSON
+                // error would corrupt its body (especially an SSE stream), so
+                // terminate the connection and let the client surface a stream
+                // interruption instead.
+                res.destroy();
+                return;
               }
+              res.statusCode = 413;
+              res.setHeader('content-type', 'application/json');
               res.end(
                 JSON.stringify({
-                  error: `Response exceeds ${MAX_RESPONSE_BYTES} byte limit`,
+                  error: `Response exceeds ${maxResponseBytes} byte limit`,
                 }),
               );
               return;
