@@ -25,7 +25,7 @@ export function RunnerPicker() {
   const addRunner = useEvalStore((s) => s.addRunner);
   const removeRunner = useEvalStore((s) => s.removeRunner);
   const isRunning = useEvalStore((s) => s.isRunning);
-  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
+  const openProviderSettings = useUiStore((s) => s.openProviderSettings);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
 
   const sortedProviders = useMemo(
@@ -59,7 +59,7 @@ export function RunnerPicker() {
 
   const handleProviderChange = (id: string | null) => {
     if (id === ADD_PROVIDER_VALUE) {
-      setSettingsOpen(true, 'providers');
+      openProviderSettings();
       return;
     }
     const next = id ?? '';
@@ -87,7 +87,7 @@ export function RunnerPicker() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setSettingsOpen(true, 'providers')}
+            onClick={() => openProviderSettings(null, true)}
           >
             <Server className="h-3 w-3" />
             Add API key
@@ -200,7 +200,7 @@ export function RunnerPicker() {
                 aria-label={`Remove ${runner.label}`}
                 onClick={() => removeRunner(runner.id)}
                 disabled={isRunning}
-                className="text-muted-foreground hover:text-foreground inline-flex h-4 w-4 items-center justify-center rounded-full disabled:opacity-40"
+                className="text-muted-foreground hover:text-foreground inline-flex h-6 w-6 items-center justify-center rounded-full disabled:opacity-40"
               >
                 <X className="h-3 w-3" />
               </button>

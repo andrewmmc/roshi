@@ -34,6 +34,7 @@ interface ProviderFormProps {
   initialData?: ProviderFormData;
   onSubmit: (data: ProviderFormData) => void;
   isBuiltIn?: boolean;
+  autoFocusApiKey?: boolean;
 }
 
 const PROVIDER_TYPE_LABELS: Record<ProviderConfig['type'], string> = {
@@ -87,6 +88,7 @@ export function ProviderForm({
   initialData,
   onSubmit,
   isBuiltIn = false,
+  autoFocusApiKey = false,
 }: ProviderFormProps) {
   const [form, setForm] = useState<ProviderFormData>(
     initialData || defaultFormData,
@@ -305,6 +307,7 @@ export function ProviderForm({
         <Field label="API Key" htmlFor="provider-api-key">
           <PasswordInput
             id="provider-api-key"
+            autoFocus={autoFocusApiKey}
             value={form.apiKey}
             onChange={(e) => updateField('apiKey', e.target.value)}
             placeholder="sk-..."

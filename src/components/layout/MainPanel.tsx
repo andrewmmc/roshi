@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useId, useState } from 'react';
 import { useDefaultLayout } from 'react-resizable-panels';
 import {
   ResizableHandle,
@@ -41,6 +41,14 @@ import { toast } from '@/stores/toast-store';
 import { ViewToggle } from './ViewToggle';
 import { TabBar } from './TabBar';
 import { useContainerBreakpoint } from '@/hooks/use-container-breakpoint';
+import { DraftStatus } from './DraftStatus';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 const EvalView = lazy(() =>
   import('@/components/eval/EvalView').then((m) => ({ default: m.EvalView })),
@@ -86,8 +94,9 @@ function RequestView() {
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
   const [envPreviewOpen, setEnvPreviewOpen] = useState(false);
-  const { containerRef, narrow } = useContainerBreakpoint(520);
+  const { containerRef, narrow } = useContainerBreakpoint(640);
   const mainLayout = useDefaultLayout({ id: 'roshi-main' });
+  const sendHintId = useId();
 
   const handleComparePrompt = () => {
     seedFromMainComposer();
@@ -95,95 +104,151 @@ function RequestView() {
     toast('Prompt copied to eval. Add models, then run compare.');
   };
 
+  const sendButton = (
+    <Button
+      size="sm"
+      className="rounded-r-none shadow-sm"
+      onClick={send}
+      disabled={!canSend}
+      aria-describedby={!canSend ? sendHintId : undefined}
+    >
+      <Send className="mr-1.5 h-3.5 w-3.5" />
+      Send
+      <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
+        {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((key) => (
+          <Kbd key={key}>{key}</Kbd>
+        ))}
+      </span>
+    </Button>
+  );
+
+  const renderRequestActions = () => (
+    <div className="flex shrink-0 items-center gap-2">
+      <DraftStatus />
+      <TokenCountBadge />
+      {narrow && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+            aria-label="More actions"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
+              <Eye className="h-3.5 w-3.5" />
+              Env preview
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+      {isLoading ? (
+        <Button variant="destructive" size="sm" onClick={cancel}>
+          <Square className="mr-1.5 h-3.5 w-3.5" />
+          Stop
+          <Kbd className="ml-1.5">Esc</Kbd>
+        </Button>
+      ) : (
+        <div className="flex items-center">
+          {sendDisabledReason ? (
+            <TooltipProvider delay={0}>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span
+                      className="inline-flex"
+                      tabIndex={0}
+                      aria-describedby={sendHintId}
+                    />
+                  }
+                >
+                  {sendButton}
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {sendDisabledReason}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            sendButton
+          )}
+          <span id={sendHintId} className="sr-only">
+            {sendDisabledReason}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 border-primary-foreground/20 inline-flex h-7 w-7 items-center justify-center rounded-l-none rounded-r-lg border-l shadow-sm transition-all outline-none focus-visible:ring-3"
+              aria-label="More send actions"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-64">
+              <DropdownMenuItem
+                className="text-xs"
+                onClick={handleComparePrompt}
+              >
+                <GitCompare className="h-3.5 w-3.5" />
+                Compare prompt across models
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <TabBar />
-      <PanelHeader ref={containerRef} className="justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          {sidebarCollapsed && (
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Open sidebar"
-              className="text-muted-foreground hover:text-foreground shrink-0"
-              onClick={() => setSidebarCollapsed(false)}
-              tooltip="Open sidebar"
-            >
-              <PanelLeftOpen className="h-3.5 w-3.5" />
-            </IconButton>
+      <PanelHeader
+        ref={containerRef}
+        className={cn(
+          'justify-between gap-3',
+          narrow && 'h-auto min-h-11 flex-wrap gap-2 py-2',
+        )}
+      >
+        <div
+          className={cn(
+            'flex min-w-0 items-center gap-2',
+            narrow ? 'w-full justify-between' : 'flex-1',
           )}
-          <ViewToggle />
-          <ProviderSelect />
-          <EnvironmentSelector />
-          {/* Always render so the sheet portal stays mounted; hide trigger when narrow */}
-          <span className={narrow ? 'hidden' : undefined}>
-            <EnvironmentPreviewButton
-              open={envPreviewOpen}
-              onOpenChange={setEnvPreviewOpen}
-            />
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <TokenCountBadge />
-          {narrow && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-                aria-label="More actions"
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            {sidebarCollapsed && (
+              <IconButton
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Open sidebar"
+                data-open-sidebar
+                className="text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => setSidebarCollapsed(false)}
+                tooltip="Open sidebar"
               >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
-                  <Eye className="h-3.5 w-3.5" />
-                  Env preview
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          {isLoading ? (
-            <Button variant="destructive" size="sm" onClick={cancel}>
-              <Square className="mr-1.5 h-3.5 w-3.5" />
-              Stop
-              <Kbd className="ml-1.5">Esc</Kbd>
-            </Button>
-          ) : (
-            <div className="flex items-center">
-              <Button
-                size="sm"
-                className="rounded-r-none shadow-sm"
-                onClick={send}
-                disabled={!canSend}
-                title={sendDisabledReason}
-              >
-                <Send className="mr-1.5 h-3.5 w-3.5" />
-                Send
-                <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
-                  {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
-                    <Kbd key={i}>{k}</Kbd>
-                  ))}
-                </span>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 border-primary-foreground/20 inline-flex h-7 w-7 items-center justify-center rounded-l-none rounded-r-lg border-l shadow-sm transition-all outline-none focus-visible:ring-3"
-                  aria-label="More send actions"
-                >
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-64">
-                  <DropdownMenuItem
-                    className="text-xs"
-                    onClick={handleComparePrompt}
-                  >
-                    <GitCompare className="h-3.5 w-3.5" />
-                    Compare prompt across models
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
+                <PanelLeftOpen className="h-3.5 w-3.5" />
+              </IconButton>
+            )}
+            <ViewToggle />
+            {!narrow && (
+              <>
+                <ProviderSelect />
+                <EnvironmentSelector />
+                <EnvironmentPreviewButton
+                  open={envPreviewOpen}
+                  onOpenChange={setEnvPreviewOpen}
+                />
+              </>
+            )}
+          </div>
+          {narrow && renderRequestActions()}
         </div>
+        {narrow ? (
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <ProviderSelect className="basis-auto" />
+            <EnvironmentSelector />
+          </div>
+        ) : (
+          renderRequestActions()
+        )}
       </PanelHeader>
       <ResizablePanelGroup
         orientation="vertical"

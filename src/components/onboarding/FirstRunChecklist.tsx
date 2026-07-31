@@ -1,7 +1,7 @@
 import { CheckCircle2, Circle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useComposerStore } from '@/stores/composer-store';
-import { useProviderStore } from '@/stores/provider-store';
+import { useProviderStore, useSelectedProvider } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import {
   hasConfiguredApiKey,
@@ -15,7 +15,8 @@ const SAMPLE_PROMPT =
 
 export function FirstRunChecklist() {
   const providers = useProviderStore((s) => s.providers);
-  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
+  const selectedProvider = useSelectedProvider();
+  const openProviderSettings = useUiStore((s) => s.openProviderSettings);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
   const checklistOpen = useUiStore((s) => s.checklistOpen);
   const setChecklistOpen = useUiStore((s) => s.setChecklistOpen);
@@ -31,6 +32,7 @@ export function FirstRunChecklist() {
   const apiKeyDone = hasConfiguredApiKey(providers);
   const modelDone = hasPickedModel(providers);
   const showCloseButton = checklistOpen && !setupIncomplete;
+  const setupProvider = selectedProvider ?? providers[0] ?? null;
 
   const handleSamplePrompt = () => {
     const firstUserIndex = messages.findIndex(
@@ -51,8 +53,8 @@ export function FirstRunChecklist() {
       id: 'api-key',
       label: 'Add a provider API key',
       complete: apiKeyDone,
-      actionLabel: 'Open Providers',
-      onAction: () => setSettingsOpen(true, 'providers'),
+      actionLabel: 'Add API key',
+      onAction: () => openProviderSettings(setupProvider?.id ?? null, true),
       visible: true,
     },
     {
@@ -60,7 +62,7 @@ export function FirstRunChecklist() {
       label: 'Pick at least one model',
       complete: modelDone,
       actionLabel: 'Browse Models',
-      onAction: () => openModelMarket(),
+      onAction: () => openModelMarket(setupProvider?.id ?? null),
       visible: true,
     },
     {
@@ -80,17 +82,17 @@ export function FirstRunChecklist() {
           type="button"
           aria-label="Close checklist"
           onClick={() => setChecklistOpen(false)}
-          className="text-muted-foreground/60 hover:text-muted-foreground absolute top-2 right-2 inline-flex h-5 w-5 items-center justify-center rounded transition-colors"
+          className="text-muted-foreground/60 hover:text-muted-foreground absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center rounded transition-colors"
         >
           <X className="h-3.5 w-3.5" />
         </button>
       )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-foreground text-xs font-medium">
+          <p className="text-foreground text-[13px] font-medium">
             Get started with Roshi
           </p>
-          <p className="text-muted-foreground mt-0.5 text-xs">
+          <p className="text-muted-foreground mt-0.5 text-[13px]">
             Complete these steps to send your first request.
           </p>
         </div>
@@ -110,7 +112,7 @@ export function FirstRunChecklist() {
                   )}
                   <span
                     className={cn(
-                      'truncate text-xs',
+                      'truncate text-[13px]',
                       step.complete
                         ? 'text-muted-foreground line-through'
                         : 'text-foreground',

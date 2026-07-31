@@ -11,7 +11,7 @@ import {
 export function ResponseEmptyState() {
   const providers = useProviderStore((s) => s.providers);
   const selectedProvider = useSelectedProvider();
-  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
+  const openProviderSettings = useUiStore((s) => s.openProviderSettings);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
 
   const hasProviders = providers.length > 0;
@@ -36,7 +36,9 @@ export function ResponseEmptyState() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setSettingsOpen(true, 'providers')}
+              onClick={() =>
+                openProviderSettings(selectedProvider?.id ?? null, true)
+              }
             >
               <Server className="h-3 w-3" />
               Add API key

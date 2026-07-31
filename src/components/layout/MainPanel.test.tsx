@@ -80,9 +80,16 @@ describe('MainPanel', () => {
   it('disables sending when no providers exist', () => {
     render(<MainPanel />);
 
-    expect(
-      screen.getByRole('button', { name: (name) => name.startsWith('Send') }),
-    ).toBeDisabled();
+    const sendButton = screen.getByRole('button', {
+      name: (name) => name.startsWith('Send'),
+    });
+    const hintId = sendButton.getAttribute('aria-describedby');
+
+    expect(sendButton).toBeDisabled();
+    expect(hintId).toBeTruthy();
+    expect(document.getElementById(hintId!)).toHaveTextContent(
+      'Select a provider',
+    );
   });
 
   it('sends on button click when a provider exists', () => {

@@ -228,16 +228,20 @@ function GeneralSettings() {
 export function SettingsDialog() {
   const open = useUiStore((s) => s.settingsOpen);
   const settingsPage = useUiStore((s) => s.settingsPage);
+  const settingsProviderId = useUiStore((s) => s.settingsProviderId);
+  const settingsProviderFocusApiKey = useUiStore(
+    (s) => s.settingsProviderFocusApiKey,
+  );
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
-  const [pendingEditProviderId, setPendingEditProviderId] = useState<
-    string | null
-  >(null);
+  const openProviderSettings = useUiStore((s) => s.openProviderSettings);
+  const clearSettingsProviderTarget = useUiStore(
+    (s) => s.clearSettingsProviderTarget,
+  );
 
   const handleClose = () => setSettingsOpen(false);
 
   const handleEditProvider = (provider: ProviderConfig) => {
-    setPendingEditProviderId(provider.id);
-    setSettingsOpen(true, 'providers');
+    openProviderSettings(provider.id);
   };
 
   return (
@@ -311,8 +315,9 @@ export function SettingsDialog() {
               {settingsPage === 'providers' && (
                 <ProviderSettings
                   onClose={handleClose}
-                  pendingEditProviderId={pendingEditProviderId}
-                  onConsumePendingEdit={() => setPendingEditProviderId(null)}
+                  pendingEditProviderId={settingsProviderId}
+                  focusApiKey={settingsProviderFocusApiKey}
+                  onConsumePendingEdit={clearSettingsProviderTarget}
                 />
               )}
               {settingsPage === 'models' && (

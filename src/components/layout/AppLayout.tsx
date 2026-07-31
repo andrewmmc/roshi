@@ -20,6 +20,7 @@ export function AppLayout() {
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const panelRef = useRef<PanelImperativeHandle | null>(null);
+  const asideRef = useRef<HTMLElement | null>(null);
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: 'roshi-shell',
   });
@@ -32,6 +33,16 @@ export function AppLayout() {
       panel.collapse();
     } else if (!sidebarCollapsed && panel.isCollapsed()) {
       panel.expand();
+    }
+  }, [sidebarCollapsed]);
+
+  // A collapsed panel remains mounted so its layout can be restored. Remove
+  // its controls from the focus/accessibility trees and return focus to the
+  // visible open-sidebar control when collapse was triggered from within it.
+  useEffect(() => {
+    if (!sidebarCollapsed) return;
+    if (asideRef.current?.contains(document.activeElement)) {
+      document.querySelector<HTMLButtonElement>('[data-open-sidebar]')?.focus();
     }
   }, [sidebarCollapsed]);
 
@@ -73,7 +84,12 @@ export function AppLayout() {
             if (panel) setSidebarCollapsed(panel.isCollapsed());
           }}
         >
-          <aside className="h-full">
+          <aside
+            ref={asideRef}
+            className="h-full"
+            aria-hidden={sidebarCollapsed || undefined}
+            inert={sidebarCollapsed || undefined}
+          >
             <ErrorBoundary panel>
               <Sidebar />
             </ErrorBoundary>

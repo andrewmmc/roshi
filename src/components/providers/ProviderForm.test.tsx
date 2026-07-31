@@ -49,6 +49,18 @@ vi.mock('@/components/ui/select', () => {
 });
 
 describe('ProviderForm', () => {
+  it('focuses the API key when opened from setup guidance', () => {
+    render(
+      <ProviderForm
+        onSubmit={() => undefined}
+        autoFocusApiKey
+        initialData={makeProvider()}
+      />,
+    );
+
+    expect(screen.getByLabelText('API Key')).toHaveFocus();
+  });
+
   it('submits cleaned models and custom headers', () => {
     const onSubmit = vi.fn();
 

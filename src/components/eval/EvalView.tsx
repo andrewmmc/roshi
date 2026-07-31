@@ -45,6 +45,7 @@ import { RunnerPicker } from './RunnerPicker';
 import { JudgeConfig } from './JudgeConfig';
 import { ResultsGrid } from './ResultsGrid';
 import { CompareView } from './CompareView';
+import { cn } from '@/lib/utils';
 
 export function EvalView() {
   const loadProviders = useProviderStore((s) => s.load);
@@ -72,80 +73,109 @@ export function EvalView() {
     await start();
   };
 
+  const renderEvalActions = () => (
+    <div className="flex shrink-0 items-center gap-2">
+      {isJudging && (
+        <span className="text-muted-foreground animate-pulse text-xs">
+          Judging…
+        </span>
+      )}
+      {narrow && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+            aria-label="More actions"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
+              <Eye className="h-3.5 w-3.5" />
+              Env preview
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+      {isRunning ? (
+        <Button variant="destructive" size="sm" onClick={cancelAll}>
+          <Square className="mr-1.5 h-3.5 w-3.5" />
+          Stop all
+          <Kbd className="ml-1.5">Esc</Kbd>
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          onClick={handleStart}
+          disabled={runners.length === 0}
+          className="shadow-sm"
+          title={
+            runners.length === 0 ? 'Add a runner before starting' : undefined
+          }
+        >
+          <Play className="mr-1.5 h-3.5 w-3.5" />
+          Run eval
+          <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
+            {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((key) => (
+              <Kbd key={key}>{key}</Kbd>
+            ))}
+          </span>
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="bg-background flex h-full min-w-0 flex-col overflow-hidden">
-      <PanelHeader ref={containerRef} className="justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          {sidebarCollapsed && (
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Open sidebar"
-              className="text-muted-foreground hover:text-foreground shrink-0"
-              onClick={() => setSidebarCollapsed(false)}
-              tooltip="Open sidebar"
-            >
-              <PanelLeftOpen className="h-3.5 w-3.5" />
-            </IconButton>
+      <PanelHeader
+        ref={containerRef}
+        className={cn(
+          'justify-between gap-3',
+          narrow && 'h-auto min-h-11 flex-wrap gap-2 py-2',
+        )}
+      >
+        <div
+          className={cn(
+            'flex min-w-0 items-center gap-2',
+            narrow ? 'w-full justify-between' : 'flex-1',
           )}
-          <ViewToggle />
-          <EnvironmentSelector />
-          {/* Always render so the sheet portal stays mounted; hide trigger when narrow */}
-          <span className={narrow ? 'hidden' : undefined}>
-            <EnvironmentPreviewButton
-              open={envPreviewOpen}
-              onOpenChange={setEnvPreviewOpen}
-              messages={composer.messages}
-              systemPrompt={composer.systemPrompt}
-              customHeaders={composer.customHeaders}
-            />
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {isJudging && (
-            <span className="text-muted-foreground animate-pulse text-xs">
-              Judging…
-            </span>
-          )}
-          {narrow && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-                aria-label="More actions"
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            {sidebarCollapsed && (
+              <IconButton
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Open sidebar"
+                data-open-sidebar
+                className="text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => setSidebarCollapsed(false)}
+                tooltip="Open sidebar"
               >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
-                  <Eye className="h-3.5 w-3.5" />
-                  Env preview
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          {isRunning ? (
-            <Button variant="destructive" size="sm" onClick={cancelAll}>
-              <Square className="mr-1.5 h-3.5 w-3.5" />
-              Stop all
-              <Kbd className="ml-1.5">Esc</Kbd>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={handleStart}
-              disabled={runners.length === 0}
-              className="shadow-sm"
-            >
-              <Play className="mr-1.5 h-3.5 w-3.5" />
-              Run eval
-              <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
-                {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((k, i) => (
-                  <Kbd key={i}>{k}</Kbd>
-                ))}
-              </span>
-            </Button>
-          )}
+                <PanelLeftOpen className="h-3.5 w-3.5" />
+              </IconButton>
+            )}
+            <ViewToggle />
+            {!narrow && (
+              <>
+                <EnvironmentSelector />
+                <EnvironmentPreviewButton
+                  open={envPreviewOpen}
+                  onOpenChange={setEnvPreviewOpen}
+                  messages={composer.messages}
+                  systemPrompt={composer.systemPrompt}
+                  customHeaders={composer.customHeaders}
+                />
+              </>
+            )}
+          </div>
+          {narrow && renderEvalActions()}
         </div>
+        {narrow ? (
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <EnvironmentSelector />
+          </div>
+        ) : (
+          renderEvalActions()
+        )}
       </PanelHeader>
 
       {error && (

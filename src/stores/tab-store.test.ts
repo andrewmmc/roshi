@@ -1,4 +1,12 @@
-import { useTabStore, MAX_TABS, computeTabLabel } from './tab-store';
+import { db } from '@/db';
+import {
+  useTabStore,
+  MAX_TABS,
+  REQUEST_SESSION_SETTING_KEY,
+  computeTabLabel,
+  createDefaultComposerSnapshot,
+  persistRequestSessionNow,
+} from './tab-store';
 import { useComposerStore } from './composer-store';
 import { useResponseStore } from './response-store';
 
@@ -173,6 +181,81 @@ describe('tab-store', () => {
       const { tabs } = useTabStore.getState();
       const duplicate = tabs[tabs.length - 1];
       expect(duplicate.label).toContain('(copy)');
+    });
+  });
+
+  describe('request session persistence', () => {
+    beforeEach(async () => {
+      await db.settings.delete(REQUEST_SESSION_SETTING_KEY);
+      useTabStore.setState({
+        hydrated: false,
+        draftPersistenceStatus: 'idle',
+      });
+    });
+
+    afterEach(async () => {
+      await persistRequestSessionNow();
+      await db.settings.delete(REQUEST_SESSION_SETTING_KEY);
+    });
+
+    it('persists the active composer as a local draft', async () => {
+      await useTabStore.getState().hydrate();
+      useComposerStore.setState({
+        messages: [{ id: 'draft-message', role: 'user', content: 'Keep me' }],
+      });
+
+      await persistRequestSessionNow();
+
+      const setting = await db.settings.get(REQUEST_SESSION_SETTING_KEY);
+      expect(setting?.value).toMatchObject({
+        version: 1,
+        activeTabId: useTabStore.getState().activeTabId,
+        tabs: [
+          {
+            label: 'Keep me',
+            composer: {
+              messages: [
+                { id: 'draft-message', role: 'user', content: 'Keep me' },
+              ],
+            },
+          },
+        ],
+      });
+      expect(useTabStore.getState().draftPersistenceStatus).toBe('saved');
+    });
+
+    it('restores saved tabs and the active composer', async () => {
+      const firstComposer = createDefaultComposerSnapshot();
+      const secondComposer = {
+        ...createDefaultComposerSnapshot(),
+        messages: [
+          {
+            id: 'restored-message',
+            role: 'user' as const,
+            content: 'Restored',
+          },
+        ],
+      };
+      await db.settings.put({
+        key: REQUEST_SESSION_SETTING_KEY,
+        value: {
+          version: 1,
+          activeTabId: 'tab-2',
+          tabs: [
+            { id: 'tab-1', label: 'First', composer: firstComposer },
+            { id: 'tab-2', label: 'Restored', composer: secondComposer },
+          ],
+        },
+      });
+
+      await useTabStore.getState().hydrate();
+
+      expect(useTabStore.getState().tabs).toHaveLength(2);
+      expect(useTabStore.getState().activeTabId).toBe('tab-2');
+      expect(useComposerStore.getState().messages).toEqual(
+        secondComposer.messages,
+      );
+      expect(useResponseStore.getState().response).toBeNull();
     });
   });
 });

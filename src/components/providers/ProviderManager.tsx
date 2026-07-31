@@ -212,10 +212,12 @@ export function ProviderSettingsFooter({
 export function ProviderSettings({
   onClose,
   pendingEditProviderId = null,
+  focusApiKey = false,
   onConsumePendingEdit,
 }: {
   onClose: () => void;
   pendingEditProviderId?: string | null;
+  focusApiKey?: boolean;
   onConsumePendingEdit?: () => void;
 }) {
   const [view, setView] = useState<View>('list');
@@ -223,6 +225,7 @@ export function ProviderSettings({
     null,
   );
   const [resettingProvider, setResettingProvider] = useState(false);
+  const [autoFocusApiKey, setAutoFocusApiKey] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const openModelMarket = useUiStore((s) => s.openModelMarket);
@@ -245,11 +248,12 @@ export function ProviderSettings({
     const provider = providers.find((p) => p.id === pendingEditProviderId);
     if (provider) {
       setEditingProvider(provider);
+      setAutoFocusApiKey(focusApiKey);
       setFormVersion((v) => v + 1);
       setView('edit');
     }
     onConsumePendingEdit?.();
-  }, [pendingEditProviderId, providers, onConsumePendingEdit]);
+  }, [pendingEditProviderId, providers, focusApiKey, onConsumePendingEdit]);
 
   const handleEdit = async (data: Omit<ProviderConfig, 'id'>) => {
     if (editingProvider) {
@@ -277,17 +281,20 @@ export function ProviderSettings({
 
   const handleBackToList = () => {
     setEditingProvider(null);
+    setAutoFocusApiKey(false);
     setView('list');
   };
 
   const openAddCustomProvider = () => {
     setEditingProvider(null);
+    setAutoFocusApiKey(false);
     setFormVersion((v) => v + 1);
     setView('add');
   };
 
   const openEditProvider = (provider: ProviderConfig) => {
     setEditingProvider(provider);
+    setAutoFocusApiKey(false);
     setView('edit');
   };
 
@@ -388,6 +395,7 @@ export function ProviderSettings({
             initialData={editingProvider}
             onSubmit={handleEdit}
             isBuiltIn={editingProvider.isBuiltIn}
+            autoFocusApiKey={autoFocusApiKey}
           />
         )}
 

@@ -16,11 +16,12 @@ import {
 import { Loader2, Plus } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
+import { cn } from '@/lib/utils';
 
 const ADD_PROVIDER_VALUE = '__add_provider__';
 const BROWSE_MODELS_VALUE = '__browse_models__';
 
-export function ProviderSelect() {
+export function ProviderSelect({ className }: { className?: string } = {}) {
   const providers = useProviderStore((s) => s.providers);
   const selectedProviderId = useProviderStore((s) => s.selectedProviderId);
   const selectedModelId = useProviderStore((s) => s.selectedModelId);
@@ -72,7 +73,7 @@ export function ProviderSelect() {
   };
 
   return (
-    <div className="flex min-w-0 flex-1 basis-[420px] gap-2">
+    <div className={cn('flex min-w-0 flex-1 basis-[420px] gap-2', className)}>
       <Select
         value={selectedProviderId || ''}
         onValueChange={handleProviderChange}
@@ -80,7 +81,7 @@ export function ProviderSelect() {
         <SelectTrigger
           aria-label="Select provider"
           title="Select provider"
-          className="h-7 w-[150px] min-w-[90px] shrink-0 text-xs"
+          className="h-8 w-[150px] min-w-[90px] shrink-0 text-[13px]"
         >
           <SelectValue placeholder="Provider">
             {selectedProvider?.name ?? 'Provider'}
@@ -107,7 +108,7 @@ export function ProviderSelect() {
       >
         <SelectTrigger
           aria-label="Select model"
-          className="h-7 min-w-[160px] flex-1 text-xs"
+          className="h-8 min-w-[140px] flex-1 text-[13px]"
           title={selectedModel?.displayName}
         >
           <SelectValue placeholder="Model">

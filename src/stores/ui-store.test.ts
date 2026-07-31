@@ -8,6 +8,8 @@ describe('ui-store', () => {
       settingsOpen: false,
       settingsPage: 'general',
       settingsModelsProviderId: null,
+      settingsProviderId: null,
+      settingsProviderFocusApiKey: false,
       historySearchFocusGen: 0,
       aboutOpen: false,
       checklistOpen: false,
@@ -66,6 +68,25 @@ describe('ui-store', () => {
       getState().openModelMarket('p1');
       getState().setSettingsModelsProviderId(null);
       expect(getState().settingsModelsProviderId).toBeNull();
+    });
+  });
+
+  describe('openProviderSettings', () => {
+    it('opens a provider directly and requests API-key focus', () => {
+      getState().openProviderSettings('builtin-openai', true);
+
+      expect(getState().settingsOpen).toBe(true);
+      expect(getState().settingsPage).toBe('providers');
+      expect(getState().settingsProviderId).toBe('builtin-openai');
+      expect(getState().settingsProviderFocusApiKey).toBe(true);
+    });
+
+    it('clears a consumed provider target', () => {
+      getState().openProviderSettings('builtin-openai', true);
+      getState().clearSettingsProviderTarget();
+
+      expect(getState().settingsProviderId).toBeNull();
+      expect(getState().settingsProviderFocusApiKey).toBe(false);
     });
   });
 

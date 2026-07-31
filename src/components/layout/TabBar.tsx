@@ -177,7 +177,7 @@ export function TabBar() {
                       requestClose(tab.id);
                     }}
                     className={cn(
-                      'text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-1 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded focus-visible:ring-1 focus-visible:outline-none',
+                      'text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded focus-visible:ring-1 focus-visible:outline-none',
                       isActive
                         ? 'opacity-60 hover:opacity-100'
                         : 'opacity-0 group-focus-within:opacity-60 group-hover:opacity-60 hover:opacity-100 focus:opacity-100',

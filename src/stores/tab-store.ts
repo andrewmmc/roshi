@@ -22,6 +22,11 @@ import {
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { toast } from '@/stores/toast-store';
+import {
+  createLoadGuard,
+  loadSetting,
+  persistSetting,
+} from '@/stores/store-helpers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Snapshot types — serialisable subsets of store state (no action functions)
@@ -76,6 +81,21 @@ export interface RequestTab {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MAX_TABS = 8;
+export const REQUEST_SESSION_SETTING_KEY = 'request-session-v1';
+
+export type DraftPersistenceStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+interface PersistedRequestSession {
+  version: 1;
+  activeTabId: string;
+  tabs: Array<Pick<RequestTab, 'id' | 'label' | 'composer'>>;
+}
+
+const requestSessionLoadGuard = createLoadGuard();
+const REQUEST_SESSION_SAVE_DELAY = 300;
+let requestSessionReady = false;
+let persistenceTimer: ReturnType<typeof setTimeout> | null = null;
+let persistenceGeneration = 0;
 
 export function createDefaultComposerSnapshot(): ComposerSnapshot {
   return {
@@ -194,6 +214,81 @@ function newBlankTab(): RequestTab {
   };
 }
 
+function isPersistedRequestSession(
+  value: unknown,
+): value is PersistedRequestSession {
+  if (!value || typeof value !== 'object') return false;
+  const session = value as Partial<PersistedRequestSession>;
+  return (
+    session.version === 1 &&
+    typeof session.activeTabId === 'string' &&
+    Array.isArray(session.tabs) &&
+    session.tabs.length > 0 &&
+    session.tabs.every(
+      (tab) =>
+        tab &&
+        typeof tab.id === 'string' &&
+        typeof tab.label === 'string' &&
+        tab.composer &&
+        Array.isArray(tab.composer.messages) &&
+        Array.isArray(tab.composer.customHeaders),
+    )
+  );
+}
+
+function buildPersistedRequestSession(): PersistedRequestSession {
+  const state = useTabStore.getState();
+  const activeComposer = captureComposerSnapshot();
+  return {
+    version: 1,
+    activeTabId: state.activeTabId,
+    tabs: state.tabs.map((tab) => ({
+      id: tab.id,
+      label:
+        tab.id === state.activeTabId
+          ? computeTabLabel(activeComposer.messages)
+          : tab.label,
+      composer: tab.id === state.activeTabId ? activeComposer : tab.composer,
+    })),
+  };
+}
+
+export async function persistRequestSessionNow(): Promise<void> {
+  const state = useTabStore.getState();
+  if (!requestSessionReady || !state.hydrated) return;
+
+  if (persistenceTimer) {
+    clearTimeout(persistenceTimer);
+    persistenceTimer = null;
+  }
+
+  const generation = ++persistenceGeneration;
+  useTabStore.setState({ draftPersistenceStatus: 'saving' });
+  try {
+    await persistSetting(
+      REQUEST_SESSION_SETTING_KEY,
+      buildPersistedRequestSession(),
+    );
+    if (generation === persistenceGeneration) {
+      useTabStore.setState({ draftPersistenceStatus: 'saved' });
+    }
+  } catch {
+    if (generation === persistenceGeneration) {
+      useTabStore.setState({ draftPersistenceStatus: 'error' });
+    }
+  }
+}
+
+export function scheduleRequestSessionPersistence(): void {
+  if (!requestSessionReady || !useTabStore.getState().hydrated) return;
+  if (persistenceTimer) clearTimeout(persistenceTimer);
+  useTabStore.setState({ draftPersistenceStatus: 'saving' });
+  persistenceTimer = setTimeout(() => {
+    persistenceTimer = null;
+    void persistRequestSessionNow();
+  }, REQUEST_SESSION_SAVE_DELAY);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Store definition
 // ─────────────────────────────────────────────────────────────────────────────
@@ -223,6 +318,9 @@ export function tabHasStoredWork(
 interface TabStore {
   tabs: RequestTab[];
   activeTabId: string;
+  hydrated: boolean;
+  draftPersistenceStatus: DraftPersistenceStatus;
+  hydrate: () => Promise<void>;
   createTab: () => void;
   duplicateActiveTab: () => void;
   closeTab: (id: string) => void;
@@ -232,6 +330,45 @@ interface TabStore {
 export const useTabStore = create<TabStore>((set, get) => ({
   tabs: [firstTab],
   activeTabId: firstTab.id,
+  hydrated: false,
+  draftPersistenceStatus: 'idle',
+
+  hydrate: async () =>
+    requestSessionLoadGuard.run(
+      () => get().hydrated,
+      async () => {
+        try {
+          const saved = await loadSetting<unknown>(REQUEST_SESSION_SETTING_KEY);
+          if (isPersistedRequestSession(saved)) {
+            const restoredTabs: RequestTab[] = saved.tabs
+              .slice(0, MAX_TABS)
+              .map((tab) => ({
+                id: tab.id,
+                label: tab.label,
+                composer: { ...tab.composer, scrollGeneration: 0 },
+                response: { ...EMPTY_RESPONSE_SNAPSHOT },
+              }));
+            const activeTab =
+              restoredTabs.find((tab) => tab.id === saved.activeTabId) ??
+              restoredTabs[0];
+            set({
+              tabs: restoredTabs,
+              activeTabId: activeTab.id,
+              hydrated: true,
+              draftPersistenceStatus: 'idle',
+            });
+            applyComposerSnapshot(activeTab.composer);
+            applyResponseSnapshot(activeTab.response);
+          } else {
+            set({ hydrated: true, draftPersistenceStatus: 'idle' });
+          }
+        } catch {
+          set({ hydrated: true, draftPersistenceStatus: 'error' });
+        } finally {
+          requestSessionReady = true;
+        }
+      },
+    ),
 
   createTab: () => {
     if (get().tabs.length >= MAX_TABS) {
@@ -263,6 +400,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     applyComposerSnapshot(newTab.composer);
     applyResponseSnapshot(newTab.response);
+    scheduleRequestSessionPersistence();
   },
 
   duplicateActiveTab: () => {
@@ -300,6 +438,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     applyComposerSnapshot(duplicate.composer);
     applyResponseSnapshot(duplicate.response);
+    scheduleRequestSessionPersistence();
   },
 
   closeTab: (id) => {
@@ -324,6 +463,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
     } else {
       set({ tabs: newTabs });
     }
+    scheduleRequestSessionPersistence();
   },
 
   switchTab: (targetId) => {
@@ -355,5 +495,6 @@ export const useTabStore = create<TabStore>((set, get) => ({
       applyComposerSnapshot(target.composer);
       applyResponseSnapshot(target.response);
     }
+    scheduleRequestSessionPersistence();
   },
 }));

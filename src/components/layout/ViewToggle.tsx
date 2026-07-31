@@ -19,7 +19,7 @@ export function ViewToggle() {
   const setView = useUiStore((s) => s.setMainView);
 
   return (
-    <div className="border-border/70 bg-muted/30 inline-flex h-7 items-center rounded-lg border p-0.5">
+    <div className="border-border/70 bg-muted/30 inline-flex h-8 items-center rounded-lg border p-0.5">
       {VIEW_OPTIONS.map((option) => (
         <TooltipProvider key={option} delay={500}>
           <Tooltip>
@@ -30,7 +30,7 @@ export function ViewToggle() {
                   aria-pressed={view === option}
                   onClick={() => setView(option)}
                   className={cn(
-                    'rounded-sm px-2 text-xs font-medium capitalize transition-colors',
+                    'h-6 min-w-11 rounded-md px-2 text-[13px] font-medium capitalize transition-colors',
                     view === option
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',

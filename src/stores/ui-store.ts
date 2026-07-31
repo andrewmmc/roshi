@@ -11,7 +11,17 @@ interface UiStore {
   settingsPage: SettingsPage;
   /** Optional provider id to focus when opening Settings > Models. */
   settingsModelsProviderId: string | null;
+  /** Optional provider id to open directly in Settings > Providers. */
+  settingsProviderId: string | null;
+  /** Focus the API-key field after opening a provider directly. */
+  settingsProviderFocusApiKey: boolean;
   setSettingsOpen: (open: boolean, page?: SettingsPage) => void;
+  /** Open Settings > Providers, optionally focused on a provider/API key. */
+  openProviderSettings: (
+    providerId?: string | null,
+    focusApiKey?: boolean,
+  ) => void;
+  clearSettingsProviderTarget: () => void;
   /** Open Settings > Models pre-filtered to a specific provider. */
   openModelMarket: (providerId?: string | null) => void;
   setSettingsModelsProviderId: (providerId: string | null) => void;
@@ -43,11 +53,25 @@ export const useUiStore = create<UiStore>((set) => ({
   settingsOpen: false,
   settingsPage: 'general',
   settingsModelsProviderId: null,
+  settingsProviderId: null,
+  settingsProviderFocusApiKey: false,
   setSettingsOpen: (open, page) =>
     set((s) => ({
       settingsOpen: open,
       settingsPage: page ?? s.settingsPage,
     })),
+  openProviderSettings: (providerId = null, focusApiKey = false) =>
+    set({
+      settingsOpen: true,
+      settingsPage: 'providers',
+      settingsProviderId: providerId,
+      settingsProviderFocusApiKey: focusApiKey,
+    }),
+  clearSettingsProviderTarget: () =>
+    set({
+      settingsProviderId: null,
+      settingsProviderFocusApiKey: false,
+    }),
   openModelMarket: (providerId = null) =>
     set({
       settingsOpen: true,
