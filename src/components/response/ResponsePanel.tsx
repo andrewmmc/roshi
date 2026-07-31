@@ -8,6 +8,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { formatCount } from '@/utils/format';
 import { exportCurrentRequest } from '@/utils/export';
 import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
+import { cn } from '@/lib/utils';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -88,6 +89,27 @@ export function ResponsePanel() {
   const hasContent = response || error || isStreaming || isLoading;
   const isInterrupted =
     error === 'Response interrupted' && Boolean(response?.content);
+  const hasHttpError = statusCode !== null && statusCode >= 400;
+
+  const responseState = isLoading
+    ? isStreaming
+      ? 'Streaming'
+      : 'Sending'
+    : isInterrupted
+      ? 'Interrupted'
+      : error || hasHttpError
+        ? 'Error'
+        : response
+          ? 'Complete'
+          : null;
+
+  const responseStateClass = isLoading
+    ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300'
+    : isInterrupted
+      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+      : error || hasHttpError
+        ? 'bg-red-500/10 text-red-700 dark:text-red-300'
+        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
 
   const statusText = isLoading
     ? isStreaming
@@ -105,71 +127,101 @@ export function ResponsePanel() {
     <Tabs
       value={activeTab}
       onValueChange={handleTabChange}
-      className="flex h-full flex-col"
+      className="flex h-full min-w-0 flex-col"
     >
-      <PanelHeader className="justify-between">
-        <TabsList
-          variant="line"
-          className="h-7 gap-0"
-          aria-label="Response views"
-        >
-          <TabsTrigger value="chat" className="px-3 text-xs">
-            Chat
-          </TabsTrigger>
-          <TabsTrigger value="raw" className="px-3 text-xs">
-            Body
-          </TabsTrigger>
-          <TabsTrigger value="headers" className="px-3 text-xs">
-            Headers
-          </TabsTrigger>
-          <TabsTrigger value="code" className="px-3 text-xs">
-            Code
-          </TabsTrigger>
-        </TabsList>
-        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-          {isLoading && (
-            <span className="animate-pulse">
-              {isStreaming ? 'Streaming...' : 'Sending...'}
-            </span>
-          )}
-          {response?.usage && (
-            <span className="font-mono">
-              {formatCount(response.usage.totalTokens)} tokens
-            </span>
-          )}
-          {statusCode !== null && !isLoading && (
-            <span
-              className={`font-mono font-medium ${
-                isInterrupted
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : statusCode >= 200 && statusCode < 300
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-              }`}
-            >
-              {statusCode}{' '}
-              {isInterrupted
-                ? 'Interrupted'
-                : statusCode < 300
-                  ? 'Success'
-                  : 'Error'}
-            </span>
-          )}
-          {durationMs !== null && !isLoading && (
-            <span className="font-mono">{durationMs}ms</span>
-          )}
-          {statusCode !== null && !isLoading && (
-            <IconButton
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground"
-              tooltip="Export request and response as JSON"
-              onClick={() => exportCurrentRequest(useResponseStore.getState())}
-            >
-              <Download className="h-3.5 w-3.5" />
-            </IconButton>
-          )}
+      <PanelHeader className="h-auto min-h-11 flex-wrap justify-between gap-x-3 gap-y-1 py-1.5">
+        <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList
+            variant="line"
+            className="h-7 w-max max-w-none gap-0"
+            aria-label="Response views"
+          >
+            <TabsTrigger value="chat" className="px-3 text-xs">
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="raw" className="px-3 text-xs">
+              Body
+            </TabsTrigger>
+            <TabsTrigger value="headers" className="px-3 text-xs">
+              Headers
+            </TabsTrigger>
+            <TabsTrigger value="code" className="px-3 text-xs">
+              Code
+            </TabsTrigger>
+          </TabsList>
         </div>
+        {(responseState ||
+          response?.usage ||
+          (statusCode !== null && !isLoading) ||
+          (durationMs !== null && !isLoading)) && (
+          <div
+            role="group"
+            aria-label="Response details"
+            className="text-muted-foreground flex min-w-0 shrink-0 items-center gap-1.5 text-[11px] max-sm:order-2 max-sm:w-full max-sm:border-t max-sm:pt-1.5"
+          >
+            {responseState && (
+              <span
+                className={cn(
+                  'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full px-2 font-medium',
+                  responseStateClass,
+                )}
+              >
+                <span
+                  className={cn(
+                    'size-1.5 rounded-full bg-current',
+                    isLoading && 'animate-pulse motion-reduce:animate-none',
+                  )}
+                  aria-hidden="true"
+                />
+                {responseState}
+              </span>
+            )}
+            {statusCode !== null && !isLoading && (
+              <span
+                className={cn(
+                  'shrink-0 font-mono font-medium tabular-nums',
+                  isInterrupted
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : statusCode >= 200 && statusCode < 300
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-red-600 dark:text-red-400',
+                )}
+                aria-label={`HTTP status ${statusCode}`}
+              >
+                HTTP {statusCode}
+              </span>
+            )}
+            {durationMs !== null && !isLoading && (
+              <span
+                className="shrink-0 font-mono tabular-nums"
+                aria-label={`Latency ${durationMs} milliseconds`}
+              >
+                {durationMs} ms
+              </span>
+            )}
+            {response?.usage && (
+              <span
+                className="shrink-0 font-mono tabular-nums"
+                aria-label={`${response.usage.totalTokens} total tokens`}
+              >
+                {formatCount(response.usage.totalTokens)} tokens
+              </span>
+            )}
+            {statusCode !== null && !isLoading && (
+              <IconButton
+                variant="ghost"
+                size="icon-sm"
+                className="text-muted-foreground hover:text-foreground ml-auto shrink-0"
+                tooltip="Export request and response as JSON"
+                onClick={() =>
+                  exportCurrentRequest(useResponseStore.getState())
+                }
+              >
+                <Download className="h-3.5 w-3.5" />
+              </IconButton>
+            )}
+          </div>
+        )}
       </PanelHeader>
 
       <div className="sr-only" aria-live="polite" role="status">

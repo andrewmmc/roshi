@@ -76,7 +76,7 @@ export function EvalView() {
   const renderEvalActions = () => (
     <div className="flex shrink-0 items-center gap-2">
       {isJudging && (
-        <span className="text-muted-foreground animate-pulse text-xs">
+        <span className="text-muted-foreground animate-pulse text-xs motion-reduce:animate-none">
           Judging…
         </span>
       )}

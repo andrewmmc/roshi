@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { ConfirmDeleteDialog } from '@/components/collections/ConfirmDeleteDialog';
 import { ProviderForm } from './ProviderForm';
 import { useProviders } from '@/hooks/use-providers';
 import { useProviderStore } from '@/stores/provider-store';
@@ -225,6 +226,8 @@ export function ProviderSettings({
     null,
   );
   const [resettingProvider, setResettingProvider] = useState(false);
+  const [providerToDelete, setProviderToDelete] =
+    useState<ProviderConfig | null>(null);
   const [autoFocusApiKey, setAutoFocusApiKey] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
@@ -299,9 +302,7 @@ export function ProviderSettings({
   };
 
   const handleDeleteProvider = (provider: ProviderConfig) => {
-    if (window.confirm('Remove this custom provider? This cannot be undone.')) {
-      void deleteProvider(provider.id);
-    }
+    setProviderToDelete(provider);
   };
 
   const handleManageModels = (provider: ProviderConfig) => {
@@ -420,6 +421,25 @@ export function ProviderSettings({
         onResetProvider={() => void handleResetProvider()}
         onSubmitForm={() => formRef.current?.requestSubmit()}
       />
+
+      {providerToDelete && (
+        <ConfirmDeleteDialog
+          open
+          title="Remove provider?"
+          description={
+            <>
+              Remove <strong>{providerToDelete.name}</strong>? Its credentials,
+              endpoint, and model configuration will be deleted from this
+              device.
+            </>
+          }
+          confirmLabel="Remove"
+          onOpenChange={(open) => {
+            if (!open) setProviderToDelete(null);
+          }}
+          onConfirm={() => deleteProvider(providerToDelete.id)}
+        />
+      )}
     </div>
   );
 }

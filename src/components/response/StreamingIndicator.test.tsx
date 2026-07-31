@@ -7,5 +7,8 @@ describe('StreamingIndicator', () => {
 
     expect(screen.getByLabelText('Response is streaming')).toBeInTheDocument();
     expect(container.querySelectorAll('.animate-bounce')).toHaveLength(3);
+    expect(
+      container.querySelectorAll('.motion-reduce\\:animate-none'),
+    ).toHaveLength(3);
   });
 });

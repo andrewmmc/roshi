@@ -82,7 +82,7 @@ export function FirstRunChecklist() {
           type="button"
           aria-label="Close checklist"
           onClick={() => setChecklistOpen(false)}
-          className="text-muted-foreground/60 hover:text-muted-foreground absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center rounded transition-colors"
+          className="text-muted-foreground/60 hover:text-muted-foreground absolute top-1.5 right-1.5 inline-flex size-7 items-center justify-center rounded transition-colors"
         >
           <X className="h-3.5 w-3.5" />
         </button>

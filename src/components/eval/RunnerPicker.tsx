@@ -200,7 +200,7 @@ export function RunnerPicker() {
                 aria-label={`Remove ${runner.label}`}
                 onClick={() => removeRunner(runner.id)}
                 disabled={isRunning}
-                className="text-muted-foreground hover:text-foreground inline-flex h-6 w-6 items-center justify-center rounded-full disabled:opacity-40"
+                className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-full disabled:opacity-40"
               >
                 <X className="h-3 w-3" />
               </button>

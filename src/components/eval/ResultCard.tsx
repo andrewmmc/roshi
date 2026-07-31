@@ -17,7 +17,7 @@ function statusBadgeClass(status: EvalRunResult['status']): string {
     case 'success':
       return 'bg-green-500/15 text-green-700 dark:text-green-300';
     case 'streaming':
-      return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 animate-pulse';
+      return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 animate-pulse motion-reduce:animate-none';
     case 'pending':
       return 'bg-muted text-muted-foreground';
     case 'cancelled':

@@ -58,17 +58,17 @@ Status: checkpoint committed.
 
 ## Phase 4 — response feedback and accessibility finish
 
-Status: pending.
+Status: checkpoint committed.
 
-- [ ] Prevent response metadata and inspection tabs from colliding at compact
+- [x] Prevent response metadata and inspection tabs from colliding at compact
       widths.
-- [ ] Present request state, HTTP status, latency, and token usage with a clear
+- [x] Present request state, HTTP status, latency, and token usage with a clear
       but quiet hierarchy.
-- [ ] Keep response export available without crowding the primary reading
+- [x] Keep response export available without crowding the primary reading
       surface.
-- [ ] Audit remaining icon-only controls and interactive target sizes in the
+- [x] Audit remaining icon-only controls and interactive target sizes in the
       primary request, history, collection, and eval paths.
-- [ ] Respect reduced-motion preferences for nonessential transitions and
+- [x] Respect reduced-motion preferences for nonessential transitions and
       loading effects.
 
 ## Completion gates

@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/history';
 
 const TRIGGER_CLASS =
-  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
+  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
 
 interface HistoryItemProps {
   entry: HistoryEntry;

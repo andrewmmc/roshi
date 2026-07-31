@@ -33,7 +33,7 @@ export function RatingControl({
               aria-checked={rating === value}
               aria-label={`Rate ${value} out of 5`}
               onClick={() => onRatingChange(rating === value ? null : value)}
-              className="text-muted-foreground hover:text-foreground p-0.5"
+              className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-md"
             >
               <Star
                 className={cn(
@@ -53,7 +53,7 @@ export function RatingControl({
         aria-pressed={thumbs === 'up'}
         onClick={() => onThumbsChange(thumbs === 'up' ? null : 'up')}
         className={cn(
-          'hover:bg-muted/50 rounded p-1 transition-colors',
+          'hover:bg-muted/50 inline-flex size-7 items-center justify-center rounded-md transition-colors',
           thumbs === 'up'
             ? 'text-green-600 dark:text-green-400'
             : 'text-muted-foreground',
@@ -67,7 +67,7 @@ export function RatingControl({
         aria-pressed={thumbs === 'down'}
         onClick={() => onThumbsChange(thumbs === 'down' ? null : 'down')}
         className={cn(
-          'hover:bg-muted/50 rounded p-1 transition-colors',
+          'hover:bg-muted/50 inline-flex size-7 items-center justify-center rounded-md transition-colors',
           thumbs === 'down'
             ? 'text-red-600 dark:text-red-400'
             : 'text-muted-foreground',

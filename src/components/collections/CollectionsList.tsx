@@ -42,7 +42,7 @@ import { useResponseStore } from '@/stores/response-store';
 import type { SavedRequest, Collection } from '@/types/history';
 
 const TRIGGER_CLASS =
-  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
+  'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
 
 const UNGROUPED_ID = '__ungrouped__';
 
@@ -526,7 +526,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
                 aria-label="Clear search"
                 title="Clear search"
               >

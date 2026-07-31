@@ -247,7 +247,7 @@ export function ChatView() {
               ariaLabel={getRoleAriaLabel('assistant')}
             >
               <div className="bg-muted/40 flex-1 rounded-lg px-3 py-2 text-[13px]">
-                <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                <Loader2 className="text-muted-foreground h-4 w-4 animate-spin motion-reduce:animate-none" />
               </div>
             </MessageRow>
           )}

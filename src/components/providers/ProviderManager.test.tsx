@@ -62,6 +62,12 @@ vi.mock('@/components/ui/dialog', () => ({
   DialogHeader: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
+  DialogDescription: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogFooter: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   DialogTitle: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -219,13 +225,17 @@ describe('ProviderSettings', () => {
 
   it('exports providers, closes, and removes custom providers', async () => {
     const user = userEvent.setup();
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { onClose } = renderProviderSettings();
 
     await user.click(screen.getByRole('button', { name: /export json/i }));
     await user.click(
       screen.getByRole('button', { name: /remove custom provider my custom/i }),
     );
+    expect(screen.getByText('Remove provider?')).toBeInTheDocument();
+    expect(
+      screen.getByText(/credentials, endpoint, and model configuration/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
     await user.click(
       screen.getAllByRole('button', { name: /^close$/i }).at(-1)!,
     );
@@ -233,9 +243,6 @@ describe('ProviderSettings', () => {
     await waitFor(() => {
       expect(exportProviders).toHaveBeenCalledWith(mockProviders.value);
     });
-    expect(confirm).toHaveBeenCalledWith(
-      'Remove this custom provider? This cannot be undone.',
-    );
     expect(deleteProvider).toHaveBeenCalledWith('custom-provider');
     expect(onClose).toHaveBeenCalledTimes(1);
   });

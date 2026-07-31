@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 import { ResponsePanel } from './ResponsePanel';
@@ -246,7 +246,7 @@ describe('ResponsePanel', () => {
 
     await renderResponsePanel();
 
-    expect(screen.getByText('Sending...')).toBeInTheDocument();
+    expect(screen.getByText('Sending')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Sending request...');
   });
 
@@ -270,9 +270,11 @@ describe('ResponsePanel', () => {
     await renderResponsePanel();
 
     expect(await screen.findByTestId('chat-view')).toBeInTheDocument();
-    expect(screen.getByText('15 tokens')).toBeInTheDocument();
-    expect(screen.getByText('200 Success')).toBeInTheDocument();
-    expect(screen.getByText('321ms')).toBeInTheDocument();
+    const details = screen.getByRole('group', { name: 'Response details' });
+    expect(within(details).getByText('Complete')).toBeInTheDocument();
+    expect(within(details).getByText('15 tokens')).toBeInTheDocument();
+    expect(within(details).getByText('HTTP 200')).toBeInTheDocument();
+    expect(within(details).getByText('321 ms')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Code' })).toBeEnabled();
 
     const bodyTab = screen.getByRole('tab', { name: 'Body' });
@@ -379,7 +381,7 @@ describe('ResponsePanel', () => {
 
     await renderResponsePanel();
 
-    expect(screen.getByText('Streaming...')).toBeInTheDocument();
+    expect(screen.getByText('Streaming')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
       'Streaming response...',
     );
@@ -398,7 +400,8 @@ describe('ResponsePanel', () => {
     await renderResponsePanel();
 
     expect(screen.getByRole('status')).toHaveTextContent('Error: Bad request');
-    expect(screen.getByText('400 Error')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('HTTP 400')).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', {
@@ -427,7 +430,8 @@ describe('ResponsePanel', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       'Response interrupted',
     );
-    expect(screen.getByText('200 Interrupted')).toBeInTheDocument();
+    expect(screen.getByText('Interrupted')).toBeInTheDocument();
+    expect(screen.getByText('HTTP 200')).toBeInTheDocument();
   });
 
   it('keeps the code tab reachable so it can explain missing setup', async () => {

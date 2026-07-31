@@ -89,7 +89,7 @@ function HistorySearchControls({
           {searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
               aria-label="Clear search"
               title="Clear search"
             >
