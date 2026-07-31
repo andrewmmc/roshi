@@ -28,6 +28,9 @@ describe('SettingsDialog', () => {
     render(<SettingsDialog />);
 
     expect(screen.getByRole('button', { name: 'General' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: 'Settings sections' }),
+    ).toHaveClass('max-sm:flex-row', 'max-sm:overflow-x-auto');
     expect(screen.getByText('Dark mode')).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Dark mode' })).toHaveAttribute(
       'aria-checked',

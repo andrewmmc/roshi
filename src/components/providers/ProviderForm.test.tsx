@@ -49,6 +49,32 @@ vi.mock('@/components/ui/select', () => {
 });
 
 describe('ProviderForm', () => {
+  it('keeps the default connection settings behind a disclosure', () => {
+    render(
+      <ProviderForm onSubmit={() => undefined} initialData={makeProvider()} />,
+    );
+
+    const disclosure = screen.getByText('Advanced settings').closest('details');
+    expect(disclosure).not.toHaveAttribute('open');
+    expect(screen.getByLabelText('API Key')).toBeInTheDocument();
+    expect(screen.getByLabelText('Base URL')).toBeInTheDocument();
+  });
+
+  it('reveals an existing non-default connection configuration', () => {
+    render(
+      <ProviderForm
+        onSubmit={() => undefined}
+        initialData={makeProvider({
+          auth: { type: 'api-key-header', headerName: 'x-api-key' },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText('Advanced settings').closest('details'),
+    ).toHaveAttribute('open');
+  });
+
   it('focuses the API key when opened from setup guidance', () => {
     render(
       <ProviderForm

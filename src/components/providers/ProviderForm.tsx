@@ -17,7 +17,7 @@ import {
   type HeaderEntry,
 } from '@/components/ui/header-list-editor';
 import { headersToRecord, recordToHeaders } from '@/utils/headers';
-import { Trash2, Plus } from 'lucide-react';
+import { ChevronDown, Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import {
   getDefaultProtocolForProviderType,
   supportsModelSelection,
@@ -93,6 +93,18 @@ export function ProviderForm({
   const [form, setForm] = useState<ProviderFormData>(
     initialData || defaultFormData,
   );
+  const [advancedOpen, setAdvancedOpen] = useState(() => {
+    const data = initialData || defaultFormData;
+    const defaultProtocol = getDefaultProtocolForProviderType(
+      data.type,
+      data.name,
+    );
+    return (
+      data.protocol !== defaultProtocol ||
+      data.auth.type !== 'bearer' ||
+      Object.keys(data.customHeaders ?? {}).length > 0
+    );
+  });
 
   const toFormModels = (models: ProviderModel[]): FormModel[] =>
     models.map((m) => ({ ...m, _formKey: nanoid() }));
@@ -178,7 +190,7 @@ export function ProviderForm({
   return (
     <form ref={ref} onSubmit={handleSubmit} data-1p-ignore data-lp-ignore>
       <div className="space-y-4 px-5 py-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Name" htmlFor="provider-name">
             <Input
               id="provider-name"
@@ -214,97 +226,11 @@ export function ProviderForm({
           </Field>
         </div>
 
-        {form.type === 'openai-compatible' && (
-          <Field
-            label="Protocol"
-            htmlFor="provider-protocol"
-            hint={
-              form.protocol === 'openai-chat-completions'
-                ? 'For the official OpenAI API. Automatically uses the Responses API for GPT-5 models.'
-                : form.protocol === 'openai-responses'
-                  ? 'Uses the OpenAI Responses API format directly for all models.'
-                  : undefined
-            }
-          >
-            <Select
-              value={form.protocol ?? 'openai-compatible-chat'}
-              onValueChange={(val) =>
-                updateField('protocol', val as ProviderConfig['protocol'])
-              }
-              disabled={isBuiltIn}
-            >
-              <SelectTrigger id="provider-protocol" className="w-full">
-                <SelectValue>
-                  {PROTOCOL_LABELS[form.protocol ?? 'openai-compatible-chat'] ??
-                    form.protocol}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="openai-compatible-chat">
-                  Chat Completions
-                </SelectItem>
-                <SelectItem value="openai-chat-completions">
-                  Chat Completions (OpenAI)
-                </SelectItem>
-                <SelectItem value="openai-responses">Responses API</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        )}
-
-        <Field label="Base URL" htmlFor="provider-base-url">
-          <Input
-            id="provider-base-url"
-            value={form.baseUrl}
-            onChange={(e) => updateField('baseUrl', e.target.value)}
-            placeholder="https://api.openai.com/v1"
-            required
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Auth Type" htmlFor="provider-auth-type">
-            <Select
-              value={form.auth.type}
-              onValueChange={(val) =>
-                updateField('auth', {
-                  ...form.auth,
-                  type: val as ProviderConfig['auth']['type'],
-                })
-              }
-              disabled={isBuiltIn}
-            >
-              <SelectTrigger id="provider-auth-type">
-                <SelectValue>
-                  {AUTH_TYPE_LABELS[form.auth.type] ?? form.auth.type}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bearer">Bearer Token</SelectItem>
-                <SelectItem value="api-key-header">API Key Header</SelectItem>
-                <SelectItem value="query-param">Query Parameter</SelectItem>
-                <SelectItem value="none">None</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          {form.auth.type === 'api-key-header' && (
-            <Field label="Header Name" htmlFor="provider-auth-header-name">
-              <Input
-                id="provider-auth-header-name"
-                value={form.auth.headerName || ''}
-                onChange={(e) =>
-                  updateField('auth', {
-                    ...form.auth,
-                    headerName: e.target.value,
-                  })
-                }
-                placeholder="x-api-key"
-              />
-            </Field>
-          )}
-        </div>
-
-        <Field label="API Key" htmlFor="provider-api-key">
+        <Field
+          label="API Key"
+          htmlFor="provider-api-key"
+          hint="Stored only on this device."
+        >
           <PasswordInput
             id="provider-api-key"
             autoFocus={autoFocusApiKey}
@@ -316,58 +242,177 @@ export function ProviderForm({
           />
         </Field>
 
-        <div className="flex flex-col gap-2">
-          <HeaderListEditor
-            headers={headerEntries}
-            onChange={updateHeaderEntries}
-            label="Custom Headers"
-            placeholderKey="x-custom-header"
-            placeholderValue="header-value"
+        <Field label="Base URL" htmlFor="provider-base-url">
+          <Input
+            id="provider-base-url"
+            value={form.baseUrl}
+            onChange={(e) => updateField('baseUrl', e.target.value)}
+            placeholder="https://api.openai.com/v1"
+            required
           />
-        </div>
+        </Field>
 
-        {form.protocol !== 'openai-responses' && (
-          <Field label="Chat Endpoint" htmlFor="provider-chat-endpoint">
-            <Input
-              id="provider-chat-endpoint"
-              value={form.endpoints.chat}
-              onChange={(e) =>
-                updateField('endpoints', {
-                  ...form.endpoints,
-                  chat: e.target.value,
-                })
-              }
-              placeholder="/chat/completions"
-            />
-          </Field>
-        )}
+        <details
+          open={advancedOpen}
+          onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+          className="border-border/70 bg-muted/10 group overflow-hidden rounded-lg border"
+        >
+          <summary className="hover:bg-muted/30 focus-visible:ring-ring/50 flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 py-2 outline-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
+            <SlidersHorizontal className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-medium">
+                Advanced settings
+              </span>
+              <span className="text-muted-foreground block truncate text-[11px]">
+                Protocol, authentication, headers, and endpoints
+              </span>
+            </span>
+            <ChevronDown className="text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
 
-        {form.type === 'openai-compatible' &&
-          (form.protocol === 'openai-responses' ||
-            form.protocol === 'openai-chat-completions') && (
-            <Field
-              label="Responses Endpoint"
-              htmlFor="provider-responses-endpoint"
-            >
-              <Input
-                id="provider-responses-endpoint"
-                value={form.endpoints.responses ?? ''}
-                onChange={(e) =>
-                  updateField('endpoints', {
-                    ...form.endpoints,
-                    responses: e.target.value,
-                  })
+          <div className="border-border/70 space-y-4 border-t px-3 py-3">
+            {form.type === 'openai-compatible' && (
+              <Field
+                label="Protocol"
+                htmlFor="provider-protocol"
+                hint={
+                  form.protocol === 'openai-chat-completions'
+                    ? 'For the official OpenAI API. Automatically uses the Responses API for GPT-5 models.'
+                    : form.protocol === 'openai-responses'
+                      ? 'Uses the OpenAI Responses API format directly for all models.'
+                      : undefined
                 }
-                placeholder="/responses"
+              >
+                <Select
+                  value={form.protocol ?? 'openai-compatible-chat'}
+                  onValueChange={(val) =>
+                    updateField('protocol', val as ProviderConfig['protocol'])
+                  }
+                  disabled={isBuiltIn}
+                >
+                  <SelectTrigger id="provider-protocol" className="w-full">
+                    <SelectValue>
+                      {PROTOCOL_LABELS[
+                        form.protocol ?? 'openai-compatible-chat'
+                      ] ?? form.protocol}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai-compatible-chat">
+                      Chat Completions
+                    </SelectItem>
+                    <SelectItem value="openai-chat-completions">
+                      Chat Completions (OpenAI)
+                    </SelectItem>
+                    <SelectItem value="openai-responses">
+                      Responses API
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Auth Type" htmlFor="provider-auth-type">
+                <Select
+                  value={form.auth.type}
+                  onValueChange={(val) =>
+                    updateField('auth', {
+                      ...form.auth,
+                      type: val as ProviderConfig['auth']['type'],
+                    })
+                  }
+                  disabled={isBuiltIn}
+                >
+                  <SelectTrigger id="provider-auth-type">
+                    <SelectValue>
+                      {AUTH_TYPE_LABELS[form.auth.type] ?? form.auth.type}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bearer">Bearer Token</SelectItem>
+                    <SelectItem value="api-key-header">
+                      API Key Header
+                    </SelectItem>
+                    <SelectItem value="query-param">Query Parameter</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              {form.auth.type === 'api-key-header' && (
+                <Field label="Header Name" htmlFor="provider-auth-header-name">
+                  <Input
+                    id="provider-auth-header-name"
+                    value={form.auth.headerName || ''}
+                    onChange={(e) =>
+                      updateField('auth', {
+                        ...form.auth,
+                        headerName: e.target.value,
+                      })
+                    }
+                    placeholder="x-api-key"
+                  />
+                </Field>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <HeaderListEditor
+                headers={headerEntries}
+                onChange={updateHeaderEntries}
+                label="Custom Headers"
+                placeholderKey="x-custom-header"
+                placeholderValue="header-value"
               />
-            </Field>
-          )}
+            </div>
+
+            {form.protocol !== 'openai-responses' && (
+              <Field label="Chat Endpoint" htmlFor="provider-chat-endpoint">
+                <Input
+                  id="provider-chat-endpoint"
+                  value={form.endpoints.chat}
+                  onChange={(e) =>
+                    updateField('endpoints', {
+                      ...form.endpoints,
+                      chat: e.target.value,
+                    })
+                  }
+                  placeholder="/chat/completions"
+                />
+              </Field>
+            )}
+
+            {form.type === 'openai-compatible' &&
+              (form.protocol === 'openai-responses' ||
+                form.protocol === 'openai-chat-completions') && (
+                <Field
+                  label="Responses Endpoint"
+                  htmlFor="provider-responses-endpoint"
+                >
+                  <Input
+                    id="provider-responses-endpoint"
+                    value={form.endpoints.responses ?? ''}
+                    onChange={(e) =>
+                      updateField('endpoints', {
+                        ...form.endpoints,
+                        responses: e.target.value,
+                      })
+                    }
+                    placeholder="/responses"
+                  />
+                </Field>
+              )}
+          </div>
+        </details>
 
         {!isBuiltIn && (
           <div className="flex flex-col gap-2">
             <Label className="text-xs">Models</Label>
             {formModels.map((model, i) => (
-              <div key={model._formKey} className="flex items-center gap-2">
+              <div
+                key={model._formKey}
+                className="flex flex-col gap-2 sm:flex-row sm:items-center"
+              >
                 <Input
                   aria-label={`Model ID ${i + 1}`}
                   value={model.id}

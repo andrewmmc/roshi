@@ -286,10 +286,10 @@ export function SettingsDialog() {
             </IconButton>
           </div>
 
-          <div className="flex min-h-0 flex-1">
+          <div className="flex min-h-0 flex-1 max-sm:flex-col">
             <nav
               aria-label="Settings sections"
-              className="border-border flex w-32 shrink-0 flex-col gap-0.5 border-r p-1.5"
+              className="border-border flex w-32 shrink-0 flex-col gap-0.5 border-r p-1.5 max-sm:w-full max-sm:flex-row max-sm:overflow-x-auto max-sm:border-r-0 max-sm:border-b"
             >
               {SECTIONS.map(({ id, label, icon: Icon }) => (
                 <button
@@ -298,7 +298,7 @@ export function SettingsDialog() {
                   aria-current={settingsPage === id ? 'page' : undefined}
                   onClick={() => setSettingsOpen(true, id)}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors',
+                    'flex min-h-8 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium whitespace-nowrap transition-colors max-sm:shrink-0',
                     settingsPage === id
                       ? 'bg-muted/50 text-foreground'
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
