@@ -17,6 +17,7 @@ describe('ui-store', () => {
       commandPaletteOpen: false,
       commandPaletteOpenCount: 0,
       newRequestDiscardOpen: false,
+      pendingTabCloseId: null,
       shortcutsOpen: false,
     });
   });
@@ -190,6 +191,16 @@ describe('ui-store', () => {
       getState().setCommandPaletteOpen(false);
       expect(getState().commandPaletteOpen).toBe(false);
       expect(getState().commandPaletteOpenCount).toBe(1);
+    });
+  });
+
+  describe('pendingTabCloseId', () => {
+    it('tracks and clears the tab awaiting discard confirmation', () => {
+      getState().setPendingTabCloseId('tab-2');
+      expect(getState().pendingTabCloseId).toBe('tab-2');
+
+      getState().setPendingTabCloseId(null);
+      expect(getState().pendingTabCloseId).toBeNull();
     });
   });
 

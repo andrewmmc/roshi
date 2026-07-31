@@ -24,6 +24,7 @@ export function TabBar() {
 
   const [pendingCloseId, setPendingCloseId] = useState<string | null>(null);
   const [showDiscard, setShowDiscard] = useState(false);
+  const tabButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Derive the active tab's label live from the composer store so it stays
   // current while the user types (inactive tabs use their stored label).
@@ -110,17 +111,33 @@ export function TabBar() {
 
   const handleTabListKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const target = event.target as HTMLElement;
+      if (target.getAttribute('role') !== 'tab') return;
+      if (
+        event.key !== 'ArrowLeft' &&
+        event.key !== 'ArrowRight' &&
+        event.key !== 'Home' &&
+        event.key !== 'End'
+      ) {
+        return;
+      }
       const index = tabs.findIndex((tab) => tab.id === activeTabId);
       if (index === -1) return;
       const nextIndex =
-        event.key === 'ArrowRight'
-          ? Math.min(index + 1, tabs.length - 1)
-          : Math.max(index - 1, 0);
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? tabs.length - 1
+            : event.key === 'ArrowRight'
+              ? (index + 1) % tabs.length
+              : (index - 1 + tabs.length) % tabs.length;
       const nextTab = tabs[nextIndex];
       if (nextTab && nextTab.id !== activeTabId) {
         event.preventDefault();
         switchTab(nextTab.id);
+        if (useTabStore.getState().activeTabId === nextTab.id) {
+          tabButtonRefs.current[nextTab.id]?.focus();
+        }
       }
     },
     [activeTabId, switchTab, tabs],
@@ -158,9 +175,13 @@ export function TabBar() {
                 )}
               >
                 <button
+                  ref={(element) => {
+                    tabButtonRefs.current[tab.id] = element;
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1}
                   data-active-tab={isActive || undefined}
                   onClick={() => switchTab(tab.id)}
                   className="focus-visible:ring-ring flex h-full min-w-0 flex-1 cursor-pointer items-center px-3 text-left focus-visible:ring-1 focus-visible:outline-none"

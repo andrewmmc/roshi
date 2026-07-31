@@ -4,7 +4,9 @@ import {
 } from '@/stores/composer-store';
 import { selectHasUnsavedEvalChanges, useEvalStore } from '@/stores/eval-store';
 import { useResponseStore } from '@/stores/response-store';
+import { activeRequestTabHasStoredWork, useTabStore } from '@/stores/tab-store';
 import { type MainView, useUiStore } from '@/stores/ui-store';
+import { toast } from '@/stores/toast-store';
 
 export function resetActiveWorkspace(): void {
   if (useUiStore.getState().mainView === 'eval') {
@@ -22,6 +24,24 @@ export function activeWorkspaceHasUnsavedChanges(): boolean {
   }
 
   return selectHasUnsavedChanges(useComposerStore.getState());
+}
+
+/** Close the active request tab without bypassing the existing discard guard. */
+export function requestCloseActiveTab(): void {
+  const { tabs, activeTabId, closeTab } = useTabStore.getState();
+  if (tabs.length <= 1) {
+    toast('At least one request tab stays open.');
+    return;
+  }
+  if (useResponseStore.getState().isLoading) {
+    toast('Stop the running request before closing this tab.');
+    return;
+  }
+  if (activeRequestTabHasStoredWork()) {
+    useUiStore.getState().setPendingTabCloseId(activeTabId);
+    return;
+  }
+  closeTab(activeTabId);
 }
 
 /**

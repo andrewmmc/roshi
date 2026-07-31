@@ -315,6 +315,14 @@ export function tabHasStoredWork(
   return hasComposer || hasResponse;
 }
 
+/** Includes the live composer/response state, which is newer than the active tab snapshot. */
+export function activeRequestTabHasStoredWork(): boolean {
+  return tabHasStoredWork({
+    composer: captureComposerSnapshot(),
+    response: captureResponseSnapshot(),
+  });
+}
+
 interface TabStore {
   tabs: RequestTab[];
   activeTabId: string;

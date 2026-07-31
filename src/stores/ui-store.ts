@@ -37,6 +37,9 @@ interface UiStore {
   setCommandPaletteOpen: (open: boolean) => void;
   newRequestDiscardOpen: boolean;
   setNewRequestDiscardOpen: (open: boolean) => void;
+  /** Tab awaiting confirmation before its local composer/response is discarded. */
+  pendingTabCloseId: string | null;
+  setPendingTabCloseId: (id: string | null) => void;
   shortcutsOpen: boolean;
   setShortcutsOpen: (open: boolean) => void;
   mainView: MainView;
@@ -98,6 +101,8 @@ export const useUiStore = create<UiStore>((set) => ({
     })),
   newRequestDiscardOpen: false,
   setNewRequestDiscardOpen: (open) => set({ newRequestDiscardOpen: open }),
+  pendingTabCloseId: null,
+  setPendingTabCloseId: (pendingTabCloseId) => set({ pendingTabCloseId }),
   shortcutsOpen: false,
   setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
   mainView: 'request',

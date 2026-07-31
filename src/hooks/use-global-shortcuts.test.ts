@@ -6,6 +6,8 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useTabStore } from '@/stores/tab-store';
+import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
 const send = vi.fn();
 const cancel = vi.fn();
@@ -31,11 +33,27 @@ function fireKey(
   });
 }
 
+function configureSendableProvider() {
+  useProviderStore.setState({
+    providers: [
+      makeProvider({
+        id: 'p1',
+        apiKey: 'test-key',
+        models: [makeModel({ id: 'm1' })],
+      }),
+    ],
+    selectedProviderId: 'p1',
+    selectedModelId: 'm1',
+  });
+}
+
 describe('useGlobalShortcuts', () => {
   beforeEach(() => {
     send.mockReset();
     cancel.mockReset();
+    useComposerStore.setState(useComposerStore.getInitialState(), true);
     useResponseStore.getState().resetResponse();
+    useTabStore.setState(useTabStore.getInitialState(), true);
     useEvalStore.getState().reset();
     useUiStore.setState({
       settingsOpen: false,
@@ -43,6 +61,7 @@ describe('useGlobalShortcuts', () => {
       historySearchFocusGen: 0,
       mainView: 'request',
       newRequestDiscardOpen: false,
+      pendingTabCloseId: null,
     });
     useThemeStore.getState().init();
     useProviderStore.setState({
@@ -145,14 +164,14 @@ describe('useGlobalShortcuts', () => {
     });
 
     it('sends when a provider exists and not loading', () => {
-      useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
+      configureSendableProvider();
       renderHook(() => useGlobalShortcuts());
       fireKey('Enter', { metaKey: true });
       expect(send).toHaveBeenCalledTimes(1);
     });
 
     it('does not send when already loading', () => {
-      useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
+      configureSendableProvider();
       useResponseStore.setState({ isLoading: true });
       renderHook(() => useGlobalShortcuts());
       fireKey('Enter', { metaKey: true });
@@ -160,7 +179,7 @@ describe('useGlobalShortcuts', () => {
     });
 
     it('sends with ctrlKey as well', () => {
-      useProviderStore.setState({ providers: [{ id: 'p1' } as never] });
+      configureSendableProvider();
       renderHook(() => useGlobalShortcuts());
       fireKey('Enter', { ctrlKey: true });
       expect(send).toHaveBeenCalledTimes(1);
@@ -255,6 +274,72 @@ describe('useGlobalShortcuts', () => {
       expect(useEvalStore.getState().composer.messages[0].content).toBe(
         'compare these',
       );
+    });
+  });
+
+  describe('request tab shortcuts', () => {
+    it('creates and duplicates tabs with direct shortcuts', () => {
+      renderHook(() => useGlobalShortcuts());
+
+      fireKey('t', { metaKey: true });
+      expect(useTabStore.getState().tabs).toHaveLength(2);
+
+      useComposerStore.setState({
+        messages: [{ id: '1', role: 'user', content: 'duplicate me' }],
+      });
+      fireKey('D', { metaKey: true, shiftKey: true });
+
+      expect(useTabStore.getState().tabs).toHaveLength(3);
+      expect(useComposerStore.getState().messages[0].content).toBe(
+        'duplicate me',
+      );
+    });
+
+    it('closes a blank active tab directly', () => {
+      useTabStore.getState().createTab();
+      renderHook(() => useGlobalShortcuts());
+
+      fireKey('w', { metaKey: true });
+
+      expect(useTabStore.getState().tabs).toHaveLength(1);
+      expect(useUiStore.getState().pendingTabCloseId).toBeNull();
+    });
+
+    it('requests confirmation before closing a tab with work', () => {
+      useTabStore.getState().createTab();
+      useComposerStore.setState({
+        messages: [{ id: '1', role: 'user', content: 'keep this' }],
+      });
+      const activeTabId = useTabStore.getState().activeTabId;
+      renderHook(() => useGlobalShortcuts());
+
+      fireKey('w', { metaKey: true });
+
+      expect(useTabStore.getState().tabs).toHaveLength(2);
+      expect(useUiStore.getState().pendingTabCloseId).toBe(activeTabId);
+    });
+
+    it('cycles through tabs in both directions', () => {
+      useTabStore.getState().createTab();
+      useTabStore.getState().createTab();
+      const tabs = useTabStore.getState().tabs;
+      expect(useTabStore.getState().activeTabId).toBe(tabs[2].id);
+      renderHook(() => useGlobalShortcuts());
+
+      fireKey('Tab', { ctrlKey: true });
+      expect(useTabStore.getState().activeTabId).toBe(tabs[0].id);
+
+      fireKey('Tab', { ctrlKey: true, shiftKey: true });
+      expect(useTabStore.getState().activeTabId).toBe(tabs[2].id);
+    });
+
+    it('leaves request tabs unchanged in eval mode', () => {
+      useUiStore.setState({ mainView: 'eval' });
+      renderHook(() => useGlobalShortcuts());
+
+      fireKey('t', { metaKey: true });
+
+      expect(useTabStore.getState().tabs).toHaveLength(1);
     });
   });
 

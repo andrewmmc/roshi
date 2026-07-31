@@ -6,7 +6,7 @@ import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { KbdShortcut } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
-import { useTabStore } from '@/stores/tab-store';
+import { MAX_TABS, useTabStore } from '@/stores/tab-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useResponseStore } from '@/stores/response-store';
@@ -17,6 +17,7 @@ import {
   activeWorkspaceHasUnsavedChanges,
   getActiveResponseText,
   getDiscardDialogCopy,
+  requestCloseActiveTab,
   resetActiveWorkspace,
 } from '@/utils/new-request';
 
@@ -28,8 +29,23 @@ interface Command {
   id: string;
   label: string;
   group: string;
+  keywords?: string[];
   shortcut?: { mac: string; win: string };
+  disabledReason?: string;
   action: () => void;
+}
+
+function findNextEnabledIndex(
+  commands: Command[],
+  fromIndex: number,
+  direction: 1 | -1,
+): number {
+  for (let step = 1; step <= commands.length; step++) {
+    const index =
+      (fromIndex + direction * step + commands.length) % commands.length;
+    if (!commands[index]?.disabledReason) return index;
+  }
+  return fromIndex;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,8 +61,55 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
   const { send, cancel } = useSendRequest();
   const providers = useProviderStore((s) => s.providers);
   const selectedProviderId = useProviderStore((s) => s.selectedProviderId);
+  const selectedModelId = useProviderStore((s) => s.selectedModelId);
   const mainView = useUiStore((s) => s.mainView);
+  const tabs = useTabStore((s) => s.tabs);
+  const isLoading = useResponseStore((s) => s.isLoading);
+  const response = useResponseStore((s) => s.response);
+  const streamingContent = useResponseStore((s) => s.streamingContent);
+  const isEvalRunning = useEvalStore((s) => s.isRunning);
+  const runners = useEvalStore((s) => s.runners);
+  const evalResults = useEvalStore((s) => s.results);
   const isEval = mainView === 'eval';
+  const selectedProvider = providers.find(
+    (provider) => provider.id === selectedProviderId,
+  );
+  const selectedModel = selectedProvider?.models.find(
+    (model) => model.id === selectedModelId,
+  );
+  const sendDisabledReason = isEval
+    ? isEvalRunning
+      ? 'An eval is already running'
+      : runners.length === 0
+        ? 'Add at least one runner'
+        : undefined
+    : isLoading
+      ? 'A request is already running'
+      : !selectedProvider
+        ? 'Select a provider'
+        : !selectedModel
+          ? 'Select a model'
+          : !selectedProvider.apiKey.trim()
+            ? 'Add an API key in provider settings'
+            : undefined;
+  const cancelDisabledReason = isEval
+    ? isEvalRunning
+      ? undefined
+      : 'No eval is running'
+    : isLoading
+      ? undefined
+      : 'No request is running';
+  const activeResponseText = isEval
+    ? runners
+        .map((runner) => evalResults[runner.id]?.content?.trim() ?? '')
+        .filter(Boolean)
+        .join('\n\n')
+    : response?.content || streamingContent;
+  const tabLimitReason =
+    tabs.length >= MAX_TABS ? `Maximum of ${MAX_TABS} tabs reached` : undefined;
+  const tabBusyReason = isLoading
+    ? 'Stop the running request first'
+    : undefined;
 
   // Build the full command list. Dynamic provider/model entries are derived
   // from store state at memo time; actions read live state via getState().
@@ -56,7 +119,9 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'send',
         label: isEval ? 'Run Eval' : 'Send Request',
         group: 'Actions',
+        keywords: ['run', 'execute', 'submit', 'prompt'],
         shortcut: { mac: '⌘↵', win: 'Ctrl+↵' },
+        disabledReason: sendDisabledReason,
         action: () => {
           if (isEval) {
             const { isRunning, runners } = useEvalStore.getState();
@@ -74,7 +139,9 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'cancel',
         label: isEval ? 'Stop Eval' : 'Stop Request',
         group: 'Actions',
+        keywords: ['cancel', 'abort', 'interrupt'],
         shortcut: { mac: 'Esc', win: 'Esc' },
+        disabledReason: cancelDisabledReason,
         action: () => {
           if (isEval) {
             const { isRunning } = useEvalStore.getState();
@@ -89,7 +156,12 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'new-request',
         label: isEval ? 'New Eval' : 'New Request',
         group: 'Actions',
+        keywords: ['clear', 'reset', 'fresh'],
         shortcut: { mac: '⌘⇧N', win: 'Ctrl+Shift+N' },
+        disabledReason:
+          isEvalRunning || isLoading
+            ? 'Stop the running task first'
+            : undefined,
         action: () => {
           if (activeWorkspaceHasUnsavedChanges()) {
             useUiStore.getState().setNewRequestDiscardOpen(true);
@@ -106,19 +178,39 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
               id: 'new-tab',
               label: 'New Tab',
               group: 'Actions',
+              keywords: ['create', 'request', 'workspace'],
+              shortcut: { mac: '⌘T', win: 'Ctrl+T' },
+              disabledReason: tabBusyReason ?? tabLimitReason,
               action: () => useTabStore.getState().createTab(),
             },
             {
               id: 'duplicate-tab',
               label: 'Duplicate Tab',
               group: 'Actions',
+              keywords: ['copy', 'clone', 'request'],
+              shortcut: { mac: '⌘⇧D', win: 'Ctrl+Shift+D' },
+              disabledReason: tabBusyReason ?? tabLimitReason,
               action: () => useTabStore.getState().duplicateActiveTab(),
+            },
+            {
+              id: 'close-tab',
+              label: 'Close Tab',
+              group: 'Actions',
+              keywords: ['remove', 'dismiss', 'request'],
+              shortcut: { mac: '⌘W', win: 'Ctrl+W' },
+              disabledReason:
+                tabBusyReason ??
+                (tabs.length <= 1
+                  ? 'At least one request tab stays open'
+                  : undefined),
+              action: requestCloseActiveTab,
             },
           ]),
       {
         id: 'toggle-theme',
         label: 'Toggle Theme',
         group: 'Actions',
+        keywords: ['dark', 'light', 'appearance', 'color'],
         shortcut: { mac: '⌥T', win: 'Alt+T' },
         action: () => useThemeStore.getState().toggle(),
       },
@@ -126,9 +218,11 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'copy-response',
         label: isEval ? 'Copy Results' : 'Copy Response',
         group: 'Actions',
+        keywords: ['clipboard', 'output', 'result'],
         shortcut: { mac: '⌥C', win: 'Alt+C' },
+        disabledReason: activeResponseText ? undefined : 'No response to copy',
         action: () => {
-          const text = getActiveResponseText();
+          const text = activeResponseText || getActiveResponseText();
           if (text) {
             navigator.clipboard
               .writeText(text)
@@ -145,6 +239,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
               id: 'focus-history',
               label: 'Search History',
               group: 'Navigation',
+              keywords: ['find', 'requests', 'recent'],
               shortcut: { mac: '⌘P', win: 'Ctrl+P' },
               action: () => useUiStore.getState().focusHistorySearch(),
             },
@@ -153,6 +248,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'settings-general',
         label: 'Settings: General',
         group: 'Navigation',
+        keywords: ['preferences', 'theme', 'reset'],
         shortcut: { mac: '⌘⇧,', win: 'Ctrl+Shift+,' },
         action: () => useUiStore.getState().setSettingsOpen(true, 'general'),
       },
@@ -160,12 +256,14 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'settings-providers',
         label: 'Settings: Providers',
         group: 'Navigation',
+        keywords: ['api key', 'credentials', 'endpoint', 'connection'],
         action: () => useUiStore.getState().setSettingsOpen(true, 'providers'),
       },
       {
         id: 'settings-environments',
         label: 'Settings: Environments',
         group: 'Navigation',
+        keywords: ['variables', 'secrets', 'template'],
         action: () =>
           useUiStore.getState().setSettingsOpen(true, 'environments'),
       },
@@ -173,12 +271,14 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'settings-models',
         label: 'Settings: Models',
         group: 'Navigation',
+        keywords: ['catalog', 'market', 'add model'],
         action: () => useUiStore.getState().openModelMarket(),
       },
       {
         id: 'show-shortcuts',
         label: 'Keyboard Shortcuts',
         group: 'Navigation',
+        keywords: ['keys', 'hotkeys', 'help'],
         shortcut: { mac: '?', win: '?' },
         action: () => useUiStore.getState().setShortcutsOpen(true),
       },
@@ -186,6 +286,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: 'about',
         label: 'About Roshi',
         group: 'Navigation',
+        keywords: ['version', 'info', 'help'],
         action: () => useUiStore.getState().setAboutOpen(true),
       },
     ];
@@ -196,25 +297,40 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         id: `switch-provider-${p.id}`,
         label: `Switch to: ${p.name}`,
         group: 'Providers',
+        keywords: ['provider', 'connection', 'api', p.name],
         action: () => useProviderStore.getState().selectProvider(p.id),
       });
     }
 
     // Dynamic: models for the currently selected provider.
-    const selectedProvider = providers.find((p) => p.id === selectedProviderId);
     if (selectedProvider) {
       for (const m of selectedProvider.models) {
         cmds.push({
           id: `select-model-${m.id}`,
           label: `Model: ${m.displayName}`,
           group: 'Models',
+          keywords: ['model', m.id, m.displayName],
           action: () => useProviderStore.getState().selectModel(m.id),
         });
       }
     }
 
     return cmds;
-  }, [providers, selectedProviderId, send, cancel, isEval]);
+  }, [
+    activeResponseText,
+    cancel,
+    cancelDisabledReason,
+    isEval,
+    isEvalRunning,
+    isLoading,
+    providers,
+    selectedProvider,
+    send,
+    sendDisabledReason,
+    tabBusyReason,
+    tabLimitReason,
+    tabs.length,
+  ]);
 
   const filteredCommands = useMemo(() => {
     if (!query.trim()) return allCommands;
@@ -222,7 +338,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     return allCommands.filter(
       (c) =>
         c.label.toLowerCase().includes(lq) ||
-        c.group.toLowerCase().includes(lq),
+        c.group.toLowerCase().includes(lq) ||
+        c.keywords?.some((keyword) => keyword.toLowerCase().includes(lq)),
     );
   }, [allCommands, query]);
 
@@ -247,19 +364,26 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
   }, [filteredCommands]);
 
   // Clamp selectedIndex inline so no useEffect + setState is needed.
-  const effectiveIndex =
+  const clampedIndex =
     filteredCommands.length > 0
       ? Math.min(selectedIndex, filteredCommands.length - 1)
       : 0;
+  const firstEnabledIndex = filteredCommands.findIndex(
+    (command) => !command.disabledReason,
+  );
+  const effectiveIndex = filteredCommands[clampedIndex]?.disabledReason
+    ? Math.max(firstEnabledIndex, 0)
+    : clampedIndex;
 
   // Scroll the selected item into view on navigation (no setState, DOM only).
   useEffect(() => {
-    itemRefs.current[effectiveIndex]?.scrollIntoView({ block: 'nearest' });
+    itemRefs.current[effectiveIndex]?.scrollIntoView?.({ block: 'nearest' });
   }, [effectiveIndex]);
 
   const runAndClose = useCallback(
-    (action: () => void) => {
-      action();
+    (command: Command) => {
+      if (command.disabledReason) return;
+      command.action();
       onClose();
     },
     [onClose],
@@ -272,14 +396,18 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex((i) => (i + 1) % count);
+        setSelectedIndex(
+          findNextEnabledIndex(filteredCommands, effectiveIndex, 1),
+        );
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex((i) => (i <= 0 ? count - 1 : i - 1));
+        setSelectedIndex(
+          findNextEnabledIndex(filteredCommands, effectiveIndex, -1),
+        );
       } else if (e.key === 'Enter') {
         e.preventDefault();
         const cmd = filteredCommands[effectiveIndex];
-        if (cmd) runAndClose(cmd.action);
+        if (cmd) runAndClose(cmd);
       }
     },
     [filteredCommands, effectiveIndex, runAndClose],
@@ -335,17 +463,26 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
                     }}
                     role="option"
                     aria-selected={effectiveIndex === flatIdx}
+                    aria-disabled={Boolean(cmd.disabledReason)}
+                    disabled={Boolean(cmd.disabledReason)}
                     className={cn(
-                      'mx-1 flex w-[calc(100%-0.5rem)] cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm',
+                      'mx-1 flex min-h-10 w-[calc(100%-0.5rem)] cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50',
                       effectiveIndex === flatIdx
                         ? 'bg-accent'
-                        : 'hover:bg-accent/50',
+                        : 'hover:bg-accent/50 disabled:hover:bg-transparent',
                     )}
-                    onClick={() => runAndClose(cmd.action)}
-                    onMouseEnter={() => setSelectedIndex(flatIdx)}
+                    onClick={() => runAndClose(cmd)}
+                    onMouseEnter={() => {
+                      if (!cmd.disabledReason) setSelectedIndex(flatIdx);
+                    }}
                   >
-                    <span className="flex-1 truncate text-left">
-                      {cmd.label}
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block truncate">{cmd.label}</span>
+                      {cmd.disabledReason && (
+                        <span className="text-muted-foreground block truncate text-[11px] leading-tight">
+                          {cmd.disabledReason}
+                        </span>
+                      )}
                     </span>
                     {cmd.shortcut && (
                       <KbdShortcut
@@ -381,6 +518,8 @@ export function CommandPalette() {
     (s) => s.setNewRequestDiscardOpen,
   );
   const mainView = useUiStore((s) => s.mainView);
+  const pendingTabCloseId = useUiStore((s) => s.pendingTabCloseId);
+  const setPendingTabCloseId = useUiStore((s) => s.setPendingTabCloseId);
   const discardDialogCopy = getDiscardDialogCopy(mainView);
 
   // Register ⌘K / Ctrl+K globally to open the palette.
@@ -414,6 +553,21 @@ export function CommandPalette() {
         onConfirm={resetActiveWorkspace}
         title={discardDialogCopy.title}
         description={discardDialogCopy.description}
+      />
+
+      <ConfirmDiscardDialog
+        open={pendingTabCloseId !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setPendingTabCloseId(null);
+        }}
+        onConfirm={() => {
+          if (pendingTabCloseId) {
+            useTabStore.getState().closeTab(pendingTabCloseId);
+          }
+          setPendingTabCloseId(null);
+        }}
+        title="Close tab?"
+        description="This tab has local composer content or a response that will be discarded when it closes."
       />
     </>
   );

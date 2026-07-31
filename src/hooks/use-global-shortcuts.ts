@@ -4,11 +4,13 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useTabStore } from '@/stores/tab-store';
 import { toast } from '@/stores/toast-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import {
   activeWorkspaceHasUnsavedChanges,
   getActiveResponseText,
+  requestCloseActiveTab,
   resetActiveWorkspace,
 } from '@/utils/new-request';
 
@@ -24,6 +26,41 @@ export function useGlobalShortcuts() {
       const mod = e.metaKey || e.ctrlKey;
       const isEval = useUiStore.getState().mainView === 'eval';
 
+      // Request-tab shortcuts intentionally mirror desktop editor conventions.
+      // They do not run while a dialog owns focus.
+      if (!isEval && !isDialogOpen()) {
+        if (mod && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') {
+          e.preventDefault();
+          useTabStore.getState().createTab();
+          return;
+        }
+
+        if (mod && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'w') {
+          e.preventDefault();
+          requestCloseActiveTab();
+          return;
+        }
+
+        if (mod && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'd') {
+          e.preventDefault();
+          useTabStore.getState().duplicateActiveTab();
+          return;
+        }
+
+        if (e.ctrlKey && !e.metaKey && !e.altKey && e.key === 'Tab') {
+          const { tabs, activeTabId, switchTab } = useTabStore.getState();
+          if (tabs.length > 1) {
+            e.preventDefault();
+            const activeIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+            const direction = e.shiftKey ? -1 : 1;
+            const nextIndex =
+              (activeIndex + direction + tabs.length) % tabs.length;
+            switchTab(tabs[nextIndex].id);
+          }
+          return;
+        }
+      }
+
       // Cmd/Ctrl+Enter — send request / run eval
       if (mod && e.key === 'Enter') {
         if (isEval) {
@@ -35,8 +72,15 @@ export function useGlobalShortcuts() {
           return;
         }
         const { isLoading } = useResponseStore.getState();
-        const { providers } = useProviderStore.getState();
-        if (!isLoading && providers.length > 0) {
+        const { providers, selectedProviderId, selectedModelId } =
+          useProviderStore.getState();
+        const provider = providers.find(
+          (item) => item.id === selectedProviderId,
+        );
+        const model = provider?.models.find(
+          (item) => item.id === selectedModelId,
+        );
+        if (!isLoading && provider?.apiKey.trim() && model) {
           e.preventDefault();
           send();
         }

@@ -45,16 +45,16 @@ the completion gates.
 
 ## Phase 3 — power-user command flow
 
-Status: pending.
+Status: checkpoint committed.
 
-- [ ] Add direct shortcuts for creating, closing, duplicating, and switching
+- [x] Add direct shortcuts for creating, closing, duplicating, and switching
       request tabs.
-- [ ] Make the tab strip follow roving-tabindex keyboard semantics.
-- [ ] Show unavailable command-palette actions as disabled with a reason rather
+- [x] Make the tab strip follow roving-tabindex keyboard semantics.
+- [x] Show unavailable command-palette actions as disabled with a reason rather
       than silently closing the palette.
-- [ ] Add command keywords so providers, models, and common actions are easy to
+- [x] Add command keywords so providers, models, and common actions are easy to
       find by intent.
-- [ ] Keep the shortcut reference synchronized with implemented commands.
+- [x] Keep the shortcut reference synchronized with implemented commands.
 
 ## Phase 4 — response feedback and accessibility finish
 

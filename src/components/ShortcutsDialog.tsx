@@ -44,8 +44,11 @@ const MAC_SECTIONS: ShortcutSection[] = [
     label: 'Tabs',
     requestOnly: true,
     rows: [
-      { keys: ['⌘K', '→', 'New Tab'], description: 'Open new tab' },
-      { keys: ['⌘K', '→', 'Duplicate Tab'], description: 'Duplicate tab' },
+      { keys: ['⌘', 'T'], description: 'Open new tab' },
+      { keys: ['⌘', 'W'], description: 'Close active tab' },
+      { keys: ['⌘', '⇧', 'D'], description: 'Duplicate active tab' },
+      { keys: ['⌃', 'Tab'], description: 'Next tab' },
+      { keys: ['⌃', '⇧', 'Tab'], description: 'Previous tab' },
     ],
   },
   {
@@ -79,8 +82,11 @@ const WIN_SECTIONS: ShortcutSection[] = [
     label: 'Tabs',
     requestOnly: true,
     rows: [
-      { keys: ['Ctrl+K', '→', 'New Tab'], description: 'Open new tab' },
-      { keys: ['Ctrl+K', '→', 'Duplicate Tab'], description: 'Duplicate tab' },
+      { keys: ['Ctrl', 'T'], description: 'Open new tab' },
+      { keys: ['Ctrl', 'W'], description: 'Close active tab' },
+      { keys: ['Ctrl', 'Shift', 'D'], description: 'Duplicate active tab' },
+      { keys: ['Ctrl', 'Tab'], description: 'Next tab' },
+      { keys: ['Ctrl', 'Shift', 'Tab'], description: 'Previous tab' },
     ],
   },
   {
