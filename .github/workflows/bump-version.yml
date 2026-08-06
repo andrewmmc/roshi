@@ -23,10 +23,10 @@ permissions:
 
 jobs:
   # Bumps all version files, commits, and pushes the tag. Pushing the tag
-  # triggers ci.yml (on: push: tags: v*), which owns the release and App Store
-  # upload jobs. Do NOT add release/appstore jobs here or they will run twice.
-  # ci.yml also skips the master branch push for these bump commits so the
-  # full pipeline does not run once for master and again for the tag.
+  # triggers tag-release.yml, which owns CI + release + App Store upload.
+  # Do NOT add release/appstore jobs here or they will run twice.
+  # ci.yml skips the master branch push for these bump commits so validation
+  # does not also run there alongside the tag release.
   bump:
     runs-on: ubuntu-latest
     steps:
@@ -62,4 +62,4 @@ jobs:
 
           bash ./scripts/bump-version.sh "$TARGET" --push
           VERSION="$(node -p "require('./package.json').version")"
-          echo "Pushed tag v${VERSION}; ci.yml will build the release."
+          echo "Pushed tag v${VERSION}; tag-release.yml will build the release."

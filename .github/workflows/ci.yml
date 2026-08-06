@@ -5,21 +5,17 @@ on:
     branches: [master]
   push:
     branches: [master]
-    tags:
-      - 'v*'
+  workflow_call:
 
 jobs:
   ci:
-    # bump-version.sh pushes the same SHA to master and as a v* tag. Only the
-    # tag event should run CI so release/appstore still fire once without a
-    # duplicate full pipeline on the branch push.
+    # bump-version.sh pushes the same SHA to master and as a v* tag. Skip the
+    # master branch push so only tag-release.yml runs the release pipeline.
     if: >
       !(github.event_name == 'push'
       && github.ref_type == 'branch'
       && startsWith(github.event.head_commit.message, 'chore(release): bump version to '))
     runs-on: ubuntu-latest
-    outputs:
-      version_tag: ${{ steps.version-tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,40 +51,8 @@ jobs:
           name: coverage-report
           path: coverage
 
-      - name: Detect version tag
-        id: version-tag
-        run: |
-          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
-            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "tag=" >> "$GITHUB_OUTPUT"
-
       - name: Type check and build
         run: npm run build
 
       - name: Validate App Store release notes
         run: npm run validate:release-notes
-
-  release:
-    needs: ci
-    if: needs.ci.outputs.version_tag != ''
-    permissions:
-      contents: write
-    uses: ./.github/workflows/release.yml
-    with:
-      tag: ${{ needs.ci.outputs.version_tag }}
-    secrets: inherit
-
-  appstore-upload:
-    needs:
-      - ci
-      - release
-    # Never upload pre-releases (tags containing a hyphen, e.g. v1.1.0-beta) to
-    # App Store Connect.
-    if: needs.ci.outputs.version_tag != '' && !contains(needs.ci.outputs.version_tag, '-')
-    uses: ./.github/workflows/appstore.yml
-    with:
-      ref: ${{ needs.ci.outputs.version_tag }}
-    secrets: inherit

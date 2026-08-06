@@ -12,8 +12,8 @@ permissions:
   contents: write
 
 jobs:
-  # Validation already ran in ci.yml before this workflow is called. Keep this
-  # workflow focused on packaging/signing so lint/test/build do not run twice.
+  # Validation already ran in tag-release.yml (via ci.yml) before this workflow
+  # is called. Keep this focused on packaging/signing.
   build-tauri:
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}

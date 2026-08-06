@@ -1,0 +1,33 @@
+name: Tag Release
+
+# Tag-only release path. Kept separate from ci.yml so pull requests do not
+# surface skipped release/appstore-upload checks on every PR.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
+
+  appstore-upload:
+    needs:
+      - ci
+      - release
+    # Never upload pre-releases (tags containing a hyphen, e.g. v1.1.0-beta) to
+    # App Store Connect.
+    if: ${{ !contains(github.ref_name, '-') }}
+    uses: ./.github/workflows/appstore.yml
+    with:
+      ref: ${{ github.ref_name }}
+    secrets: inherit
