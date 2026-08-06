@@ -8,6 +8,9 @@ on:
 
 jobs:
   ci:
+    # bump-version.sh pushes the same SHA to master and as a v* tag. Skip the
+    # master branch push so only the tag-triggered Release workflow runs.
+    if: "github.event_name != 'push' || github.ref_type != 'branch' || !startsWith(github.event.head_commit.message, 'chore(release): bump version to ')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
