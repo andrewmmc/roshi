@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 const E2E_API_KEY = 'sk-e2e-test-key';
 const E2E_MODEL_ID = 'gpt-4o-mini';
@@ -105,6 +105,20 @@ async function seedOpenAiProvider(page: Page): Promise<void> {
   );
 }
 
+/** Composer tab list (Messages / System Prompt / Headers / Parameters). */
+export function composerTabList(page: Page): Locator {
+  return page
+    .locator('[data-slot="tabs-list"]')
+    .filter({ has: page.getByRole('tab', { name: 'Parameters' }) });
+}
+
+export async function openComposerTab(
+  page: Page,
+  name: 'Messages' | 'System Prompt' | 'Headers' | 'Parameters',
+): Promise<void> {
+  await composerTabList(page).getByRole('tab', { name }).click();
+}
+
 /**
  * Boots the app with a usable OpenAI provider/model selection and no live APIs.
  */
@@ -117,10 +131,8 @@ export async function openReadyWorkspace(page: Page): Promise<void> {
   await dismissOnboarding(page);
 
   await expect(page.getByLabel('Select provider')).toContainText('OpenAI');
-  await expect(page.getByLabel('Select model')).toContainText(/gpt-4o-mini/i);
-  await expect(
-    page.getByRole('button', { name: (name) => name.startsWith('Send') }),
-  ).toBeEnabled();
+  await expect(page.getByLabel('Select model')).toContainText(/GPT-4o mini/i);
+  await expect(page.getByRole('button', { name: /^Send/ })).toBeEnabled();
 }
 
 export async function fillUserMessage(
@@ -133,15 +145,15 @@ export async function fillUserMessage(
 }
 
 export async function clickSend(page: Page): Promise<void> {
-  await page
-    .getByRole('button', { name: (name) => name.startsWith('Send') })
-    .click();
+  await page.getByRole('button', { name: /^Send/ }).click();
 }
 
 export async function expectAssistantReply(
   page: Page,
   text: string,
 ): Promise<void> {
-  await expect(page.getByLabel('Assistant')).toBeVisible();
-  await expect(page.getByText(text)).toBeVisible();
+  const chatPanel = page.getByRole('tabpanel', { name: 'Chat' });
+  await expect(page.getByLabel('HTTP status 200')).toBeVisible();
+  await expect(chatPanel.getByText('Loading…')).toHaveCount(0);
+  await expect(chatPanel.getByText(text)).toBeVisible();
 }

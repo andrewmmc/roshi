@@ -8,6 +8,7 @@ import {
   clickSend,
   expectAssistantReply,
   fillUserMessage,
+  openComposerTab,
   openReadyWorkspace,
 } from './fixtures/workspace';
 
@@ -44,19 +45,26 @@ test.describe('Composer request flows', () => {
     const captured = await mockExternalApis(page);
     await openReadyWorkspace(page);
 
-    await page.getByRole('tab', { name: 'System Prompt' }).click();
+    await openComposerTab(page, 'System Prompt');
     await page
-      .getByLabel('System prompt')
+      .getByRole('textbox', { name: 'System prompt' })
       .fill('You are a concise test assistant.');
 
-    await page.getByRole('tab', { name: 'Messages' }).click();
+    await openComposerTab(page, 'Messages');
     await fillUserMessage(page, 'What is 2 + 2?');
     await clickSend(page);
 
     await expectAssistantReply(page, MOCK_ASSISTANT_REPLY);
-    await expect(page.getByLabel('System')).toContainText(
-      'You are a concise test assistant.',
-    );
+    await expect(
+      page.getByRole('tabpanel', { name: 'Chat' }).getByLabel('System', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole('tabpanel', { name: 'Chat' })
+        .getByText('You are a concise test assistant.'),
+    ).toBeVisible();
 
     const request = await lastCaptured(captured);
     expect(request.body?.messages).toEqual([
@@ -98,16 +106,16 @@ test.describe('Composer request flows', () => {
     const captured = await mockExternalApis(page);
     await openReadyWorkspace(page);
 
-    await page.getByRole('tab', { name: 'Headers' }).click();
+    await openComposerTab(page, 'Headers');
     await page.getByLabel('Custom header name').fill('X-E2E-Test');
     await page.getByLabel('Custom header value').fill('playwright');
 
-    await page.getByRole('tab', { name: 'Parameters' }).click();
+    await openComposerTab(page, 'Parameters');
     await page.locator('#param-temperature').fill('0.25');
     await page.locator('#param-max-tokens').fill('256');
     await page.locator('#param-stream').uncheck();
 
-    await page.getByRole('tab', { name: 'Messages' }).click();
+    await openComposerTab(page, 'Messages');
     await fillUserMessage(page, 'Request with custom header and params');
     await clickSend(page);
 
