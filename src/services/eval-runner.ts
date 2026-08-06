@@ -100,13 +100,21 @@ async function runSingleRunner(
     composer: {
       messages: baseRequest.messages,
       systemPrompt: baseRequest.systemPrompt ?? '',
-      temperature: baseRequest.temperature ?? request.temperature,
-      maxTokens: baseRequest.maxTokens ?? request.maxTokens,
-      topP: baseRequest.topP ?? request.topP,
+      // Keep stored values for display/fallback; enable flags decide inclusion.
+      temperature: request.temperature,
+      maxTokens: request.maxTokens,
+      topP: request.topP,
       topK: request.topK,
-      frequencyPenalty:
-        baseRequest.frequencyPenalty ?? request.frequencyPenalty,
-      presencePenalty: baseRequest.presencePenalty ?? request.presencePenalty,
+      frequencyPenalty: request.frequencyPenalty,
+      presencePenalty: request.presencePenalty,
+      paramEnabled: {
+        temperature: baseRequest.temperature !== undefined,
+        maxTokens: baseRequest.maxTokens !== undefined,
+        topP: baseRequest.topP !== undefined,
+        topK: baseRequest.topK !== undefined,
+        frequencyPenalty: baseRequest.frequencyPenalty !== undefined,
+        presencePenalty: baseRequest.presencePenalty !== undefined,
+      },
       stream: request.stream,
       thinkingEnabled: false,
       thinkingBudgetTokens: 0,

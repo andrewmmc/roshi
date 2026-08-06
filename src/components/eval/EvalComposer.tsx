@@ -174,11 +174,18 @@ export function EvalParametersEditor() {
   const setTopK = useEvalStore((s) => s.setTopK);
   const setFrequencyPenalty = useEvalStore((s) => s.setFrequencyPenalty);
   const setPresencePenalty = useEvalStore((s) => s.setPresencePenalty);
+  const setParamEnabled = useEvalStore((s) => s.setParamEnabled);
   const setStream = useEvalStore((s) => s.setStream);
   const resetParameters = useEvalStore((s) => s.resetParameters);
+  const enabled = composer.paramEnabled;
+  const maxTokensControlsDisabled = isRunning || !enabled.maxTokens;
 
   return (
     <div className="flex flex-col gap-3">
+      <p className="text-muted-foreground/70 text-xs leading-snug">
+        Optional parameters are off by default. Check a control to include it in
+        the request; otherwise the model default is used.
+      </p>
       <SectionHeader>Sampling</SectionHeader>
 
       <div className="flex flex-col gap-1.5">
@@ -191,29 +198,37 @@ export function EvalParametersEditor() {
           max={TEMPERATURE_MAX}
           step={0.01}
           disabled={isRunning}
+          enabled={enabled.temperature}
+          onEnabledChange={(next) => setParamEnabled('temperature', next)}
+          enableDisabled={isRunning}
         />
-        <div className="flex gap-1 pl-0">
-          {TEMP_PRESETS.map((preset) => (
-            <Button
-              key={preset.label}
-              variant="outline"
-              size="xs"
-              title={preset.title}
-              aria-pressed={
-                Math.abs(composer.temperature - preset.value) < 0.001
-              }
-              onClick={() => setTemperature(preset.value)}
-              disabled={isRunning}
-              className={`flex-1 px-1 transition-colors ${
-                Math.abs(composer.temperature - preset.value) < 0.001
-                  ? 'bg-accent text-accent-foreground'
-                  : ''
-              }`}
-            >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
+        {enabled.temperature && (
+          <div className="flex gap-1 pl-0">
+            {TEMP_PRESETS.map((preset) => (
+              <Button
+                key={preset.label}
+                variant="outline"
+                size="xs"
+                title={preset.title}
+                aria-pressed={
+                  Math.abs(composer.temperature - preset.value) < 0.001
+                }
+                onClick={() => {
+                  setParamEnabled('temperature', true);
+                  setTemperature(preset.value);
+                }}
+                disabled={isRunning}
+                className={`flex-1 px-1 transition-colors ${
+                  Math.abs(composer.temperature - preset.value) < 0.001
+                    ? 'bg-accent text-accent-foreground'
+                    : ''
+                }`}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       <SliderNumberRow
@@ -225,6 +240,9 @@ export function EvalParametersEditor() {
         max={TOP_P_MAX}
         step={0.01}
         disabled={isRunning}
+        enabled={enabled.topP}
+        onEnabledChange={(next) => setParamEnabled('topP', next)}
+        enableDisabled={isRunning}
       />
       <SliderNumberRow
         label="Top K"
@@ -236,6 +254,9 @@ export function EvalParametersEditor() {
         step={1}
         decimals={0}
         disabled={isRunning}
+        enabled={enabled.topK}
+        onEnabledChange={(next) => setParamEnabled('topK', next)}
+        enableDisabled={isRunning}
       />
 
       <SectionHeader>Penalties</SectionHeader>
@@ -249,6 +270,9 @@ export function EvalParametersEditor() {
         max={FREQUENCY_PENALTY_MAX}
         step={0.01}
         disabled={isRunning}
+        enabled={enabled.frequencyPenalty}
+        onEnabledChange={(next) => setParamEnabled('frequencyPenalty', next)}
+        enableDisabled={isRunning}
       />
       <SliderNumberRow
         label="Presence Penalty"
@@ -259,6 +283,9 @@ export function EvalParametersEditor() {
         max={PRESENCE_PENALTY_MAX}
         step={0.01}
         disabled={isRunning}
+        enabled={enabled.presencePenalty}
+        onEnabledChange={(next) => setParamEnabled('presencePenalty', next)}
+        enableDisabled={isRunning}
       />
 
       <SectionHeader>Output</SectionHeader>
@@ -266,9 +293,17 @@ export function EvalParametersEditor() {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={enabled.maxTokens}
+              onChange={(e) => setParamEnabled('maxTokens', e.target.checked)}
+              disabled={isRunning}
+              aria-label="Include Max Tokens"
+              className="rounded"
+            />
             <Label
               htmlFor="eval-param-max-tokens"
-              className={`text-xs ${isRunning ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
+              className={`text-xs ${maxTokensControlsDisabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
             >
               Max Tokens
             </Label>
@@ -285,7 +320,7 @@ export function EvalParametersEditor() {
             className="h-6 w-20 font-mono text-xs"
             min={1}
             max={2_000_000}
-            disabled={isRunning}
+            disabled={maxTokensControlsDisabled}
           />
         </div>
       </div>

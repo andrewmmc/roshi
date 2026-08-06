@@ -3,6 +3,7 @@ import type {
   NormalizedRequest,
   NormalizedResponse,
 } from './normalized';
+import type { ParamEnabledState } from './optional-params';
 import type { HistoryHeaderEntry } from '@/utils/headers';
 
 export type { HistoryHeaderEntry } from '@/utils/headers';
@@ -48,6 +49,8 @@ export interface SavedRequestSnapshot {
   topK?: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  /** Absent on legacy saves — treat as all enabled (except topK). */
+  paramEnabled?: ParamEnabledState;
   stream: boolean;
   thinkingEnabled?: boolean;
   thinkingBudgetTokens?: number;

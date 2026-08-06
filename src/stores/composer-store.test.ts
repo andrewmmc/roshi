@@ -6,6 +6,10 @@ import {
   DEFAULT_EFFORT,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
+import {
+  createDefaultParamEnabled,
+  LEGACY_PARAM_ENABLED,
+} from '@/types/optional-params';
 
 vi.mock('nanoid', () => {
   let count = 0;
@@ -41,6 +45,10 @@ describe('composer-store', () => {
     it('has default temperature and maxTokens', () => {
       expect(getState().temperature).toBe(DEFAULT_TEMPERATURE);
       expect(getState().maxTokens).toBe(DEFAULT_MAX_TOKENS);
+    });
+
+    it('has optional params disabled by default', () => {
+      expect(getState().paramEnabled).toEqual(createDefaultParamEnabled());
     });
 
     it('has stream enabled by default', () => {
@@ -149,6 +157,7 @@ describe('composer-store', () => {
       getState().setTopK(20);
       getState().setFrequencyPenalty(0.2);
       getState().setPresencePenalty(0.3);
+      getState().setParamEnabled('temperature', true);
       getState().setThinkingEnabled(true);
       getState().setThinkingBudgetTokens(2048);
       getState().setEffort('high');
@@ -158,6 +167,7 @@ describe('composer-store', () => {
       expect(getState().topK).toBe(20);
       expect(getState().frequencyPenalty).toBe(0.2);
       expect(getState().presencePenalty).toBe(0.3);
+      expect(getState().paramEnabled.temperature).toBe(true);
       expect(getState().thinkingEnabled).toBe(true);
       expect(getState().thinkingBudgetTokens).toBe(2048);
       expect(getState().effort).toBe('high');
@@ -212,6 +222,8 @@ describe('composer-store', () => {
       expect(getState().customHeaders).toEqual([
         expect.objectContaining({ key: 'X-Test', value: 'abc' }),
       ]);
+      // Legacy history payloads without paramEnabled keep sending params.
+      expect(getState().paramEnabled).toEqual(LEGACY_PARAM_ENABLED);
     });
 
     it('defaults to empty header row when customHeaders is empty', () => {

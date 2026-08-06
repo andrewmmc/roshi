@@ -20,6 +20,7 @@ export function useRequestCompatibilityPreview(): { warnings: string[] } {
         topK: s.topK,
         frequencyPenalty: s.frequencyPenalty,
         presencePenalty: s.presencePenalty,
+        paramEnabled: s.paramEnabled,
         stream: s.stream,
         thinkingEnabled: s.thinkingEnabled,
         thinkingBudgetTokens: s.thinkingBudgetTokens,

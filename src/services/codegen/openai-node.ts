@@ -1,10 +1,5 @@
 import type { CodeGenerator, CodeGenParams } from './types';
 import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_TEMPERATURE,
-  DEFAULT_TOP_P,
-} from '@/constants/defaults';
-import {
   escapeJSString,
   getSendableMessages,
   mergeCodegenCustomHeaders,
@@ -81,11 +76,11 @@ export const openaiNodeGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = DEFAULT_TEMPERATURE,
-      maxTokens = DEFAULT_MAX_TOKENS,
-      topP = DEFAULT_TOP_P,
-      frequencyPenalty = 0,
-      presencePenalty = 0,
+      temperature,
+      maxTokens,
+      topP,
+      frequencyPenalty,
+      presencePenalty,
       stream = false,
       effort,
       verbosity,
@@ -100,7 +95,9 @@ export const openaiNodeGenerator: CodeGenerator = {
       if (systemPrompt.trim()) {
         args.push(`  instructions: ${escapeJSString(systemPrompt)},`);
       }
-      args.push(`  max_output_tokens: ${maxTokens},`);
+      if (maxTokens !== undefined) {
+        args.push(`  max_output_tokens: ${maxTokens},`);
+      }
       args.push(`  input: [`);
       args.push(buildResponsesInputLines(messages).join('\n'));
       args.push(`  ],`);
@@ -111,11 +108,21 @@ export const openaiNodeGenerator: CodeGenerator = {
         args.push(`  text: { verbosity: "${verbosity}" },`);
       }
     } else {
-      args.push(`  temperature: ${temperature},`);
-      args.push(`  max_tokens: ${maxTokens},`);
-      args.push(`  top_p: ${topP},`);
-      args.push(`  frequency_penalty: ${frequencyPenalty},`);
-      args.push(`  presence_penalty: ${presencePenalty},`);
+      if (temperature !== undefined) {
+        args.push(`  temperature: ${temperature},`);
+      }
+      if (maxTokens !== undefined) {
+        args.push(`  max_tokens: ${maxTokens},`);
+      }
+      if (topP !== undefined) {
+        args.push(`  top_p: ${topP},`);
+      }
+      if (frequencyPenalty !== undefined) {
+        args.push(`  frequency_penalty: ${frequencyPenalty},`);
+      }
+      if (presencePenalty !== undefined) {
+        args.push(`  presence_penalty: ${presencePenalty},`);
+      }
       args.push(`  messages: [`);
       args.push(buildChatMessageLines(messages, systemPrompt).join('\n'));
       args.push(`  ],`);

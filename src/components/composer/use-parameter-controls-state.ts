@@ -2,6 +2,10 @@ import { useShallow } from 'zustand/react/shallow';
 import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedModelCapabilities } from '@/stores/provider-store';
 import type { ModelCapabilities } from '@/models/capabilities';
+import type {
+  OptionalParamKey,
+  ParamEnabledState,
+} from '@/types/optional-params';
 import {
   getCapabilityAwareParameterDefaults,
   getCapabilitySupport,
@@ -20,6 +24,8 @@ export interface ResolvedSliderParam extends SliderParamConfig {
   max: number;
   canEdit: boolean;
   disabledReason?: string;
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
 }
 
 export interface ParameterControlsState {
@@ -27,13 +33,16 @@ export interface ParameterControlsState {
   hasCapabilities: boolean;
   temperature: number;
   maxTokens: number;
+  maxTokensEnabled: boolean;
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
   verbosity: string;
+  paramEnabled: ParamEnabledState;
   setTemperature: (value: number) => void;
   setMaxTokens: (value: number) => void;
+  setParamEnabled: (key: OptionalParamKey, enabled: boolean) => void;
   setStream: (value: boolean) => void;
   setThinkingEnabled: (value: boolean) => void;
   setThinkingBudgetTokens: (value: number) => void;
@@ -67,6 +76,7 @@ export function useParameterControlsState(): ParameterControlsState {
       topK: s.topK,
       frequencyPenalty: s.frequencyPenalty,
       presencePenalty: s.presencePenalty,
+      paramEnabled: s.paramEnabled,
       stream: s.stream,
       thinkingEnabled: s.thinkingEnabled,
       thinkingBudgetTokens: s.thinkingBudgetTokens,
@@ -78,6 +88,7 @@ export function useParameterControlsState(): ParameterControlsState {
       setTopK: s.setTopK,
       setFrequencyPenalty: s.setFrequencyPenalty,
       setPresencePenalty: s.setPresencePenalty,
+      setParamEnabled: s.setParamEnabled,
       setStream: s.setStream,
       setThinkingEnabled: s.setThinkingEnabled,
       setThinkingBudgetTokens: s.setThinkingBudgetTokens,
@@ -120,6 +131,9 @@ export function useParameterControlsState(): ParameterControlsState {
       max: getParamMax(support, config.fallbackMax),
       canEdit,
       disabledReason: getDisabledReason(support, !canEdit),
+      enabled: composer.paramEnabled[config.capabilityKey],
+      onEnabledChange: (enabled: boolean) =>
+        composer.setParamEnabled(config.capabilityKey, enabled),
     };
   };
 
@@ -146,18 +160,25 @@ export function useParameterControlsState(): ParameterControlsState {
     !supportsThinkingBudget &&
     (thinkingSupport?.modes.includes('adaptive') ?? false);
 
+  const canEditMaxTokens = capabilities
+    ? maxTokensSupport?.supported === true
+    : true;
+
   return {
     capabilities,
     hasCapabilities,
     temperature: composer.temperature,
     maxTokens: composer.maxTokens,
+    maxTokensEnabled: composer.paramEnabled.maxTokens,
     stream: composer.stream,
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
     effort: composer.effort,
     verbosity: composer.verbosity,
+    paramEnabled: composer.paramEnabled,
     setTemperature: composer.setTemperature,
     setMaxTokens: composer.setMaxTokens,
+    setParamEnabled: composer.setParamEnabled,
     setStream: composer.setStream,
     setThinkingEnabled: composer.setThinkingEnabled,
     setThinkingBudgetTokens: composer.setThinkingBudgetTokens,
@@ -171,6 +192,11 @@ export function useParameterControlsState(): ParameterControlsState {
       composer.setTopK(defaults.topK);
       composer.setFrequencyPenalty(defaults.frequencyPenalty);
       composer.setPresencePenalty(defaults.presencePenalty);
+      for (const key of Object.keys(
+        defaults.paramEnabled,
+      ) as OptionalParamKey[]) {
+        composer.setParamEnabled(key, defaults.paramEnabled[key]);
+      }
       composer.setStream(defaults.stream);
       composer.setThinkingEnabled(defaults.thinkingEnabled);
       composer.setThinkingBudgetTokens(defaults.thinkingBudgetTokens);
@@ -183,9 +209,7 @@ export function useParameterControlsState(): ParameterControlsState {
     penaltyParams: sliderParams.filter(
       (param) => param.section === 'penalties',
     ),
-    canEditMaxTokens: capabilities
-      ? maxTokensSupport?.supported === true
-      : true,
+    canEditMaxTokens,
     supportsStreaming: capabilities?.streaming ?? true,
     supportsThinking,
     supportsThinkingBudget,
@@ -197,6 +221,7 @@ export function useParameterControlsState(): ParameterControlsState {
     canEditTemperature,
     applyTempPreset: (value: number) => {
       if (!canEditTemperature) return;
+      composer.setParamEnabled('temperature', true);
       composer.setTemperature(Math.min(tempMax, Math.max(tempMin, value)));
     },
   };

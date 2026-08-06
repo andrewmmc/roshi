@@ -62,6 +62,7 @@ function makeSavedRequestSnapshot(
     topK: composer.topK,
     frequencyPenalty: composer.frequencyPenalty,
     presencePenalty: composer.presencePenalty,
+    paramEnabled: { ...composer.paramEnabled },
     stream: composer.stream,
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,

@@ -16,9 +16,9 @@ export const anthropicPythonGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = 1,
-      maxTokens = 4096,
-      topP = 1,
+      temperature,
+      maxTokens,
+      topP,
       topK,
       stream = false,
     } = request;
@@ -32,7 +32,8 @@ export const anthropicPythonGenerator: CodeGenerator = {
 
     const kwargs: string[] = [];
     kwargs.push(`    model="${model}",`);
-    kwargs.push(`    max_tokens=${maxTokens},`);
+    // Anthropic requires max_tokens; fall back when the user left it optional.
+    kwargs.push(`    max_tokens=${maxTokens ?? 4096},`);
     kwargs.push(`    messages=[`);
     kwargs.push(messageLines.join('\n'));
     kwargs.push(`    ],`);
@@ -40,8 +41,12 @@ export const anthropicPythonGenerator: CodeGenerator = {
       kwargs.push(`    system=${escapePythonString(systemPrompt)},`);
     }
     if (!isOpus47OrNewer(model)) {
-      kwargs.push(`    temperature=${temperature},`);
-      kwargs.push(`    top_p=${topP},`);
+      if (temperature !== undefined) {
+        kwargs.push(`    temperature=${temperature},`);
+      }
+      if (topP !== undefined) {
+        kwargs.push(`    top_p=${topP},`);
+      }
       if (topK !== undefined && topK > 0) {
         kwargs.push(`    top_k=${topK},`);
       }

@@ -1,5 +1,6 @@
 import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
+import type { ParamEnabledState } from '@/types/optional-params';
 import {
   filterRequestByCapabilities,
   type RequestCompatibilityResult,
@@ -15,6 +16,7 @@ export interface ComposerRequestFields {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  paramEnabled: ParamEnabledState;
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
@@ -37,15 +39,20 @@ export function buildNormalizedRequestFromComposer(
   modelId: string,
   messages: NormalizedMessage[] = filterComposerMessages(composer.messages),
 ): NormalizedRequest {
+  const enabled = composer.paramEnabled;
   return {
     messages,
     model: modelId,
-    temperature: composer.temperature,
-    maxTokens: composer.maxTokens,
-    topP: composer.topP,
-    topK: composer.topK || undefined,
-    frequencyPenalty: composer.frequencyPenalty,
-    presencePenalty: composer.presencePenalty,
+    temperature: enabled.temperature ? composer.temperature : undefined,
+    maxTokens: enabled.maxTokens ? composer.maxTokens : undefined,
+    topP: enabled.topP ? composer.topP : undefined,
+    topK: enabled.topK && composer.topK > 0 ? composer.topK : undefined,
+    frequencyPenalty: enabled.frequencyPenalty
+      ? composer.frequencyPenalty
+      : undefined,
+    presencePenalty: enabled.presencePenalty
+      ? composer.presencePenalty
+      : undefined,
     stream: composer.stream,
     systemPrompt: composer.systemPrompt || undefined,
     effort: composer.effort,

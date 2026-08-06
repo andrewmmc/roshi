@@ -31,6 +31,7 @@ interface CodeViewState {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  paramEnabled: ComposerStore['paramEnabled'];
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
@@ -62,6 +63,7 @@ function getCodeViewState(): CodeViewState {
     topK: composer.topK,
     frequencyPenalty: composer.frequencyPenalty,
     presencePenalty: composer.presencePenalty,
+    paramEnabled: composer.paramEnabled,
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
     effort: composer.effort,
@@ -108,6 +110,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     topK,
     frequencyPenalty,
     presencePenalty,
+    paramEnabled,
     thinkingEnabled,
     thinkingBudgetTokens,
     effort,
@@ -153,6 +156,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
         topK,
         frequencyPenalty,
         presencePenalty,
+        paramEnabled,
         stream,
         thinkingEnabled,
         thinkingBudgetTokens,
@@ -171,6 +175,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
   }, [
     effort,
     frequencyPenalty,
+    paramEnabled,
     hasMessages,
     maxTokens,
     messages,

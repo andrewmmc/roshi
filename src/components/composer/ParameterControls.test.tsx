@@ -4,6 +4,7 @@ import { ParameterControls } from './ParameterControls';
 import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
+import { createDefaultParamEnabled } from '@/types/optional-params';
 
 vi.mock('@/components/ui/slider', () => ({
   Slider: ({
@@ -42,9 +43,9 @@ describe('ParameterControls', () => {
 
     render(<ParameterControls />);
 
-    expect(screen.getByLabelText('Top K')).toBeEnabled();
-    expect(screen.getByLabelText('Frequency Penalty')).toBeDisabled();
-    expect(screen.getByLabelText('Presence Penalty')).toBeDisabled();
+    expect(screen.getByLabelText('Include Top K')).toBeEnabled();
+    expect(screen.getByLabelText('Include Frequency Penalty')).toBeDisabled();
+    expect(screen.getByLabelText('Include Presence Penalty')).toBeDisabled();
     expect(screen.getByLabelText('Thinking')).toBeEnabled();
   });
 
@@ -62,15 +63,15 @@ describe('ParameterControls', () => {
 
     render(<ParameterControls />);
 
-    expect(screen.getByLabelText('Temperature')).toBeDisabled();
-    expect(screen.getByLabelText('Temperature')).toHaveAttribute(
+    expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Include Temperature')).toHaveAttribute(
       'title',
       'Use reasoning effort and verbosity controls for GPT-5 models.',
     );
-    expect(screen.getByLabelText('Top P')).toBeDisabled();
-    expect(screen.getByLabelText('Frequency Penalty')).toBeDisabled();
-    expect(screen.getByLabelText('Presence Penalty')).toBeDisabled();
-    expect(screen.getByLabelText('Max Tokens')).toBeEnabled();
+    expect(screen.getByLabelText('Include Top P')).toBeDisabled();
+    expect(screen.getByLabelText('Include Frequency Penalty')).toBeDisabled();
+    expect(screen.getByLabelText('Include Presence Penalty')).toBeDisabled();
+    expect(screen.getByLabelText('Include Max Tokens')).toBeEnabled();
     expect(screen.getByLabelText('Stream')).toBeEnabled();
     expect(screen.getByLabelText('Thinking')).toBeDisabled();
     expect(screen.getByLabelText('Thinking')).toHaveAttribute(
@@ -79,6 +80,23 @@ describe('ParameterControls', () => {
     );
     expect(screen.getByLabelText('Effort')).toBeEnabled();
     expect(screen.getByLabelText('Verbosity')).toBeEnabled();
+  });
+
+  it('keeps optional param inputs disabled until the include toggle is checked', async () => {
+    const user = userEvent.setup();
+    render(<ParameterControls />);
+
+    expect(screen.getByLabelText('Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Max Tokens')).toBeDisabled();
+    expect(screen.getByLabelText('Include Temperature')).not.toBeChecked();
+
+    await user.click(screen.getByLabelText('Include Temperature'));
+    expect(screen.getByLabelText('Temperature')).toBeEnabled();
+    expect(useComposerStore.getState().paramEnabled.temperature).toBe(true);
+
+    await user.click(screen.getByLabelText('Include Max Tokens'));
+    expect(screen.getByLabelText('Max Tokens')).toBeEnabled();
+    expect(useComposerStore.getState().paramEnabled.maxTokens).toBe(true);
   });
 
   it('updates GPT-5 effort and verbosity controls', async () => {
@@ -164,10 +182,12 @@ describe('ParameterControls', () => {
     expect(screen.queryByLabelText('Budget Tokens')).not.toBeInTheDocument();
   });
 
-  it('resets edited values back to defaults', async () => {
+  it('resets edited values and enable flags back to defaults', async () => {
     const user = userEvent.setup();
     render(<ParameterControls />);
 
+    await user.click(screen.getByLabelText('Include Temperature'));
+    await user.click(screen.getByLabelText('Include Max Tokens'));
     await user.clear(screen.getByLabelText('Temperature'));
     await user.type(screen.getByLabelText('Temperature'), '1.55');
     await user.clear(screen.getByLabelText('Max Tokens'));
@@ -183,6 +203,7 @@ describe('ParameterControls', () => {
     const state = useComposerStore.getState();
     expect(state.temperature).toBe(1);
     expect(state.maxTokens).toBe(4096);
+    expect(state.paramEnabled).toEqual(createDefaultParamEnabled());
     expect(state.stream).toBe(true);
     expect(state.effort).toBe('medium');
     expect(state.verbosity).toBe('medium');

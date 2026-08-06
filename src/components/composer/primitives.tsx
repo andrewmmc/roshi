@@ -64,6 +64,10 @@ export function SliderNumberRow({
   decimals = 2,
   disabled = false,
   disabledReason,
+  enabled,
+  onEnabledChange,
+  enableDisabled = false,
+  enableDisabledReason,
 }: {
   label: string;
   paramKey: string;
@@ -75,18 +79,40 @@ export function SliderNumberRow({
   decimals?: number;
   disabled?: boolean;
   disabledReason?: string;
+  /** When provided with onEnabledChange, shows an opt-in toggle. */
+  enabled?: boolean;
+  onEnabledChange?: (enabled: boolean) => void;
+  enableDisabled?: boolean;
+  enableDisabledReason?: string;
 }) {
   const inputId = `param-${paramKey}`;
   const info = PARAM_INFO[paramKey];
+  const isOptIn = onEnabledChange !== undefined;
+  const optedOut = isOptIn && !enabled;
+  const controlsDisabled = disabled || optedOut;
+  const controlsTitle = optedOut
+    ? `Enable ${label} to include it in the request.`
+    : disabledReason;
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          {isOptIn && (
+            <input
+              type="checkbox"
+              checked={Boolean(enabled)}
+              onChange={(e) => onEnabledChange(e.target.checked)}
+              disabled={enableDisabled}
+              title={enableDisabledReason}
+              aria-label={`Include ${label}`}
+              className="rounded"
+            />
+          )}
           <Label
             htmlFor={inputId}
-            className={`text-xs whitespace-nowrap ${disabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
-            title={disabledReason}
+            className={`text-xs whitespace-nowrap ${controlsDisabled || enableDisabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
+            title={enableDisabledReason ?? controlsTitle}
           >
             {label}
           </Label>
@@ -105,8 +131,8 @@ export function SliderNumberRow({
           step={step}
           min={min}
           max={max}
-          disabled={disabled}
-          title={disabledReason}
+          disabled={controlsDisabled}
+          title={controlsTitle}
           className="h-6 w-20 font-mono text-xs"
         />
       </div>
@@ -119,7 +145,7 @@ export function SliderNumberRow({
         min={min}
         max={max}
         step={step}
-        disabled={disabled}
+        disabled={controlsDisabled}
         aria-label={`${label} slider`}
       />
     </div>
