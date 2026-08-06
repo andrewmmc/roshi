@@ -12,45 +12,9 @@ permissions:
   contents: write
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: Extract version from tag
-        run: echo "APP_VERSION=${RELEASE_TAG#v}" >> $GITHUB_ENV
-
-      - name: Set commit hash
-        run: echo "APP_COMMIT=$(git rev-parse --short=9 HEAD)" >> $GITHUB_ENV
-
-      - name: Build
-        env:
-          VITE_APP_VERSION: ${{ env.APP_VERSION }}
-          VITE_APP_COMMIT: ${{ env.APP_COMMIT }}
-        run: npm run build
-
+  # Validation already ran in ci.yml before this workflow is called. Keep this
+  # workflow focused on packaging/signing so lint/test/build do not run twice.
   build-tauri:
-    needs: ci
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     strategy:

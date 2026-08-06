@@ -10,6 +10,13 @@ on:
 
 jobs:
   ci:
+    # bump-version.sh pushes the same SHA to master and as a v* tag. Only the
+    # tag event should run CI so release/appstore still fire once without a
+    # duplicate full pipeline on the branch push.
+    if: >
+      !(github.event_name == 'push'
+      && github.ref_type == 'branch'
+      && startsWith(github.event.head_commit.message, 'chore(release): bump version to '))
     runs-on: ubuntu-latest
     outputs:
       version_tag: ${{ steps.version-tag.outputs.tag }}
