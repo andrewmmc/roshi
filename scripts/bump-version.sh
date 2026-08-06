@@ -218,6 +218,7 @@ if [[ "$PUSH" == "true" ]]; then
   git push origin "HEAD:${branch}"
 
   if [[ "$TAG" == "true" ]]; then
+    # tag-release.yml listens for v* tags and runs CI + release + App Store upload.
     git push origin "v${next}"
   fi
 fi
