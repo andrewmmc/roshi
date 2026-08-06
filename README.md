@@ -137,7 +137,8 @@ npm run dev          # http://localhost:5173
 
 ```bash
 npm run build        # production build
-npm run test         # run tests
+npm run test         # run unit/integration tests (Vitest)
+npm run test:e2e     # run Playwright end-to-end tests
 npm run lint         # ESLint
 npm run typecheck    # TypeScript check
 npm run format       # Prettier
@@ -147,7 +148,7 @@ npm run tauri:build  # desktop app (release)
 
 ### Tech stack
 
-React 19, TypeScript, Vite 7, Tailwind CSS v4, shadcn/ui v4, Zustand, Dexie.js (IndexedDB), eventsource-parser (SSE), Tauri 2 (desktop), Vitest (testing).
+React 19, TypeScript, Vite 7, Tailwind CSS v4, shadcn/ui v4, Zustand, Dexie.js (IndexedDB), eventsource-parser (SSE), Tauri 2 (desktop), Vitest + Playwright (testing).
 
 See **[AGENTS.md](./AGENTS.md)** for architecture, conventions, and contributor docs.
 
