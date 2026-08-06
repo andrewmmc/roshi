@@ -1,5 +1,9 @@
 import { geminiNodeGenerator } from './gemini-node';
-import { makeCodeGenParams, makeMessage } from '@/__tests__/fixtures';
+import {
+  makeCodeGenParams,
+  makeMessage,
+  makeRequest,
+} from '@/__tests__/fixtures';
 
 describe('geminiNodeGenerator', () => {
   it('has correct label and language', () => {
@@ -79,5 +83,22 @@ describe('geminiNodeGenerator', () => {
     );
 
     expect(code).toContain('`line1\nline2`');
+  });
+
+  it('omits config when all optional parameters are disabled', () => {
+    const code = geminiNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          temperature: undefined,
+          maxTokens: undefined,
+          topP: undefined,
+          topK: undefined,
+          frequencyPenalty: undefined,
+          presencePenalty: undefined,
+        }),
+      }),
+    );
+
+    expect(code).not.toContain('config:');
   });
 });

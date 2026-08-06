@@ -3,6 +3,7 @@ import {
   makeCodeGenParams,
   makeProvider,
   makeMessage,
+  makeRequest,
 } from '@/__tests__/fixtures';
 
 describe('openaiNodeGenerator', () => {
@@ -156,6 +157,25 @@ describe('openaiNodeGenerator', () => {
       const code = openaiNodeGenerator.generate(params);
       expect(code).toContain('temperature: 0.7');
       expect(code).toContain('max_tokens: 2048');
+    });
+
+    it('omits disabled optional parameters', () => {
+      const params = makeCodeGenParams({
+        request: makeRequest({
+          temperature: undefined,
+          maxTokens: undefined,
+          topP: undefined,
+          frequencyPenalty: undefined,
+          presencePenalty: undefined,
+        }),
+      });
+      const code = openaiNodeGenerator.generate(params);
+
+      expect(code).not.toContain('temperature:');
+      expect(code).not.toContain('max_tokens:');
+      expect(code).not.toContain('top_p:');
+      expect(code).not.toContain('frequency_penalty:');
+      expect(code).not.toContain('presence_penalty:');
     });
 
     it('escapes special characters in single-line strings', () => {

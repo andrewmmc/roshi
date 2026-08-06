@@ -1,5 +1,9 @@
 import { anthropicNodeGenerator } from './anthropic-node';
-import { makeCodeGenParams, makeMessage } from '@/__tests__/fixtures';
+import {
+  makeCodeGenParams,
+  makeMessage,
+  makeRequest,
+} from '@/__tests__/fixtures';
 
 function makeAnthropicParams() {
   return makeCodeGenParams({
@@ -86,6 +90,23 @@ describe('anthropicNodeGenerator', () => {
       'thinking: { type: "enabled", budget_tokens: 1024 }',
     );
     expect(code).toContain('top_k: 40');
+  });
+
+  it('omits disabled sampling parameters and keeps required max_tokens', () => {
+    const code = anthropicNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: undefined,
+          maxTokens: undefined,
+          topP: undefined,
+        }),
+      }),
+    );
+
+    expect(code).toContain('max_tokens: 4096');
+    expect(code).not.toContain('temperature:');
+    expect(code).not.toContain('top_p:');
   });
 
   it('omits temperature controls for opus 4.7 and newer', () => {
