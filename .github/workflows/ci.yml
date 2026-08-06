@@ -5,7 +5,6 @@ on:
     branches: [master]
   push:
     branches: [master]
-  workflow_call:
 
 jobs:
   ci:
@@ -14,7 +13,6 @@ jobs:
     # Pull requests always run; only version-bump pushes to a branch are skipped.
     if: |
       github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_call' ||
       (
         github.event_name == 'push' &&
         (
