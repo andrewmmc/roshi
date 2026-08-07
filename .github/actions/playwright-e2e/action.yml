@@ -1,0 +1,23 @@
+name: Playwright e2e tests
+description: Install Playwright Chromium, run the e2e suite, and upload the report.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Playwright Chromium
+      run: npx playwright install --with-deps chromium
+      shell: bash
+
+    - name: Run Playwright e2e tests
+      run: npm run test:e2e
+      shell: bash
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: |
+          playwright-report
+          test-results
+        retention-days: 7
