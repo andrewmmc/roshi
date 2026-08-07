@@ -215,9 +215,9 @@ if [[ "$TAG" == "true" ]]; then
 fi
 
 if [[ "$PUSH" == "true" ]]; then
-  git push origin "HEAD:${branch}"
-
   if [[ "$TAG" == "true" ]]; then
-    git push origin "v${next}"
+    git push --atomic origin "HEAD:${branch}" "refs/tags/v${next}"
+  else
+    git push origin "HEAD:${branch}"
   fi
 fi
