@@ -111,7 +111,10 @@ test.describe('Composer request flows', () => {
     await page.getByLabel('Custom header value').fill('playwright');
 
     await openComposerTab(page, 'Parameters');
+    // Optional sampling params are opt-in; enable them before editing/sending.
+    await page.getByLabel('Include Temperature').check();
     await page.locator('#param-temperature').fill('0.25');
+    await page.getByLabel('Include Max Tokens').check();
     await page.locator('#param-max-tokens').fill('256');
     await page.locator('#param-stream').uncheck();
 
