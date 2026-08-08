@@ -187,6 +187,26 @@ describe('openaiNodeGenerator', () => {
       expect(code).not.toContain('max_tokens: 2048');
     });
 
+    it('omits legacy sampling parameters for o-series chat models', () => {
+      const params = makeCodeGenParams({
+        request: makeRequest({
+          model: 'o3-mini',
+          maxTokens: 2048,
+          temperature: 0.7,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.5,
+        }),
+      });
+      const code = openaiNodeGenerator.generate(params);
+
+      expect(code).not.toContain('temperature:');
+      expect(code).not.toContain('top_p:');
+      expect(code).not.toContain('frequency_penalty:');
+      expect(code).not.toContain('presence_penalty:');
+      expect(code).toContain('messages: [');
+    });
+
     it('omits disabled optional parameters', () => {
       const params = makeCodeGenParams({
         request: makeRequest({

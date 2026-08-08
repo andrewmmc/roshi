@@ -1,5 +1,6 @@
 import type { CodeGenerator, CodeGenParams } from './types';
 import { escapeJSString, getSendableMessages } from './shared';
+import { usesGeminiThinkingLevel } from '@/models/model-families';
 
 export const geminiNodeGenerator: CodeGenerator = {
   label: 'Node.js',
@@ -18,6 +19,8 @@ export const geminiNodeGenerator: CodeGenerator = {
       frequencyPenalty,
       presencePenalty,
       stream = false,
+      thinking,
+      effort,
     } = request;
 
     const contentLines: string[] = [];
@@ -49,6 +52,13 @@ export const geminiNodeGenerator: CodeGenerator = {
     }
     if (presencePenalty !== undefined) {
       configArgs.push(`      presencePenalty: ${presencePenalty},`);
+    }
+    if (thinking?.enabled) {
+      configArgs.push(
+        usesGeminiThinkingLevel(model)
+          ? `      thinkingConfig: { thinkingLevel: "${effort ?? 'medium'}" },`
+          : `      thinkingConfig: { thinkingBudget: ${thinking.budgetTokens} },`,
+      );
     }
 
     let systemLine = '';

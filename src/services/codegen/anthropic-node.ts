@@ -3,7 +3,7 @@ import {
   buildAnthropicThinkingArgs,
   escapeJSString,
   getSendableMessages,
-  isOpus47OrNewer,
+  anthropicRejectsSamplingParams,
   mergeCodegenCustomHeaders,
 } from './shared';
 
@@ -41,7 +41,7 @@ export const anthropicNodeGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       args.push(`  system: ${escapeJSString(systemPrompt)},`);
     }
-    if (!isOpus47OrNewer(model)) {
+    if (!anthropicRejectsSamplingParams(model)) {
       if (temperature !== undefined) {
         args.push(`  temperature: ${Math.min(temperature, 1)},`);
       } else if (topP !== undefined) {

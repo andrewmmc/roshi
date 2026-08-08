@@ -146,13 +146,21 @@ describe('llm-client', () => {
       });
     });
 
-    it('throws RequestError for a provider failure in a 200 response', async () => {
+    it('throws RequestError when a 200 response has no usable content', async () => {
       const rawResponse = {
         status: 'failed',
         error: { message: 'generation failed' },
       };
       mockAdapter = createMockAdapter({
         parseResponseError: vi.fn().mockReturnValue('generation failed'),
+        parseResponse: vi.fn().mockReturnValue({
+          id: 'resp-1',
+          model: 'gpt-4',
+          content: '',
+          role: 'assistant',
+          finishReason: null,
+          usage: null,
+        }),
       });
       vi.mocked(getAdapter).mockReturnValue(mockAdapter);
       vi.stubGlobal(
@@ -176,7 +184,36 @@ describe('llm-client', () => {
         status: 200,
         rawResponse,
       });
-      expect(mockAdapter.parseResponse).not.toHaveBeenCalled();
+    });
+
+    it('returns partial content with a warning for an incomplete response', async () => {
+      const rawResponse = {
+        status: 'incomplete',
+        incomplete_details: { reason: 'max_output_tokens' },
+      };
+      mockAdapter = createMockAdapter({
+        parseResponseError: vi
+          .fn()
+          .mockReturnValue('Response incomplete: max_output_tokens'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          text: () => Promise.resolve(JSON.stringify(rawResponse)),
+        }),
+      );
+
+      const result = await sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: false }),
+      });
+
+      expect(result.response.content).toBe('Hello there!');
+      expect(result.warning).toBe('Response incomplete: max_output_tokens');
     });
 
     it('calls adapter methods in order', async () => {

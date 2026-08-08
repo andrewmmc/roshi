@@ -7,6 +7,7 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
+import { usesGeminiThinkingLevel } from '@/models/model-families';
 import {
   appendApiKeyQueryParam,
   buildJsonRequestHeaders,
@@ -32,10 +33,6 @@ function buildInlineData(att: MessageAttachment): Record<string, unknown> {
     };
   }
   return { text: `[attachment: ${att.filename}]` };
-}
-
-function usesThinkingLevel(model: string): boolean {
-  return /^gemini-(?:[3-9]|\d{2,})(?:[.-]|$)/.test(model);
 }
 
 export const geminiAdapter: ProviderAdapter = {
@@ -108,7 +105,7 @@ export const geminiAdapter: ProviderAdapter = {
       generationConfig.presencePenalty = request.presencePenalty;
 
     if (request.thinking?.enabled) {
-      generationConfig.thinkingConfig = usesThinkingLevel(request.model)
+      generationConfig.thinkingConfig = usesGeminiThinkingLevel(request.model)
         ? { thinkingLevel: request.effort ?? 'medium' }
         : { thinkingBudget: request.thinking.budgetTokens };
     }

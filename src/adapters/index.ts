@@ -5,6 +5,7 @@ import { openaiChatAdapter } from './openai-chat';
 import { openaiResponsesAdapter } from './openai-responses';
 import { anthropicAdapter } from './anthropic';
 import { geminiAdapter } from './gemini';
+import { isOpenAIGpt5Family } from '@/models/model-families';
 
 function shouldUseResponsesForModel(
   provider: ProviderConfig,
@@ -13,7 +14,7 @@ function shouldUseResponsesForModel(
   return (
     provider.name === 'OpenAI' &&
     provider.type === 'openai-compatible' &&
-    /^gpt-5(?:\.|-|$)/.test(model)
+    isOpenAIGpt5Family(model)
   );
 }
 

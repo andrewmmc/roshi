@@ -8,6 +8,10 @@ import type {
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
 import {
+  anthropicRejectsSamplingParams,
+  usesAnthropicAdaptiveThinking,
+} from '@/models/model-families';
+import {
   buildJsonRequestHeaders,
   extractDataUriBase64,
   extractErrorMessage,
@@ -27,23 +31,6 @@ const DEFAULT_MAX_TOKENS = 4096;
  *
  * @see https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
  */
-function usesAdaptiveThinking(model: string): boolean {
-  const opus4 = model.match(/^claude-opus-4-(\d{1,2})(?:-|$)/);
-  if (opus4) return parseInt(opus4[1], 10) >= 6;
-  if (/^claude-sonnet-4-6(?:-|$)/.test(model)) return true;
-  return /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/.test(
-    model,
-  );
-}
-
-function rejectsSamplingParameters(model: string): boolean {
-  const opus4 = model.match(/^claude-opus-4-(\d{1,2})(?:-|$)/);
-  if (opus4) return parseInt(opus4[1], 10) >= 7;
-  return /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/.test(
-    model,
-  );
-}
-
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
     const parsed = extractDataUriBase64(att.data);
@@ -104,8 +91,8 @@ export const anthropicAdapter: ProviderAdapter = {
       body.system = request.systemPrompt;
     }
 
-    const adaptiveThinking = usesAdaptiveThinking(request.model);
-    const rejectsSampling = rejectsSamplingParameters(request.model);
+    const adaptiveThinking = usesAnthropicAdaptiveThinking(request.model);
+    const rejectsSampling = anthropicRejectsSamplingParams(request.model);
 
     // Opus 4.7+ removed support for sampling parameters (temperature,
     // top_p, top_k); sending non-default values returns a 400 error.

@@ -6,7 +6,8 @@ import {
   formatJsHeaderEntries,
   formatPythonHeaderEntries,
   getSendableMessages,
-  isOpus47OrNewer,
+  anthropicRejectsSamplingParams,
+  usesAnthropicAdaptiveThinking,
   isSendableMessage,
   mergeCodegenCustomHeaders,
   shouldGenerateOpenAIResponses,
@@ -136,17 +137,54 @@ describe('codegen shared helpers', () => {
     });
   });
 
-  describe('isOpus47OrNewer', () => {
-    it('matches claude-opus-4-7 model ids', () => {
-      expect(isOpus47OrNewer('claude-opus-4-7')).toBe(true);
-      expect(isOpus47OrNewer('claude-opus-4-7-20260219')).toBe(true);
-      expect(isOpus47OrNewer('claude-sonnet-4-20250514')).toBe(false);
+  describe('anthropic model family predicates', () => {
+    it('detects models that reject sampling parameters', () => {
+      expect(anthropicRejectsSamplingParams('claude-opus-4-7')).toBe(true);
+      expect(anthropicRejectsSamplingParams('claude-opus-4-8')).toBe(true);
+      expect(anthropicRejectsSamplingParams('claude-sonnet-5')).toBe(true);
+      expect(anthropicRejectsSamplingParams('claude-opus-4-6')).toBe(false);
+      expect(anthropicRejectsSamplingParams('claude-sonnet-4-20250514')).toBe(
+        false,
+      );
+    });
+
+    it('detects models limited to adaptive thinking', () => {
+      expect(usesAnthropicAdaptiveThinking('claude-opus-4-6')).toBe(true);
+      expect(usesAnthropicAdaptiveThinking('claude-opus-4-8')).toBe(true);
+      expect(usesAnthropicAdaptiveThinking('claude-sonnet-4-6')).toBe(true);
+      expect(usesAnthropicAdaptiveThinking('claude-sonnet-5')).toBe(true);
+      expect(usesAnthropicAdaptiveThinking('claude-sonnet-4-20250514')).toBe(
+        false,
+      );
     });
   });
 
   describe('buildAnthropicThinkingArgs', () => {
     it('returns nothing when thinking is disabled', () => {
       expect(buildAnthropicThinkingArgs(makeRequest())).toEqual([]);
+    });
+
+    it('emits effort even when thinking is disabled', () => {
+      expect(
+        buildAnthropicThinkingArgs(
+          makeRequest({ model: 'claude-opus-4-7', effort: 'high' }),
+        ),
+      ).toEqual(['  output_config: { effort: "high" },']);
+    });
+
+    it('uses adaptive thinking for newer Claude families', () => {
+      expect(
+        buildAnthropicThinkingArgs(
+          makeRequest({
+            model: 'claude-sonnet-5',
+            thinking: { enabled: true, budgetTokens: 1024 },
+            effort: 'high',
+          }),
+        ),
+      ).toEqual([
+        '  thinking: { type: "adaptive" },',
+        '  output_config: { effort: "high" },',
+      ]);
     });
 
     it('uses adaptive thinking for opus 4.7 and newer', () => {
@@ -181,7 +219,45 @@ describe('codegen shared helpers', () => {
       expect(buildAnthropicThinkingPythonKwargs(makeRequest())).toEqual([]);
     });
 
+    it('emits effort even when thinking is disabled', () => {
+      expect(
+        buildAnthropicThinkingArgs(
+          makeRequest({ model: 'claude-opus-4-7', effort: 'high' }),
+        ),
+      ).toEqual(['  output_config: { effort: "high" },']);
+    });
+
+    it('uses adaptive thinking for newer Claude families', () => {
+      expect(
+        buildAnthropicThinkingArgs(
+          makeRequest({
+            model: 'claude-sonnet-5',
+            thinking: { enabled: true, budgetTokens: 1024 },
+            effort: 'high',
+          }),
+        ),
+      ).toEqual([
+        '  thinking: { type: "adaptive" },',
+        '  output_config: { effort: "high" },',
+      ]);
+    });
+
     it('uses adaptive thinking for opus 4.7 and newer', () => {
+      expect(
+        buildAnthropicThinkingPythonKwargs(
+          makeRequest({
+            model: 'claude-opus-4-7',
+            thinking: { enabled: true, budgetTokens: 1024 },
+            effort: 'high',
+          }),
+        ),
+      ).toEqual([
+        '    thinking={"type": "adaptive"},',
+        '    output_config={"effort": "high"},',
+      ]);
+    });
+
+    it('omits output_config when no effort is set', () => {
       expect(
         buildAnthropicThinkingPythonKwargs(
           makeRequest({
@@ -189,10 +265,7 @@ describe('codegen shared helpers', () => {
             thinking: { enabled: true, budgetTokens: 1024 },
           }),
         ),
-      ).toEqual([
-        '    thinking={"type": "adaptive"},',
-        '    output_config={"effort": "high"},',
-      ]);
+      ).toEqual(['    thinking={"type": "adaptive"},']);
     });
 
     it('uses enabled thinking with budget for older models', () => {

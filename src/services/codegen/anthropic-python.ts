@@ -3,7 +3,7 @@ import {
   buildAnthropicThinkingPythonKwargs,
   escapePythonString,
   getSendableMessages,
-  isOpus47OrNewer,
+  anthropicRejectsSamplingParams,
 } from './shared';
 
 export const anthropicPythonGenerator: CodeGenerator = {
@@ -40,7 +40,7 @@ export const anthropicPythonGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       kwargs.push(`    system=${escapePythonString(systemPrompt)},`);
     }
-    if (!isOpus47OrNewer(model)) {
+    if (!anthropicRejectsSamplingParams(model)) {
       if (temperature !== undefined) {
         kwargs.push(`    temperature=${Math.min(temperature, 1)},`);
       } else if (topP !== undefined) {

@@ -7,6 +7,7 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
+import { isOpenAIReasoningModel } from '@/models/model-families';
 import {
   appendApiKeyQueryParam,
   buildJsonRequestHeaders,
@@ -14,14 +15,6 @@ import {
   mapOpenAIUsage,
   parseTopLevelStreamError,
 } from './shared';
-
-function isGpt5Family(model: string): boolean {
-  return /^gpt-5(?:\.|-|$)/.test(model);
-}
-
-function isReasoningModel(model: string): boolean {
-  return isGpt5Family(model) || /^o\d(?:-|$)/.test(model);
-}
 
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
@@ -63,7 +56,7 @@ export const openaiAdapter: ProviderAdapter = {
       stream: request.stream,
     };
 
-    if (isReasoningModel(request.model)) {
+    if (isOpenAIReasoningModel(request.model)) {
       if (request.maxTokens !== undefined) {
         body.max_completion_tokens = request.maxTokens;
       }

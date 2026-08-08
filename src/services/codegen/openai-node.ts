@@ -5,6 +5,7 @@ import {
   mergeCodegenCustomHeaders,
   shouldGenerateOpenAIResponses,
 } from './shared';
+import { isOpenAIReasoningModel } from '@/models/model-families';
 
 function buildClientArgs(
   provider: CodeGenParams['provider'],
@@ -66,10 +67,6 @@ function buildResponsesInputLines(
   );
 }
 
-function usesMaxCompletionTokens(model: string): boolean {
-  return /^gpt-5(?:\.|-|$)/.test(model) || /^o\d(?:-|$)/.test(model);
-}
-
 export const openaiNodeGenerator: CodeGenerator = {
   label: 'Node.js',
   language: 'javascript',
@@ -121,14 +118,21 @@ export const openaiNodeGenerator: CodeGenerator = {
       if (verbosity) {
         args.push(`  text: { verbosity: "${verbosity}" },`);
       }
+    } else if (isOpenAIReasoningModel(model)) {
+      // Reasoning models on Chat Completions require max_completion_tokens
+      // and reject legacy sampling parameters.
+      if (maxTokens !== undefined) {
+        args.push(`  max_completion_tokens: ${maxTokens},`);
+      }
+      args.push(`  messages: [`);
+      args.push(buildChatMessageLines(messages, systemPrompt).join('\n'));
+      args.push(`  ],`);
     } else {
       if (temperature !== undefined) {
         args.push(`  temperature: ${temperature},`);
       }
       if (maxTokens !== undefined) {
-        args.push(
-          `  ${usesMaxCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens'}: ${maxTokens},`,
-        );
+        args.push(`  max_tokens: ${maxTokens},`);
       }
       if (topP !== undefined) {
         args.push(`  top_p: ${topP},`);

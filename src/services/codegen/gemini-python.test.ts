@@ -104,4 +104,34 @@ describe('geminiPythonGenerator', () => {
 
     expect(code).not.toContain('config=');
   });
+  it('emits thinking_level for Gemini 3 models', () => {
+    const code = geminiPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'gemini-3.6-flash',
+          thinking: { enabled: true, budgetTokens: 10240 },
+          effort: 'low',
+        }),
+      }),
+    );
+
+    expect(code).toContain(
+      'thinking_config=types.ThinkingConfig(thinking_level="low")',
+    );
+  });
+
+  it('emits thinking_budget for pre-Gemini 3 models', () => {
+    const code = geminiPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'gemini-2.5-pro',
+          thinking: { enabled: true, budgetTokens: 2048 },
+        }),
+      }),
+    );
+
+    expect(code).toContain(
+      'thinking_config=types.ThinkingConfig(thinking_budget=2048)',
+    );
+  });
 });

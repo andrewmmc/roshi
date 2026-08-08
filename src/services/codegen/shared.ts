@@ -1,6 +1,12 @@
 import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
 import { resolveProviderProtocol } from '@/types/provider';
 import type { CodeGenParams } from './types';
+import {
+  anthropicRejectsSamplingParams,
+  usesAnthropicAdaptiveThinking,
+} from '@/models/model-families';
+
+export { anthropicRejectsSamplingParams, usesAnthropicAdaptiveThinking };
 
 export function escapeJSString(s: string): string {
   if (s.includes('\n')) {
@@ -76,36 +82,36 @@ export function formatPythonHeaderEntries(
   );
 }
 
-export function isOpus47OrNewer(model: string): boolean {
-  return /claude-opus-4-7(?:\.|-|$)/.test(model);
-}
-
 export function buildAnthropicThinkingArgs(
   request: NormalizedRequest,
 ): string[] {
-  if (!request.thinking?.enabled) return [];
-  if (isOpus47OrNewer(request.model)) {
-    return [
-      `  thinking: { type: "adaptive" },`,
-      `  output_config: { effort: "${request.effort ?? 'high'}" },`,
-    ];
+  const args: string[] = [];
+  if (request.thinking?.enabled) {
+    args.push(
+      usesAnthropicAdaptiveThinking(request.model)
+        ? `  thinking: { type: "adaptive" },`
+        : `  thinking: { type: "enabled", budget_tokens: ${request.thinking.budgetTokens} },`,
+    );
   }
-  return [
-    `  thinking: { type: "enabled", budget_tokens: ${request.thinking.budgetTokens} },`,
-  ];
+  if (request.effort !== undefined) {
+    args.push(`  output_config: { effort: "${request.effort}" },`);
+  }
+  return args;
 }
 
 export function buildAnthropicThinkingPythonKwargs(
   request: NormalizedRequest,
 ): string[] {
-  if (!request.thinking?.enabled) return [];
-  if (isOpus47OrNewer(request.model)) {
-    return [
-      `    thinking={"type": "adaptive"},`,
-      `    output_config={"effort": "${request.effort ?? 'high'}"},`,
-    ];
+  const kwargs: string[] = [];
+  if (request.thinking?.enabled) {
+    kwargs.push(
+      usesAnthropicAdaptiveThinking(request.model)
+        ? `    thinking={"type": "adaptive"},`
+        : `    thinking={"type": "enabled", "budget_tokens": ${request.thinking.budgetTokens}},`,
+    );
   }
-  return [
-    `    thinking={"type": "enabled", "budget_tokens": ${request.thinking.budgetTokens}},`,
-  ];
+  if (request.effort !== undefined) {
+    kwargs.push(`    output_config={"effort": "${request.effort}"},`);
+  }
+  return kwargs;
 }

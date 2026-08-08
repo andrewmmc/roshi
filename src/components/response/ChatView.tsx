@@ -229,9 +229,7 @@ export function ChatView() {
               labelClassName="text-amber-600 dark:text-amber-400"
             >
               <div className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100">
-                <div className="font-medium">
-                  Request adjusted for model compatibility
-                </div>
+                <div className="font-medium">Warnings</div>
                 <ul className="mt-1 list-disc space-y-1 pl-4">
                   {compatibilityWarnings.map((warning) => (
                     <li key={warning}>{warning}</li>

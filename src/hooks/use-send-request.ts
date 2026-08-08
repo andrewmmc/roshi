@@ -166,6 +166,12 @@ function completeSuccessfulRequest(
     durationMs: result.durationMs,
     statusCode: result.statusCode,
   });
+  if (result.warning) {
+    const existing = useResponseStore.getState().compatibilityWarnings;
+    if (!existing.includes(result.warning)) {
+      respStore.setCompatibilityWarnings([...existing, result.warning]);
+    }
+  }
 }
 
 const STREAM_INTERRUPTED_SUMMARY = 'Response interrupted';

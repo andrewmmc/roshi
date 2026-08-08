@@ -34,6 +34,8 @@ export interface SendRequestResult {
   responseHeaders: Record<string, string>;
   durationMs: number;
   statusCode: number;
+  /** Non-fatal provider issue (e.g. truncated output) to surface in the UI. */
+  warning?: string;
 }
 
 const MAX_CAPTURED_STREAM_CHUNKS = 200;
@@ -145,11 +147,15 @@ export async function sendRequest(
     });
   }
   const responseError = adapter.parseResponseError?.(rawResponse);
-  if (responseError) {
-    throw createRequestError(responseError, rawResponse);
-  }
   const durationMs = Math.round(performance.now() - startTime);
   const response = adapter.parseResponse(rawResponse);
+
+  // A non-terminal problem (e.g. `status: "incomplete"` from the Responses
+  // API) still returns usable partial content; surface it as a warning rather
+  // than discarding what the provider produced.
+  if (responseError && !response.content) {
+    throw createRequestError(responseError, rawResponse);
+  }
 
   return {
     response,
@@ -160,6 +166,7 @@ export async function sendRequest(
     responseHeaders,
     durationMs,
     statusCode: fetchResponse.status,
+    warning: responseError ?? undefined,
   };
 }
 

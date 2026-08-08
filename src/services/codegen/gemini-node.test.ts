@@ -101,4 +101,30 @@ describe('geminiNodeGenerator', () => {
 
     expect(code).not.toContain('config:');
   });
+  it('emits thinkingLevel for Gemini 3 models', () => {
+    const code = geminiNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'gemini-3.6-flash',
+          thinking: { enabled: true, budgetTokens: 10240 },
+          effort: 'high',
+        }),
+      }),
+    );
+
+    expect(code).toContain('thinkingConfig: { thinkingLevel: "high" }');
+  });
+
+  it('emits thinkingBudget for pre-Gemini 3 models', () => {
+    const code = geminiNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'gemini-2.5-pro',
+          thinking: { enabled: true, budgetTokens: 2048 },
+        }),
+      }),
+    );
+
+    expect(code).toContain('thinkingConfig: { thinkingBudget: 2048 }');
+  });
 });
