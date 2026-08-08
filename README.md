@@ -24,7 +24,7 @@
   </a>
 </p>
 
-Roshi is a local-first workspace for testing and debugging LLM APIs. Send prompts, inspect streaming responses, tune model settings, test image inputs, switch between providers, and review raw request and response payloads from one focused interface.
+Roshi is a local-first workspace for testing and debugging LLM APIs. Send prompts, inspect streaming responses, tune model settings, test image inputs, switch between providers, compare models in Eval mode, and review raw request and response payloads from one focused interface.
 
 No backend. No account. No telemetry. Your API keys, settings, and request history stay on your machine.
 
@@ -35,7 +35,8 @@ Whether you are debugging prompts, testing custom endpoints, or comparing model 
 - **Purpose-built for LLM APIs** — test chat-style payloads, streaming, image inputs, and provider-specific settings without forcing them into a generic HTTP client
 - **Local-first by default** — no backend, no signup, no telemetry, and no hosted key storage
 - **Multi-provider workflow** — built-in templates for OpenAI, Anthropic, Google Gemini, and OpenRouter, plus custom OpenAI-compatible endpoints
-- **Debuggable and reproducible** — inspect raw payloads, save local history, and generate Python and Node.js snippets for supported OpenAI-compatible requests
+- **Debuggable and reproducible** — inspect raw payloads, save local history with diffing, and generate Python and Node.js snippets for supported OpenAI-compatible requests
+- **Compare models side by side** — Eval mode runs the same prompt across multiple providers/models at once, with LLM-as-judge scoring and CSV/JSON export
 
 ## Screenshots
 
@@ -92,9 +93,15 @@ The Mac App Store version is a one-time purchase that includes automatic updates
 ## Features
 
 - **Multi-provider support** — built-in templates for OpenAI, Anthropic, Google Gemini, and OpenRouter; add custom providers for any OpenAI-compatible endpoint
+- **Model Market** — browse and opt in to models sourced from the [models.dev](https://models.dev) catalog instead of hand-typing model IDs
 - **Real-time streaming** — SSE streaming with live token output
-- **Multi-turn conversations** — build and test full chat sessions with role-based message composer
-- **Request history** — every request and response stored locally with search and filtering
+- **Multi-turn conversations** — build and test full chat sessions with role-based message composer, opt-in sampling parameters, and per-request custom headers
+- **Tabs** — work on up to 8 requests at once, each with its own composer state
+- **Collections** — save and organize requests into collections for reuse
+- **Environments** — define named variable sets and use `{{var}}` substitution across requests, with an environment preview and provider health checks
+- **Eval mode** — run the same prompt across multiple providers/models side by side, score results with an LLM-as-judge, and export runs as CSV/JSON
+- **Request history** — every request and response stored locally with search, filtering, and diffing between entries
+- **Command palette** — `⌘K` quick actions for sending requests, switching tabs, searching history, and jumping to settings
 - **Code snippets** — auto-generated Python and Node.js snippets for supported OpenAI-compatible requests
 - **Image attachments** — test vision models with base64-encoded image inputs
 - **Advanced parameters** — temperature, top-p, frequency/presence penalty, max tokens, custom headers, system prompt
