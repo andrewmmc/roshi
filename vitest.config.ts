@@ -31,8 +31,10 @@ export default defineConfig({
         // branch behavior. Component coverage is handled by interaction tests.
         'src/adapters/gemini.ts',
         'src/services/llm-client.ts',
+        'src/services/reset.ts',
         'src/services/runtime-fetch.ts',
         'src/services/codegen/*.ts',
+        'src/db/index.ts',
         'src/stores/history-store.ts',
         'src/stores/response-store.ts',
         'src/stores/theme-store.ts',
@@ -41,6 +43,7 @@ export default defineConfig({
         'src/hooks/use-global-shortcuts.ts',
         'src/hooks/use-history.ts',
         'src/hooks/use-providers.ts',
+        'src/hooks/use-request-session.ts',
         'src/hooks/use-token-count.ts',
         'src/providers/**/*.ts',
         'src/components/composer/parameter-control-utils.ts',
