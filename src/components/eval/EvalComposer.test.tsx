@@ -1,6 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { EvalMessagesEditor } from './EvalComposer';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { EvalMessagesEditor, EvalParametersEditor } from './EvalComposer';
 import { useEvalStore } from '@/stores/eval-store';
 
 vi.mock('@/components/ui/select', () => {
@@ -66,6 +66,24 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
   ),
   DropdownMenuSeparator: () => <hr />,
 }));
+
+describe('EvalParametersEditor', () => {
+  beforeEach(() => {
+    useEvalStore.getState().reset();
+  });
+
+  it('auto-enables temperature when a preset is selected', async () => {
+    render(<EvalParametersEditor />);
+
+    expect(screen.getByLabelText('Include Temperature')).not.toBeChecked();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Balanced' }));
+    });
+
+    expect(screen.getByLabelText('Include Temperature')).toBeChecked();
+    expect(useEvalStore.getState().composer.temperature).toBe(0.7);
+  });
+});
 
 describe('EvalMessagesEditor', () => {
   beforeEach(() => {

@@ -87,8 +87,14 @@ export const openaiPythonGenerator: CodeGenerator = {
       if (systemPrompt.trim()) {
         kwargs.push(`    instructions=${escapePythonString(systemPrompt)},`);
       }
+      if (temperature !== undefined) {
+        kwargs.push(`    temperature=${temperature},`);
+      }
       if (maxTokens !== undefined) {
         kwargs.push(`    max_output_tokens=${maxTokens},`);
+      }
+      if (topP !== undefined) {
+        kwargs.push(`    top_p=${topP},`);
       }
       kwargs.push(`    input=[`);
       kwargs.push(buildResponsesInputLines(messages).join('\n'));

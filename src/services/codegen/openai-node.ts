@@ -95,8 +95,14 @@ export const openaiNodeGenerator: CodeGenerator = {
       if (systemPrompt.trim()) {
         args.push(`  instructions: ${escapeJSString(systemPrompt)},`);
       }
+      if (temperature !== undefined) {
+        args.push(`  temperature: ${temperature},`);
+      }
       if (maxTokens !== undefined) {
         args.push(`  max_output_tokens: ${maxTokens},`);
+      }
+      if (topP !== undefined) {
+        args.push(`  top_p: ${topP},`);
       }
       args.push(`  input: [`);
       args.push(buildResponsesInputLines(messages).join('\n'));

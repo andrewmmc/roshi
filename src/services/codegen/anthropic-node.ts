@@ -43,9 +43,8 @@ export const anthropicNodeGenerator: CodeGenerator = {
     }
     if (!isOpus47OrNewer(model)) {
       if (temperature !== undefined) {
-        args.push(`  temperature: ${temperature},`);
-      }
-      if (topP !== undefined) {
+        args.push(`  temperature: ${Math.min(temperature, 1)},`);
+      } else if (topP !== undefined) {
         args.push(`  top_p: ${topP},`);
       }
       if (topK !== undefined && topK > 0) {

@@ -21,6 +21,7 @@ import {
 } from '@/constants/defaults';
 import {
   createDefaultParamEnabled,
+  LEGACY_PARAM_ENABLED,
   resolveParamEnabled,
   type OptionalParamKey,
   type ParamEnabledState,
@@ -565,7 +566,10 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       topK: record.request.topK,
       frequencyPenalty: record.request.frequencyPenalty,
       presencePenalty: record.request.presencePenalty,
-      paramEnabled: resolveParamEnabled(record.request.paramEnabled),
+      paramEnabled: resolveParamEnabled(record.request.paramEnabled, {
+        ...LEGACY_PARAM_ENABLED,
+        topK: record.request.topK > 0,
+      }),
       stream: record.request.stream,
       customHeaders: historyEntriesToHeaders(record.request.customHeaders),
     };

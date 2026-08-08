@@ -42,9 +42,8 @@ export const anthropicPythonGenerator: CodeGenerator = {
     }
     if (!isOpus47OrNewer(model)) {
       if (temperature !== undefined) {
-        kwargs.push(`    temperature=${temperature},`);
-      }
-      if (topP !== undefined) {
+        kwargs.push(`    temperature=${Math.min(temperature, 1)},`);
+      } else if (topP !== undefined) {
         kwargs.push(`    top_p=${topP},`);
       }
       if (topK !== undefined && topK > 0) {

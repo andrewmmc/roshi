@@ -7,9 +7,12 @@ import {
 
 function makeAnthropicParams() {
   return makeCodeGenParams({
-    model: 'claude-sonnet-4-20250514',
-    topP: 0.95,
-    maxTokens: 1024,
+    request: makeRequest({
+      model: 'claude-sonnet-4-20250514',
+      temperature: undefined,
+      topP: 0.95,
+      maxTokens: 1024,
+    }),
   });
 }
 
@@ -90,6 +93,21 @@ describe('anthropicNodeGenerator', () => {
       'thinking: { type: "enabled", budget_tokens: 1024 }',
     );
     expect(code).toContain('top_k: 40');
+  });
+
+  it('matches adapter precedence and clamping for temperature and top_p', () => {
+    const code = anthropicNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: 1.5,
+          topP: 0.9,
+        }),
+      }),
+    );
+
+    expect(code).toContain('temperature: 1');
+    expect(code).not.toContain('top_p:');
   });
 
   it('omits disabled sampling parameters and keeps required max_tokens', () => {

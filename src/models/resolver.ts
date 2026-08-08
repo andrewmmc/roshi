@@ -1,4 +1,4 @@
-import type { ProviderConfig } from '@/types/provider';
+import { resolveProviderProtocol, type ProviderConfig } from '@/types/provider';
 import { defaultCapabilitiesForProviderType } from './capabilities';
 import type { ModelCapabilities } from './capabilities';
 import {
@@ -35,6 +35,33 @@ function applyModelMetadata(
     : merged;
 }
 
+function defaultCapabilitiesForProvider(
+  provider: ProviderConfig,
+): ModelCapabilities {
+  const capabilities = defaultCapabilitiesForProviderType(provider.type);
+  if (resolveProviderProtocol(provider) !== 'openai-responses') {
+    return capabilities;
+  }
+
+  return {
+    ...capabilities,
+    params: {
+      ...capabilities.params,
+      frequencyPenalty: {
+        supported: false,
+        reason:
+          'Frequency penalty is not supported by the OpenAI Responses API.',
+      },
+      presencePenalty: {
+        supported: false,
+        reason:
+          'Presence penalty is not supported by the OpenAI Responses API.',
+      },
+      maxTokens: { supported: true, wireName: 'max_output_tokens' },
+    },
+  };
+}
+
 export function resolveModelCapabilities(
   provider: ProviderConfig,
   modelId: string,
@@ -51,12 +78,12 @@ export function resolveModelCapabilities(
   if (model) {
     return {
       ...mergeCapabilities(
-        defaultCapabilitiesForProviderType(provider.type),
+        defaultCapabilitiesForProvider(provider),
         model.capabilities,
       ),
       streaming: model.supportsStreaming,
     };
   }
 
-  return defaultCapabilitiesForProviderType(provider.type);
+  return defaultCapabilitiesForProvider(provider);
 }

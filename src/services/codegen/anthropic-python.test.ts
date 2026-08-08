@@ -14,9 +14,12 @@ describe('anthropicPythonGenerator', () => {
   it('generates non-streaming code', () => {
     const code = anthropicPythonGenerator.generate(
       makeCodeGenParams({
-        model: 'claude-sonnet-4-20250514',
-        topP: 0.9,
-        maxTokens: 2048,
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: undefined,
+          topP: 0.9,
+          maxTokens: 2048,
+        }),
       }),
     );
 
@@ -69,6 +72,21 @@ describe('anthropicPythonGenerator', () => {
     );
 
     expect(code).toContain('"content": r"""line1\nline2"""');
+  });
+
+  it('matches adapter precedence and clamping for temperature and top_p', () => {
+    const code = anthropicPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: 1.5,
+          topP: 0.9,
+        }),
+      }),
+    );
+
+    expect(code).toContain('temperature=1');
+    expect(code).not.toContain('top_p=');
   });
 
   it('omits disabled sampling parameters and keeps required max_tokens', () => {

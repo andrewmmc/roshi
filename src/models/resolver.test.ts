@@ -13,6 +13,22 @@ describe('resolveModelCapabilities', () => {
     expect(capabilities.params.maxTokens?.wireName).toBe('max_tokens');
   });
 
+  it('uses Responses API defaults for unknown response models', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({
+        protocol: 'openai-responses',
+        models: [makeModel({ id: 'custom-response-model' })],
+      }),
+      'custom-response-model',
+    );
+
+    expect(capabilities.params.temperature?.supported).toBe(true);
+    expect(capabilities.params.topP?.supported).toBe(true);
+    expect(capabilities.params.frequencyPenalty?.supported).toBe(false);
+    expect(capabilities.params.presencePenalty?.supported).toBe(false);
+    expect(capabilities.params.maxTokens?.wireName).toBe('max_output_tokens');
+  });
+
   it('merges model metadata capabilities into provider defaults', () => {
     const provider = makeProvider({
       models: [

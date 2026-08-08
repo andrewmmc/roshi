@@ -202,33 +202,33 @@ export function EvalParametersEditor() {
           onEnabledChange={(next) => setParamEnabled('temperature', next)}
           enableDisabled={isRunning}
         />
-        {enabled.temperature && (
-          <div className="flex gap-1 pl-0">
-            {TEMP_PRESETS.map((preset) => (
-              <Button
-                key={preset.label}
-                variant="outline"
-                size="xs"
-                title={preset.title}
-                aria-pressed={
-                  Math.abs(composer.temperature - preset.value) < 0.001
-                }
-                onClick={() => {
-                  setParamEnabled('temperature', true);
-                  setTemperature(preset.value);
-                }}
-                disabled={isRunning}
-                className={`flex-1 px-1 transition-colors ${
-                  Math.abs(composer.temperature - preset.value) < 0.001
-                    ? 'bg-accent text-accent-foreground'
-                    : ''
-                }`}
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-1 pl-0">
+          {TEMP_PRESETS.map((preset) => (
+            <Button
+              key={preset.label}
+              variant="outline"
+              size="xs"
+              title={preset.title}
+              aria-pressed={
+                enabled.temperature &&
+                Math.abs(composer.temperature - preset.value) < 0.001
+              }
+              onClick={() => {
+                setParamEnabled('temperature', true);
+                setTemperature(preset.value);
+              }}
+              disabled={isRunning}
+              className={`flex-1 px-1 transition-colors ${
+                enabled.temperature &&
+                Math.abs(composer.temperature - preset.value) < 0.001
+                  ? 'bg-accent text-accent-foreground'
+                  : ''
+              }`}
+            >
+              {preset.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <SliderNumberRow
