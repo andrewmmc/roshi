@@ -1,9 +1,4 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_TEMPERATURE,
-  DEFAULT_TOP_P,
-} from '@/constants/defaults';
 import { escapeJSString, getSendableMessages } from './shared';
 
 export const geminiNodeGenerator: CodeGenerator = {
@@ -16,12 +11,12 @@ export const geminiNodeGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = DEFAULT_TEMPERATURE,
-      maxTokens = DEFAULT_MAX_TOKENS,
-      topP = DEFAULT_TOP_P,
+      temperature,
+      maxTokens,
+      topP,
       topK,
-      frequencyPenalty = 0,
-      presencePenalty = 0,
+      frequencyPenalty,
+      presencePenalty,
       stream = false,
     } = request;
 
@@ -37,14 +32,24 @@ export const geminiNodeGenerator: CodeGenerator = {
     }
 
     const configArgs: string[] = [];
-    configArgs.push(`      temperature: ${temperature},`);
-    configArgs.push(`      maxOutputTokens: ${maxTokens},`);
-    configArgs.push(`      topP: ${topP},`);
+    if (temperature !== undefined) {
+      configArgs.push(`      temperature: ${temperature},`);
+    }
+    if (maxTokens !== undefined) {
+      configArgs.push(`      maxOutputTokens: ${maxTokens},`);
+    }
+    if (topP !== undefined) {
+      configArgs.push(`      topP: ${topP},`);
+    }
     if (topK !== undefined && topK > 0) {
       configArgs.push(`      topK: ${topK},`);
     }
-    configArgs.push(`      frequencyPenalty: ${frequencyPenalty},`);
-    configArgs.push(`      presencePenalty: ${presencePenalty},`);
+    if (frequencyPenalty !== undefined) {
+      configArgs.push(`      frequencyPenalty: ${frequencyPenalty},`);
+    }
+    if (presencePenalty !== undefined) {
+      configArgs.push(`      presencePenalty: ${presencePenalty},`);
+    }
 
     let systemLine = '';
     if (systemPrompt.trim()) {
@@ -56,9 +61,11 @@ export const geminiNodeGenerator: CodeGenerator = {
     args.push(`    contents: [`);
     args.push(contentLines.join('\n'));
     args.push(`    ],`);
-    args.push(`    config: {`);
-    args.push(configArgs.join('\n'));
-    args.push(`    },`);
+    if (configArgs.length > 0) {
+      args.push(`    config: {`);
+      args.push(configArgs.join('\n'));
+      args.push(`    },`);
+    }
 
     if (stream) {
       return `import { GoogleGenAI } from "@google/genai";

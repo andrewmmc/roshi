@@ -3,6 +3,7 @@ import {
   makeCodeGenParams,
   makeProvider,
   makeMessage,
+  makeRequest,
 } from '@/__tests__/fixtures';
 
 describe('openaiNodeGenerator', () => {
@@ -92,10 +93,14 @@ describe('openaiNodeGenerator', () => {
     it('generates responses code for responses protocol', () => {
       const params = makeCodeGenParams({
         provider: makeProvider({ protocol: 'openai-responses' }),
-        systemPrompt: 'Be concise',
-        maxTokens: 2048,
-        effort: 'high',
-        verbosity: 'low',
+        request: makeRequest({
+          systemPrompt: 'Be concise',
+          temperature: undefined,
+          maxTokens: 2048,
+          topP: undefined,
+          effort: 'high',
+          verbosity: 'low',
+        }),
       });
       const code = openaiNodeGenerator.generate(params);
 
@@ -108,6 +113,19 @@ describe('openaiNodeGenerator', () => {
       expect(code).toContain('const content = response.output_text');
       expect(code).not.toContain('client.chat.completions.create');
       expect(code).not.toContain('temperature:');
+    });
+
+    it('includes enabled sampling parameters in responses code', () => {
+      const code = openaiNodeGenerator.generate(
+        makeCodeGenParams({
+          provider: makeProvider({ protocol: 'openai-responses' }),
+          temperature: 0.7,
+          topP: 0.9,
+        }),
+      );
+
+      expect(code).toContain('temperature: 0.7');
+      expect(code).toContain('top_p: 0.9');
     });
 
     it('includes only effort in responses code when verbosity is unset', () => {
@@ -156,6 +174,25 @@ describe('openaiNodeGenerator', () => {
       const code = openaiNodeGenerator.generate(params);
       expect(code).toContain('temperature: 0.7');
       expect(code).toContain('max_tokens: 2048');
+    });
+
+    it('omits disabled optional parameters', () => {
+      const params = makeCodeGenParams({
+        request: makeRequest({
+          temperature: undefined,
+          maxTokens: undefined,
+          topP: undefined,
+          frequencyPenalty: undefined,
+          presencePenalty: undefined,
+        }),
+      });
+      const code = openaiNodeGenerator.generate(params);
+
+      expect(code).not.toContain('temperature:');
+      expect(code).not.toContain('max_tokens:');
+      expect(code).not.toContain('top_p:');
+      expect(code).not.toContain('frequency_penalty:');
+      expect(code).not.toContain('presence_penalty:');
     });
 
     it('escapes special characters in single-line strings', () => {

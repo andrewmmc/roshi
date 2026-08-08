@@ -19,20 +19,24 @@ import {
   PRESENCE_PENALTY_MIN,
   PRESENCE_PENALTY_MAX,
 } from '@/constants/defaults';
+import {
+  createDefaultParamEnabled,
+  type ParamEnabledState,
+} from '@/types/optional-params';
 
 export const PARAM_INFO: Record<string, string> = {
   temperature:
-    'Controls output randomness. 0 = consistent/predictable. 1 = default. 2 = highly varied. Use the presets below for common use cases.',
+    'Controls output randomness. 0 = consistent/predictable. 1 = default. 2 = highly varied. Check to include in the request; leave unchecked to use the model default.',
   'top-p':
-    'Limits the vocabulary the model samples from. Lower = more focused; higher = more varied. On most providers, use either temperature or Top P — not both.',
+    'Limits the vocabulary the model samples from. Lower = more focused; higher = more varied. Check to include; on most providers use either temperature or Top P — not both.',
   'top-k':
-    'Caps the number of candidate tokens the model can pick from. Lower = more predictable. Supported by Anthropic and Gemini; ignored by OpenAI-compatible APIs.',
+    'Caps the number of candidate tokens the model can pick from. Lower = more predictable. Check to include. Supported by Anthropic and Gemini; ignored by OpenAI-compatible APIs.',
   'frequency-penalty':
-    'Discourages the model from repeating words it has already used. Positive values reduce repetition; negative values allow it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
+    'Discourages the model from repeating words it has already used. Check to include. Positive values reduce repetition; negative values allow it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
   'presence-penalty':
-    'Pushes the model to introduce new topics by penalising any word that has appeared at all. Positive values = more varied output. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
+    'Pushes the model to introduce new topics by penalising any word that has appeared at all. Check to include. Positive values = more varied output. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
   'max-tokens':
-    'Hard limit on response length. Higher values allow longer replies but cost more API credits.',
+    'Hard limit on response length. Check to include; leave unchecked to omit and use the model default. Higher values allow longer replies but cost more API credits.',
   stream:
     'Receive tokens as they arrive instead of waiting for the full response. Useful for long outputs and latency testing.',
   thinking:
@@ -191,6 +195,7 @@ export interface ParameterDefaults {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  paramEnabled: ParamEnabledState;
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
@@ -208,6 +213,7 @@ export function getCapabilityAwareParameterDefaults(
     topK: DEFAULT_TOP_K,
     frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: DEFAULT_PRESENCE_PENALTY,
+    paramEnabled: createDefaultParamEnabled(),
     stream: true,
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,

@@ -1,9 +1,4 @@
 import type { CodeGenerator, CodeGenParams } from './types';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_TEMPERATURE,
-  DEFAULT_TOP_P,
-} from '@/constants/defaults';
 import { escapePythonString, getSendableMessages } from './shared';
 
 export const geminiPythonGenerator: CodeGenerator = {
@@ -16,12 +11,12 @@ export const geminiPythonGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = DEFAULT_TEMPERATURE,
-      maxTokens = DEFAULT_MAX_TOKENS,
-      topP = DEFAULT_TOP_P,
+      temperature,
+      maxTokens,
+      topP,
       topK,
-      frequencyPenalty = 0,
-      presencePenalty = 0,
+      frequencyPenalty,
+      presencePenalty,
       stream = false,
     } = request;
 
@@ -37,23 +32,38 @@ export const geminiPythonGenerator: CodeGenerator = {
     }
 
     const configArgs: string[] = [];
-    configArgs.push(`        temperature=${temperature},`);
-    configArgs.push(`        max_output_tokens=${maxTokens},`);
-    configArgs.push(`        top_p=${topP},`);
+    if (temperature !== undefined) {
+      configArgs.push(`        temperature=${temperature},`);
+    }
+    if (maxTokens !== undefined) {
+      configArgs.push(`        max_output_tokens=${maxTokens},`);
+    }
+    if (topP !== undefined) {
+      configArgs.push(`        top_p=${topP},`);
+    }
     if (topK !== undefined && topK > 0) {
       configArgs.push(`        top_k=${topK},`);
     }
-    configArgs.push(`        frequency_penalty=${frequencyPenalty},`);
-    configArgs.push(`        presence_penalty=${presencePenalty},`);
+    if (frequencyPenalty !== undefined) {
+      configArgs.push(`        frequency_penalty=${frequencyPenalty},`);
+    }
+    if (presencePenalty !== undefined) {
+      configArgs.push(`        presence_penalty=${presencePenalty},`);
+    }
 
-    const configBlock = `    config=types.GenerateContentConfig(\n${configArgs.join('\n')}\n    ),`;
+    const configBlock =
+      configArgs.length > 0
+        ? `    config=types.GenerateContentConfig(\n${configArgs.join('\n')}\n    ),`
+        : null;
 
     const kwargs: string[] = [];
     kwargs.push(`    model="${model}",`);
     kwargs.push(`    contents=[`);
     kwargs.push(contentLines.join('\n'));
     kwargs.push(`    ],`);
-    kwargs.push(configBlock);
+    if (configBlock) {
+      kwargs.push(configBlock);
+    }
     if (systemPrompt.trim()) {
       kwargs.push(
         `    system_instruction=${escapePythonString(systemPrompt)},`,

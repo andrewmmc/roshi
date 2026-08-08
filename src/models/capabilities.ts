@@ -11,6 +11,7 @@ export interface MaxTokensSupport {
   supported: boolean;
   wireName:
     | 'max_tokens'
+    | 'max_output_tokens'
     | 'max_completion_tokens'
     | 'maxOutputTokens'
     | 'max_tokens_anthropic';

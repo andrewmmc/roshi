@@ -17,9 +17,9 @@ export const anthropicNodeGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = 1,
-      maxTokens = 4096,
-      topP = 1,
+      temperature,
+      maxTokens,
+      topP,
       topK,
       stream = false,
     } = request;
@@ -33,7 +33,8 @@ export const anthropicNodeGenerator: CodeGenerator = {
 
     const args: string[] = [];
     args.push(`  model: "${model}",`);
-    args.push(`  max_tokens: ${maxTokens},`);
+    // Anthropic requires max_tokens; fall back when the user left it optional.
+    args.push(`  max_tokens: ${maxTokens ?? 4096},`);
     args.push(`  messages: [`);
     args.push(messageLines.join('\n'));
     args.push(`  ],`);
@@ -41,8 +42,11 @@ export const anthropicNodeGenerator: CodeGenerator = {
       args.push(`  system: ${escapeJSString(systemPrompt)},`);
     }
     if (!isOpus47OrNewer(model)) {
-      args.push(`  temperature: ${temperature},`);
-      args.push(`  top_p: ${topP},`);
+      if (temperature !== undefined) {
+        args.push(`  temperature: ${Math.min(temperature, 1)},`);
+      } else if (topP !== undefined) {
+        args.push(`  top_p: ${topP},`);
+      }
       if (topK !== undefined && topK > 0) {
         args.push(`  top_k: ${topK},`);
       }

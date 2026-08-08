@@ -10,6 +10,7 @@ import {
   DEFAULT_EFFORT,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
+import { paramEnabledFromRequest } from '@/types/optional-params';
 import type { HistoryEntry } from '@/types/history';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 
@@ -88,6 +89,7 @@ export function buildComposerHistoryRestore(entry: HistoryEntry) {
     frequencyPenalty:
       entry.request.frequencyPenalty ?? DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: entry.request.presencePenalty ?? DEFAULT_PRESENCE_PENALTY,
+    paramEnabled: paramEnabledFromRequest(entry.request),
     stream: entry.request.stream,
     thinkingEnabled:
       entry.request.thinking?.enabled ?? DEFAULT_THINKING_ENABLED,

@@ -696,6 +696,10 @@ describe('useSendRequest', () => {
       useComposerStore.setState({
         ...useComposerStore.getState(),
         stream: true,
+        paramEnabled: {
+          ...useComposerStore.getState().paramEnabled,
+          temperature: true,
+        },
       });
       mockSendRequest.mockResolvedValue({
         response: {
@@ -748,6 +752,14 @@ describe('useSendRequest', () => {
         frequencyPenalty: 0.5,
         presencePenalty: 0.3,
         maxTokens: 2048,
+        paramEnabled: {
+          temperature: true,
+          maxTokens: true,
+          topP: true,
+          topK: false,
+          frequencyPenalty: true,
+          presencePenalty: true,
+        },
       });
       mockSendRequest.mockResolvedValue({
         response: {

@@ -359,6 +359,7 @@ describe('useEvalStore', () => {
     expect(state.composer.systemPrompt).toBe('sys');
     expect(state.composer.messages[0].content).toBe('Hi');
     expect(state.composer.temperature).toBe(0.5);
+    expect(state.composer.paramEnabled.topK).toBe(true);
     expect(state.composer.stream).toBe(false);
     expect(state.runners).toHaveLength(1);
     expect(state.results.r1.status).toBe('success');

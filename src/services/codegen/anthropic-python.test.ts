@@ -1,5 +1,9 @@
 import { anthropicPythonGenerator } from './anthropic-python';
-import { makeCodeGenParams, makeMessage } from '@/__tests__/fixtures';
+import {
+  makeCodeGenParams,
+  makeMessage,
+  makeRequest,
+} from '@/__tests__/fixtures';
 
 describe('anthropicPythonGenerator', () => {
   it('has correct label and language', () => {
@@ -10,9 +14,12 @@ describe('anthropicPythonGenerator', () => {
   it('generates non-streaming code', () => {
     const code = anthropicPythonGenerator.generate(
       makeCodeGenParams({
-        model: 'claude-sonnet-4-20250514',
-        topP: 0.9,
-        maxTokens: 2048,
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: undefined,
+          topP: 0.9,
+          maxTokens: 2048,
+        }),
       }),
     );
 
@@ -65,6 +72,38 @@ describe('anthropicPythonGenerator', () => {
     );
 
     expect(code).toContain('"content": r"""line1\nline2"""');
+  });
+
+  it('matches adapter precedence and clamping for temperature and top_p', () => {
+    const code = anthropicPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: 1.5,
+          topP: 0.9,
+        }),
+      }),
+    );
+
+    expect(code).toContain('temperature=1');
+    expect(code).not.toContain('top_p=');
+  });
+
+  it('omits disabled sampling parameters and keeps required max_tokens', () => {
+    const code = anthropicPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({
+          model: 'claude-sonnet-4-20250514',
+          temperature: undefined,
+          maxTokens: undefined,
+          topP: undefined,
+        }),
+      }),
+    );
+
+    expect(code).toContain('max_tokens=4096');
+    expect(code).not.toContain('temperature=');
+    expect(code).not.toContain('top_p=');
   });
 
   it('uses adaptive thinking for opus 4.7 models', () => {

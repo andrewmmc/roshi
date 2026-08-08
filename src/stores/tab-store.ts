@@ -19,6 +19,11 @@ import {
   DEFAULT_EFFORT,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
+import {
+  createDefaultParamEnabled,
+  resolveParamEnabled,
+  type ParamEnabledState,
+} from '@/types/optional-params';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { toast } from '@/stores/toast-store';
@@ -41,6 +46,7 @@ export interface ComposerSnapshot {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  paramEnabled: ParamEnabledState;
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
@@ -107,6 +113,7 @@ export function createDefaultComposerSnapshot(): ComposerSnapshot {
     topK: DEFAULT_TOP_K,
     frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: DEFAULT_PRESENCE_PENALTY,
+    paramEnabled: createDefaultParamEnabled(),
     stream: true,
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
@@ -116,6 +123,22 @@ export function createDefaultComposerSnapshot(): ComposerSnapshot {
     activeCollectionId: null,
     activeSavedRequestId: null,
     scrollGeneration: 0,
+  };
+}
+
+function normalizeComposerSnapshot(
+  snapshot: ComposerSnapshot,
+): ComposerSnapshot {
+  return {
+    ...snapshot,
+    paramEnabled: resolveParamEnabled(snapshot.paramEnabled, {
+      temperature: true,
+      maxTokens: true,
+      topP: true,
+      topK: snapshot.topK > 0,
+      frequencyPenalty: true,
+      presencePenalty: true,
+    }),
   };
 }
 
@@ -158,6 +181,7 @@ function captureComposerSnapshot(): ComposerSnapshot {
     topK: s.topK,
     frequencyPenalty: s.frequencyPenalty,
     presencePenalty: s.presencePenalty,
+    paramEnabled: { ...s.paramEnabled },
     stream: s.stream,
     thinkingEnabled: s.thinkingEnabled,
     thinkingBudgetTokens: s.thinkingBudgetTokens,
@@ -190,10 +214,11 @@ function captureResponseSnapshot(): ResponseSnapshot {
 }
 
 function applyComposerSnapshot(snapshot: ComposerSnapshot): void {
+  const normalized = normalizeComposerSnapshot(snapshot);
   // Increment scrollGeneration so the composer scrolls to top on tab switch.
   useComposerStore.setState({
-    ...snapshot,
-    scrollGeneration: snapshot.scrollGeneration + 1,
+    ...normalized,
+    scrollGeneration: normalized.scrollGeneration + 1,
   });
 }
 
@@ -353,7 +378,10 @@ export const useTabStore = create<TabStore>((set, get) => ({
               .map((tab) => ({
                 id: tab.id,
                 label: tab.label,
-                composer: { ...tab.composer, scrollGeneration: 0 },
+                composer: normalizeComposerSnapshot({
+                  ...tab.composer,
+                  scrollGeneration: 0,
+                }),
                 response: { ...EMPTY_RESPONSE_SNAPSHOT },
               }));
             const activeTab =

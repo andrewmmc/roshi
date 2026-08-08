@@ -35,6 +35,10 @@ function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
       decimals={param.decimals}
       disabled={!param.canEdit}
       disabledReason={param.disabledReason}
+      enabled={param.enabled}
+      onEnabledChange={param.onEnabledChange}
+      enableDisabled={!param.canEdit}
+      enableDisabledReason={param.disabledReason}
     />
   );
 }
@@ -113,12 +117,14 @@ export function ParameterControls() {
     capabilities,
     temperature,
     maxTokens,
+    maxTokensEnabled,
     stream,
     thinkingEnabled,
     thinkingBudgetTokens,
     effort,
     verbosity,
     setMaxTokens,
+    setParamEnabled,
     setStream,
     setThinkingEnabled,
     setThinkingBudgetTokens,
@@ -145,9 +151,20 @@ export function ParameterControls() {
     (param) => param.capabilityKey !== 'temperature',
   );
 
+  const maxTokensControlsDisabled = !canEditMaxTokens || !maxTokensEnabled;
+  const maxTokensTitle = !canEditMaxTokens
+    ? 'Max tokens is not supported by the selected model.'
+    : !maxTokensEnabled
+      ? 'Enable Max Tokens to include it in the request.'
+      : undefined;
+
   return (
     <div className="flex flex-col gap-3">
       <ModelCompatibilitySummary />
+      <p className="text-muted-foreground/70 text-xs leading-snug">
+        Optional parameters are off by default. Check a control to include it in
+        the request; otherwise the model default is used.
+      </p>
       <SectionHeader>Sampling</SectionHeader>
 
       {temperatureParam && (
@@ -161,9 +178,13 @@ export function ParameterControls() {
                   variant="outline"
                   size="xs"
                   title={preset.title}
-                  aria-pressed={Math.abs(temperature - preset.value) < 0.001}
+                  aria-pressed={
+                    temperatureParam.enabled &&
+                    Math.abs(temperature - preset.value) < 0.001
+                  }
                   onClick={() => applyTempPreset(preset.value)}
                   className={`flex-1 px-1 transition-colors ${
+                    temperatureParam.enabled &&
                     Math.abs(temperature - preset.value) < 0.001
                       ? 'bg-accent text-accent-foreground'
                       : ''
@@ -192,14 +213,23 @@ export function ParameterControls() {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-1.5">
-            <Label
-              htmlFor="param-max-tokens"
-              className={`text-xs ${!canEditMaxTokens ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
+            <input
+              type="checkbox"
+              checked={maxTokensEnabled}
+              onChange={(e) => setParamEnabled('maxTokens', e.target.checked)}
+              disabled={!canEditMaxTokens}
               title={
                 !canEditMaxTokens
                   ? 'Max tokens is not supported by the selected model.'
                   : undefined
               }
+              aria-label="Include Max Tokens"
+              className="rounded"
+            />
+            <Label
+              htmlFor="param-max-tokens"
+              className={`text-xs ${!canEditMaxTokens || !maxTokensEnabled ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
+              title={maxTokensTitle}
             >
               Max Tokens
             </Label>
@@ -213,12 +243,8 @@ export function ParameterControls() {
             className="h-6 w-20 font-mono text-xs"
             min={1}
             max={capabilities?.tokenLimits?.output ?? 1000000}
-            disabled={!canEditMaxTokens}
-            title={
-              !canEditMaxTokens
-                ? 'Max tokens is not supported by the selected model.'
-                : undefined
-            }
+            disabled={maxTokensControlsDisabled}
+            title={maxTokensTitle}
           />
         </div>
         {capabilities?.tokenLimits?.output && (

@@ -19,6 +19,13 @@ import {
   DEFAULT_FREQUENCY_PENALTY,
   DEFAULT_PRESENCE_PENALTY,
 } from '@/constants/defaults';
+import {
+  createDefaultParamEnabled,
+  LEGACY_PARAM_ENABLED,
+  resolveParamEnabled,
+  type OptionalParamKey,
+  type ParamEnabledState,
+} from '@/types/optional-params';
 import { runEval, type EvalRunnerUpdate } from '@/services/eval-runner';
 import { runJudge, DEFAULT_JUDGE_RUBRIC } from '@/services/judge-runner';
 import { useProviderStore } from '@/stores/provider-store';
@@ -43,6 +50,7 @@ export interface EvalComposerState {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  paramEnabled: ParamEnabledState;
   stream: boolean;
   customHeaders: HeaderEntry[];
 }
@@ -80,6 +88,7 @@ interface EvalStoreActions {
   setTopK: (v: number) => void;
   setFrequencyPenalty: (v: number) => void;
   setPresencePenalty: (v: number) => void;
+  setParamEnabled: (key: OptionalParamKey, enabled: boolean) => void;
   setStream: (stream: boolean) => void;
   resetParameters: () => void;
   setCustomHeaders: (headers: HeaderEntry[]) => void;
@@ -137,6 +146,7 @@ export function selectHasUnsavedEvalChanges(
   ) {
     return true;
   }
+  const defaultsEnabled = createDefaultParamEnabled();
   if (
     composer.temperature !== DEFAULT_TEMPERATURE ||
     composer.maxTokens !== DEFAULT_MAX_TOKENS ||
@@ -144,6 +154,9 @@ export function selectHasUnsavedEvalChanges(
     composer.topK !== DEFAULT_TOP_K ||
     composer.frequencyPenalty !== DEFAULT_FREQUENCY_PENALTY ||
     composer.presencePenalty !== DEFAULT_PRESENCE_PENALTY ||
+    (Object.keys(defaultsEnabled) as OptionalParamKey[]).some(
+      (key) => composer.paramEnabled[key] !== defaultsEnabled[key],
+    ) ||
     composer.stream !== true
   ) {
     return true;
@@ -177,6 +190,7 @@ function createInitialParameterState(): Pick<
   | 'topK'
   | 'frequencyPenalty'
   | 'presencePenalty'
+  | 'paramEnabled'
   | 'stream'
 > {
   return {
@@ -186,6 +200,7 @@ function createInitialParameterState(): Pick<
     topK: DEFAULT_TOP_K,
     frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: DEFAULT_PRESENCE_PENALTY,
+    paramEnabled: createDefaultParamEnabled(),
     stream: true,
   };
 }
@@ -251,6 +266,7 @@ function composerToSharedRequest(
     topK: composer.topK,
     frequencyPenalty: composer.frequencyPenalty,
     presencePenalty: composer.presencePenalty,
+    paramEnabled: { ...composer.paramEnabled },
     stream: composer.stream,
     customHeaders: headersToHistoryEntries(composer.customHeaders),
   };
@@ -324,6 +340,13 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     set((s) => ({ composer: { ...s.composer, frequencyPenalty } })),
   setPresencePenalty: (presencePenalty) =>
     set((s) => ({ composer: { ...s.composer, presencePenalty } })),
+  setParamEnabled: (key, enabled) =>
+    set((s) => ({
+      composer: {
+        ...s.composer,
+        paramEnabled: { ...s.composer.paramEnabled, [key]: enabled },
+      },
+    })),
   setStream: (stream) => set((s) => ({ composer: { ...s.composer, stream } })),
   resetParameters: () =>
     set((s) => ({
@@ -543,6 +566,10 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       topK: record.request.topK,
       frequencyPenalty: record.request.frequencyPenalty,
       presencePenalty: record.request.presencePenalty,
+      paramEnabled: resolveParamEnabled(record.request.paramEnabled, {
+        ...LEGACY_PARAM_ENABLED,
+        topK: record.request.topK > 0,
+      }),
       stream: record.request.stream,
       customHeaders: historyEntriesToHeaders(record.request.customHeaders),
     };
@@ -593,6 +620,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         topK: mainComposer.topK,
         frequencyPenalty: mainComposer.frequencyPenalty,
         presencePenalty: mainComposer.presencePenalty,
+        paramEnabled: { ...mainComposer.paramEnabled },
         stream: mainComposer.stream,
         customHeaders: mainComposer.customHeaders.map((header) => ({
           ...header,

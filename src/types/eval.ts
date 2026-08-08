@@ -1,4 +1,9 @@
 import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
+import {
+  LEGACY_PARAM_ENABLED,
+  resolveParamEnabled,
+  type ParamEnabledState,
+} from '@/types/optional-params';
 import type { HistoryHeaderEntry } from '@/utils/headers';
 
 export type EvalRunStatus =
@@ -67,6 +72,8 @@ export interface EvalSharedRequest {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  /** Absent on legacy eval runs — treat as all enabled (except topK). */
+  paramEnabled?: ParamEnabledState;
   stream: boolean;
   customHeaders: HistoryHeaderEntry[];
 }
@@ -134,15 +141,24 @@ export function buildNormalizedRequestForRunner(
   modelId: string,
   overrides: Partial<Pick<NormalizedRequest, 'stream'>> = {},
 ): NormalizedRequest {
+  const enabled = resolveParamEnabled(shared.paramEnabled, {
+    ...LEGACY_PARAM_ENABLED,
+    // Pre-flag eval runs sent topK whenever it was non-zero.
+    topK: shared.topK > 0,
+  });
   return {
     messages: shared.messages,
     model: modelId,
-    temperature: shared.temperature,
-    maxTokens: shared.maxTokens,
-    topP: shared.topP,
-    topK: shared.topK || undefined,
-    frequencyPenalty: shared.frequencyPenalty,
-    presencePenalty: shared.presencePenalty,
+    temperature: enabled.temperature ? shared.temperature : undefined,
+    maxTokens: enabled.maxTokens ? shared.maxTokens : undefined,
+    topP: enabled.topP ? shared.topP : undefined,
+    topK: enabled.topK && shared.topK > 0 ? shared.topK : undefined,
+    frequencyPenalty: enabled.frequencyPenalty
+      ? shared.frequencyPenalty
+      : undefined,
+    presencePenalty: enabled.presencePenalty
+      ? shared.presencePenalty
+      : undefined,
     stream: overrides.stream ?? shared.stream,
     systemPrompt: shared.systemPrompt || undefined,
     thinking: undefined,

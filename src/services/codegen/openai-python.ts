@@ -68,11 +68,11 @@ export const openaiPythonGenerator: CodeGenerator = {
       model,
       messages,
       systemPrompt = '',
-      temperature = 1,
-      maxTokens = 4096,
-      topP = 1,
-      frequencyPenalty = 0,
-      presencePenalty = 0,
+      temperature,
+      maxTokens,
+      topP,
+      frequencyPenalty,
+      presencePenalty,
       stream = false,
       effort,
       verbosity,
@@ -87,7 +87,15 @@ export const openaiPythonGenerator: CodeGenerator = {
       if (systemPrompt.trim()) {
         kwargs.push(`    instructions=${escapePythonString(systemPrompt)},`);
       }
-      kwargs.push(`    max_output_tokens=${maxTokens},`);
+      if (temperature !== undefined) {
+        kwargs.push(`    temperature=${temperature},`);
+      }
+      if (maxTokens !== undefined) {
+        kwargs.push(`    max_output_tokens=${maxTokens},`);
+      }
+      if (topP !== undefined) {
+        kwargs.push(`    top_p=${topP},`);
+      }
       kwargs.push(`    input=[`);
       kwargs.push(buildResponsesInputLines(messages).join('\n'));
       kwargs.push(`    ],`);
@@ -98,11 +106,21 @@ export const openaiPythonGenerator: CodeGenerator = {
         kwargs.push(`    text={"verbosity": "${verbosity}"},`);
       }
     } else {
-      kwargs.push(`    temperature=${temperature},`);
-      kwargs.push(`    max_tokens=${maxTokens},`);
-      kwargs.push(`    top_p=${topP},`);
-      kwargs.push(`    frequency_penalty=${frequencyPenalty},`);
-      kwargs.push(`    presence_penalty=${presencePenalty},`);
+      if (temperature !== undefined) {
+        kwargs.push(`    temperature=${temperature},`);
+      }
+      if (maxTokens !== undefined) {
+        kwargs.push(`    max_tokens=${maxTokens},`);
+      }
+      if (topP !== undefined) {
+        kwargs.push(`    top_p=${topP},`);
+      }
+      if (frequencyPenalty !== undefined) {
+        kwargs.push(`    frequency_penalty=${frequencyPenalty},`);
+      }
+      if (presencePenalty !== undefined) {
+        kwargs.push(`    presence_penalty=${presencePenalty},`);
+      }
       kwargs.push(`    messages=[`);
       kwargs.push(buildChatMessageLines(request).join('\n'));
       kwargs.push(`    ],`);

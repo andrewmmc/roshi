@@ -14,6 +14,13 @@ import {
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import {
+  createDefaultParamEnabled,
+  LEGACY_PARAM_ENABLED,
+  resolveParamEnabled,
+  type OptionalParamKey,
+  type ParamEnabledState,
+} from '@/types/optional-params';
+import {
   createEmptyHeaderEntry,
   historyEntriesToHeaders,
   type HeaderEntry,
@@ -30,6 +37,8 @@ interface ComposerState {
   topK: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  /** When false, the param value is kept for the UI but omitted from requests. */
+  paramEnabled: ParamEnabledState;
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
@@ -53,6 +62,7 @@ interface ComposerActions {
   setTopK: (topK: number) => void;
   setFrequencyPenalty: (penalty: number) => void;
   setPresencePenalty: (penalty: number) => void;
+  setParamEnabled: (key: OptionalParamKey, enabled: boolean) => void;
   setStream: (stream: boolean) => void;
   setThinkingEnabled: (enabled: boolean) => void;
   setThinkingBudgetTokens: (tokens: number) => void;
@@ -75,6 +85,7 @@ interface ComposerActions {
     topK?: number;
     frequencyPenalty: number;
     presencePenalty: number;
+    paramEnabled?: Partial<ParamEnabledState>;
     stream: boolean;
     thinkingEnabled?: boolean;
     thinkingBudgetTokens?: number;
@@ -96,6 +107,7 @@ function createInitialComposerState(): ComposerState {
     topK: DEFAULT_TOP_K,
     frequencyPenalty: DEFAULT_FREQUENCY_PENALTY,
     presencePenalty: DEFAULT_PRESENCE_PENALTY,
+    paramEnabled: createDefaultParamEnabled(),
     stream: true,
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
@@ -159,6 +171,10 @@ export const useComposerStore = create<ComposerStore>((set) => ({
   setTopK: (topK) => set({ topK }),
   setFrequencyPenalty: (frequencyPenalty) => set({ frequencyPenalty }),
   setPresencePenalty: (presencePenalty) => set({ presencePenalty }),
+  setParamEnabled: (key, enabled) =>
+    set((s) => ({
+      paramEnabled: { ...s.paramEnabled, [key]: enabled },
+    })),
   setStream: (stream) => set({ stream }),
   setThinkingEnabled: (thinkingEnabled) => set({ thinkingEnabled }),
   setThinkingBudgetTokens: (thinkingBudgetTokens) =>
@@ -203,6 +219,10 @@ export const useComposerStore = create<ComposerStore>((set) => ({
       topK: data.topK ?? DEFAULT_TOP_K,
       frequencyPenalty: data.frequencyPenalty,
       presencePenalty: data.presencePenalty,
+      paramEnabled: resolveParamEnabled(data.paramEnabled, {
+        ...LEGACY_PARAM_ENABLED,
+        topK: (data.topK ?? 0) > 0,
+      }),
       stream: data.stream,
       thinkingEnabled: data.thinkingEnabled ?? DEFAULT_THINKING_ENABLED,
       thinkingBudgetTokens:
