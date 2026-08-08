@@ -7,7 +7,14 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'src-tauri/target']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    'src-tauri/target',
+    'test-results',
+    'playwright-report',
+    'blob-report',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

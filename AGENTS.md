@@ -29,6 +29,7 @@ For **Cursor Cloud**, use the same guidance as the rest of this file: [What this
 | Tests (single run)       | `npm run test` — Vitest + jsdom                        |
 | Tests (watch)            | `npm run test:watch`                                   |
 | Test coverage            | `npm run test:coverage` — V8 provider + thresholds     |
+| E2E tests                | `npm run test:e2e` — Playwright (Chromium; mocks LLM)  |
 | Tauri (desktop) dev      | `npm run tauri:dev`                                    |
 | Tauri (desktop) build    | `npm run tauri:build` — platform packages (e.g. macOS) |
 
@@ -109,6 +110,7 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, Google Gemini, OpenR
 ## Notes for agents
 
 - Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage is intentionally scoped to non-visual logic in `vitest.config.ts`; thresholds are enforced when running `test:coverage` (95% lines/functions/statements/branches).
+- Playwright e2e tests live in `e2e/` (`npm run test:e2e`). They start the Vite dev server, seed IndexedDB with a usable OpenAI provider/model, and mock `/api/proxy` / provider URLs so no real LLM calls are made.
 - ESLint may report pre-existing issues (e.g. unused variables, conditional hooks in `CodeView.tsx`, react-refresh noise in generated UI). Do not assume new edits caused all warnings.
 - Users enter API keys in the UI; secrets are stored locally in IndexedDB. No `.env` or server-side secrets are required for the app to run.
 - **Git workflow:** after finishing implementation work that changed files, always commit and push:
