@@ -23,7 +23,8 @@ describe('reset service', () => {
   });
 
   it('deletes application data and clears local storage', async () => {
-    const clear = vi.spyOn(localStorage, 'clear');
+    const clear = vi.fn();
+    vi.stubGlobal('localStorage', { clear });
 
     await resetApplication();
 
