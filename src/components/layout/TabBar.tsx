@@ -62,6 +62,7 @@ export function TabBar() {
             thinkingEnabled: composer.thinkingEnabled,
             thinkingBudgetTokens: composer.thinkingBudgetTokens,
             effort: composer.effort,
+            reasoningMode: composer.reasoningMode,
             verbosity: composer.verbosity,
             customHeaders: composer.customHeaders,
             activeCollectionId: composer.activeCollectionId,

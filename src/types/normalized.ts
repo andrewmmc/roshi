@@ -31,6 +31,7 @@ export interface NormalizedRequest {
   systemPrompt?: string;
   thinking?: ThinkingConfig;
   effort?: string;
+  reasoningMode?: string;
   verbosity?: string;
 }
 

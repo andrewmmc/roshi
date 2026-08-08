@@ -105,6 +105,33 @@ describe('filterRequestByCapabilities', () => {
     expect(result.omittedParams).toEqual([]);
   });
 
+  it('filters reasoning mode by model support', () => {
+    const supported = filterRequestByCapabilities(
+      makeRequest({ model: 'gpt-5.6', reasoningMode: 'pro' }),
+      {
+        ...gpt5FamilyCapabilities,
+        params: {
+          ...gpt5FamilyCapabilities.params,
+          reasoningMode: {
+            levels: ['standard', 'pro'],
+            defaultLevel: 'standard',
+            wireName: 'reasoning.mode',
+          },
+        },
+      },
+    );
+    const unsupported = filterRequestByCapabilities(
+      makeRequest({ model: 'gpt-5.5', reasoningMode: 'pro' }),
+      gpt5FamilyCapabilities,
+    );
+
+    expect(supported.request.reasoningMode).toBe('pro');
+    expect(unsupported.request.reasoningMode).toBeUndefined();
+    expect(unsupported.warnings).toContain(
+      'Reasoning mode was omitted: Reasoning mode is not supported by this model.',
+    );
+  });
+
   it('omits unsupported effort and verbosity values', () => {
     const result = filterRequestByCapabilities(
       makeRequest({

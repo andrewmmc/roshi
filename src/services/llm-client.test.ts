@@ -146,6 +146,39 @@ describe('llm-client', () => {
       });
     });
 
+    it('throws RequestError for a provider failure in a 200 response', async () => {
+      const rawResponse = {
+        status: 'failed',
+        error: { message: 'generation failed' },
+      };
+      mockAdapter = createMockAdapter({
+        parseResponseError: vi.fn().mockReturnValue('generation failed'),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          text: () => Promise.resolve(JSON.stringify(rawResponse)),
+        }),
+      );
+
+      const promise = sendRequest({
+        provider: makeProvider(),
+        request: makeRequest({ stream: false }),
+      });
+
+      await expect(promise).rejects.toMatchObject({
+        name: 'RequestError',
+        message: 'generation failed',
+        status: 200,
+        rawResponse,
+      });
+      expect(mockAdapter.parseResponse).not.toHaveBeenCalled();
+    });
+
     it('calls adapter methods in order', async () => {
       vi.stubGlobal(
         'fetch',

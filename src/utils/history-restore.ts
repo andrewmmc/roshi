@@ -8,6 +8,7 @@ import {
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
   DEFAULT_EFFORT,
+  DEFAULT_REASONING_MODE,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import { paramEnabledFromRequest } from '@/types/optional-params';
@@ -96,6 +97,7 @@ export function buildComposerHistoryRestore(entry: HistoryEntry) {
     thinkingBudgetTokens:
       entry.request.thinking?.budgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
     effort: entry.request.effort ?? DEFAULT_EFFORT,
+    reasoningMode: entry.request.reasoningMode ?? DEFAULT_REASONING_MODE,
     verbosity: entry.request.verbosity ?? DEFAULT_VERBOSITY,
     customHeaders: entry.customHeaders ?? [],
   };

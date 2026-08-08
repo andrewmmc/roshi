@@ -206,6 +206,35 @@ describe('anthropicAdapter', () => {
       expect(body.effort).toBeUndefined();
     });
 
+    it('sends adaptive thinking for Claude 5 models', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-sonnet-5',
+          thinking: { enabled: true, budgetTokens: 10240 },
+          effort: 'xhigh',
+        }),
+        provider,
+      );
+
+      expect(body.thinking).toEqual({ type: 'adaptive' });
+      expect(body.output_config).toEqual({ effort: 'xhigh' });
+      expect(body.temperature).toBeUndefined();
+    });
+
+    it('sends effort without requiring thinking to be enabled', () => {
+      const body = anthropicAdapter.buildRequestBody(
+        makeRequest({
+          model: 'claude-opus-4-7',
+          thinking: undefined,
+          effort: 'medium',
+        }),
+        provider,
+      );
+
+      expect(body.thinking).toBeUndefined();
+      expect(body.output_config).toEqual({ effort: 'medium' });
+    });
+
     it('sends extended thinking for pre-4.7 models', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({
@@ -238,7 +267,7 @@ describe('anthropicAdapter', () => {
       expect(body.effort).toBeUndefined();
     });
 
-    it('defaults Opus 4.7+ effort to high when not provided', () => {
+    it('uses the API default effort when not provided', () => {
       const body = anthropicAdapter.buildRequestBody(
         makeRequest({
           model: 'claude-opus-4-7',
@@ -248,7 +277,7 @@ describe('anthropicAdapter', () => {
         provider,
       );
 
-      expect(body.output_config).toEqual({ effort: 'high' });
+      expect(body.output_config).toBeUndefined();
     });
 
     it('handles base64 image attachments', () => {

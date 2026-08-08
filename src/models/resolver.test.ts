@@ -90,6 +90,17 @@ describe('resolveModelCapabilities', () => {
     expect(capabilities.params.maxTokens?.wireName).toBe('max_tokens');
   });
 
+  it('uses adaptive thinking and effort for Claude 5 models', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({ type: 'anthropic' }),
+      'claude-sonnet-5',
+    );
+
+    expect(capabilities.params.thinking?.modes).toEqual(['adaptive']);
+    expect(capabilities.params.effort?.levels).toContain('max');
+    expect(capabilities.params.temperature?.supported).toBe(false);
+  });
+
   it('uses GPT-5 capabilities for GPT-5.5', () => {
     const capabilities = resolveModelCapabilities(makeProvider(), 'gpt-5.5');
 
@@ -99,6 +110,27 @@ describe('resolveModelCapabilities', () => {
     );
     expect(capabilities.params.effort?.wireName).toBe('reasoning.effort');
     expect(capabilities.params.verbosity?.wireName).toBe('text.verbosity');
+  });
+
+  it('includes current reasoning effort levels for GPT-5.6', () => {
+    const capabilities = resolveModelCapabilities(makeProvider(), 'gpt-5.6');
+
+    expect(capabilities.params.effort?.levels).toContain('minimal');
+    expect(capabilities.params.effort?.levels).toContain('max');
+    expect(capabilities.params.reasoningMode).toEqual({
+      levels: ['standard', 'pro'],
+      defaultLevel: 'standard',
+      wireName: 'reasoning.mode',
+    });
+  });
+
+  it('uses reasoning chat capabilities for o-series models', () => {
+    const capabilities = resolveModelCapabilities(makeProvider(), 'o3-mini');
+
+    expect(capabilities.params.temperature?.supported).toBe(false);
+    expect(capabilities.params.maxTokens?.wireName).toBe(
+      'max_completion_tokens',
+    );
   });
 
   it('disables streaming for GPT-5.5 Pro aliases and snapshots', () => {
@@ -126,6 +158,34 @@ describe('resolveModelCapabilities', () => {
     expect(capabilities.streaming).toBe(true);
     expect(capabilities.params.maxTokens?.wireName).toBe('maxOutputTokens');
     expect(capabilities.inputModalities).toContain('video');
+  });
+
+  it('uses thinking levels for Gemini 3 models', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({ type: 'google-gemini' }),
+      'gemini-3.6-flash',
+    );
+
+    expect(capabilities.params.thinking?.modes).toEqual(['adaptive']);
+    expect(capabilities.params.effort).toEqual({
+      levels: ['minimal', 'low', 'medium', 'high'],
+      defaultLevel: 'medium',
+      wireName: 'generationConfig.thinkingConfig.thinkingLevel',
+    });
+  });
+
+  it('limits Gemini 3.1 Pro to its supported thinking levels', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({ type: 'google-gemini' }),
+      'gemini-3.1-pro',
+    );
+
+    expect(capabilities.params.effort?.levels).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(capabilities.params.effort?.defaultLevel).toBe('high');
   });
 
   it('respects selected model streaming metadata for Gemini model IDs', () => {

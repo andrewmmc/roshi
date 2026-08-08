@@ -100,6 +100,17 @@ describe('openaiAdapter', () => {
       expect(body.max_tokens).toBeUndefined();
     });
 
+    it('uses max_completion_tokens for o-series chat requests', () => {
+      const body = openaiAdapter.buildRequestBody(
+        makeRequest({ model: 'o3-mini', maxTokens: 2048 }),
+        provider,
+      );
+
+      expect(body.max_completion_tokens).toBe(2048);
+      expect(body.max_tokens).toBeUndefined();
+      expect(body.temperature).toBeUndefined();
+    });
+
     it('omits legacy sampling controls for GPT-5 family chat requests', () => {
       const body = openaiAdapter.buildRequestBody(
         makeRequest({

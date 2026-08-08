@@ -35,6 +35,7 @@ interface CodeViewState {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
   customHeaders: ComposerStore['customHeaders'];
   stream: boolean;
@@ -67,6 +68,7 @@ function getCodeViewState(): CodeViewState {
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
     effort: composer.effort,
+    reasoningMode: composer.reasoningMode,
     verbosity: composer.verbosity,
     customHeaders: composer.customHeaders,
     stream: composer.stream,
@@ -114,6 +116,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     thinkingEnabled,
     thinkingBudgetTokens,
     effort,
+    reasoningMode,
     verbosity,
     customHeaders,
     stream: streamDefault,
@@ -161,6 +164,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
         thinkingEnabled,
         thinkingBudgetTokens,
         effort,
+        reasoningMode,
         verbosity,
       },
       messages: sendableMessages,
@@ -182,6 +186,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     model,
     presencePenalty,
     provider,
+    reasoningMode,
     sendableMessages,
     stream,
     systemPrompt,

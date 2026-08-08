@@ -182,6 +182,43 @@ describe('ParameterControls', () => {
     expect(screen.queryByLabelText('Budget Tokens')).not.toBeInTheDocument();
   });
 
+  it('shows thinking levels instead of budgets for Gemini 3 models', () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'g3',
+          type: 'google-gemini',
+          models: [makeModel({ id: 'gemini-3.6-flash' })],
+        }),
+      ],
+      selectedProviderId: 'g3',
+      selectedModelId: 'gemini-3.6-flash',
+    });
+
+    render(<ParameterControls />);
+
+    expect(screen.getByLabelText('Thinking Level')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Budget Tokens')).not.toBeInTheDocument();
+  });
+
+  it('shows reasoning mode for GPT-5.6 models', () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'openai',
+          name: 'OpenAI',
+          models: [makeModel({ id: 'gpt-5.6' })],
+        }),
+      ],
+      selectedProviderId: 'openai',
+      selectedModelId: 'gpt-5.6',
+    });
+
+    render(<ParameterControls />);
+
+    expect(screen.getByLabelText('Reasoning Mode')).toBeInTheDocument();
+  });
+
   it('resets edited values and enable flags back to defaults', async () => {
     const user = userEvent.setup();
     render(<ParameterControls />);

@@ -122,6 +122,7 @@ export function ParameterControls() {
     thinkingEnabled,
     thinkingBudgetTokens,
     effort,
+    reasoningMode,
     verbosity,
     setMaxTokens,
     setParamEnabled,
@@ -129,6 +130,7 @@ export function ParameterControls() {
     setThinkingEnabled,
     setThinkingBudgetTokens,
     setEffort,
+    setReasoningMode,
     setVerbosity,
     resetParameters,
     samplingParams,
@@ -139,6 +141,7 @@ export function ParameterControls() {
     supportsThinkingBudget,
     isAdaptiveThinkingOnly,
     effortSupport,
+    reasoningModeSupport,
     verbositySupport,
     canEditTemperature,
     applyTempPreset,
@@ -319,8 +322,16 @@ export function ParameterControls() {
 
       {effortSupport && (
         <SelectRow
-          label="Effort"
-          paramKey="effort"
+          label={
+            effortSupport.wireName.endsWith('thinkingLevel')
+              ? 'Thinking Level'
+              : 'Effort'
+          }
+          paramKey={
+            effortSupport.wireName.endsWith('thinkingLevel')
+              ? 'thinking-level'
+              : 'effort'
+          }
           value={
             effortSupport.levels.includes(effort)
               ? effort
@@ -342,6 +353,20 @@ export function ParameterControls() {
           }
           values={verbositySupport.levels}
           onChange={setVerbosity}
+        />
+      )}
+
+      {reasoningModeSupport && (
+        <SelectRow
+          label="Reasoning Mode"
+          paramKey="reasoning-mode"
+          value={
+            reasoningModeSupport.levels.includes(reasoningMode)
+              ? reasoningMode
+              : reasoningModeSupport.defaultLevel
+          }
+          values={reasoningModeSupport.levels}
+          onChange={setReasoningMode}
         />
       )}
 

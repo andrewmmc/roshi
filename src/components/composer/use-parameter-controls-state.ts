@@ -38,6 +38,7 @@ export interface ParameterControlsState {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
   paramEnabled: ParamEnabledState;
   setTemperature: (value: number) => void;
@@ -47,6 +48,7 @@ export interface ParameterControlsState {
   setThinkingEnabled: (value: boolean) => void;
   setThinkingBudgetTokens: (value: number) => void;
   setEffort: (value: string) => void;
+  setReasoningMode: (value: string) => void;
   setVerbosity: (value: string) => void;
   resetParameters: () => void;
   samplingParams: ResolvedSliderParam[];
@@ -57,6 +59,7 @@ export interface ParameterControlsState {
   supportsThinkingBudget: boolean;
   isAdaptiveThinkingOnly: boolean;
   effortSupport: ModelCapabilities['params']['effort'];
+  reasoningModeSupport: ModelCapabilities['params']['reasoningMode'];
   verbositySupport: ModelCapabilities['params']['verbosity'];
   tempMin: number;
   tempMax: number;
@@ -81,6 +84,7 @@ export function useParameterControlsState(): ParameterControlsState {
       thinkingEnabled: s.thinkingEnabled,
       thinkingBudgetTokens: s.thinkingBudgetTokens,
       effort: s.effort,
+      reasoningMode: s.reasoningMode,
       verbosity: s.verbosity,
       setTemperature: s.setTemperature,
       setMaxTokens: s.setMaxTokens,
@@ -93,6 +97,7 @@ export function useParameterControlsState(): ParameterControlsState {
       setThinkingEnabled: s.setThinkingEnabled,
       setThinkingBudgetTokens: s.setThinkingBudgetTokens,
       setEffort: s.setEffort,
+      setReasoningMode: s.setReasoningMode,
       setVerbosity: s.setVerbosity,
     })),
   );
@@ -150,6 +155,7 @@ export function useParameterControlsState(): ParameterControlsState {
   const maxTokensSupport = capabilities?.params.maxTokens;
   const thinkingSupport = capabilities?.params.thinking;
   const effortSupport = capabilities?.params.effort;
+  const reasoningModeSupport = capabilities?.params.reasoningMode;
   const verbositySupport = capabilities?.params.verbosity;
 
   const supportsThinking = Boolean(thinkingSupport);
@@ -174,6 +180,7 @@ export function useParameterControlsState(): ParameterControlsState {
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
     effort: composer.effort,
+    reasoningMode: composer.reasoningMode,
     verbosity: composer.verbosity,
     paramEnabled: composer.paramEnabled,
     setTemperature: composer.setTemperature,
@@ -183,6 +190,7 @@ export function useParameterControlsState(): ParameterControlsState {
     setThinkingEnabled: composer.setThinkingEnabled,
     setThinkingBudgetTokens: composer.setThinkingBudgetTokens,
     setEffort: composer.setEffort,
+    setReasoningMode: composer.setReasoningMode,
     setVerbosity: composer.setVerbosity,
     resetParameters: () => {
       const defaults = getCapabilityAwareParameterDefaults(capabilities);
@@ -201,6 +209,7 @@ export function useParameterControlsState(): ParameterControlsState {
       composer.setThinkingEnabled(defaults.thinkingEnabled);
       composer.setThinkingBudgetTokens(defaults.thinkingBudgetTokens);
       composer.setEffort(defaults.effort);
+      composer.setReasoningMode(defaults.reasoningMode);
       composer.setVerbosity(defaults.verbosity);
     },
     samplingParams: sliderParams.filter(
@@ -215,6 +224,7 @@ export function useParameterControlsState(): ParameterControlsState {
     supportsThinkingBudget,
     isAdaptiveThinkingOnly,
     effortSupport,
+    reasoningModeSupport,
     verbositySupport,
     tempMin,
     tempMax,

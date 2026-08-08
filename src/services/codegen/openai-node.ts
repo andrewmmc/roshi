@@ -66,6 +66,10 @@ function buildResponsesInputLines(
   );
 }
 
+function usesMaxCompletionTokens(model: string): boolean {
+  return /^gpt-5(?:\.|-|$)/.test(model) || /^o\d(?:-|$)/.test(model);
+}
+
 export const openaiNodeGenerator: CodeGenerator = {
   label: 'Node.js',
   language: 'javascript',
@@ -83,6 +87,7 @@ export const openaiNodeGenerator: CodeGenerator = {
       presencePenalty,
       stream = false,
       effort,
+      reasoningMode,
       verbosity,
     } = request;
 
@@ -107,8 +112,11 @@ export const openaiNodeGenerator: CodeGenerator = {
       args.push(`  input: [`);
       args.push(buildResponsesInputLines(messages).join('\n'));
       args.push(`  ],`);
-      if (effort) {
-        args.push(`  reasoning: { effort: "${effort}" },`);
+      const reasoning: string[] = [];
+      if (effort) reasoning.push(`effort: "${effort}"`);
+      if (reasoningMode) reasoning.push(`mode: "${reasoningMode}"`);
+      if (reasoning.length > 0) {
+        args.push(`  reasoning: { ${reasoning.join(', ')} },`);
       }
       if (verbosity) {
         args.push(`  text: { verbosity: "${verbosity}" },`);
@@ -118,7 +126,9 @@ export const openaiNodeGenerator: CodeGenerator = {
         args.push(`  temperature: ${temperature},`);
       }
       if (maxTokens !== undefined) {
-        args.push(`  max_tokens: ${maxTokens},`);
+        args.push(
+          `  ${usesMaxCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens'}: ${maxTokens},`,
+        );
       }
       if (topP !== undefined) {
         args.push(`  top_p: ${topP},`);

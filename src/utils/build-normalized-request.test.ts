@@ -27,6 +27,7 @@ function makeComposerFields(
     thinkingEnabled: false,
     thinkingBudgetTokens: 1024,
     effort: 'medium',
+    reasoningMode: 'standard',
     verbosity: 'medium',
     ...overrides,
   };

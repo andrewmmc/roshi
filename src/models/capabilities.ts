@@ -34,6 +34,12 @@ export interface VerbositySupport {
   wireName: string;
 }
 
+export interface ReasoningModeSupport {
+  levels: string[];
+  defaultLevel: string;
+  wireName: string;
+}
+
 export interface ModelCapabilities {
   streaming: boolean;
   inputModalities: ModelModality[];
@@ -51,6 +57,7 @@ export interface ModelCapabilities {
     maxTokens?: MaxTokensSupport;
     thinking?: ThinkingSupport;
     effort?: EffortSupport;
+    reasoningMode?: ReasoningModeSupport;
     verbosity?: VerbositySupport;
   };
   quirks?: string[];

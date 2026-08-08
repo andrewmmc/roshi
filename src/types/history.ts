@@ -55,6 +55,7 @@ export interface SavedRequestSnapshot {
   thinkingEnabled?: boolean;
   thinkingBudgetTokens?: number;
   effort?: string;
+  reasoningMode?: string;
   verbosity?: string;
   customHeaders?: HistoryHeaderEntry[];
 }

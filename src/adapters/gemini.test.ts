@@ -137,6 +137,18 @@ describe('geminiAdapter', () => {
       expect(config.thinkingConfig).toEqual({ thinkingBudget: 10240 });
     });
 
+    it('uses thinkingLevel for Gemini 3 models', () => {
+      const request = makeRequest({
+        model: 'gemini-3.6-flash',
+        thinking: { enabled: true, budgetTokens: 10240 },
+        effort: 'high',
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const config = body.generationConfig as Record<string, unknown>;
+
+      expect(config.thinkingConfig).toEqual({ thinkingLevel: 'high' });
+    });
+
     it('omits thinking config when not enabled', () => {
       const request = makeRequest({
         thinking: { enabled: false, budgetTokens: 10240 },
@@ -463,6 +475,22 @@ describe('geminiAdapter', () => {
         promptTokens: 0,
         completionTokens: 0,
         totalTokens: 0,
+      });
+    });
+
+    describe('parseResponseError', () => {
+      it('surfaces blocked prompts', () => {
+        expect(
+          geminiAdapter.parseResponseError?.({
+            promptFeedback: { blockReason: 'SAFETY' },
+          }),
+        ).toBe('Prompt blocked: SAFETY');
+      });
+
+      it('returns null for a normal response', () => {
+        expect(
+          geminiAdapter.parseResponseError?.({ candidates: [] }),
+        ).toBeNull();
       });
     });
 

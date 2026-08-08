@@ -21,6 +21,7 @@ export interface ComposerRequestFields {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
 }
 
@@ -56,6 +57,7 @@ export function buildNormalizedRequestFromComposer(
     stream: composer.stream,
     systemPrompt: composer.systemPrompt || undefined,
     effort: composer.effort,
+    reasoningMode: composer.reasoningMode,
     verbosity: composer.verbosity,
     thinking: composer.thinkingEnabled
       ? { enabled: true, budgetTokens: composer.thinkingBudgetTokens }
@@ -89,6 +91,9 @@ export function buildCompatibleRequestFromComposer({
   request.stream =
     (streamOverride ?? composer.stream) && capabilities.streaming;
   request.effort = capabilities.params.effort ? composer.effort : undefined;
+  request.reasoningMode = capabilities.params.reasoningMode
+    ? composer.reasoningMode
+    : undefined;
   request.verbosity = capabilities.params.verbosity
     ? composer.verbosity
     : undefined;

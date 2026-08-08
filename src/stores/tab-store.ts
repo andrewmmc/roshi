@@ -17,6 +17,7 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
   DEFAULT_EFFORT,
+  DEFAULT_REASONING_MODE,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import {
@@ -51,6 +52,7 @@ export interface ComposerSnapshot {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
   customHeaders: HeaderEntry[];
   activeCollectionId: string | null;
@@ -118,6 +120,7 @@ export function createDefaultComposerSnapshot(): ComposerSnapshot {
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
     effort: DEFAULT_EFFORT,
+    reasoningMode: DEFAULT_REASONING_MODE,
     verbosity: DEFAULT_VERBOSITY,
     customHeaders: [createEmptyHeaderEntry()],
     activeCollectionId: null,
@@ -131,6 +134,7 @@ function normalizeComposerSnapshot(
 ): ComposerSnapshot {
   return {
     ...snapshot,
+    reasoningMode: snapshot.reasoningMode ?? DEFAULT_REASONING_MODE,
     paramEnabled: resolveParamEnabled(snapshot.paramEnabled, {
       temperature: true,
       maxTokens: true,
@@ -186,6 +190,7 @@ function captureComposerSnapshot(): ComposerSnapshot {
     thinkingEnabled: s.thinkingEnabled,
     thinkingBudgetTokens: s.thinkingBudgetTokens,
     effort: s.effort,
+    reasoningMode: s.reasoningMode,
     verbosity: s.verbosity,
     customHeaders: s.customHeaders,
     activeCollectionId: s.activeCollectionId,

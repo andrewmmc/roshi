@@ -19,6 +19,10 @@ function isGpt5Family(model: string): boolean {
   return /^gpt-5(?:\.|-|$)/.test(model);
 }
 
+function isReasoningModel(model: string): boolean {
+  return isGpt5Family(model) || /^o\d(?:-|$)/.test(model);
+}
+
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
   if (isImageMimeType(att.mimeType)) {
     return {
@@ -59,7 +63,7 @@ export const openaiAdapter: ProviderAdapter = {
       stream: request.stream,
     };
 
-    if (isGpt5Family(request.model)) {
+    if (isReasoningModel(request.model)) {
       if (request.maxTokens !== undefined) {
         body.max_completion_tokens = request.maxTokens;
       }

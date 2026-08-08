@@ -119,6 +119,7 @@ async function runSingleRunner(
       thinkingEnabled: false,
       thinkingBudgetTokens: 0,
       effort: '',
+      reasoningMode: '',
       verbosity: '',
     },
     messages: baseRequest.messages,

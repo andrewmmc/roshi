@@ -18,6 +18,7 @@ const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, string>> = {
   maxTokens: 'Max tokens',
   thinking: 'Thinking',
   effort: 'Effort',
+  reasoningMode: 'Reasoning mode',
   verbosity: 'Verbosity',
 };
 
@@ -144,6 +145,20 @@ export function filterRequestByCapabilities(
       reason: 'Effort is not supported by this model.',
     });
     compatibleRequest.effort = undefined;
+  }
+
+  if (
+    compatibleRequest.reasoningMode !== undefined &&
+    (!capabilities.params.reasoningMode ||
+      !capabilities.params.reasoningMode.levels.includes(
+        compatibleRequest.reasoningMode,
+      ))
+  ) {
+    omittedParams.push({
+      param: 'reasoningMode',
+      reason: 'Reasoning mode is not supported by this model.',
+    });
+    compatibleRequest.reasoningMode = undefined;
   }
 
   if (

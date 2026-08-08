@@ -144,6 +144,10 @@ export async function sendRequest(
       body: responseText,
     });
   }
+  const responseError = adapter.parseResponseError?.(rawResponse);
+  if (responseError) {
+    throw createRequestError(responseError, rawResponse);
+  }
   const durationMs = Math.round(performance.now() - startTime);
   const response = adapter.parseResponse(rawResponse);
 

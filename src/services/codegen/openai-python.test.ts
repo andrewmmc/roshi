@@ -105,6 +105,7 @@ describe('openaiPythonGenerator', () => {
           maxTokens: 2048,
           topP: undefined,
           effort: 'high',
+          reasoningMode: 'pro',
           verbosity: 'low',
         }),
       });
@@ -114,7 +115,7 @@ describe('openaiPythonGenerator', () => {
       expect(code).toContain('instructions="Be concise"');
       expect(code).toContain('max_output_tokens=2048');
       expect(code).toContain('input=[');
-      expect(code).toContain('reasoning={"effort": "high"}');
+      expect(code).toContain('reasoning={"effort": "high", "mode": "pro"}');
       expect(code).toContain('text={"verbosity": "low"}');
       expect(code).toContain('content = response.output_text');
       expect(code).not.toContain('client.chat.completions.create');
@@ -180,6 +181,16 @@ describe('openaiPythonGenerator', () => {
       const code = openaiPythonGenerator.generate(params);
       expect(code).toContain('temperature=0.7');
       expect(code).toContain('max_tokens=2048');
+    });
+
+    it('uses max_completion_tokens for o-series chat models', () => {
+      const params = makeCodeGenParams({
+        request: makeRequest({ model: 'o3-mini', maxTokens: 2048 }),
+      });
+      const code = openaiPythonGenerator.generate(params);
+
+      expect(code).toContain('max_completion_tokens=2048');
+      expect(code).not.toContain('max_tokens=2048');
     });
 
     it('omits disabled optional parameters', () => {

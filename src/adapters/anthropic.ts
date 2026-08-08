@@ -27,11 +27,21 @@ const DEFAULT_MAX_TOKENS = 4096;
  *
  * @see https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
  */
-function isOpus47OrNewer(model: string): boolean {
-  // Match claude-opus-4-7, claude-opus-4-8, etc.
-  const match = model.match(/^claude-opus-4-(\d+)/);
-  if (!match) return false;
-  return parseInt(match[1], 10) >= 7;
+function usesAdaptiveThinking(model: string): boolean {
+  const opus4 = model.match(/^claude-opus-4-(\d{1,2})(?:-|$)/);
+  if (opus4) return parseInt(opus4[1], 10) >= 6;
+  if (/^claude-sonnet-4-6(?:-|$)/.test(model)) return true;
+  return /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/.test(
+    model,
+  );
+}
+
+function rejectsSamplingParameters(model: string): boolean {
+  const opus4 = model.match(/^claude-opus-4-(\d{1,2})(?:-|$)/);
+  if (opus4) return parseInt(opus4[1], 10) >= 7;
+  return /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/.test(
+    model,
+  );
 }
 
 function buildAttachmentBlock(att: MessageAttachment): Record<string, unknown> {
@@ -94,11 +104,12 @@ export const anthropicAdapter: ProviderAdapter = {
       body.system = request.systemPrompt;
     }
 
-    const opus47 = isOpus47OrNewer(request.model);
+    const adaptiveThinking = usesAdaptiveThinking(request.model);
+    const rejectsSampling = rejectsSamplingParameters(request.model);
 
     // Opus 4.7+ removed support for sampling parameters (temperature,
     // top_p, top_k); sending non-default values returns a 400 error.
-    if (!opus47) {
+    if (!rejectsSampling) {
       if (request.temperature !== undefined && request.topP !== undefined) {
         // Anthropic does not allow both temperature and top_p;
         // when both are set, send only temperature.
@@ -113,18 +124,20 @@ export const anthropicAdapter: ProviderAdapter = {
     }
 
     if (request.thinking?.enabled) {
-      if (opus47) {
+      if (adaptiveThinking) {
         // Opus 4.7+ only supports adaptive thinking; extended thinking
         // budgets (`{type:"enabled", budget_tokens}`) were removed.
         // Effort is set via output_config (defaults to "high").
         body.thinking = { type: 'adaptive' };
-        body.output_config = { effort: request.effort ?? 'high' };
       } else {
         body.thinking = {
           type: 'enabled',
           budget_tokens: request.thinking.budgetTokens,
         };
       }
+    }
+    if (request.effort !== undefined) {
+      body.output_config = { effort: request.effort };
     }
 
     return body;

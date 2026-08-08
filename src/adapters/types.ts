@@ -18,6 +18,7 @@ export interface ProviderAdapter {
     provider: ProviderConfig,
     request?: NormalizedRequest,
   ): string;
+  parseResponseError?(raw: Record<string, unknown>): string | null;
   parseResponse(raw: Record<string, unknown>): NormalizedResponse;
   parseStreamChunk(data: string): NormalizedStreamChunk | null;
   /**

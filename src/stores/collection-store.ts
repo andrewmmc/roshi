@@ -67,6 +67,7 @@ function makeSavedRequestSnapshot(
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
     effort: composer.effort,
+    reasoningMode: composer.reasoningMode,
     verbosity: composer.verbosity,
     customHeaders: headersToHistoryEntries(composer.customHeaders),
   };

@@ -104,8 +104,13 @@ export const openaiResponsesAdapter: ProviderAdapter = {
     if (request.maxTokens !== undefined)
       body.max_output_tokens = request.maxTokens;
     if (request.topP !== undefined) body.top_p = request.topP;
-    if (request.effort !== undefined) {
-      body.reasoning = { effort: request.effort };
+    if (request.effort !== undefined || request.reasoningMode !== undefined) {
+      body.reasoning = {
+        ...(request.effort !== undefined ? { effort: request.effort } : {}),
+        ...(request.reasoningMode !== undefined
+          ? { mode: request.reasoningMode }
+          : {}),
+      };
     }
     if (request.verbosity !== undefined) {
       body.text = { verbosity: request.verbosity };
@@ -130,6 +135,24 @@ export const openaiResponsesAdapter: ProviderAdapter = {
       return appendApiKeyQueryParam(url, provider.apiKey);
     }
     return url;
+  },
+
+  parseResponseError(raw: Record<string, unknown>): string | null {
+    const status = typeof raw.status === 'string' ? raw.status : undefined;
+    if (status === 'failed') {
+      return extractErrorMessage(raw.error, 'Response generation failed');
+    }
+    if (status === 'incomplete') {
+      const details = raw.incomplete_details;
+      const reason =
+        details && typeof details === 'object'
+          ? (details as { reason?: unknown }).reason
+          : undefined;
+      return typeof reason === 'string' && reason
+        ? `Response incomplete: ${reason}`
+        : 'Response incomplete';
+    }
+    return null;
   },
 
   parseResponse(raw: Record<string, unknown>): NormalizedResponse {

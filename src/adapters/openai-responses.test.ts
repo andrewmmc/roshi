@@ -72,17 +72,18 @@ describe('openaiResponsesAdapter', () => {
       ]);
     });
 
-    it('maps effort and verbosity controls', () => {
+    it('maps reasoning and verbosity controls', () => {
       const body = openaiResponsesAdapter.buildRequestBody(
         makeRequest({
           model: 'gpt-5.5',
           effort: 'high',
+          reasoningMode: 'pro',
           verbosity: 'low',
         }),
         provider,
       );
 
-      expect(body.reasoning).toEqual({ effort: 'high' });
+      expect(body.reasoning).toEqual({ effort: 'high', mode: 'pro' });
       expect(body.text).toEqual({ verbosity: 'low' });
     });
   });
@@ -120,6 +121,32 @@ describe('openaiResponsesAdapter', () => {
         role: 'assistant',
         finishReason: 'completed',
         usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+      });
+    });
+
+    describe('parseResponseError', () => {
+      it('surfaces failed responses', () => {
+        expect(
+          openaiResponsesAdapter.parseResponseError?.({
+            status: 'failed',
+            error: { message: 'model overloaded' },
+          }),
+        ).toBe('model overloaded');
+      });
+
+      it('surfaces incomplete responses', () => {
+        expect(
+          openaiResponsesAdapter.parseResponseError?.({
+            status: 'incomplete',
+            incomplete_details: { reason: 'max_output_tokens' },
+          }),
+        ).toBe('Response incomplete: max_output_tokens');
+      });
+
+      it('returns null for completed responses', () => {
+        expect(
+          openaiResponsesAdapter.parseResponseError?.({ status: 'completed' }),
+        ).toBeNull();
       });
     });
 

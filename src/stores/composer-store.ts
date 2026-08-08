@@ -11,6 +11,7 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
   DEFAULT_EFFORT,
+  DEFAULT_REASONING_MODE,
   DEFAULT_VERBOSITY,
 } from '@/constants/defaults';
 import {
@@ -43,6 +44,7 @@ interface ComposerState {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
   customHeaders: HeaderEntry[];
   activeCollectionId: string | null;
@@ -67,6 +69,7 @@ interface ComposerActions {
   setThinkingEnabled: (enabled: boolean) => void;
   setThinkingBudgetTokens: (tokens: number) => void;
   setEffort: (effort: string) => void;
+  setReasoningMode: (mode: string) => void;
   setVerbosity: (verbosity: string) => void;
   addAttachment: (messageIndex: number, attachment: MessageAttachment) => void;
   removeAttachment: (messageIndex: number, attachmentId: string) => void;
@@ -90,6 +93,7 @@ interface ComposerActions {
     thinkingEnabled?: boolean;
     thinkingBudgetTokens?: number;
     effort?: string;
+    reasoningMode?: string;
     verbosity?: string;
     customHeaders?: HistoryHeaderEntry[];
   }) => void;
@@ -112,6 +116,7 @@ function createInitialComposerState(): ComposerState {
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
     effort: DEFAULT_EFFORT,
+    reasoningMode: DEFAULT_REASONING_MODE,
     verbosity: DEFAULT_VERBOSITY,
     customHeaders: [createEmptyHeaderEntry()],
     activeCollectionId: null,
@@ -180,6 +185,7 @@ export const useComposerStore = create<ComposerStore>((set) => ({
   setThinkingBudgetTokens: (thinkingBudgetTokens) =>
     set({ thinkingBudgetTokens }),
   setEffort: (effort) => set({ effort }),
+  setReasoningMode: (reasoningMode) => set({ reasoningMode }),
   setVerbosity: (verbosity) => set({ verbosity }),
   addAttachment: (messageIndex, attachment) =>
     set((s) => ({
@@ -228,6 +234,7 @@ export const useComposerStore = create<ComposerStore>((set) => ({
       thinkingBudgetTokens:
         data.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
       effort: data.effort ?? DEFAULT_EFFORT,
+      reasoningMode: data.reasoningMode ?? DEFAULT_REASONING_MODE,
       verbosity: data.verbosity ?? DEFAULT_VERBOSITY,
       activeCollectionId: null,
       activeSavedRequestId: null,

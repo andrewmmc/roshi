@@ -9,6 +9,7 @@ import {
   DEFAULT_THINKING_ENABLED,
   DEFAULT_THINKING_BUDGET_TOKENS,
   DEFAULT_EFFORT,
+  DEFAULT_REASONING_MODE,
   DEFAULT_VERBOSITY,
   TEMPERATURE_MIN,
   TEMPERATURE_MAX,
@@ -45,6 +46,10 @@ export const PARAM_INFO: Record<string, string> = {
     'How many tokens the model may spend on hidden reasoning steps. More = deeper analysis, slower response, higher cost.',
   effort:
     'Reasoning depth for o-series and Claude Opus 4.7+ models. Higher effort = more thorough output at greater cost and latency.',
+  'reasoning-mode':
+    'Selects standard or pro reasoning execution for supported GPT-5.6 models.',
+  'thinking-level':
+    'Controls reasoning depth for Gemini 3 and newer models. Supported levels vary by model.',
   verbosity:
     'Controls how long and detailed the final answer is (GPT-5 Responses API).',
 };
@@ -200,6 +205,7 @@ export interface ParameterDefaults {
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
   effort: string;
+  reasoningMode: string;
   verbosity: string;
 }
 
@@ -218,6 +224,9 @@ export function getCapabilityAwareParameterDefaults(
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
     thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
     effort: capabilities?.params.effort?.defaultLevel ?? DEFAULT_EFFORT,
+    reasoningMode:
+      capabilities?.params.reasoningMode?.defaultLevel ??
+      DEFAULT_REASONING_MODE,
     verbosity:
       capabilities?.params.verbosity?.defaultLevel ?? DEFAULT_VERBOSITY,
   };

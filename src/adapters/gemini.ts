@@ -34,6 +34,10 @@ function buildInlineData(att: MessageAttachment): Record<string, unknown> {
   return { text: `[attachment: ${att.filename}]` };
 }
 
+function usesThinkingLevel(model: string): boolean {
+  return /^gemini-(?:[3-9]|\d{2,})(?:[.-]|$)/.test(model);
+}
+
 export const geminiAdapter: ProviderAdapter = {
   buildRequestUrl(
     provider: ProviderConfig,
@@ -104,9 +108,9 @@ export const geminiAdapter: ProviderAdapter = {
       generationConfig.presencePenalty = request.presencePenalty;
 
     if (request.thinking?.enabled) {
-      generationConfig.thinkingConfig = {
-        thinkingBudget: request.thinking.budgetTokens,
-      };
+      generationConfig.thinkingConfig = usesThinkingLevel(request.model)
+        ? { thinkingLevel: request.effort ?? 'medium' }
+        : { thinkingBudget: request.thinking.budgetTokens };
     }
 
     if (Object.keys(generationConfig).length > 0) {
@@ -114,6 +118,21 @@ export const geminiAdapter: ProviderAdapter = {
     }
 
     return body;
+  },
+
+  parseResponseError(raw: Record<string, unknown>): string | null {
+    const promptFeedback = raw.promptFeedback;
+    if (!promptFeedback || typeof promptFeedback !== 'object') return null;
+    const feedback = promptFeedback as {
+      blockReason?: unknown;
+      blockReasonMessage?: unknown;
+    };
+    if (typeof feedback.blockReasonMessage === 'string') {
+      return feedback.blockReasonMessage;
+    }
+    return typeof feedback.blockReason === 'string'
+      ? `Prompt blocked: ${feedback.blockReason}`
+      : null;
   },
 
   parseResponse(raw: Record<string, unknown>): NormalizedResponse {

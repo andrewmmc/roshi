@@ -25,6 +25,7 @@ export function useRequestCompatibilityPreview(): { warnings: string[] } {
         thinkingEnabled: s.thinkingEnabled,
         thinkingBudgetTokens: s.thinkingBudgetTokens,
         effort: s.effort,
+        reasoningMode: s.reasoningMode,
         verbosity: s.verbosity,
       }),
     ),
