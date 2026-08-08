@@ -5,11 +5,11 @@
 <h1 align="center">Roshi</h1>
 
 <p align="center">
-  <strong>MIT-licensed, local-first API workbench for LLM developers.</strong>
+  <strong>A local-first macOS API client and model evaluation workbench for LLM developers.</strong>
 </p>
 
 <p align="center">
-  Test OpenAI, Anthropic, OpenRouter, Google Gemini, and custom OpenAI-compatible endpoints with real-time streaming, local history, image inputs, and raw payload inspection.
+  Compose chat requests, inspect complete responses, compare models side by side, and score their output with an LLM judge.
 </p>
 
 <p align="center">
@@ -24,11 +24,21 @@
   </a>
 </p>
 
-Roshi is a local-first workspace for testing and debugging LLM APIs. Send prompts, inspect streaming responses, tune model settings, test image inputs, switch between providers, compare models in Eval mode, and review raw request and response payloads from one focused interface.
+## What is Roshi?
 
-No backend. No account. No telemetry. Your API keys, settings, and request history stay on your machine.
+Roshi is a desktop app for developers who build with LLM APIs. If you use Postman or a similar tool for ordinary REST APIs, Roshi is the specialized client for the model layer: it understands multi-turn messages, streaming output, model parameters, token usage, provider-specific payloads, and model comparisons.
 
-Whether you are debugging prompts, testing custom endpoints, or comparing model behavior, Roshi gives you a dedicated workspace for multi-turn conversations, provider-specific settings, and fast iteration without bending a generic API client into shape.
+Use it to test OpenAI, Anthropic, Google Gemini, OpenRouter, and compatible endpoints without writing a throwaway script for every experiment. Build a request once, inspect exactly what was sent and returned, then run the same prompt across several models and compare quality, latency, token usage, and cost.
+
+Roshi is client-only: there is **no Roshi backend, account, or telemetry**. The desktop app calls providers directly, while your API keys, settings, history, collections, and eval results stay on your Mac.
+
+<p align="center">
+  <a href="https://roshi.mmc.dev"><strong>Website</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://github.com/andrewmmc/roshi/releases/latest"><strong>Free download</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847"><strong>Mac App Store</strong></a>
+</p>
 
 ## Why Roshi
 
@@ -38,36 +48,67 @@ Whether you are debugging prompts, testing custom endpoints, or comparing model 
 - **Debuggable and reproducible** — inspect raw payloads, save local history with diffing, and generate Python and Node.js snippets for supported OpenAI-compatible requests
 - **Compare models side by side** — Eval mode runs the same prompt across multiple providers/models at once, with LLM-as-judge scoring and CSV/JSON export
 
+## How it works
+
+1. **Add a provider** — start from an OpenAI, Anthropic, Gemini, or OpenRouter template, or configure a compatible endpoint.
+2. **Compose and debug** — edit messages, images, model parameters, and headers while inspecting streamed text, raw bodies, timing, and token usage.
+3. **Compare models** — send the same frozen request to several provider/model pairs and review their output and metrics together.
+4. **Evaluate and reuse** — rate responses yourself or apply an LLM judge with your rubric, then save the run, export the results, or generate code.
+
 ## Screenshots
 
-Real views from the actual app, so you can quickly see how Roshi feels before you download it.
+These are current views from the shipping app.
 
 <p align="center">
-  <img src="./assets/screenshot-1.png" alt="Roshi composer view" width="92%" />
+  <img src="./assets/screenshot-1.png" alt="Roshi composer showing a multi-turn OpenAI request and its raw JSON response" width="92%" />
 </p>
 <p align="center">
-  <strong>Compose and iterate fast</strong><br />
-  Build multi-turn requests, tune model parameters, and attach images in one focused workspace.
+  <strong>Compose, send, and inspect in one workspace</strong><br />
+  Build multi-turn requests, tune parameters and headers, stream the answer, and inspect the complete request or response body.
 </p>
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="./assets/screenshot-2.png" alt="Roshi response inspection view" />
+      <img src="./assets/screenshot-2.png" alt="Roshi provider settings listing OpenAI, Anthropic, Google Gemini, and OpenRouter" />
       <p>
-        <strong>Inspect responses deeply</strong><br />
-        Review streamed output, raw payloads, and generated code while iterating on requests.
+        <strong>Bring your existing providers</strong><br />
+        Start with templates for OpenAI, Anthropic, Google Gemini, and OpenRouter, then choose the models you want available.
       </p>
     </td>
     <td width="50%" valign="top">
-      <img src="./assets/screenshot-3.png" alt="Roshi provider and history view" />
+      <img src="./assets/screenshot-3.png" alt="Roshi provider editor showing API key, base URL, protocol, authentication, and custom headers" />
       <p>
-        <strong>Organize providers and history</strong><br />
-        Manage models, headers, provider setups, and local request history from one place.
+        <strong>Configure compatible endpoints</strong><br />
+        Control the base URL, protocol, authentication, custom headers, and model list. Credentials are stored locally.
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="./assets/screenshot-4.png" alt="Roshi Eval results comparing OpenAI, Anthropic, and Google Gemini outputs and metrics" />
+      <p>
+        <strong>Run one prompt across several models</strong><br />
+        Compare output, latency, time to first token, throughput, token counts, estimated cost, ratings, and judge scores.
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="./assets/screenshot-5.png" alt="Roshi Eval comparison showing a word-level diff and metrics for two model responses" />
+      <p>
+        <strong>Inspect differences, not just answers</strong><br />
+        Select two results for a word-level diff and a direct comparison of performance and usage metrics.
       </p>
     </td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="./assets/screenshot-6.png" alt="Roshi LLM-as-judge settings with a selected judge model, custom rubric, and scored Eval results" width="92%" />
+</p>
+<p align="center">
+  <strong>Apply your own evaluation rubric</strong><br />
+  Choose a separate judge model to score candidates for qualities such as helpfulness, accuracy, and clarity, and select a winner.
+</p>
 
 ## Download
 
