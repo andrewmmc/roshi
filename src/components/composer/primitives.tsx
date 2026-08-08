@@ -90,9 +90,9 @@ export function SliderNumberRow({
   const isOptIn = onEnabledChange !== undefined;
   const optedOut = isOptIn && !enabled;
   const controlsDisabled = disabled || optedOut;
-  const controlsTitle = optedOut
-    ? `Enable ${label} to include it in the request.`
-    : disabledReason;
+  const controlsTitle =
+    disabledReason ??
+    (optedOut ? `Enable ${label} to include it in the request.` : undefined);
 
   return (
     <div className="flex flex-col gap-1">
