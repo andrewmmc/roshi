@@ -11,14 +11,6 @@
     },
     "opener:default",
     "dialog:default",
-    {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$DOWNLOAD/**" },
-        { "path": "$DESKTOP/**" },
-        { "path": "$DOCUMENT/**" }
-      ]
-    }
+    "fs:allow-write-text-file"
   ]
 }
