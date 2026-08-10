@@ -329,8 +329,11 @@ export function exportEvalRunCsv(record: EvalRunRecord): void {
 }
 
 function csvCell(value: string | number): string {
-  const text = typeof value === 'number' ? String(value) : value;
+  let text = typeof value === 'number' ? String(value) : value;
   if (text === '') return '';
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(text.trimStart())) {
+    text = `'${text}`;
+  }
   if (/[",\n\r]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }

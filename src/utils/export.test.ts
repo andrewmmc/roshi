@@ -523,6 +523,17 @@ describe('export', () => {
       expect(r2).toContain('"HTTP 401, nope"');
     });
 
+    it('neutralizes spreadsheet formulas in CSV text fields', () => {
+      const record = makeEvalRecord();
+      record.runners[0].providerName = '=HYPERLINK("https://example.com")';
+      record.results[1].error = '  @SUM(1+1)';
+
+      const csv = buildEvalRunCsv(record);
+
+      expect(csv).toContain("'=HYPERLINK");
+      expect(csv).toContain("'  @SUM(1+1)");
+    });
+
     it('exportEvalRunCsv triggers a CSV download', async () => {
       exportEvalRunCsv(makeEvalRecord());
       const blob: Blob = createObjectURLSpy.mock.calls[0][0];
