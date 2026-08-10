@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Boxes,
   ChevronDown,
   MonitorCog,
+  Network,
   RotateCcw,
   Server,
   Settings,
@@ -14,6 +15,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogClose,
@@ -37,6 +39,7 @@ import {
 } from '@/components/environments/EnvironmentManager';
 import { useUiStore, type SettingsPage } from '@/stores/ui-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useProxyStore, type ProxyConfig } from '@/stores/proxy-store';
 import { resetApplication, resetProviders } from '@/services/reset';
 import type { ProviderConfig } from '@/types/provider';
 import { cn } from '@/lib/utils';
@@ -49,10 +52,147 @@ type SettingsSection = {
 
 const SECTIONS: SettingsSection[] = [
   { id: 'general', label: 'General', icon: MonitorCog },
+  { id: 'proxy', label: 'Proxy', icon: Network },
   { id: 'providers', label: 'Providers', icon: Server },
   { id: 'models', label: 'Models', icon: Boxes },
   { id: 'environments', label: 'Environments', icon: Variable },
 ];
+
+function validateProxyUrl(value: string): boolean {
+  if (!value.trim()) return true;
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') && !!url.hostname
+    );
+  } catch {
+    return false;
+  }
+}
+
+function ProxySettings() {
+  const httpProxy = useProxyStore((s) => s.httpProxy);
+  const httpsProxy = useProxyStore((s) => s.httpsProxy);
+  const noProxy = useProxyStore((s) => s.noProxy);
+  const save = useProxyStore((s) => s.save);
+  const [draft, setDraft] = useState<ProxyConfig>({
+    httpProxy,
+    httpsProxy,
+    noProxy,
+  });
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(
+    () => setDraft({ httpProxy, httpsProxy, noProxy }),
+    [httpProxy, httpsProxy, noProxy],
+  );
+
+  const update = (key: keyof ProxyConfig, value: string) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+    setError('');
+    setSaved(false);
+  };
+
+  const handleSave = async () => {
+    if (!validateProxyUrl(draft.httpProxy)) {
+      setError('HTTP_PROXY must be a valid http:// or https:// URL.');
+      return;
+    }
+    if (!validateProxyUrl(draft.httpsProxy)) {
+      setError('HTTPS_PROXY must be a valid http:// or https:// URL.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await save(draft);
+      setSaved(true);
+    } catch {
+      setError('Could not save proxy settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="border-border bg-muted/20 border-b px-5 py-4">
+        <h2 className="text-[15px] font-medium tracking-tight">Proxy</h2>
+        <p className="text-muted-foreground mt-0.5 text-xs">
+          Route provider, eval, and model catalog requests through a proxy.
+        </p>
+      </div>
+      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <div className="space-y-1.5">
+          <label htmlFor="http-proxy" className="text-xs font-medium">
+            HTTP_PROXY
+          </label>
+          <Input
+            id="http-proxy"
+            value={draft.httpProxy}
+            onChange={(event) => update('httpProxy', event.target.value)}
+            placeholder="http://proxy.example:8080"
+            spellCheck={false}
+            autoCapitalize="none"
+          />
+          <p className="text-muted-foreground text-[11px]">
+            Used for HTTP destinations. Credentials may be included in the URL.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="https-proxy" className="text-xs font-medium">
+            HTTPS_PROXY
+          </label>
+          <Input
+            id="https-proxy"
+            value={draft.httpsProxy}
+            onChange={(event) => update('httpsProxy', event.target.value)}
+            placeholder="http://proxy.example:8080"
+            spellCheck={false}
+            autoCapitalize="none"
+          />
+          <p className="text-muted-foreground text-[11px]">
+            Used for HTTPS destinations, including LLM APIs and models.dev.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="no-proxy" className="text-xs font-medium">
+            NO_PROXY
+          </label>
+          <Input
+            id="no-proxy"
+            value={draft.noProxy}
+            onChange={(event) => update('noProxy', event.target.value)}
+            placeholder="localhost,127.0.0.1,.internal.example"
+            spellCheck={false}
+            autoCapitalize="none"
+          />
+          <p className="text-muted-foreground text-[11px]">
+            Comma-separated hosts, domains, or host:port entries that connect
+            directly.
+          </p>
+        </div>
+        {error && (
+          <p className="text-destructive text-xs" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="flex items-center gap-3 pt-1">
+          <Button size="sm" disabled={saving} onClick={() => void handleSave()}>
+            {saving ? 'Saving…' : 'Save proxy settings'}
+          </Button>
+          {saved && (
+            <span className="text-muted-foreground text-xs" role="status">
+              Saved. New requests use these settings immediately.
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ResetConfirmDialog({
   open,
@@ -312,6 +452,7 @@ export function SettingsDialog() {
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               {settingsPage === 'general' && <GeneralSettings />}
+              {settingsPage === 'proxy' && <ProxySettings />}
               {settingsPage === 'providers' && (
                 <ProviderSettings
                   onClose={handleClose}

@@ -2,7 +2,13 @@ import { EventEmitter } from 'node:events';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ViteDevServer } from 'vite';
+import { EnvHttpProxyAgent } from 'undici';
 import { devProxyPlugin } from './dev-proxy-plugin';
+import {
+  DEV_HTTP_PROXY_HEADER,
+  DEV_HTTPS_PROXY_HEADER,
+  DEV_NO_PROXY_HEADER,
+} from './proxy-headers';
 
 class MockResponse extends EventEmitter {
   statusCode = 200;
@@ -53,10 +59,10 @@ function getProxyHandler(options: Parameters<typeof devProxyPlugin>[0] = {}) {
   return handler;
 }
 
-function createRequest(): Readable {
+function createRequest(headers: Record<string, string> = {}): Readable {
   return Object.assign(Readable.from([Buffer.from('{}')]), {
     method: 'POST',
-    headers: {},
+    headers,
     url: '/?url=https%3A%2F%2Fexample.com%2Fv1%2Fchat',
   });
 }
@@ -68,6 +74,33 @@ afterEach(() => {
 });
 
 describe('devProxyPlugin', () => {
+  it('uses configured proxies without forwarding configuration headers', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const response = new MockResponse();
+
+    await getProxyHandler()(
+      createRequest({
+        [DEV_HTTP_PROXY_HEADER]: 'http://proxy.test:8080',
+        [DEV_HTTPS_PROXY_HEADER]: 'http://secure-proxy.test:8443',
+        [DEV_NO_PROXY_HEADER]: 'localhost,.internal.test',
+      }),
+      response,
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(URL),
+      expect.objectContaining({ dispatcher: expect.any(EnvHttpProxyAgent) }),
+    );
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const headers = new Headers(init.headers);
+    expect(headers.has(DEV_HTTP_PROXY_HEADER)).toBe(false);
+    expect(headers.has(DEV_HTTPS_PROXY_HEADER)).toBe(false);
+    expect(headers.has(DEV_NO_PROXY_HEADER)).toBe(false);
+  });
+
   it('rejects targets that resolve to private network addresses', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

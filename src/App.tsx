@@ -11,6 +11,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useRequestSession } from '@/hooks/use-request-session';
 import { useTabStore } from '@/stores/tab-store';
+import { useProxyStore } from '@/stores/proxy-store';
 import { Loader2 } from 'lucide-react';
 import { loadStoreSafely } from '@/stores/load-error';
 
@@ -18,6 +19,7 @@ export function App() {
   const loadProviders = useProviderStore((s) => s.load);
   const loadHistory = useHistoryStore((s) => s.load);
   const initTheme = useThemeStore((s) => s.init);
+  const loadProxy = useProxyStore((s) => s.load);
   const requestSessionHydrated = useTabStore((s) => s.hydrated);
   useGlobalShortcuts();
   useRequestSession();
@@ -29,7 +31,8 @@ export function App() {
   useEffect(() => {
     loadStoreSafely('providers', loadProviders);
     loadStoreSafely('history', loadHistory);
-  }, [loadProviders, loadHistory]);
+    loadStoreSafely('proxy settings', loadProxy);
+  }, [loadProviders, loadHistory, loadProxy]);
 
   return (
     <ErrorBoundary>

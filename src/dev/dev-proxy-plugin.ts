@@ -2,6 +2,12 @@ import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { EnvHttpProxyAgent } from 'undici';
+import {
+  DEV_HTTP_PROXY_HEADER,
+  DEV_HTTPS_PROXY_HEADER,
+  DEV_NO_PROXY_HEADER,
+} from './proxy-headers';
 import {
   DEFAULT_REQUEST_TIMEOUT_MS,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
@@ -27,6 +33,9 @@ const SKIP_REQUEST_HEADERS = new Set([
   'referer',
   'connection',
   'accept-encoding',
+  DEV_HTTP_PROXY_HEADER,
+  DEV_HTTPS_PROXY_HEADER,
+  DEV_NO_PROXY_HEADER,
 ]);
 const SKIP_RESPONSE_HEADERS = new Set([
   'content-encoding',
@@ -177,6 +186,7 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
         // long-running stream is not cut off by a wall-clock deadline.
         armTimeout(requestTimeoutMs);
 
+        let dispatcher: EnvHttpProxyAgent | undefined;
         try {
           let requestBody: Uint8Array | undefined;
           if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -196,13 +206,28 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
             upstreamHeaders.set('content-length', String(requestBody.length));
           }
 
+          const httpProxy = req.headers[DEV_HTTP_PROXY_HEADER];
+          const httpsProxy = req.headers[DEV_HTTPS_PROXY_HEADER];
+          const noProxy = req.headers[DEV_NO_PROXY_HEADER];
+          dispatcher =
+            typeof httpProxy === 'string' || typeof httpsProxy === 'string'
+              ? new EnvHttpProxyAgent({
+                  httpProxy:
+                    typeof httpProxy === 'string' ? httpProxy : undefined,
+                  httpsProxy:
+                    typeof httpsProxy === 'string' ? httpsProxy : undefined,
+                  noProxy: typeof noProxy === 'string' ? noProxy : undefined,
+                })
+              : undefined;
+
           const upstreamResponse = await fetch(validatedTarget, {
             method: req.method,
             headers: upstreamHeaders,
-            body: requestBody as NonNullable<RequestInit['body']> | undefined,
+            body: requestBody,
             signal: abortController.signal,
             redirect: 'error',
-          });
+            dispatcher,
+          } as RequestInit & { dispatcher?: EnvHttpProxyAgent });
 
           const isSse = upstreamResponse.headers
             .get('content-type')
@@ -303,6 +328,7 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
           res.end(JSON.stringify({ error: message }));
         } finally {
           clearTimeoutTimer();
+          await dispatcher?.close();
         }
       });
     },

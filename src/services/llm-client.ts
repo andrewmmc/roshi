@@ -60,7 +60,7 @@ export async function sendRequest(
   const adapter = getAdapter(provider, compatibleRequest.model);
 
   const rawUrl = adapter.buildRequestUrl(provider, compatibleRequest);
-  const url = getRequestUrl(rawUrl);
+  const url = rawUrl;
 
   if (import.meta.env.DEV) {
     console.log('[LLM Request]', getLogSafeRequestUrl(provider, rawUrl));
@@ -192,23 +192,6 @@ function getLogSafeRequestUrl(
   return requestUrl
     .replaceAll(provider.apiKey, '[REDACTED]')
     .replaceAll(encodeURIComponent(provider.apiKey), '[REDACTED]');
-}
-
-function getRequestUrl(targetUrl: string): string {
-  if (!import.meta.env.DEV) {
-    return targetUrl;
-  }
-
-  try {
-    const parsedUrl = new URL(targetUrl);
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return targetUrl;
-    }
-  } catch {
-    return targetUrl;
-  }
-
-  return `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
 }
 
 function buildStreamState(

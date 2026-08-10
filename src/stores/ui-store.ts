@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-export type SettingsPage = 'general' | 'providers' | 'environments' | 'models';
+export type SettingsPage =
+  | 'general'
+  | 'proxy'
+  | 'providers'
+  | 'environments'
+  | 'models';
 export type MainView = 'request' | 'eval';
 export type SidebarSection = 'history' | 'collections' | 'evals';
 
