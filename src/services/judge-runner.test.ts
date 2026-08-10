@@ -286,9 +286,41 @@ describe('runJudge', () => {
     expect(callArgs.provider.id).toBe('judge');
     expect(callArgs.request.model).toBe('judge-m');
     expect(callArgs.request.stream).toBe(false);
-    expect(callArgs.request.messages[0].role).toBe('system');
-    expect(callArgs.request.messages[1].content).toContain('Candidate A');
-    expect(callArgs.request.messages[1].content).toContain('id: r1');
+    expect(callArgs.request.systemPrompt).toBeTruthy();
+    expect(callArgs.request.messages).toHaveLength(1);
+    expect(callArgs.request.messages[0].role).toBe('user');
+    expect(callArgs.request.messages[0].content).toContain('Candidate A');
+    expect(callArgs.request.messages[0].content).toContain('id: r1');
+  });
+
+  it('sends a custom rubric through the provider system-prompt field', async () => {
+    mockSendRequest.mockResolvedValueOnce({
+      response: {
+        id: 'j',
+        model: 'judge-m',
+        content: '{"scores":{},"winner":null}',
+        role: 'assistant',
+        finishReason: 'stop',
+        usage: null,
+      },
+    });
+
+    await runJudge({
+      config: makeConfig({ rubric: 'Custom rubric' }),
+      providers: [judgeProvider, candidateProvider],
+      request: makeRequest(),
+      runners: [makeRunner('r1')],
+      results: [makeResult('r1', 'best')],
+    }).promise;
+
+    expect(mockSendRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          systemPrompt: 'Custom rubric',
+          messages: [expect.objectContaining({ role: 'user' })],
+        }),
+      }),
+    );
   });
 
   it('cancels via handle.cancel()', async () => {

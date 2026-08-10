@@ -91,8 +91,8 @@ async function runJudgeInternal(
     return emptyJudgeResult('No successful candidate responses to judge');
   }
 
+  const rubric = config.rubric || DEFAULT_JUDGE_RUBRIC;
   const judgeMessages = buildJudgeMessages({
-    rubric: config.rubric || DEFAULT_JUDGE_RUBRIC,
     request,
     candidates,
   });
@@ -102,6 +102,7 @@ async function runJudgeInternal(
     model: config.runner.modelId,
     stream: false,
     temperature: 0,
+    systemPrompt: rubric,
   };
 
   try {
@@ -126,13 +127,12 @@ async function runJudgeInternal(
 }
 
 interface BuildJudgeMessagesArgs {
-  rubric: string;
   request: EvalSharedRequest;
   candidates: { runner: EvalRunner; result: EvalRunResult }[];
 }
 
 function buildJudgeMessages(args: BuildJudgeMessagesArgs): NormalizedMessage[] {
-  const { rubric, request, candidates } = args;
+  const { request, candidates } = args;
   const promptSummary = summarizePrompt(request);
 
   const candidateBlocks = candidates
@@ -160,10 +160,7 @@ function buildJudgeMessages(args: BuildJudgeMessagesArgs): NormalizedMessage[] {
     'IMPORTANT: keys of the "scores" object MUST be the exact candidate ids above.',
   ].join('\n');
 
-  return [
-    { role: 'system', content: rubric },
-    { role: 'user', content: userContent },
-  ];
+  return [{ role: 'user', content: userContent }];
 }
 
 function summarizePrompt(request: EvalSharedRequest): string {
