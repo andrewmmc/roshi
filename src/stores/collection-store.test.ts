@@ -250,6 +250,22 @@ describe('collection-store', () => {
       expect(getState().collections.map((c) => c.id)).toEqual(['c2']);
       expect(getState().savedRequests.map((r) => r.id)).toEqual(['r2']);
     });
+
+    it('clears composer context when its collection is deleted', async () => {
+      useCollectionStore.setState({
+        collections: [makeCollection({ id: 'c1' })],
+        savedRequests: [makeSavedRequest({ id: 'r1', collectionId: 'c1' })],
+      });
+      useComposerStore.setState({
+        activeCollectionId: 'c1',
+        activeSavedRequestId: 'r1',
+      });
+
+      await getState().deleteCollection('c1');
+
+      expect(useComposerStore.getState().activeCollectionId).toBeNull();
+      expect(useComposerStore.getState().activeSavedRequestId).toBeNull();
+    });
   });
 
   describe('saveCurrentRequest', () => {

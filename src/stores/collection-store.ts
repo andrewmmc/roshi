@@ -155,6 +155,11 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
 
     const prevCollections = get().collections;
     const prevSavedRequests = get().savedRequests;
+    const deletedRequestIds = new Set(
+      prevSavedRequests
+        .filter((request) => request.collectionId === id)
+        .map((request) => request.id),
+    );
     try {
       await db.transaction('rw', db.collections, db.savedRequests, async () => {
         await db.savedRequests.where('collectionId').equals(id).delete();
@@ -167,6 +172,14 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
           (request) => request.collectionId !== id,
         ),
       }));
+      const composer = useComposerStore.getState();
+      if (
+        composer.activeCollectionId === id ||
+        (composer.activeSavedRequestId !== null &&
+          deletedRequestIds.has(composer.activeSavedRequestId))
+      ) {
+        composer.setSavedRequestContext(null, null);
+      }
     } catch (error) {
       set({
         collections: prevCollections,
