@@ -294,6 +294,7 @@ async function handleStream(
   const allChunks: unknown[] = [];
   let capturedChunkBytes = 0;
   let rawChunksTruncated = false;
+  let terminalEventSeen = false;
 
   let pipeError: unknown;
   let readError: unknown;
@@ -333,7 +334,11 @@ async function handleStream(
       armIdleTimer();
 
       const data = value?.data;
-      if (!data || data === '[DONE]') continue;
+      if (!data) continue;
+      if (data === '[DONE]') {
+        terminalEventSeen = true;
+        continue;
+      }
 
       const parsed = parseJsonObject(data);
       if (parsed) {
@@ -360,7 +365,10 @@ async function handleStream(
         fullContent += chunk.content;
         if (chunk.id) lastId = chunk.id;
         if (chunk.model) lastModel = chunk.model;
-        if (chunk.finishReason) finishReason = chunk.finishReason;
+        if (chunk.finishReason) {
+          finishReason = chunk.finishReason;
+          terminalEventSeen = true;
+        }
         if (chunk.usage) usage = mergeUsage(usage, chunk.usage);
         onStreamChunk?.(chunk);
       }
@@ -371,6 +379,12 @@ async function handleStream(
     await pipePromise.catch((error) => {
       pipeError = error;
     });
+  }
+
+  if (!readError && !pipeError && !terminalEventSeen) {
+    readError = new Error(
+      'The stream ended before the provider sent a completion event.',
+    );
   }
 
   const { response, rawResponse } = buildStreamState(

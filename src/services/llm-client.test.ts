@@ -389,7 +389,7 @@ describe('llm-client', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        body: createSSEStream([]),
+        body: createSSEStream(['[DONE]']),
       });
       vi.stubGlobal('fetch', mockFetch);
 
@@ -633,9 +633,10 @@ describe('llm-client', () => {
     });
 
     it('bounds captured raw stream chunks to protect local history storage', async () => {
-      const events = Array.from({ length: 201 }, (_, index) =>
-        JSON.stringify({ index }),
-      );
+      const events = [
+        ...Array.from({ length: 201 }, (_, index) => JSON.stringify({ index })),
+        '[DONE]',
+      ];
       mockAdapter = createMockAdapter({
         parseStreamChunk: vi.fn().mockReturnValue({
           content: '',
@@ -660,6 +661,39 @@ describe('llm-client', () => {
 
       expect(result.rawResponse).toMatchObject({ chunksTruncated: true });
       expect(result.rawResponse.chunks).toHaveLength(200);
+    });
+
+    it('treats clean EOF without a terminal event as an interrupted stream', async () => {
+      mockAdapter = createMockAdapter({
+        parseStreamChunk: vi.fn().mockReturnValue({
+          content: 'Partial',
+          finishReason: null,
+          model: 'gpt-4',
+          id: 'chatcmpl-1',
+        }),
+      });
+      vi.mocked(getAdapter).mockReturnValue(mockAdapter);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: createSSEStream([JSON.stringify({ delta: 'Partial' })]),
+        }),
+      );
+
+      await expect(
+        sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        }),
+      ).rejects.toMatchObject({
+        name: 'StreamError',
+        message:
+          'The stream ended before the provider sent a completion event.',
+        partialResponse: { content: 'Partial' },
+      });
     });
 
     it('surfaces a mid-stream provider error as StreamError with partial content', async () => {
