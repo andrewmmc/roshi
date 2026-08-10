@@ -492,6 +492,19 @@ describe('geminiAdapter', () => {
           geminiAdapter.parseResponseError?.({ candidates: [] }),
         ).toBeNull();
       });
+
+      it('surfaces candidate-level safety stops', () => {
+        expect(
+          geminiAdapter.parseResponseError?.({
+            candidates: [{ finishReason: 'SAFETY' }],
+          }),
+        ).toBe('Generation stopped: SAFETY');
+        expect(
+          geminiAdapter.parseResponseError?.({
+            candidates: [{ finishReason: 'MAX_TOKENS' }],
+          }),
+        ).toBeNull();
+      });
     });
 
     it('handles empty candidates', () => {
@@ -618,6 +631,15 @@ describe('geminiAdapter', () => {
         candidates: [{ content: { parts: [{ text: 'Hi' }] } }],
       });
       expect(geminiAdapter.parseStreamError?.(data)).toBeNull();
+    });
+
+    it('surfaces candidate-level safety stops', () => {
+      const data = JSON.stringify({
+        candidates: [{ finishReason: 'SAFETY' }],
+      });
+      expect(geminiAdapter.parseStreamError?.(data)).toBe(
+        'Generation stopped: SAFETY',
+      );
     });
 
     it('returns null for invalid JSON', () => {

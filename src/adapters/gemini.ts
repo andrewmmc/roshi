@@ -35,6 +35,24 @@ function buildInlineData(att: MessageAttachment): Record<string, unknown> {
   return { text: `[attachment: ${att.filename}]` };
 }
 
+const SUCCESSFUL_FINISH_REASONS = new Set(['STOP', 'MAX_TOKENS']);
+
+function getCandidateFinishError(raw: Record<string, unknown>): string | null {
+  const candidates = raw.candidates;
+  if (!Array.isArray(candidates)) return null;
+  const candidate = candidates[0];
+  if (!candidate || typeof candidate !== 'object') return null;
+  const reason = (candidate as { finishReason?: unknown }).finishReason;
+  if (
+    typeof reason !== 'string' ||
+    !reason ||
+    SUCCESSFUL_FINISH_REASONS.has(reason)
+  ) {
+    return null;
+  }
+  return `Generation stopped: ${reason}`;
+}
+
 export const geminiAdapter: ProviderAdapter = {
   buildRequestUrl(
     provider: ProviderConfig,
@@ -119,7 +137,9 @@ export const geminiAdapter: ProviderAdapter = {
 
   parseResponseError(raw: Record<string, unknown>): string | null {
     const promptFeedback = raw.promptFeedback;
-    if (!promptFeedback || typeof promptFeedback !== 'object') return null;
+    if (!promptFeedback || typeof promptFeedback !== 'object') {
+      return getCandidateFinishError(raw);
+    }
     const feedback = promptFeedback as {
       blockReason?: unknown;
       blockReasonMessage?: unknown;
@@ -127,9 +147,11 @@ export const geminiAdapter: ProviderAdapter = {
     if (typeof feedback.blockReasonMessage === 'string') {
       return feedback.blockReasonMessage;
     }
-    return typeof feedback.blockReason === 'string'
-      ? `Prompt blocked: ${feedback.blockReason}`
-      : null;
+    const promptError =
+      typeof feedback.blockReason === 'string'
+        ? `Prompt blocked: ${feedback.blockReason}`
+        : null;
+    return promptError ?? getCandidateFinishError(raw);
   },
 
   parseResponse(raw: Record<string, unknown>): NormalizedResponse {
@@ -200,6 +222,14 @@ export const geminiAdapter: ProviderAdapter = {
   },
 
   parseStreamError(data: string): string | null {
-    return parseTopLevelStreamError(data);
+    const topLevelError = parseTopLevelStreamError(data);
+    if (topLevelError) return topLevelError;
+    try {
+      return getCandidateFinishError(
+        JSON.parse(data) as Record<string, unknown>,
+      );
+    } catch {
+      return null;
+    }
   },
 };
