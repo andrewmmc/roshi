@@ -94,6 +94,35 @@ describe('CodeView', () => {
     expect(screen.getByText('Enter a message to see code')).toBeInTheDocument();
   });
 
+  it('does not generate a lossy snippet when messages contain attachments', () => {
+    seedValidState();
+    useComposerStore.setState({
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'Describe this',
+          attachments: [
+            {
+              id: 'a1',
+              filename: 'photo.png',
+              mimeType: 'image/png',
+              data: 'data:image/png;base64,abc',
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<CodeView />);
+
+    expect(
+      screen.getByText('Attachment code generation is not available'),
+    ).toBeInTheDocument();
+    expect(generateNode).not.toHaveBeenCalled();
+    expect(generatePython).not.toHaveBeenCalled();
+  });
+
   it('renders generated code and toggles stream mode', () => {
     seedValidState();
 

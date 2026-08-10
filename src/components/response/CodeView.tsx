@@ -131,6 +131,9 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     [messages],
   );
   const hasMessages = sendableMessages.length > 0;
+  const hasAttachments = sendableMessages.some(
+    (message) => (message.attachments?.length ?? 0) > 0,
+  );
   const customHeaderRecord = useMemo(
     () => headersToRecord(customHeaders),
     [customHeaders],
@@ -145,7 +148,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
       : (generators[0]?.label ?? '');
 
   const compatibleRequest = useMemo(() => {
-    if (!provider || !model || !hasMessages || !isActive) {
+    if (!provider || !model || !hasMessages || hasAttachments || !isActive) {
       return null;
     }
 
@@ -181,6 +184,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     frequencyPenalty,
     paramEnabled,
     hasMessages,
+    hasAttachments,
     maxTokens,
     messages,
     model,
@@ -227,6 +231,15 @@ export function CodeView({ isActive = true }: CodeViewProps) {
 
   if (!hasMessages) {
     return <EmptyState title="Enter a message to see code" />;
+  }
+
+  if (hasAttachments) {
+    return (
+      <EmptyState
+        title="Attachment code generation is not available"
+        description="Use the Raw request view to inspect or copy the complete request without dropping attachments."
+      />
+    );
   }
 
   return (
