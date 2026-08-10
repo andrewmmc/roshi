@@ -446,7 +446,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
 
   start: async () => {
     const state = get();
-    if (state.isRunning) return;
+    if (state.isRunning || state.isJudging) return;
     if (state.runners.length === 0) {
       set({ error: 'Add at least one runner before starting an eval.' });
       return;
@@ -486,13 +486,16 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       initialResults[runner.id] = emptyResult(runner.id);
     }
 
+    const runId = nanoid();
+    const isCurrentRun = () => get().activeRunId === runId;
+
     set({
       error: null,
       isRunning: true,
       isJudging: false,
       results: initialResults,
       judgeResult: null,
-      activeRunId: nanoid(),
+      activeRunId: runId,
     });
 
     const handle = runEval({
@@ -500,6 +503,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       providers,
       request: sharedRequest,
       onUpdate: (update: EvalRunnerUpdate) => {
+        if (!isCurrentRun()) return;
         set((s) => ({
           results: { ...s.results, [update.runnerId]: update.result },
         }));
@@ -511,8 +515,12 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     try {
       results = await handle.promise;
     } finally {
-      set({ _runHandle: null, isRunning: false });
+      if (isCurrentRun()) {
+        set({ _runHandle: null, isRunning: false });
+      }
     }
+
+    if (!isCurrentRun()) return;
 
     const judgeConfig = get().judgeConfig;
     if (judgeConfig.enabled) {
@@ -529,9 +537,11 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       });
       try {
         const judgeResult = await judgeHandle.promise;
-        set({ judgeResult });
+        if (isCurrentRun()) set({ judgeResult });
       } finally {
-        set({ _judgeHandle: null, isJudging: false });
+        if (isCurrentRun()) {
+          set({ _judgeHandle: null, isJudging: false });
+        }
       }
     }
   },
@@ -548,6 +558,9 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   },
 
   loadRun: (record) => {
+    const { _runHandle, _judgeHandle } = get();
+    _runHandle?.cancel();
+    _judgeHandle?.cancel();
     const composer: EvalComposerState = {
       ...createInitialComposer(),
       systemPrompt: record.request.systemPrompt,

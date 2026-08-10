@@ -68,6 +68,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
   const response = useResponseStore((s) => s.response);
   const streamingContent = useResponseStore((s) => s.streamingContent);
   const isEvalRunning = useEvalStore((s) => s.isRunning);
+  const isEvalJudging = useEvalStore((s) => s.isJudging);
+  const isEvalBusy = isEvalRunning || isEvalJudging;
   const runners = useEvalStore((s) => s.runners);
   const evalResults = useEvalStore((s) => s.results);
   const isEval = mainView === 'eval';
@@ -78,7 +80,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     (model) => model.id === selectedModelId,
   );
   const sendDisabledReason = isEval
-    ? isEvalRunning
+    ? isEvalBusy
       ? 'An eval is already running'
       : runners.length === 0
         ? 'Add at least one runner'
@@ -93,7 +95,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
             ? 'Add an API key in provider settings'
             : undefined;
   const cancelDisabledReason = isEval
-    ? isEvalRunning
+    ? isEvalBusy
       ? undefined
       : 'No eval is running'
     : isLoading
@@ -124,8 +126,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         disabledReason: sendDisabledReason,
         action: () => {
           if (isEval) {
-            const { isRunning, runners } = useEvalStore.getState();
-            if (!isRunning && runners.length > 0) {
+            const { isRunning, isJudging, runners } = useEvalStore.getState();
+            if (!isRunning && !isJudging && runners.length > 0) {
               void useEvalStore.getState().start();
             }
             return;
@@ -144,8 +146,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         disabledReason: cancelDisabledReason,
         action: () => {
           if (isEval) {
-            const { isRunning } = useEvalStore.getState();
-            if (isRunning) useEvalStore.getState().cancelAll();
+            const { isRunning, isJudging } = useEvalStore.getState();
+            if (isRunning || isJudging) useEvalStore.getState().cancelAll();
             return;
           }
           const { isLoading } = useResponseStore.getState();
@@ -159,9 +161,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         keywords: ['clear', 'reset', 'fresh'],
         shortcut: { mac: '⌘⇧N', win: 'Ctrl+Shift+N' },
         disabledReason:
-          isEvalRunning || isLoading
-            ? 'Stop the running task first'
-            : undefined,
+          isEvalBusy || isLoading ? 'Stop the running task first' : undefined,
         action: () => {
           if (activeWorkspaceHasUnsavedChanges()) {
             useUiStore.getState().setNewRequestDiscardOpen(true);
@@ -321,7 +321,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     cancel,
     cancelDisabledReason,
     isEval,
-    isEvalRunning,
+    isEvalBusy,
     isLoading,
     providers,
     selectedProvider,

@@ -220,6 +220,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const buildRecord = useEvalStore((s) => s.buildRecord);
   const runners = useEvalStore((s) => s.runners);
   const isRunning = useEvalStore((s) => s.isRunning);
+  const isJudging = useEvalStore((s) => s.isJudging);
   const setMainView = useUiStore((s) => s.setMainView);
 
   const [saveOpen, setSaveOpen] = useState(false);
@@ -288,10 +289,14 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
 
   const handleSelect = useCallback(
     (record: EvalRunRecord) => {
+      if (isRunning || isJudging) {
+        toast('Stop the active eval before loading a saved run.');
+        return;
+      }
       loadRun(record);
       setMainView('eval');
     },
-    [loadRun, setMainView],
+    [isJudging, isRunning, loadRun, setMainView],
   );
 
   const handleMove = useCallback(
@@ -345,7 +350,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
     }
   }, [confirm, deleteCollection, remove]);
 
-  const saveDisabled = isRunning || runners.length === 0;
+  const saveDisabled = isRunning || isJudging || runners.length === 0;
   const isEmpty = records.length === 0 && collections.length === 0;
 
   const nameDialogConfig = nameDialog

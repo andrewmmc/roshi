@@ -55,6 +55,7 @@ export function EvalView() {
   const cancelAll = useEvalStore((s) => s.cancelAll);
   const isRunning = useEvalStore((s) => s.isRunning);
   const isJudging = useEvalStore((s) => s.isJudging);
+  const isBusy = isRunning || isJudging;
   const error = useEvalStore((s) => s.error);
   const runners = useEvalStore((s) => s.runners);
   const composer = useEvalStore((s) => s.composer);
@@ -96,7 +97,7 @@ export function EvalView() {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      {isRunning ? (
+      {isBusy ? (
         <Button variant="destructive" size="sm" onClick={cancelAll}>
           <Square className="mr-1.5 h-3.5 w-3.5" />
           Stop all
@@ -106,7 +107,7 @@ export function EvalView() {
         <Button
           size="sm"
           onClick={handleStart}
-          disabled={runners.length === 0}
+          disabled={runners.length === 0 || isJudging}
           className="shadow-sm"
           title={
             runners.length === 0 ? 'Add a runner before starting' : undefined

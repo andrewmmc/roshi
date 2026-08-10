@@ -64,8 +64,8 @@ export function useGlobalShortcuts() {
       // Cmd/Ctrl+Enter — send request / run eval
       if (mod && e.key === 'Enter') {
         if (isEval) {
-          const { isRunning, runners } = useEvalStore.getState();
-          if (!isRunning && runners.length > 0) {
+          const { isRunning, isJudging, runners } = useEvalStore.getState();
+          if (!isRunning && !isJudging && runners.length > 0) {
             e.preventDefault();
             useEvalStore.getState().start();
           }
@@ -90,8 +90,8 @@ export function useGlobalShortcuts() {
       // Escape — cancel running request/eval (only when no dialog is open)
       if (e.key === 'Escape' && !isDialogOpen()) {
         if (isEval) {
-          const { isRunning } = useEvalStore.getState();
-          if (isRunning) {
+          const { isRunning, isJudging } = useEvalStore.getState();
+          if (isRunning || isJudging) {
             e.preventDefault();
             useEvalStore.getState().cancelAll();
           }

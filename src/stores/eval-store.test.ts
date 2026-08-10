@@ -283,6 +283,100 @@ describe('useEvalStore', () => {
     expect(useEvalStore.getState().isJudging).toBe(false);
   });
 
+  it('does not start another eval while judging is in progress', async () => {
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.getState().updateMessage(0, { content: 'Hello' });
+    useEvalStore.getState().setJudgeEnabled(true);
+    useEvalStore.getState().setJudgeRunner({ providerId: 'p1', modelId: 'm1' });
+    const runnerId = useEvalStore.getState().runners[0].id;
+    mockRunEval.mockReturnValue({
+      promise: Promise.resolve([
+        { ...emptyResult(runnerId), status: 'success', content: 'ok' },
+      ]),
+      cancel: vi.fn(),
+    });
+    let resolveJudge!: (value: {
+      scores: Record<string, never>;
+      winnerRunnerId: null;
+      rawContent: string;
+      error: null;
+    }) => void;
+    mockRunJudge.mockReturnValue({
+      promise: new Promise((resolve) => {
+        resolveJudge = resolve;
+      }),
+      cancel: vi.fn(),
+    });
+
+    const firstStart = useEvalStore.getState().start();
+    await vi.waitFor(() =>
+      expect(useEvalStore.getState().isJudging).toBe(true),
+    );
+    await useEvalStore.getState().start();
+    expect(mockRunEval).toHaveBeenCalledTimes(1);
+
+    resolveJudge({
+      scores: {},
+      winnerRunnerId: null,
+      rawContent: '',
+      error: null,
+    });
+    await firstStart;
+  });
+
+  it('ignores updates from a run replaced by a loaded record', async () => {
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.getState().updateMessage(0, { content: 'Hello' });
+    const runnerId = useEvalStore.getState().runners[0].id;
+    const cancel = vi.fn();
+    let onUpdate!: (update: {
+      runnerId: string;
+      result: ReturnType<typeof emptyResult>;
+    }) => void;
+    let resolveRun!: (results: never[]) => void;
+    mockRunEval.mockImplementation((options) => {
+      onUpdate = options.onUpdate;
+      return {
+        promise: new Promise<never[]>((resolve) => {
+          resolveRun = resolve;
+        }),
+        cancel,
+      };
+    });
+
+    const start = useEvalStore.getState().start();
+    useEvalStore.getState().loadRun({
+      id: 'loaded-record',
+      createdAt: new Date(),
+      request: {
+        messages: [{ role: 'user', content: 'Loaded' }],
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 100,
+        topP: 1,
+        topK: 0,
+        frequencyPenalty: 0,
+        presencePenalty: 0,
+        stream: false,
+        customHeaders: [],
+      },
+      runners: [],
+      results: [],
+      judgeConfig: { enabled: false, runner: null, rubric: '' },
+      judgeResult: null,
+    });
+    onUpdate({
+      runnerId,
+      result: { ...emptyResult(runnerId), content: 'stale' },
+    });
+    resolveRun([]);
+    await start;
+
+    expect(cancel).toHaveBeenCalled();
+    expect(useEvalStore.getState().composer.messages[0].content).toBe('Loaded');
+    expect(useEvalStore.getState().results[runnerId]).toBeUndefined();
+  });
+
   it('cancelAll cancels both run and judge handles', () => {
     const cancelRun = vi.fn();
     const cancelJudge = vi.fn();
