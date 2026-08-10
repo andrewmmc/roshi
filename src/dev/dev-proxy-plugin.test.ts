@@ -33,7 +33,10 @@ function getProxyHandler(options: Parameters<typeof devProxyPlugin>[0] = {}) {
   let handler:
     | ((request: Readable, response: MockResponse) => Promise<void>)
     | undefined;
-  devProxyPlugin(options).configureServer({
+  devProxyPlugin({
+    resolveHostname: async () => ['93.184.216.34'],
+    ...options,
+  }).configureServer({
     middlewares: {
       use: (
         _path: string,
@@ -65,6 +68,31 @@ afterEach(() => {
 });
 
 describe('devProxyPlugin', () => {
+  it('rejects targets that resolve to private network addresses', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const response = new MockResponse();
+
+    await getProxyHandler({ resolveHostname: async () => ['127.0.0.1'] })(
+      createRequest(),
+      response,
+    );
+
+    expect(response.statusCode).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects oversized request bodies before calling upstream', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const response = new MockResponse();
+
+    await getProxyHandler({ maxRequestBytes: 1 })(createRequest(), response);
+
+    expect(response.statusCode).toBe(413);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('rejects an oversized response before forwarding headers', async () => {
     vi.stubGlobal(
       'fetch',
@@ -82,6 +110,10 @@ describe('devProxyPlugin', () => {
     expect(response.destroyed).toBe(false);
     expect(Buffer.concat(response.chunks).toString()).toContain(
       'Response exceeds 3 byte limit',
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(URL),
+      expect.objectContaining({ redirect: 'error' }),
     );
   });
 

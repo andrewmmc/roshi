@@ -1,5 +1,7 @@
 import type { ViteDevServer } from 'vite';
 import type { IncomingMessage } from 'node:http';
+import { lookup as dnsLookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 import {
   DEFAULT_REQUEST_TIMEOUT_MS,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
@@ -7,11 +9,16 @@ import {
 
 const PROXY_TIMEOUT_MS = DEFAULT_REQUEST_TIMEOUT_MS;
 const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
+const MAX_REQUEST_BYTES = 10 * 1024 * 1024;
+
+type ResolveHostname = (hostname: string) => Promise<string[]>;
 
 interface DevProxyOptions {
   requestTimeoutMs?: number;
   streamIdleTimeoutMs?: number;
   maxResponseBytes?: number;
+  maxRequestBytes?: number;
+  resolveHostname?: ResolveHostname;
 }
 
 const SKIP_REQUEST_HEADERS = new Set([
@@ -27,13 +34,81 @@ const SKIP_RESPONSE_HEADERS = new Set([
   'connection',
 ]);
 
-function collectBody(req: IncomingMessage): Promise<Buffer> {
+class RequestBodyTooLargeError extends Error {}
+
+function collectBody(req: IncomingMessage, maxBytes: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    let bytesRead = 0;
+    req.on('data', (chunk: Buffer) => {
+      bytesRead += chunk.byteLength;
+      if (bytesRead > maxBytes) {
+        reject(new RequestBodyTooLargeError());
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
+}
+
+function isPrivateIpv4(address: string): boolean {
+  const parts = address.split('.').map(Number);
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) {
+    return true;
+  }
+  const [a, b] = parts;
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    a >= 224
+  );
+}
+
+function isPrivateAddress(address: string): boolean {
+  const normalized = address.toLowerCase().split('%')[0];
+  if (isIP(normalized) === 4) return isPrivateIpv4(normalized);
+  if (isIP(normalized) !== 6) return true;
+  if (normalized === '::' || normalized === '::1') return true;
+  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+  if (/^fe[89ab]/.test(normalized)) return true;
+  const mappedIpv4 = normalized.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
+  return mappedIpv4 ? isPrivateIpv4(mappedIpv4) : false;
+}
+
+async function defaultResolveHostname(hostname: string): Promise<string[]> {
+  if (isIP(hostname)) return [hostname];
+  const results = await dnsLookup(hostname, { all: true, verbatim: true });
+  return results.map(({ address }) => address);
+}
+
+async function validateProxyTarget(
+  target: string,
+  resolveHostname: ResolveHostname,
+): Promise<URL> {
+  const url = new URL(target);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error('Invalid proxy target');
+  }
+  const hostname = url.hostname.toLowerCase();
+  if (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    hostname.endsWith('.local')
+  ) {
+    throw new Error('Private network targets are not allowed');
+  }
+  const addresses = await resolveHostname(hostname);
+  if (addresses.length === 0 || addresses.some(isPrivateAddress)) {
+    throw new Error('Private network targets are not allowed');
+  }
+  return url;
 }
 
 export function devProxyPlugin(options: DevProxyOptions = {}) {
@@ -41,6 +116,8 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
   const streamIdleTimeoutMs =
     options.streamIdleTimeoutMs ?? DEFAULT_STREAM_IDLE_TIMEOUT_MS;
   const maxResponseBytes = options.maxResponseBytes ?? MAX_RESPONSE_BYTES;
+  const maxRequestBytes = options.maxRequestBytes ?? MAX_REQUEST_BYTES;
+  const resolveHostname = options.resolveHostname ?? defaultResolveHostname;
 
   return {
     name: 'dev-dynamic-proxy',
@@ -55,7 +132,10 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
           return;
         }
 
-        if (!/^https?:\/\//.test(target)) {
+        let validatedTarget: URL;
+        try {
+          validatedTarget = await validateProxyTarget(target, resolveHostname);
+        } catch {
           res.statusCode = 400;
           res.end('Invalid proxy target');
           return;
@@ -100,7 +180,14 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
         try {
           let requestBody: Uint8Array | undefined;
           if (req.method !== 'GET' && req.method !== 'HEAD') {
-            const buf = await collectBody(req);
+            const contentLength = Number(req.headers['content-length']);
+            if (
+              Number.isFinite(contentLength) &&
+              contentLength > maxRequestBytes
+            ) {
+              throw new RequestBodyTooLargeError();
+            }
+            const buf = await collectBody(req, maxRequestBytes);
             requestBody = new Uint8Array(
               buf.buffer,
               buf.byteOffset,
@@ -109,11 +196,12 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
             upstreamHeaders.set('content-length', String(requestBody.length));
           }
 
-          const upstreamResponse = await fetch(target, {
+          const upstreamResponse = await fetch(validatedTarget, {
             method: req.method,
             headers: upstreamHeaders,
             body: requestBody as NonNullable<RequestInit['body']> | undefined,
             signal: abortController.signal,
+            redirect: 'error',
           });
 
           const isSse = upstreamResponse.headers
@@ -182,6 +270,16 @@ export function devProxyPlugin(options: DevProxyOptions = {}) {
           }
           res.end();
         } catch (error) {
+          if (error instanceof RequestBodyTooLargeError) {
+            res.statusCode = 413;
+            res.setHeader('content-type', 'application/json');
+            res.end(
+              JSON.stringify({
+                error: `Request exceeds ${maxRequestBytes} byte limit`,
+              }),
+            );
+            return;
+          }
           if (abortController.signal.aborted && !timedOut) {
             res.end();
             return;
