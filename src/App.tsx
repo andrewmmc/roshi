@@ -12,6 +12,7 @@ import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useRequestSession } from '@/hooks/use-request-session';
 import { useTabStore } from '@/stores/tab-store';
 import { Loader2 } from 'lucide-react';
+import { loadStoreSafely } from '@/stores/load-error';
 
 export function App() {
   const loadProviders = useProviderStore((s) => s.load);
@@ -26,8 +27,8 @@ export function App() {
   }, [initTheme]);
 
   useEffect(() => {
-    loadProviders();
-    loadHistory();
+    loadStoreSafely('providers', loadProviders);
+    loadStoreSafely('history', loadHistory);
   }, [loadProviders, loadHistory]);
 
   return (

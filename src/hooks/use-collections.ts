@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useCollectionStore } from '@/stores/collection-store';
+import { loadStoreSafely } from '@/stores/load-error';
 
 export function useCollections() {
   const store = useCollectionStore();
@@ -7,7 +8,7 @@ export function useCollections() {
 
   useEffect(() => {
     if (!loaded) {
-      load();
+      loadStoreSafely('collections', load);
     }
   }, [loaded, load]);
 

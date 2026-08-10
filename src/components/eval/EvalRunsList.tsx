@@ -37,6 +37,7 @@ import { useUiStore } from '@/stores/ui-store';
 import { toast } from '@/stores/toast-store';
 import { formatRelativeTime } from '@/utils/relative-time';
 import type { EvalCollection, EvalRunRecord } from '@/types/eval';
+import { loadStoreSafely } from '@/stores/load-error';
 
 const TRIGGER_CLASS =
   'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
@@ -230,7 +231,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!loaded) load();
+    if (!loaded) loadStoreSafely('eval runs', load);
   }, [loaded, load]);
 
   const recordsByCollection = useMemo(() => {

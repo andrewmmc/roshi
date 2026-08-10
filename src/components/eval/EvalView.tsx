@@ -30,6 +30,7 @@ import { EnvironmentPreviewButton } from '@/components/environments/EnvironmentP
 import { useEvalStore } from '@/stores/eval-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { loadStoreSafely } from '@/stores/load-error';
 import { IS_MAC } from '@/lib/platform';
 import { ViewToggle } from '@/components/layout/ViewToggle';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -67,7 +68,7 @@ export function EvalView() {
   const { containerRef, narrow } = useContainerBreakpoint(640);
 
   useEffect(() => {
-    if (!loaded) loadProviders();
+    if (!loaded) loadStoreSafely('providers', loadProviders);
   }, [loaded, loadProviders]);
 
   const handleStart = async () => {

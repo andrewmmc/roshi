@@ -17,6 +17,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { supportsModelSelection } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import { cn } from '@/lib/utils';
+import { loadStoreSafely } from '@/stores/load-error';
 
 const ADD_PROVIDER_VALUE = '__add_provider__';
 const BROWSE_MODELS_VALUE = '__browse_models__';
@@ -37,7 +38,7 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
 
   useEffect(() => {
     if (!loaded) {
-      load();
+      loadStoreSafely('providers', load);
     }
   }, [loaded, load]);
 

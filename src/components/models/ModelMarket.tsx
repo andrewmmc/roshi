@@ -13,6 +13,7 @@ import { useUiStore } from '@/stores/ui-store';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import { builtinProviders } from '@/providers/builtins';
 import type { ProviderConfig } from '@/types/provider';
+import { loadStoreSafely } from '@/stores/load-error';
 
 const BUILTIN_NAMES = new Set(builtinProviders.map((p) => p.name));
 
@@ -70,7 +71,7 @@ export function ModelMarket({
 
   useEffect(() => {
     if (!loaded) {
-      void loadProviders();
+      loadStoreSafely('providers', loadProviders);
     }
   }, [loaded, loadProviders]);
 

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useHistoryStore } from '@/stores/history-store';
+import { loadStoreSafely } from '@/stores/load-error';
 
 export function useHistory() {
   const store = useHistoryStore();
@@ -7,7 +8,7 @@ export function useHistory() {
 
   useEffect(() => {
     if (!loaded) {
-      load();
+      loadStoreSafely('history', load);
     }
   }, [loaded, load]);
 
