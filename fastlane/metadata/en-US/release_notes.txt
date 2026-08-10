@@ -1,1 +1,1 @@
-This patch fixes the request model picker so it refreshes and selects the first model after one is added to a provider with an empty model list.
+Configure HTTP_PROXY, HTTPS_PROXY, and NO_PROXY for provider, model catalog, and evaluation traffic. This release also improves streaming error handling, Gemini safety reporting, export security, credential redaction, and local data resilience.
