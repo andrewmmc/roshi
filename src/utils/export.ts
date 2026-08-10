@@ -5,7 +5,11 @@ import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 import type { EvalRunRecord } from '@/types/eval';
 import { isTauri } from '@tauri-apps/api/core';
 import { normalizeProviderConfig } from '@/stores/provider-store';
-import { redactHeaders, redactUrlQueryParams } from '@/utils/redact';
+import {
+  redactHeaderEntries,
+  redactHeaders,
+  redactUrlQueryParams,
+} from '@/utils/redact';
 
 const EXPORT_VERSION = 1;
 
@@ -68,6 +72,9 @@ function dateTag(): string {
 function redactHistoryEntry(entry: HistoryEntry): HistoryEntry {
   return {
     ...entry,
+    customHeaders: entry.customHeaders
+      ? redactHeaderEntries(entry.customHeaders)
+      : entry.customHeaders,
     requestUrl: redactUrlQueryParams(entry.requestUrl ?? null),
     requestHeaders: redactHeaders(entry.requestHeaders),
   };

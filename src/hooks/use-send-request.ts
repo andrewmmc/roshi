@@ -17,7 +17,11 @@ import {
   type ProviderModel,
 } from '@/types/provider';
 import { headersToHistoryEntries, headersToRecord } from '@/utils/headers';
-import { redactApiKeyInString, redactHeaders } from '@/utils/redact';
+import {
+  redactApiKeyInString,
+  redactHeaderEntries,
+  redactHeaders,
+} from '@/utils/redact';
 import type { ComposerStore } from '@/stores/composer-store';
 import type { ResponseStore } from '@/stores/response-store';
 import type { HistoryEntry, HistoryHeaderEntry } from '@/types/history';
@@ -95,12 +99,14 @@ function createBaseHistoryEntry({
   customHeaders,
   collectionId,
   savedRequestId,
+  apiKey,
 }: {
   provider: ProviderConfig;
   request: NormalizedRequest;
   customHeaders: ComposerStore['customHeaders'];
   collectionId: string | null;
   savedRequestId: string | null;
+  apiKey: string;
 }): BaseHistoryEntry {
   return {
     providerId: provider.id,
@@ -109,7 +115,10 @@ function createBaseHistoryEntry({
     collectionId: collectionId ?? undefined,
     savedRequestId: savedRequestId ?? undefined,
     request: { ...request },
-    customHeaders: headersToHistoryEntries(customHeaders),
+    customHeaders: redactHeaderEntries(
+      headersToHistoryEntries(customHeaders),
+      apiKey,
+    ),
   };
 }
 
@@ -365,6 +374,7 @@ export function useSendRequest() {
       customHeaders: requestComposer.customHeaders,
       collectionId: composer.activeCollectionId,
       savedRequestId: composer.activeSavedRequestId,
+      apiKey: validation.provider.apiKey,
     });
 
     try {
@@ -372,8 +382,8 @@ export function useSendRequest() {
         provider: validation.provider,
         request: normalizedRequest,
         customHeaders:
-          baseHistoryEntry.customHeaders.length > 0
-            ? headersToRecord(baseHistoryEntry.customHeaders)
+          requestComposer.customHeaders.length > 0
+            ? headersToRecord(requestComposer.customHeaders)
             : undefined,
         signal: abortController.signal,
         onStreamChunk: (chunk) => {

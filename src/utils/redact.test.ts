@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   redactApiKeyInString,
+  redactHeaderEntries,
   redactHeaders,
   redactUrlQueryParams,
 } from './redact';
@@ -32,7 +33,31 @@ describe('redactHeaders', () => {
         { 'X-Custom-Auth': 'token sk-secret-999' },
         'sk-secret-999',
       ),
-    ).toEqual({ 'X-Custom-Auth': 'token REDACTED' });
+    ).toEqual({ 'X-Custom-Auth': 'REDACTED' });
+  });
+
+  it('redacts credential-like custom header names', () => {
+    expect(
+      redactHeaders({
+        'X-Custom-Token': 'secret-value',
+        'Client-Secret': 'secret-value',
+        'X-Customer': 'Acme',
+      }),
+    ).toEqual({
+      'X-Custom-Token': 'REDACTED',
+      'Client-Secret': 'REDACTED',
+      'X-Customer': 'Acme',
+    });
+  });
+});
+
+describe('redactHeaderEntries', () => {
+  it('preserves entry shape while redacting values', () => {
+    expect(
+      redactHeaderEntries([
+        { id: 'one', key: 'Authorization', value: 'Bearer secret' },
+      ]),
+    ).toEqual([{ id: 'one', key: 'Authorization', value: 'REDACTED' }]);
   });
 });
 

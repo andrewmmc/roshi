@@ -373,6 +373,45 @@ describe('useSendRequest', () => {
       );
     });
 
+    it('sends sensitive custom headers but redacts them from history', async () => {
+      useComposerStore.setState({
+        ...useComposerStore.getState(),
+        customHeaders: [
+          { id: '1', key: 'X-Custom-Token', value: 'secret-value' },
+        ],
+      });
+      mockSendRequest.mockResolvedValue({
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'ok',
+          role: 'assistant',
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        durationMs: 100,
+        statusCode: 200,
+      });
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customHeaders: { 'X-Custom-Token': 'secret-value' },
+        }),
+      );
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customHeaders: [{ key: 'X-Custom-Token', value: 'REDACTED' }],
+        }),
+      );
+    });
+
     it('keeps a completed response and reports a history persistence failure', async () => {
       mockDb.history.add.mockRejectedValueOnce(new Error('Quota exceeded'));
       mockSendRequest.mockResolvedValue({

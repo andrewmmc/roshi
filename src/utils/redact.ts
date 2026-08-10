@@ -11,6 +11,17 @@ export const SENSITIVE_HEADER_NAMES = new Set([
   'api-key',
 ]);
 
+const SENSITIVE_HEADER_NAME_PATTERN =
+  /(?:^|[-_])(?:api[-_]?key|secret|token|password|passwd|auth|authorization|credential|private)(?:$|[-_])/i;
+
+export function isSensitiveHeaderName(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  return (
+    SENSITIVE_HEADER_NAMES.has(normalized) ||
+    SENSITIVE_HEADER_NAME_PATTERN.test(normalized)
+  );
+}
+
 /**
  * Redact credential header values. Sensitive header names are replaced
  * wholesale; when the caller knows the API key, any header value that embeds it
@@ -23,7 +34,7 @@ export function redactHeaders<T extends Record<string, string> | null>(
   if (!headers) return headers;
   const redacted = Object.fromEntries(
     Object.entries(headers).map(([key, value]) => {
-      if (SENSITIVE_HEADER_NAMES.has(key.toLowerCase())) {
+      if (isSensitiveHeaderName(key)) {
         return [key, REDACTED_VALUE];
       }
       if (apiKey && value.includes(apiKey)) {
@@ -33,6 +44,15 @@ export function redactHeaders<T extends Record<string, string> | null>(
     }),
   );
   return redacted as T;
+}
+
+export function redactHeaderEntries<
+  T extends readonly { key: string; value: string }[],
+>(headers: T, apiKey?: string): T {
+  return headers.map((header) => {
+    const redacted = redactHeaders({ [header.key]: header.value }, apiKey);
+    return { ...header, value: redacted[header.key] };
+  }) as unknown as T;
 }
 
 /**

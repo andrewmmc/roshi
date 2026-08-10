@@ -266,6 +266,20 @@ describe('export', () => {
       );
     });
 
+    it('exportHistory redacts legacy sensitive custom headers', async () => {
+      exportHistory([
+        makeHistoryEntry({
+          customHeaders: [{ key: 'X-Custom-Token', value: 'legacy-secret' }],
+        }),
+      ]);
+
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const envelope = JSON.parse(await blob.text());
+      expect(envelope.data[0].customHeaders).toEqual([
+        { key: 'X-Custom-Token', value: 'REDACTED' },
+      ]);
+    });
+
     it('exportHistory uses date tag in filename', () => {
       exportHistory([makeHistoryEntry()]);
 

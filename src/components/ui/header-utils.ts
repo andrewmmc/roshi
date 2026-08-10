@@ -8,7 +8,7 @@ export {
   type HistoryHeaderEntry,
 } from '@/utils/headers';
 
-import { SENSITIVE_HEADER_NAMES } from '@/utils/redact';
+import { isSensitiveHeaderName } from '@/utils/redact';
 
 /**
  * Partially mask a secret for display, keeping a short prefix/suffix so the
@@ -30,7 +30,7 @@ export function maskHeaderValueForDisplay(key: string, value: string): string {
     const token = value.slice(7);
     return token ? `Bearer ${maskSecretForDisplay(token)}` : value;
   }
-  if (SENSITIVE_HEADER_NAMES.has(key.toLowerCase())) {
+  if (isSensitiveHeaderName(key)) {
     return maskSecretForDisplay(value);
   }
   return value;
