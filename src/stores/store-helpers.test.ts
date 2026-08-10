@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   createLoadGuard,
+  persistSetting,
   removeById,
   replaceById,
   toStoreErrorMessage,
   upsertById,
 } from './store-helpers';
+
+const { settingsPut } = vi.hoisted(() => ({ settingsPut: vi.fn() }));
+
+vi.mock('@/db', () => ({
+  db: { settings: { put: settingsPut } },
+}));
 
 describe('store-helpers', () => {
   const items = [
@@ -65,5 +72,21 @@ describe('store-helpers', () => {
     await Promise.all([first, second]);
     expect(loadCount).toBe(1);
     expect(loaded).toBe(true);
+  });
+
+  it('continues processing settings writes after a failed write', async () => {
+    settingsPut
+      .mockRejectedValueOnce(new Error('temporary failure'))
+      .mockResolvedValueOnce(undefined);
+
+    await expect(persistSetting('first', 1)).rejects.toThrow(
+      'temporary failure',
+    );
+    await expect(persistSetting('second', 2)).resolves.toBeUndefined();
+
+    expect(settingsPut).toHaveBeenNthCalledWith(2, {
+      key: 'second',
+      value: 2,
+    });
   });
 });

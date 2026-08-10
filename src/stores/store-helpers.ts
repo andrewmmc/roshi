@@ -23,10 +23,11 @@ export async function persistSetting(
   key: string,
   value: unknown,
 ): Promise<void> {
-  lastSettingsSave = lastSettingsSave.then(() =>
-    db.settings.put({ key, value }).then(() => undefined),
-  );
-  await lastSettingsSave;
+  const save = lastSettingsSave
+    .catch(() => undefined)
+    .then(() => db.settings.put({ key, value }).then(() => undefined));
+  lastSettingsSave = save;
+  await save;
 }
 
 export async function loadSetting<T>(key: string): Promise<T | null> {
