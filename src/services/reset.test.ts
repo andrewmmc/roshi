@@ -22,14 +22,32 @@ describe('reset service', () => {
     resetAllProviders.mockResolvedValue(undefined);
   });
 
-  it('deletes application data and clears local storage', async () => {
-    const clear = vi.fn();
-    vi.stubGlobal('localStorage', { clear });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('deletes application data without clearing unrelated origin storage', async () => {
+    const values = new Map([
+      ['llm-tester-theme', 'dark'],
+      ['other-app-session', 'keep'],
+      ['llm-tester-models-cache', '{}'],
+    ]);
+    const removeItem = vi.fn((key: string) => values.delete(key));
+    vi.stubGlobal('localStorage', {
+      get length() {
+        return values.size;
+      },
+      key: (index: number) => [...values.keys()][index] ?? null,
+      removeItem,
+      clear: vi.fn(() => values.clear()),
+    });
 
     await resetApplication();
 
     expect(deleteDatabase).toHaveBeenCalledOnce();
-    expect(clear).toHaveBeenCalledOnce();
+    expect(removeItem).toHaveBeenCalledWith('llm-tester-theme');
+    expect(removeItem).toHaveBeenCalledWith('llm-tester-models-cache');
+    expect(removeItem).not.toHaveBeenCalledWith('other-app-session');
   });
 
   it('resets providers through the provider store', async () => {
