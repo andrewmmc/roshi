@@ -7,11 +7,11 @@ import {
   DEV_HTTP_PROXY_HEADER,
   DEV_HTTPS_PROXY_HEADER,
   DEV_NO_PROXY_HEADER,
-} from './proxy-headers';
+} from './proxy-headers.ts';
 import {
   DEFAULT_REQUEST_TIMEOUT_MS,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
-} from '../constants/defaults';
+} from '../constants/defaults.ts';
 
 const PROXY_TIMEOUT_MS = DEFAULT_REQUEST_TIMEOUT_MS;
 const MAX_RESPONSE_BYTES = 50 * 1024 * 1024;

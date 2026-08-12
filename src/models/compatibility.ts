@@ -2,11 +2,7 @@ import type { NormalizedRequest } from '@/types/normalized';
 import type { ModelCapabilities, ParamSupport } from './capabilities';
 
 type FilterableRequestParam =
-  | 'temperature'
-  | 'topP'
-  | 'topK'
-  | 'frequencyPenalty'
-  | 'presencePenalty';
+  'temperature' | 'topP' | 'topK' | 'frequencyPenalty' | 'presencePenalty';
 
 const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, string>> = {
   stream: 'Streaming',

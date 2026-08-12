@@ -37,8 +37,7 @@ class MockResponse extends EventEmitter {
 
 function getProxyHandler(options: Parameters<typeof devProxyPlugin>[0] = {}) {
   let handler:
-    | ((request: Readable, response: MockResponse) => Promise<void>)
-    | undefined;
+    ((request: Readable, response: MockResponse) => Promise<void>) | undefined;
   devProxyPlugin({
     resolveHostname: async () => ['93.184.216.34'],
     ...options,

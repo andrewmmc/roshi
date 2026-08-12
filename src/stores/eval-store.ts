@@ -511,7 +511,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     });
     set({ _runHandle: { cancel: handle.cancel } });
 
-    let results: EvalRunResult[] = [];
+    let results: EvalRunResult[];
     try {
       results = await handle.promise;
     } finally {

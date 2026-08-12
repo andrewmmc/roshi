@@ -10,13 +10,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __APP_COMMIT__: JSON.stringify('test'),
   },
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
-  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   test: {

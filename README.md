@@ -169,7 +169,7 @@ Roshi stores API keys **unencrypted** in browser IndexedDB. This is an accepted 
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 26+
 - [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds)
 
 ### Quick start

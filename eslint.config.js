@@ -27,6 +27,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Dialog state is intentionally reset when dialogs open or persisted
+      // settings change; these effects synchronize state across boundaries.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
   eslintConfigPrettier,
 ]);

@@ -7,12 +7,7 @@ import {
 import type { HistoryHeaderEntry } from '@/utils/headers';
 
 export type EvalRunStatus =
-  | 'pending'
-  | 'streaming'
-  | 'success'
-  | 'partial'
-  | 'error'
-  | 'cancelled';
+  'pending' | 'streaming' | 'success' | 'partial' | 'error' | 'cancelled';
 
 export interface EvalRunner {
   id: string;

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { execSync } from 'child_process';
-import { devProxyPlugin } from './src/dev/dev-proxy-plugin';
+import { devProxyPlugin } from './src/dev/dev-proxy-plugin.ts';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -30,7 +30,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   clearScreen: false,
@@ -53,7 +53,7 @@ export default defineConfig({
   build: {
     target:
       process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari16',
-    minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
+    minify: !process.env.TAURI_ENV_DEBUG ? 'oxc' : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
     chunkSizeWarningLimit: 2100,
     rollupOptions: {

@@ -74,11 +74,7 @@ export const TEMP_PRESETS = [
 ] as const;
 
 export type SliderCapabilityKey =
-  | 'temperature'
-  | 'topP'
-  | 'topK'
-  | 'frequencyPenalty'
-  | 'presencePenalty';
+  'temperature' | 'topP' | 'topK' | 'frequencyPenalty' | 'presencePenalty';
 
 export interface SliderParamConfig {
   label: string;

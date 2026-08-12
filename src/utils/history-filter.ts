@@ -2,12 +2,7 @@ import type { HistoryEntry } from '@/types/history';
 
 export type HistoryStatusFilter = 'all' | 'success' | 'error';
 export type HistoryStatusCodeClassFilter =
-  | 'all'
-  | '2xx'
-  | '3xx'
-  | '4xx'
-  | '5xx'
-  | 'none';
+  'all' | '2xx' | '3xx' | '4xx' | '5xx' | 'none';
 export type HistoryDateRangeFilter = 'all' | 'today' | '7d' | '30d';
 
 export interface HistoryFilters {

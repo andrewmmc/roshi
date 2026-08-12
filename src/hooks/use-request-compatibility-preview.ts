@@ -10,25 +10,23 @@ import {
 
 export function useRequestCompatibilityPreview(): { warnings: string[] } {
   const composer = useComposerStore(
-    useShallow(
-      (s): ComposerRequestFields => ({
-        messages: s.messages,
-        systemPrompt: s.systemPrompt,
-        temperature: s.temperature,
-        maxTokens: s.maxTokens,
-        topP: s.topP,
-        topK: s.topK,
-        frequencyPenalty: s.frequencyPenalty,
-        presencePenalty: s.presencePenalty,
-        paramEnabled: s.paramEnabled,
-        stream: s.stream,
-        thinkingEnabled: s.thinkingEnabled,
-        thinkingBudgetTokens: s.thinkingBudgetTokens,
-        effort: s.effort,
-        reasoningMode: s.reasoningMode,
-        verbosity: s.verbosity,
-      }),
-    ),
+    useShallow((s): ComposerRequestFields => ({
+      messages: s.messages,
+      systemPrompt: s.systemPrompt,
+      temperature: s.temperature,
+      maxTokens: s.maxTokens,
+      topP: s.topP,
+      topK: s.topK,
+      frequencyPenalty: s.frequencyPenalty,
+      presencePenalty: s.presencePenalty,
+      paramEnabled: s.paramEnabled,
+      stream: s.stream,
+      thinkingEnabled: s.thinkingEnabled,
+      thinkingBudgetTokens: s.thinkingBudgetTokens,
+      effort: s.effort,
+      reasoningMode: s.reasoningMode,
+      verbosity: s.verbosity,
+    })),
   );
   const provider = useProviderStore((s) => s.getSelectedProvider());
   const model = useProviderStore((s) => s.getSelectedModel());

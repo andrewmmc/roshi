@@ -130,7 +130,7 @@ export function ResponsePanel() {
       className="flex h-full min-w-0 flex-col"
     >
       <PanelHeader className="h-auto min-h-11 flex-wrap justify-between gap-x-3 gap-y-1 py-1.5">
-        <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
           <TabsList
             variant="line"
             className="h-7 w-max max-w-none gap-0"
