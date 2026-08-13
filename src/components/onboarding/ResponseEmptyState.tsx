@@ -1,4 +1,4 @@
-import { Boxes, Server } from 'lucide-react';
+import { Boxes, MessageSquareText, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useProviderStore, useSelectedProvider } from '@/stores/provider-store';
@@ -28,6 +28,7 @@ export function ResponseEmptyState() {
 
   return (
     <EmptyState
+      icon={needsApiKey ? Server : needsModel ? Boxes : MessageSquareText}
       title={message}
       actions={
         <>
