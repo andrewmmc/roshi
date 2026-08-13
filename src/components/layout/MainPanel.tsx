@@ -49,10 +49,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { PreloadedEvalView, loadEvalView } from './lazy-view-loaders';
 
-const EvalView = lazy(() =>
-  import('@/components/eval/EvalView').then((m) => ({ default: m.EvalView })),
-);
+const EvalView = lazy(loadEvalView);
 
 export function MainPanel() {
   const mainView = useUiStore((s) => s.mainView);
@@ -60,7 +59,8 @@ export function MainPanel() {
   return (
     <div className="bg-background flex h-full flex-col">
       {mainView === 'request' ? <RequestView /> : null}
-      {mainView === 'eval' ? (
+      {mainView === 'eval' && PreloadedEvalView ? <PreloadedEvalView /> : null}
+      {mainView === 'eval' && !PreloadedEvalView ? (
         <Suspense
           fallback={
             <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
@@ -98,8 +98,9 @@ function RequestView() {
   const mainLayout = useDefaultLayout({ id: 'roshi-main' });
   const sendHintId = useId();
 
-  const handleComparePrompt = () => {
+  const handleComparePrompt = async () => {
     seedFromMainComposer();
+    await loadEvalView().catch(() => undefined);
     setMainView('eval');
     toast('Prompt copied to eval. Add models, then run compare.');
   };

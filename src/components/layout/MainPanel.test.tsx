@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MainPanel } from './MainPanel';
 import { useResponseStore } from '@/stores/response-store';
 import { useProviderStore } from '@/stores/provider-store';
@@ -60,6 +61,12 @@ vi.mock('@/hooks/use-send-request', () => ({
   useSendRequest: () => ({ send, cancel }),
 }));
 
+vi.mock('./lazy-view-loaders', () => ({
+  loadEvalView: () =>
+    Promise.resolve({ default: () => <div>EvalView Mock</div> }),
+  PreloadedEvalView: () => <div>EvalView Mock</div>,
+}));
+
 describe('MainPanel', () => {
   beforeEach(() => {
     send.mockReset();
@@ -115,15 +122,18 @@ describe('MainPanel', () => {
   });
 
   it('moves compare into the send actions menu and shows feedback', async () => {
+    const user = userEvent.setup();
     render(<MainPanel />);
 
     expect(screen.queryByRole('button', { name: /^compare$/i })).toBeNull();
 
-    fireEvent.click(screen.getByLabelText('More send actions'));
-    fireEvent.click(await screen.findByText('Compare prompt across models'));
+    await user.click(screen.getByLabelText('More send actions'));
+    await user.click(await screen.findByText('Compare prompt across models'));
 
     expect(seedFromMainComposer).toHaveBeenCalledTimes(1);
-    expect(useUiStore.getState().mainView).toBe('eval');
+    await vi.waitFor(() => {
+      expect(useUiStore.getState().mainView).toBe('eval');
+    });
     expect(useToastStore.getState().toasts[0]?.message).toBe(
       'Prompt copied to eval. Add models, then run compare.',
     );
