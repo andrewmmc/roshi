@@ -84,7 +84,10 @@ export function EnvironmentPreviewButton({
         <Eye className="h-3 w-3" />
       </IconButton>
       <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent className="w-full sm:max-w-md">
+        <SheetContent
+          className="w-full sm:max-w-md"
+          overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
+        >
           <SheetHeader>
             <SheetTitle>Environment preview</SheetTitle>
             <SheetDescription>

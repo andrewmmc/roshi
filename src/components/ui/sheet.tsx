@@ -37,14 +37,16 @@ function SheetOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {
 function SheetContent({
   className,
   children,
+  overlayClassName,
   showCloseButton = true,
   ...props
 }: DialogPrimitive.Popup.Props & {
+  overlayClassName?: string;
   showCloseButton?: boolean;
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay className={overlayClassName} />
       <DialogPrimitive.Popup
         data-slot="sheet-content"
         className={cn(
