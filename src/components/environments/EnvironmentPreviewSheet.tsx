@@ -85,8 +85,8 @@ export function EnvironmentPreviewButton({
       </IconButton>
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent
-          className="w-full sm:max-w-md"
-          overlayClassName="bg-transparent"
+          className="w-full duration-100 sm:max-w-md"
+          overlayClassName="duration-100"
         >
           <SheetHeader>
             <SheetTitle>Environment preview</SheetTitle>
