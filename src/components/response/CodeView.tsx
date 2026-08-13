@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Code2, Download } from 'lucide-react';
 import { useComposerStore } from '@/stores/composer-store';
 import { useProviderStore } from '@/stores/provider-store';
 import { getCodeGenerators } from '@/services/codegen';
@@ -220,22 +220,31 @@ export function CodeView({ isActive = true }: CodeViewProps) {
   }, [activeTab, compatibleRequest, customHeaderRecord, generators, provider]);
 
   if (!provider || !model) {
-    return <EmptyState title="Select a provider and model to see code" />;
+    return (
+      <EmptyState
+        icon={Code2}
+        title="Select a provider and model to see code"
+      />
+    );
   }
 
   if (generators.length === 0) {
     return (
-      <EmptyState title="Code generation is not available for this provider type" />
+      <EmptyState
+        icon={Code2}
+        title="Code generation is not available for this provider type"
+      />
     );
   }
 
   if (!hasMessages) {
-    return <EmptyState title="Enter a message to see code" />;
+    return <EmptyState icon={Code2} title="Enter a message to see code" />;
   }
 
   if (hasAttachments) {
     return (
       <EmptyState
+        icon={Code2}
         title="Attachment code generation is not available"
         description="Use the Raw request view to inspect or copy the complete request without dropping attachments."
       />
