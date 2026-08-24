@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Compose chat requests, inspect complete responses, compare models side by side, and score their output with an LLM judge.
+  Send LLM requests, inspect responses, compare models, and evaluate output—all from your Mac.
 </p>
 
 <p align="center">
@@ -24,36 +24,34 @@
   </a>
 </p>
 
-## What is Roshi?
-
-Roshi is a desktop app for developers who build with LLM APIs. If you use Postman or a similar tool for ordinary REST APIs, Roshi is the specialized client for the model layer: it understands multi-turn messages, streaming output, model parameters, token usage, provider-specific payloads, and model comparisons.
-
-Use it to test OpenAI, Anthropic, Google Gemini, OpenRouter, and compatible endpoints without writing a throwaway script for every experiment. Build a request once, inspect exactly what was sent and returned, then run the same prompt across several models and compare quality, latency, token usage, and cost.
-
-Roshi is client-only: there is **no Roshi backend, account, or telemetry**. The desktop app calls providers directly, while your API keys, settings, history, collections, and eval results stay on your Mac.
-
 <p align="center">
-  <a href="https://roshi.mmc.dev"><strong>Website</strong></a>
+  <a href="https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847"><strong>Mac App Store</strong></a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
   <a href="https://github.com/andrewmmc/roshi/releases/latest"><strong>Free download</strong></a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847"><strong>Mac App Store</strong></a>
+  <a href="https://roshi.mmc.dev"><strong>Website</strong></a>
 </p>
 
-## Why Roshi
+## Overview
 
-- **Purpose-built for LLM APIs** — test chat-style payloads, streaming, image inputs, and provider-specific settings without forcing them into a generic HTTP client
-- **Local-first by default** — no backend, no signup, no telemetry, and no hosted key storage
-- **Multi-provider workflow** — built-in templates for OpenAI, Anthropic, Google Gemini, and OpenRouter, plus custom OpenAI-compatible endpoints
-- **Debuggable and reproducible** — inspect raw payloads, save local history with diffing, and generate Python and Node.js snippets for supported OpenAI-compatible requests
-- **Compare models side by side** — Eval mode runs the same prompt across multiple providers/models at once, with LLM-as-judge scoring and CSV/JSON export
+Roshi is a Postman-like desktop client built specifically for LLM APIs. It understands multi-turn messages, streaming, model parameters, token usage, provider-specific payloads, and model comparisons.
 
-## How it works
+Use Roshi with OpenAI, Anthropic, Google Gemini, OpenRouter, or any OpenAI-compatible endpoint. Build a request once, inspect exactly what was sent and returned, then compare the same prompt across models by quality, latency, token usage, and cost.
 
-1. **Add a provider** — start from an OpenAI, Anthropic, Gemini, or OpenRouter template, or configure a compatible endpoint.
-2. **Compose and debug** — edit messages, images, model parameters, and headers while inspecting streamed text, raw bodies, timing, and token usage.
-3. **Compare models** — send the same frozen request to several provider/model pairs and review their output and metrics together.
-4. **Evaluate and reuse** — rate responses yourself or apply an LLM judge with your rubric, then save the run, export the results, or generate code.
+| Area              | Details                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| Providers         | OpenAI, Anthropic, Google Gemini, OpenRouter, and OpenAI-compatible APIs                     |
+| Core workflow     | Compose → send → inspect → compare → evaluate                                                |
+| Data storage      | Local IndexedDB; no Roshi backend, account, telemetry, or hosted key storage                 |
+| Desktop platforms | macOS on Apple Silicon and Intel                                                             |
+| Model evaluation  | Side-by-side runs, manual ratings, LLM-as-judge scoring, response diffs, and CSV/JSON export |
+
+## Workflow
+
+1. **Add a provider.** Choose a built-in template or configure a compatible endpoint.
+2. **Compose a request.** Add messages, images, model parameters, and custom headers.
+3. **Inspect the result.** Review streamed text, raw payloads, timing, and token usage.
+4. **Compare and evaluate.** Run the request across models, apply your rubric, and save or export the results.
 
 ## Screenshots
 
@@ -110,62 +108,61 @@ These are current views from the shipping app.
   Choose a separate judge model to score candidates for qualities such as helpfulness, accuracy, and clarity, and select a winner.
 </p>
 
-## Download
+## Install
 
-**[Download on the Mac App Store](https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847)**
-&nbsp;&nbsp;·&nbsp;&nbsp;
-**[Download the latest release](https://github.com/andrewmmc/roshi/releases/latest)** (free, manual updates)
+Roshi supports macOS on Apple Silicon (M1+) and Intel.
 
-macOS builds are available for both Apple Silicon (M1+) and Intel.
+| Option                                                                                  | Best for                                     |
+| --------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **[Mac App Store](https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847)** | Automatic updates and supporting development |
+| **[GitHub release](https://github.com/andrewmmc/roshi/releases/latest)**                | Free manual installation                     |
 
-### Mac App Store (recommended)
+To install a GitHub release:
 
-The Mac App Store version is a one-time purchase that includes automatic updates and supports ongoing development. Click **[Download on the Mac App Store](https://apps.apple.com/us/app/roshi-llm-api-workbench/id6761768847)** to get it.
+1. Download the `.dmg` for your Mac from the [latest release](https://github.com/andrewmmc/roshi/releases/latest).
+2. Open it and drag **Roshi** to **Applications**.
+3. If macOS blocks the first launch, open **System Settings → Privacy & Security** and select **Open Anyway**.
+4. Add a provider API key and start testing.
 
-### Manual install (free, GitHub releases)
-
-1. Download the `.dmg` file from the [releases page](https://github.com/andrewmmc/roshi/releases/latest) for your architecture (Apple Silicon or Intel).
-2. Open the `.dmg` and drag **Roshi** to your **Applications** folder.
-3. On first launch, macOS may block the app. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
-4. Add your API key for any provider in the app and start testing.
-
-> You can also use Roshi as a [web app](#development) in the browser — no install required. Note: the browser build only works with CORS-enabled providers; most major providers (OpenAI, Anthropic) block browser-origin requests. Use the desktop app for full provider compatibility.
+> The browser build is intended for development. It only works with CORS-enabled providers; use the desktop app for full provider compatibility.
 
 ## Features
 
-- **Multi-provider support** — built-in templates for OpenAI, Anthropic, Google Gemini, and OpenRouter; add custom providers for any OpenAI-compatible endpoint
-- **Model Market** — browse and opt in to models sourced from the [models.dev](https://models.dev) catalog instead of hand-typing model IDs
-- **Real-time streaming** — SSE streaming with live token output
-- **Multi-turn conversations** — build and test full chat sessions with role-based message composer, opt-in sampling parameters, and per-request custom headers
-- **Tabs** — work on up to 8 requests at once, each with its own composer state
-- **Collections** — save and organize requests into collections for reuse
-- **Environments** — define named variable sets and use `{{var}}` substitution across requests, with an environment preview and provider health checks
-- **Eval mode** — run the same prompt across multiple providers/models side by side, score results with an LLM-as-judge, and export runs as CSV/JSON
-- **Request history** — every request and response stored locally with search, filtering, and diffing between entries
-- **Command palette** — `⌘K` quick actions for sending requests, switching tabs, searching history, and jumping to settings
-- **Code snippets** — auto-generated Python and Node.js snippets for supported OpenAI-compatible requests
-- **Image attachments** — test vision models with base64-encoded image inputs
-- **Advanced parameters** — temperature, top-p, frequency/presence penalty, max tokens, custom headers, system prompt
-- **Dark mode** — toggle between light and dark themes
-- **Open source and fully client-side** — MIT licensed, no backend, no telemetry; API keys are stored locally and never transmitted
+### Build and debug requests
 
-## Why Developers Can Trust It
+- Multi-turn conversations with system prompts, image attachments, sampling parameters, and custom headers
+- Real-time SSE streaming with raw request and response inspection
+- Token usage, latency, time-to-first-token, throughput, and estimated cost metrics
+- Python and Node.js snippets for supported OpenAI-compatible requests
 
-- **Open source under MIT** — the code and license are straightforward to inspect, use, and contribute to
-- **Privacy-first architecture** — provider keys, settings, and history are stored locally in the app instead of routed through a Roshi service
-- **Verified in CI** — every push and pull request runs lint, format checks, tests, and a production build in [CI](https://github.com/andrewmmc/roshi/actions/workflows/ci.yml)
-- **No hidden hosted dependency** — the desktop app calls provider APIs directly, and the browser workflow remains client-side for development
+### Organize your work
 
-## Security model
+- Model catalog powered by [models.dev](https://models.dev)
+- Up to eight independent request tabs
+- Searchable local history with filtering and response diffs
+- Reusable collections and saved requests
+- Named environments with `{{var}}` substitution
+- `⌘K` command palette and light/dark themes
 
-Roshi stores API keys **unencrypted** in browser IndexedDB. This is an accepted tradeoff for the local-first desktop app, where only your code and your OS have access to local storage.
+### Compare models
 
-- **Desktop (recommended for real keys)** — keys never leave your machine; the Tauri app calls provider APIs directly with a restrictive Content-Security-Policy.
-- **Web / self-hosted** — the same CSP applies via a `<meta>` tag, but any XSS on the hosting origin could read stored keys. Treat the web build as a convenience for development and testing, not as the primary way to hold production secrets.
+- Side-by-side runs across multiple providers and models
+- Manual ratings and custom LLM-as-judge rubrics
+- Word-level response diffs and direct metric comparisons
+- Saved eval runs with CSV and JSON export
+
+## Privacy and security
+
+Roshi is open source under the [MIT License](LICENSE). It has no backend, account system, telemetry, or hosted dependency. The desktop app calls provider APIs directly, and [CI](https://github.com/andrewmmc/roshi/actions/workflows/ci.yml) checks formatting, linting, tests, and production builds.
+
+API keys are stored **unencrypted** in local IndexedDB:
+
+- **Desktop (recommended for real keys):** keys are sent directly to the selected provider, never through Roshi infrastructure. The Tauri app uses a restrictive Content Security Policy.
+- **Web or self-hosted:** an XSS vulnerability on the hosting origin could read stored keys. Use the browser build for development and testing, not for production secrets.
 
 ## Development
 
-> **Note:** This section is for contributors and developers only. If you just want to use Roshi, [download the app](#download) instead.
+> Looking to use Roshi? [Install the desktop app](#install). This section is for contributors.
 
 ### Prerequisites
 
@@ -176,33 +173,35 @@ Roshi stores API keys **unencrypted** in browser IndexedDB. This is an accepted 
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173
+npm run dev
 ```
 
-> **CORS note:** The dev server includes a proxy (`/api/proxy`) that bypasses browser CORS restrictions. A production web build (`npm run build`) does not include this proxy — provider calls will fail for endpoints that don't send CORS headers (most major providers). For full provider compatibility in production, use the Tauri desktop app.
+Then open <http://localhost:5173>.
+
+The dev server includes a CORS proxy at `/api/proxy`. Production web builds do not, so providers that block browser requests will fail there. Use the Tauri desktop app for full provider compatibility.
 
 ### Commands
 
 ```bash
-npm run build        # production build
-npm run test         # run unit/integration tests (Vitest)
-npm run test:e2e     # run Playwright end-to-end tests
+npm run build        # Production build
+npm run test         # Unit and integration tests
+npm run test:e2e     # Playwright end-to-end tests
 npm run lint         # ESLint
-npm run typecheck    # TypeScript check
+npm run typecheck    # TypeScript
 npm run format       # Prettier
-npm run tauri:dev    # desktop app (dev)
-npm run tauri:build  # desktop app (release)
+npm run tauri:dev    # Desktop app in development
+npm run tauri:build  # Desktop release build
 ```
 
 ### Tech stack
 
-React 19, TypeScript, Vite 7, Tailwind CSS v4, shadcn/ui v4, Zustand, Dexie.js (IndexedDB), eventsource-parser (SSE), Tauri 2 (desktop), Vitest + Playwright (testing).
+React 19 · TypeScript · Vite 7 · Tailwind CSS v4 · shadcn/ui v4 · Zustand · Dexie.js · Tauri 2 · Vitest · Playwright
 
-See **[AGENTS.md](./AGENTS.md)** for architecture, conventions, and contributor docs.
+See [AGENTS.md](./AGENTS.md) for architecture, conventions, and contributor documentation.
 
 ## Contributing
 
-Issues and pull requests are welcome. If you want to propose a feature, report a bug, or improve a provider workflow, start with [GitHub issues](https://github.com/andrewmmc/roshi/issues) and include enough context to reproduce the behavior.
+Issues and pull requests are welcome. To suggest a feature or report a bug, [open an issue](https://github.com/andrewmmc/roshi/issues) with enough detail to reproduce the behavior.
 
 ## Author
 
@@ -210,7 +209,7 @@ Created by **Andrew Mok** ([@andrewmmc](https://github.com/andrewmmc))
 
 ## Disclaimer
 
-Roshi is an independent, open-source project. It is not affiliated with, endorsed by, or sponsored by Postman, Inc. "Postman" is a trademark of Postman, Inc. References to Postman are for descriptive purposes only.
+Roshi is not affiliated with, endorsed by, or sponsored by Postman, Inc. “Postman” is a trademark of Postman, Inc. References to Postman are descriptive only.
 
 ## License
 
