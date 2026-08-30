@@ -1,5 +1,6 @@
 import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 interface RatingControlProps {
   rating: number | null;
@@ -16,12 +17,13 @@ export function RatingControl({
   onRatingChange,
   onThumbsChange,
 }: RatingControlProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-2">
       <div
         className="flex items-center gap-0.5"
         role="radiogroup"
-        aria-label="Star rating"
+        aria-label={t('eval.starRating')}
       >
         {STAR_VALUES.map((value) => {
           const active = rating !== null && value <= rating;
@@ -31,7 +33,7 @@ export function RatingControl({
               type="button"
               role="radio"
               aria-checked={rating === value}
-              aria-label={`Rate ${value} out of 5`}
+              aria-label={t('eval.rateOutOfFive', { value })}
               onClick={() => onRatingChange(rating === value ? null : value)}
               className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-md"
             >
@@ -49,7 +51,7 @@ export function RatingControl({
       <div className="bg-border/70 h-3 w-px" />
       <button
         type="button"
-        aria-label="Thumbs up"
+        aria-label={t('eval.thumbsUp')}
         aria-pressed={thumbs === 'up'}
         onClick={() => onThumbsChange(thumbs === 'up' ? null : 'up')}
         className={cn(
@@ -63,7 +65,7 @@ export function RatingControl({
       </button>
       <button
         type="button"
-        aria-label="Thumbs down"
+        aria-label={t('eval.thumbsDown')}
         aria-pressed={thumbs === 'down'}
         onClick={() => onThumbsChange(thumbs === 'down' ? null : 'down')}
         className={cn(

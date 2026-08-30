@@ -1,4 +1,5 @@
 import type { EvalMetrics } from '@/types/eval';
+import { useTranslation } from '@/i18n';
 import { formatCount } from '@/utils/format';
 import { formatCostUsd } from '@/utils/cost';
 
@@ -39,59 +40,60 @@ interface MetricsBarProps {
 }
 
 export function MetricsBar({ metrics }: MetricsBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap gap-1.5">
       <MetricChip
-        label="Duration"
+        label={t('eval.metricDuration')}
         value={formatMs(metrics.durationMs)}
-        title="Total wall-clock time for the request"
+        title={t('eval.titleDuration')}
       />
       <MetricChip
-        label="TTFT"
+        label={t('eval.metricTtft')}
         value={formatMs(metrics.ttftMs)}
-        title="Time to first streamed token"
+        title={t('eval.titleTtft')}
       />
       <MetricChip
-        label="Throughput"
+        label={t('eval.metricThroughput')}
         value={formatTps(metrics.tokensPerSec)}
-        title="Completion tokens per second"
+        title={t('eval.titleThroughput')}
       />
       <MetricChip
-        label="Prompt"
+        label={t('eval.metricPrompt')}
         value={
           metrics.promptTokens !== null
             ? formatCount(metrics.promptTokens)
             : '—'
         }
-        title="Input tokens"
+        title={t('eval.titlePromptTokens')}
       />
       <MetricChip
-        label="Completion"
+        label={t('eval.metricCompletion')}
         value={
           metrics.completionTokens !== null
             ? formatCount(metrics.completionTokens)
             : '—'
         }
-        title="Output tokens"
+        title={t('eval.titleCompletionTokens')}
       />
       <MetricChip
-        label="Cost"
+        label={t('eval.metricCost')}
         value={formatCostUsd(metrics.costUsd)}
-        title="Estimated cost using models.dev pricing"
+        title={t('eval.titleCost')}
       />
       <MetricChip
-        label="Chars"
+        label={t('eval.metricChars')}
         value={
           metrics.responseChars !== null
             ? formatCount(metrics.responseChars)
             : '—'
         }
-        title="Length of the response in characters"
+        title={t('eval.titleChars')}
       />
       <MetricChip
-        label="Finish"
+        label={t('eval.metricFinish')}
         value={metrics.finishReason ?? '—'}
-        title="Provider-reported finish reason"
+        title={t('eval.titleFinish')}
       />
     </div>
   );

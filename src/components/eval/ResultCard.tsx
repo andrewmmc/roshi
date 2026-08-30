@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EvalRunResult, EvalRunner, JudgeResult } from '@/types/eval';
+import { useTranslation } from '@/i18n';
 import { useEvalStore } from '@/stores/eval-store';
 import { MetricsBar } from './MetricsBar';
 import { RatingControl } from './RatingControl';
@@ -30,6 +31,7 @@ function statusBadgeClass(status: EvalRunResult['status']): string {
 }
 
 export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
+  const { t } = useTranslation();
   const removeRunner = useEvalStore((s) => s.removeRunner);
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const toggleCompare = useEvalStore((s) => s.toggleCompare);
@@ -46,6 +48,15 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
     [result.content],
   );
 
+  const statusLabels: Record<EvalRunResult['status'], string> = {
+    success: t('eval.statusSuccess'),
+    streaming: t('eval.statusStreaming'),
+    pending: t('eval.statusPending'),
+    cancelled: t('eval.statusCancelled'),
+    partial: t('eval.statusPartial'),
+    error: t('eval.statusError'),
+  };
+
   return (
     <div
       className={cn(
@@ -61,7 +72,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
               statusBadgeClass(result.status),
             )}
           >
-            {result.status}
+            {statusLabels[result.status]}
           </span>
           <span className="truncate font-mono text-xs" title={runner.label}>
             {runner.label}
@@ -69,7 +80,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
           {isWinner && (
             <Trophy
               className="h-3.5 w-3.5 text-yellow-500"
-              aria-label="Judge winner"
+              aria-label={t('eval.judgeWinner')}
             />
           )}
         </div>
@@ -81,7 +92,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
               onChange={() => toggleCompare(runner.id)}
               className="rounded"
             />
-            Compare
+            {t('eval.compare')}
           </label>
           <button
             type="button"
@@ -89,7 +100,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
             disabled={isRunning}
             className="text-muted-foreground hover:text-foreground text-xs disabled:opacity-40"
           >
-            Remove
+            {t('common.remove')}
           </button>
         </div>
       </div>
@@ -112,7 +123,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
           </>
         ) : (
           <p className="text-muted-foreground text-xs italic">
-            Waiting for response…
+            {t('eval.waitingForResponse')}
           </p>
         )}
       </div>
@@ -128,20 +139,33 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
             onThumbsChange={(thumbs) => setThumbs(runner.id, thumbs)}
           />
           <span className="text-muted-foreground text-[11px]">
-            {wordCount} words
+            {t('eval.wordCount', { count: wordCount })}
           </span>
         </div>
 
         {judgeScore && (
           <div className="border-border/60 border-t pt-1.5">
             <div className="text-muted-foreground/70 mb-1 text-[11px] font-medium tracking-wide uppercase">
-              Judge
+              {t('eval.judge')}
             </div>
             <div className="grid grid-cols-4 gap-1 text-[11px]">
-              <ScoreCell label="Helpful" value={judgeScore.helpfulness} />
-              <ScoreCell label="Accurate" value={judgeScore.accuracy} />
-              <ScoreCell label="Clear" value={judgeScore.clarity} />
-              <ScoreCell label="Overall" value={judgeScore.overall} bold />
+              <ScoreCell
+                label={t('eval.scoreHelpful')}
+                value={judgeScore.helpfulness}
+              />
+              <ScoreCell
+                label={t('eval.scoreAccurate')}
+                value={judgeScore.accuracy}
+              />
+              <ScoreCell
+                label={t('eval.scoreClear')}
+                value={judgeScore.clarity}
+              />
+              <ScoreCell
+                label={t('eval.scoreOverall')}
+                value={judgeScore.overall}
+                bold
+              />
             </div>
             {judgeScore.rationale && (
               <p className="text-muted-foreground mt-1 text-xs italic">

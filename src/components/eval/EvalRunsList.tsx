@@ -37,6 +37,7 @@ import { useUiStore } from '@/stores/ui-store';
 import { toast } from '@/stores/toast-store';
 import { formatRelativeTime } from '@/utils/relative-time';
 import type { EvalCollection, EvalRunRecord } from '@/types/eval';
+import { useTranslation } from '@/i18n';
 import { loadStoreSafely } from '@/stores/load-error';
 
 const TRIGGER_CLASS =
@@ -67,11 +68,12 @@ function EvalRunItem({
   onMove: (record: EvalRunRecord, collectionId: string | null) => void;
   onDelete: (record: EvalRunRecord) => void;
 }) {
+  const { t } = useTranslation();
   const successCount = record.results.filter(
     (r) => r.status === 'success',
   ).length;
   const winnerLabel = winnerLabelFor(record);
-  const displayName = record.name ?? 'Untitled eval run';
+  const displayName = record.name ?? t('eval.untitledRun');
   const currentCollectionId = record.collectionId ?? null;
   const moveTargets = collections.filter(
     (collection) => collection.id !== currentCollectionId,
@@ -84,7 +86,7 @@ function EvalRunItem({
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Eval run actions"
+            aria-label={t('eval.runActions')}
             className={TRIGGER_CLASS}
             onClick={(e) => e.stopPropagation()}
           >
@@ -93,18 +95,20 @@ function EvalRunItem({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onRename(record)}>
               <Pencil className="h-3.5 w-3.5" />
-              Rename
+              {t('eval.rename')}
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger disabled={!canMove}>
                 <FolderOpen className="h-3.5 w-3.5" />
-                Move to
+                {t('eval.moveTo')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {currentCollectionId !== null && (
                   <DropdownMenuItem onClick={() => onMove(record, null)}>
                     <Folder className="h-3.5 w-3.5" />
-                    <span className="truncate">Ungrouped</span>
+                    <span className="truncate">
+                      {t('collections.ungrouped')}
+                    </span>
                   </DropdownMenuItem>
                 )}
                 {moveTargets.map((collection) => (
@@ -124,7 +128,7 @@ function EvalRunItem({
               onClick={() => onDelete(record)}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {t('eval.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -136,14 +140,21 @@ function EvalRunItem({
         </div>
         <div className="text-muted-foreground flex items-center justify-between text-[11px]">
           <span>
-            {record.runners.length} runner
-            {record.runners.length === 1 ? '' : 's'} · {successCount} ok
+            {record.runners.length === 1
+              ? t('eval.runSummarySingular', {
+                  runners: record.runners.length,
+                  ok: successCount,
+                })
+              : t('eval.runSummary', {
+                  runners: record.runners.length,
+                  ok: successCount,
+                })}
           </span>
           <span>{formatRelativeTime(record.createdAt)}</span>
         </div>
         {winnerLabel && (
           <div className="text-muted-foreground text-[11px]">
-            Winner: <span className="font-mono">{winnerLabel}</span>
+            {t('eval.winnerLine', { label: winnerLabel })}
           </div>
         )}
       </div>
@@ -206,6 +217,7 @@ interface EvalRunsListProps {
 }
 
 export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
+  const { t } = useTranslation();
   const records = useEvalRunsStore((s) => s.records);
   const collections = useEvalRunsStore((s) => s.collections);
   const loaded = useEvalRunsStore((s) => s.loaded);
@@ -252,20 +264,20 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
     for (const [key, recs] of recordsByCollection) {
       const collectionName =
         key === UNGROUPED_ID
-          ? 'ungrouped'
+          ? t('collections.ungrouped').toLowerCase()
           : (collections.find((c) => c.id === key)?.name.toLowerCase() ?? '');
       const collectionMatches = collectionName.includes(query);
       const matchingRecords = collectionMatches
         ? recs
         : recs.filter((r) =>
-            (r.name ?? 'Untitled eval run').toLowerCase().includes(query),
+            (r.name ?? t('eval.untitledRun')).toLowerCase().includes(query),
           );
       if (matchingRecords.length > 0 || collectionMatches) {
         filtered.set(key, matchingRecords);
       }
     }
     return filtered;
-  }, [isSearching, recordsByCollection, collections, query]);
+  }, [isSearching, recordsByCollection, collections, query, t]);
 
   const filteredCollections = useMemo(() => {
     if (!isSearching) return collections;
@@ -291,13 +303,13 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const handleSelect = useCallback(
     (record: EvalRunRecord) => {
       if (isRunning || isJudging) {
-        toast('Stop the active eval before loading a saved run.');
+        toast(t('eval.stopActiveEvalToast'));
         return;
       }
       loadRun(record);
       setMainView('eval');
     },
-    [isJudging, isRunning, loadRun, setMainView],
+    [isJudging, isRunning, loadRun, setMainView, t],
   );
 
   const handleMove = useCallback(
@@ -306,9 +318,13 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
       const target = collectionId
         ? collections.find((collection) => collection.id === collectionId)
         : null;
-      toast(target ? `Moved to ${target.name}` : 'Moved to Ungrouped');
+      toast(
+        target
+          ? t('eval.movedToToast', { name: target.name })
+          : t('eval.movedToToast', { name: t('collections.ungrouped') }),
+      );
     },
-    [collections, moveRun],
+    [collections, moveRun, t],
   );
 
   const handleSave = useCallback(
@@ -318,9 +334,9 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
         ...record,
         collectionId: collectionId ?? undefined,
       });
-      toast('Saved eval run');
+      toast(t('eval.savedToast'));
     },
-    [buildRecord, saveRecord],
+    [buildRecord, saveRecord, t],
   );
 
   const handleNameSubmit = useCallback(
@@ -328,28 +344,28 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
       if (!nameDialog) return;
       if (nameDialog.mode === 'create-folder') {
         await addCollection(name);
-        toast('Folder created');
+        toast(t('eval.folderCreatedToast'));
       } else if (nameDialog.mode === 'rename-folder') {
         await renameCollection(nameDialog.id, name);
-        toast('Folder renamed');
+        toast(t('eval.folderRenamedToast'));
       } else {
         await rename(nameDialog.id, name);
-        toast('Eval run renamed');
+        toast(t('eval.runRenamedToast'));
       }
     },
-    [addCollection, nameDialog, rename, renameCollection],
+    [addCollection, nameDialog, rename, renameCollection, t],
   );
 
   const handleConfirmDelete = useCallback(async () => {
     if (!confirm) return;
     if (confirm.kind === 'folder') {
       await deleteCollection(confirm.id);
-      toast('Folder deleted');
+      toast(t('eval.folderDeletedToast'));
     } else {
       await remove(confirm.id);
-      toast('Eval run deleted');
+      toast(t('eval.runDeletedToast'));
     }
-  }, [confirm, deleteCollection, remove]);
+  }, [confirm, deleteCollection, remove, t]);
 
   const saveDisabled = isRunning || isJudging || runners.length === 0;
   const isEmpty = records.length === 0 && collections.length === 0;
@@ -357,26 +373,26 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const nameDialogConfig = nameDialog
     ? nameDialog.mode === 'create-folder'
       ? {
-          title: 'New folder',
-          label: 'Folder name',
-          placeholder: 'Folder name',
+          title: t('collections.newFolder'),
+          label: t('eval.folderName'),
+          placeholder: t('eval.folderName'),
           initialValue: '',
-          submitLabel: 'Create',
+          submitLabel: t('eval.create'),
         }
       : nameDialog.mode === 'rename-folder'
         ? {
-            title: 'Rename folder',
-            label: 'Folder name',
-            placeholder: 'Folder name',
+            title: t('eval.renameFolderTitle'),
+            label: t('eval.folderName'),
+            placeholder: t('eval.folderName'),
             initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
+            submitLabel: t('eval.rename'),
           }
         : {
-            title: 'Rename eval run',
-            label: 'Run name',
-            placeholder: 'Run name',
+            title: t('eval.renameRunTitle'),
+            label: t('eval.runName'),
+            placeholder: t('eval.runName'),
             initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
+            submitLabel: t('eval.rename'),
           }
     : null;
 
@@ -385,7 +401,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
       <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-            Collections
+            {t('navigation.collections')}
           </span>
         )}
         <div className="flex items-center">
@@ -394,7 +410,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => setNameDialog({ mode: 'create-folder' })}
-            tooltip="New folder"
+            tooltip={t('collections.newFolder')}
           >
             <FolderPlus className="h-3.5 w-3.5" />
           </IconButton>
@@ -403,7 +419,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => setSaveOpen(true)}
-            tooltip="Save current eval run"
+            tooltip={t('eval.saveCurrentRun')}
             disabled={saveDisabled}
           >
             <Save className="h-3.5 w-3.5" />
@@ -419,8 +435,8 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
               aria-hidden="true"
             />
             <Input
-              placeholder="Search collections..."
-              aria-label="Search collections"
+              placeholder={t('collections.search')}
+              aria-label={t('eval.searchCollectionsAria')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
@@ -429,8 +445,8 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
               <button
                 onClick={() => setSearchQuery('')}
                 className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
-                aria-label="Clear search"
-                title="Clear search"
+                aria-label={t('common.clearSearch')}
+                title={t('common.clearSearch')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -444,8 +460,8 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
           <EmptyState
             compact
             icon={BarChart2}
-            title="No saved runs"
-            description="Compare one prompt across multiple models, then save the run here."
+            title={t('eval.noSavedRuns')}
+            description={t('eval.noSavedRunsDescription')}
           />
         ) : isSearching &&
           filteredCollections.length === 0 &&
@@ -453,8 +469,8 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
           <EmptyState
             compact
             icon={Search}
-            title="No results"
-            description="Try a different search term."
+            title={t('collections.noResults')}
+            description={t('eval.noResultsDescription')}
           />
         ) : (
           <div className="flex flex-col gap-2 p-2">
@@ -471,7 +487,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                   actions={
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        aria-label="Folder actions"
+                        aria-label={t('eval.folderActions')}
                         className={`${TRIGGER_CLASS} opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[popup-open]:opacity-100`}
                       >
                         <MoreHorizontal className="h-3.5 w-3.5" />
@@ -487,7 +503,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                           }
                         >
                           <Pencil className="h-3.5 w-3.5" />
-                          Rename
+                          {t('eval.rename')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -501,7 +517,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                           }
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete
+                          {t('eval.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -509,7 +525,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                 >
                   {folderRecords.length === 0 ? (
                     <p className="text-muted-foreground/70 px-2.5 pb-1 pl-6 text-[11px]">
-                      No saved runs
+                      {t('eval.noSavedRuns')}
                     </p>
                   ) : (
                     folderRecords.map((record) => (
@@ -530,7 +546,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                           setConfirm({
                             kind: 'run',
                             id: target.id,
-                            name: target.name ?? 'Untitled eval run',
+                            name: target.name ?? t('eval.untitledRun'),
                           })
                         }
                       />
@@ -542,7 +558,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
 
             {ungroupedRecords.length > 0 && (
               <EvalRunSection
-                name="Ungrouped"
+                name={t('collections.ungrouped')}
                 count={ungroupedRecords.length}
                 collapsed={!isSearching && collapsed.has(UNGROUPED_ID)}
                 onToggle={() => toggleCollapse(UNGROUPED_ID)}
@@ -565,7 +581,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
                       setConfirm({
                         kind: 'run',
                         id: target.id,
-                        name: target.name ?? 'Untitled eval run',
+                        name: target.name ?? t('eval.untitledRun'),
                       })
                     }
                   />
@@ -601,13 +617,15 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
       <ConfirmDeleteDialog
         open={confirm !== null}
         title={
-          confirm?.kind === 'folder' ? 'Delete folder?' : 'Delete eval run?'
+          confirm?.kind === 'folder'
+            ? t('eval.deleteFolderTitle')
+            : t('eval.deleteRunTitle')
         }
         description={
           confirm?.kind === 'folder'
-            ? `"${confirm.name}" and all of its saved runs will be permanently deleted.`
+            ? t('eval.deleteFolderDescription', { name: confirm.name })
             : confirm
-              ? `"${confirm.name}" will be permanently deleted.`
+              ? t('eval.deleteRunDescription', { name: confirm.name })
               : ''
         }
         onOpenChange={(open) => {

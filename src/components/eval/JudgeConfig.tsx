@@ -9,9 +9,11 @@ import {
 } from '@/components/ui/select';
 import { useProviderStore } from '@/stores/provider-store';
 import { useEvalStore } from '@/stores/eval-store';
+import { useTranslation } from '@/i18n';
 import { sortProvidersByName } from '@/utils/sort-providers';
 
 export function JudgeConfig() {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const judgeConfig = useEvalStore((s) => s.judgeConfig);
   const setJudgeEnabled = useEvalStore((s) => s.setJudgeEnabled);
@@ -49,8 +51,7 @@ export function JudgeConfig() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground text-xs">
-        Judge uses a separate model to automatically score each response against
-        your rubric and pick a winner.
+        {t('eval.judgeDescription')}
       </p>
       <label className="flex items-center gap-2 text-xs">
         <input
@@ -60,16 +61,16 @@ export function JudgeConfig() {
           disabled={isRunning}
           className="rounded"
         />
-        <span className="text-foreground">Enable LLM-as-judge</span>
+        <span className="text-foreground">{t('eval.enableJudge')}</span>
         <span className="text-muted-foreground text-xs">
-          Score every candidate after the run.
+          {t('eval.judgeHint')}
         </span>
       </label>
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-            Judge provider
+            {t('eval.judgeProvider')}
           </label>
           <Select
             value={judgeConfig.runner?.providerId ?? ''}
@@ -77,8 +78,8 @@ export function JudgeConfig() {
             disabled={!judgeConfig.enabled || isRunning}
           >
             <SelectTrigger className="h-7 w-[160px] text-xs">
-              <SelectValue placeholder="Provider">
-                {selectedProvider?.name ?? 'Provider'}
+              <SelectValue placeholder={t('request.provider')}>
+                {selectedProvider?.name ?? t('request.provider')}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -92,7 +93,7 @@ export function JudgeConfig() {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-            Judge model
+            {t('eval.judgeModel')}
           </label>
           <Select
             value={judgeConfig.runner?.modelId ?? ''}
@@ -100,8 +101,8 @@ export function JudgeConfig() {
             disabled={!judgeConfig.enabled || isRunning}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
-              <SelectValue placeholder="Model">
-                {selectedModel?.displayName ?? 'Model'}
+              <SelectValue placeholder={t('request.model')}>
+                {selectedModel?.displayName ?? t('request.model')}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +114,7 @@ export function JudgeConfig() {
                 ))
               ) : (
                 <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-                  No models available.
+                  {t('request.noModelsAvailable')}
                 </div>
               )}
             </SelectContent>
@@ -123,7 +124,7 @@ export function JudgeConfig() {
 
       <div className="flex flex-col gap-1">
         <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-          Rubric
+          {t('eval.rubric')}
         </label>
         <Textarea
           value={judgeConfig.rubric}

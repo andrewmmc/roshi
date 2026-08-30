@@ -1,4 +1,5 @@
 export const evalStrings = {
+  // Eval view chrome and tabs
   runners: '執行項目',
   judge: '評審',
   results: '結果',
@@ -12,4 +13,136 @@ export const evalStrings = {
   emptyResultsTitle: '請至少新增一個執行項目才能開始評測。',
   emptyResultsDescription:
     '請在「執行項目」分頁選擇供應商與模型，然後執行評測即可在此比較結果。',
+
+  // Runner picker
+  noProvidersTitle: '請先新增供應商 API 金鑰以建立執行項目。',
+  addApiKey: '新增 API 金鑰',
+  runnersHint: '每個執行項目都是一組供應商與模型，會接收相同的提示詞。',
+  addRunner: '新增執行項目',
+  noRunnersHint: '尚無執行項目。請至少新增一組供應商與模型以進行比較。',
+  removeRunnerLabel: '移除 {label}',
+
+  // Judge config
+  judgeDescription:
+    '評審會使用獨立的模型，依據您的評分準則自動為每個回應評分並選出優勝者。',
+  enableJudge: '啟用 LLM 評審',
+  judgeHint: '執行結束後為每個候選回應評分。',
+  judgeProvider: '評審供應商',
+  judgeModel: '評審模型',
+  rubric: '評分準則',
+
+  // Result cards
+  statusSuccess: '成功',
+  statusStreaming: '串流中',
+  statusPending: '等待中',
+  statusCancelled: '已取消',
+  statusPartial: '部分完成',
+  statusError: '錯誤',
+  judgeWinner: '評審選出的優勝',
+  waitingForResponse: '正在等待回應…',
+  wordCount: '{count} 字',
+  scoreHelpful: '有幫助',
+  scoreAccurate: '準確',
+  scoreClear: '清晰',
+  scoreOverall: '總分',
+
+  // Metrics chips
+  metricDuration: '耗時',
+  metricTtft: 'TTFT',
+  metricThroughput: '輸送量',
+  metricPrompt: '提示詞',
+  metricCompletion: '完成',
+  metricCost: '成本',
+  metricChars: '字元數',
+  metricFinish: '結束原因',
+  titleDuration: '請求的總耗時',
+  titleTtft: '收到首個串流 Token 的時間',
+  titleThroughput: '每秒完成的 Token 數',
+  titlePromptTokens: '輸入 Token 數',
+  titleCompletionTokens: '輸出 Token 數',
+  titleCost: '依 models.dev 定價估算的成本',
+  titleChars: '回應的字元長度',
+  titleFinish: '供應商回報的結束原因',
+
+  // Rating control
+  starRating: '星級評分',
+  rateOutOfFive: '評為 {value} / 5 星',
+  thumbsUp: '讚',
+  thumbsDown: '倒讚',
+
+  // Compare view
+  selectTwoResults: '請選取兩個結果以進行比較。',
+  selectOneMoreResult: '請再選取一個結果以進行比較。',
+  compareHint:
+    '在「結果」分頁勾選兩張結果卡片上的「比較」，即可查看並排差異與指標。',
+  compareHintMore: '請在「結果」分頁再勾選一張結果卡片上的「比較」。',
+  vs: '對',
+  jaccardSimilarity: 'Jaccard 相似度：{value}',
+  clear: '清除',
+  differences: '差異',
+  sideBySideMetrics: '並排指標',
+  metric: '指標',
+  metricTokensPerSec: '每秒 Token 數',
+  metricPromptTokens: '提示詞 Token',
+  metricCompletionTokens: '完成 Token',
+  metricCostUsd: '成本（美元）',
+
+  // Eval composer
+  sharedSystemPrompt: '共用的系統提示詞（選填）',
+  evalSystemPromptAria: '評測系統提示詞',
+  customHeadersLabel: '自訂',
+  addHeader: '新增標頭',
+  paramsIntro:
+    '選用參數預設為關閉。勾選控制項即會將其加入請求；否則將使用模型預設值。',
+  temperature: '溫度',
+  topP: 'Top P',
+  topK: 'Top K',
+  frequencyPenalty: '頻率懲罰',
+  presencePenalty: '出現懲罰',
+  maxTokens: '最大 Token 數',
+  includeMaxTokens: '包含最大 Token 數',
+  stream: '串流',
+  resetToDefaults: '重設為預設值',
+
+  // Eval runs list
+  untitledRun: '未命名評測執行',
+  runActions: '評測執行操作',
+  folderActions: '資料夾操作',
+  rename: '重新命名',
+  moveTo: '移動到',
+  delete: '刪除',
+  runSummarySingular: '{runners} 個執行項目 · {ok} 個成功',
+  runSummary: '{runners} 個執行項目 · {ok} 個成功',
+  winnerLine: '優勝：{label}',
+  saveCurrentRun: '儲存目前的評測執行',
+  searchCollectionsAria: '搜尋收藏',
+  noSavedRuns: '尚無已儲存的評測執行',
+  noSavedRunsDescription:
+    '在多個模型間比較同一個提示詞，然後將執行結果儲存於此。',
+  noResultsDescription: '請嘗試其他搜尋字詞。',
+  stopActiveEvalToast: '請先停止進行中的評測，再載入已儲存的執行。',
+  movedToToast: '已移動到 {name}',
+  savedToast: '已儲存評測執行',
+  folderName: '資料夾名稱',
+  runName: '執行名稱',
+  create: '建立',
+  renameFolderTitle: '重新命名資料夾',
+  renameRunTitle: '重新命名評測執行',
+  folderCreatedToast: '已建立資料夾',
+  folderRenamedToast: '已重新命名資料夾',
+  runRenamedToast: '已重新命名評測執行',
+  folderDeletedToast: '已刪除資料夾',
+  runDeletedToast: '已刪除評測執行',
+  deleteFolderTitle: '刪除資料夾？',
+  deleteRunTitle: '刪除評測執行？',
+  deleteFolderDescription: '「{name}」及其所有已儲存的執行將被永久刪除。',
+  deleteRunDescription: '「{name}」將被永久刪除。',
+
+  // Save eval run dialog
+  saveDialogTitle: '儲存評測執行',
+  saveDialogDescription: '目前的提示詞、執行項目與結果將會儲存在本機。',
+  runNamePlaceholder: '選填名稱（例如「定價用語變體」）',
+  runNameAria: '評測執行名稱',
+  folderLabel: '資料夾',
+  selectFolderAria: '選擇資料夾',
 } as const;

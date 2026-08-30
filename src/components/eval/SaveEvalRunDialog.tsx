@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from '@/i18n';
 import type { EvalCollection } from '@/types/eval';
 
 const UNGROUPED_VALUE = '__ungrouped__';
@@ -34,6 +35,7 @@ export function SaveEvalRunDialog({
   onOpenChange,
   onSave,
 }: SaveEvalRunDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string>(UNGROUPED_VALUE);
   const [busy, setBusy] = useState(false);
@@ -66,37 +68,42 @@ export function SaveEvalRunDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save eval run</DialogTitle>
+          <DialogTitle>{t('eval.saveDialogTitle')}</DialogTitle>
           <DialogDescription>
-            The current prompt, runners, and results will be persisted locally.
+            {t('eval.saveDialogDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <Field label="Name">
+          <Field label={t('common.name')}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Optional name (e.g. 'Pricing wording variants')"
-              aria-label="Eval run name"
+              placeholder={t('eval.runNamePlaceholder')}
+              aria-label={t('eval.runNameAria')}
               autoFocus
             />
           </Field>
 
-          <Field label="Folder">
+          <Field label={t('eval.folderLabel')}>
             <Select
               value={selectedFolder}
               onValueChange={(value) =>
                 setSelectedFolder(value ?? UNGROUPED_VALUE)
               }
             >
-              <SelectTrigger aria-label="Select folder" className="w-full">
+              <SelectTrigger
+                aria-label={t('eval.selectFolderAria')}
+                className="w-full"
+              >
                 <SelectValue>
-                  {selectedCollection?.name ?? 'Ungrouped'}
+                  {selectedCollection?.name ?? t('collections.ungrouped')}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UNGROUPED_VALUE}>Ungrouped</SelectItem>
+                <SelectItem value={UNGROUPED_VALUE}>
+                  {t('collections.ungrouped')}
+                </SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.name}
@@ -109,10 +116,10 @@ export function SaveEvalRunDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={busy}>
-            Save
+            {t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

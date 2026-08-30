@@ -14,12 +14,14 @@ import {
 import { useProviderStore } from '@/stores/provider-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useTranslation } from '@/i18n';
 import { sortProvidersByName } from '@/utils/sort-providers';
 
 const ADD_PROVIDER_VALUE = '__add_provider__';
 const BROWSE_MODELS_VALUE = '__browse_models__';
 
 export function RunnerPicker() {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const runners = useEvalStore((s) => s.runners);
   const addRunner = useEvalStore((s) => s.addRunner);
@@ -81,7 +83,7 @@ export function RunnerPicker() {
       <EmptyState
         compact
         icon={Server}
-        title="Add a provider API key to create runners."
+        title={t('eval.noProvidersTitle')}
         actions={
           <Button
             type="button"
@@ -90,7 +92,7 @@ export function RunnerPicker() {
             onClick={() => openProviderSettings(null, true)}
           >
             <Server className="h-3 w-3" />
-            Add API key
+            {t('eval.addApiKey')}
           </Button>
         }
       />
@@ -99,13 +101,11 @@ export function RunnerPicker() {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-muted-foreground text-xs">
-        Each runner is a provider + model pair that receives the same prompt.
-      </p>
+      <p className="text-muted-foreground text-xs">{t('eval.runnersHint')}</p>
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-            Provider
+            {t('request.provider')}
           </label>
           <Select
             value={effectiveProviderId}
@@ -113,8 +113,8 @@ export function RunnerPicker() {
             disabled={isRunning}
           >
             <SelectTrigger className="h-7 w-[160px] text-xs">
-              <SelectValue placeholder="Provider">
-                {selectedProvider?.name ?? 'Provider'}
+              <SelectValue placeholder={t('request.provider')}>
+                {selectedProvider?.name ?? t('request.provider')}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -126,7 +126,7 @@ export function RunnerPicker() {
               {sortedProviders.length ? <SelectSeparator /> : null}
               <SelectItem value={ADD_PROVIDER_VALUE}>
                 <Plus />
-                Add provider
+                {t('request.addProvider')}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -134,7 +134,7 @@ export function RunnerPicker() {
 
         <div className="flex flex-col gap-1">
           <label className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-            Model
+            {t('request.model')}
           </label>
           <Select
             value={effectiveModelId}
@@ -142,8 +142,8 @@ export function RunnerPicker() {
             disabled={isRunning}
           >
             <SelectTrigger className="h-7 w-[260px] text-xs">
-              <SelectValue placeholder="Model">
-                {selectedModel?.displayName ?? 'Model'}
+              <SelectValue placeholder={t('request.model')}>
+                {selectedModel?.displayName ?? t('request.model')}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -155,7 +155,7 @@ export function RunnerPicker() {
                 ))
               ) : (
                 <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-                  No models available.
+                  {t('request.noModelsAvailable')}
                 </div>
               )}
               {showBrowseModels ? (
@@ -163,7 +163,7 @@ export function RunnerPicker() {
                   <SelectSeparator />
                   <SelectItem value={BROWSE_MODELS_VALUE}>
                     <Plus />
-                    Browse models
+                    {t('request.browseModels')}
                   </SelectItem>
                 </>
               ) : null}
@@ -178,13 +178,13 @@ export function RunnerPicker() {
           disabled={isRunning || !effectiveProviderId || !effectiveModelId}
         >
           <Plus className="mr-1 h-3 w-3" />
-          Add runner
+          {t('eval.addRunner')}
         </Button>
       </div>
 
       {runners.length === 0 ? (
         <p className="text-muted-foreground text-xs">
-          No runners yet. Add at least one provider + model to compare.
+          {t('eval.noRunnersHint')}
         </p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
@@ -197,7 +197,9 @@ export function RunnerPicker() {
               <span className="font-mono">{runner.label}</span>
               <button
                 type="button"
-                aria-label={`Remove ${runner.label}`}
+                aria-label={t('eval.removeRunnerLabel', {
+                  label: runner.label,
+                })}
                 onClick={() => removeRunner(runner.id)}
                 disabled={isRunning}
                 className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-full disabled:opacity-40"

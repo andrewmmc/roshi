@@ -18,6 +18,7 @@ import {
   SectionHeader,
   SliderNumberRow,
 } from '@/components/composer/primitives';
+import { useTranslation } from '@/i18n';
 import {
   FREQUENCY_PENALTY_MAX,
   FREQUENCY_PENALTY_MIN,
@@ -40,6 +41,7 @@ export function EvalComposer() {
 }
 
 export function EvalSystemPromptEditor() {
+  const { t } = useTranslation();
   const composer = useEvalStore((s) => s.composer);
   const isRunning = useEvalStore((s) => s.isRunning);
   const setSystemPrompt = useEvalStore((s) => s.setSystemPrompt);
@@ -50,8 +52,8 @@ export function EvalSystemPromptEditor() {
       onChange={(e) => setSystemPrompt(e.target.value)}
       disabled={isRunning}
       rows={3}
-      placeholder="Shared system prompt (optional)"
-      aria-label="Eval system prompt"
+      placeholder={t('eval.sharedSystemPrompt')}
+      aria-label={t('eval.evalSystemPromptAria')}
       className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-xs"
     />
   );
@@ -92,6 +94,7 @@ export function EvalMessagesEditor() {
 }
 
 export function EvalHeadersEditor() {
+  const { t } = useTranslation();
   const customHeaders = useEvalStore((s) => s.composer.customHeaders);
   const setCustomHeaders = useEvalStore((s) => s.setCustomHeaders);
   const isRunning = useEvalStore((s) => s.isRunning);
@@ -119,24 +122,24 @@ export function EvalHeadersEditor() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-        Custom
+        {t('eval.customHeadersLabel')}
       </p>
       {customHeaders.map((header, index) => (
         <div key={header.id} className="flex items-center gap-2">
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
-            placeholder="Header name"
+            placeholder={t('request.headerName')}
             disabled={isRunning}
-            aria-label="Custom header name"
+            aria-label={t('request.customHeaderName')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
-            placeholder="Header value"
+            placeholder={t('request.headerValue')}
             disabled={isRunning}
-            aria-label="Custom header value"
+            aria-label={t('request.customHeaderValue')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <IconButton
@@ -145,7 +148,7 @@ export function EvalHeadersEditor() {
             className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
             disabled={isRunning || customHeaders.length <= 1}
-            tooltip="Remove header"
+            tooltip={t('request.removeHeader')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </IconButton>
@@ -159,13 +162,14 @@ export function EvalHeadersEditor() {
         disabled={isRunning}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add header
+        {t('eval.addHeader')}
       </Button>
     </div>
   );
 }
 
 export function EvalParametersEditor() {
+  const { t } = useTranslation();
   const composer = useEvalStore((s) => s.composer);
   const isRunning = useEvalStore((s) => s.isRunning);
   const setTemperature = useEvalStore((s) => s.setTemperature);
@@ -183,14 +187,13 @@ export function EvalParametersEditor() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-muted-foreground/70 text-xs leading-snug">
-        Optional parameters are off by default. Check a control to include it in
-        the request; otherwise the model default is used.
+        {t('eval.paramsIntro')}
       </p>
-      <SectionHeader>Sampling</SectionHeader>
+      <SectionHeader>{t('request.sampling')}</SectionHeader>
 
       <div className="flex flex-col gap-1.5">
         <SliderNumberRow
-          label="Temperature"
+          label={t('eval.temperature')}
           paramKey="temperature"
           value={composer.temperature}
           onChange={setTemperature}
@@ -232,7 +235,7 @@ export function EvalParametersEditor() {
       </div>
 
       <SliderNumberRow
-        label="Top P"
+        label={t('eval.topP')}
         paramKey="top-p"
         value={composer.topP}
         onChange={setTopP}
@@ -245,7 +248,7 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
       <SliderNumberRow
-        label="Top K"
+        label={t('eval.topK')}
         paramKey="top-k"
         value={composer.topK}
         onChange={(value) => setTopK(Math.max(0, Math.round(value)))}
@@ -259,10 +262,10 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
 
-      <SectionHeader>Penalties</SectionHeader>
+      <SectionHeader>{t('request.penalties')}</SectionHeader>
 
       <SliderNumberRow
-        label="Frequency Penalty"
+        label={t('eval.frequencyPenalty')}
         paramKey="frequency-penalty"
         value={composer.frequencyPenalty}
         onChange={setFrequencyPenalty}
@@ -275,7 +278,7 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
       <SliderNumberRow
-        label="Presence Penalty"
+        label={t('eval.presencePenalty')}
         paramKey="presence-penalty"
         value={composer.presencePenalty}
         onChange={setPresencePenalty}
@@ -288,7 +291,7 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
 
-      <SectionHeader>Output</SectionHeader>
+      <SectionHeader>{t('request.output')}</SectionHeader>
 
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
@@ -298,14 +301,14 @@ export function EvalParametersEditor() {
               checked={enabled.maxTokens}
               onChange={(e) => setParamEnabled('maxTokens', e.target.checked)}
               disabled={isRunning}
-              aria-label="Include Max Tokens"
+              aria-label={t('eval.includeMaxTokens')}
               className="rounded"
             />
             <Label
               htmlFor="eval-param-max-tokens"
               className={`text-xs ${maxTokensControlsDisabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
             >
-              Max Tokens
+              {t('eval.maxTokens')}
             </Label>
             <InfoTooltip content={PARAM_INFO['max-tokens']} />
           </div>
@@ -326,7 +329,7 @@ export function EvalParametersEditor() {
       </div>
 
       <CheckboxRow
-        label="Stream"
+        label={t('eval.stream')}
         paramKey="stream"
         checked={composer.stream}
         onChange={setStream}
@@ -340,7 +343,7 @@ export function EvalParametersEditor() {
           onClick={resetParameters}
           disabled={isRunning}
         >
-          Reset to defaults
+          {t('eval.resetToDefaults')}
         </Button>
       </div>
     </div>

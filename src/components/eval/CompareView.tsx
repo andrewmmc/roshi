@@ -2,11 +2,13 @@ import { useMemo } from 'react';
 import { GitCompare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useTranslation } from '@/i18n';
 import { useEvalStore } from '@/stores/eval-store';
 import { DiffText } from '@/components/ui/diff-text';
 import { diffWords, jaccardSimilarity } from '@/utils/diff';
 
 export function CompareView() {
+  const { t } = useTranslation();
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const runners = useEvalStore((s) => s.runners);
   const results = useEvalStore((s) => s.results);
@@ -31,13 +33,13 @@ export function CompareView() {
         icon={GitCompare}
         title={
           selectedCount === 0
-            ? 'Select two results to compare.'
-            : 'Select one more result to compare.'
+            ? t('eval.selectTwoResults')
+            : t('eval.selectOneMoreResult')
         }
         description={
           selectedCount === 0
-            ? 'Check "Compare" on two result cards in the Results tab to see a side-by-side diff and metrics.'
-            : 'Check "Compare" on another result card in the Results tab.'
+            ? t('eval.compareHint')
+            : t('eval.compareHintMore')
         }
       />
     );
@@ -54,10 +56,12 @@ export function CompareView() {
       <div className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-1.5">
         <div className="text-foreground min-w-0 truncate text-xs font-medium">
           <span className="font-mono">{pair.a.runner.label}</span>{' '}
-          <span className="text-muted-foreground">vs</span>{' '}
+          <span className="text-muted-foreground">{t('eval.vs')}</span>{' '}
           <span className="font-mono">{pair.b.runner.label}</span>
           <span className="text-muted-foreground ml-3 text-[11px]">
-            Jaccard similarity: {(similarity * 100).toFixed(1)}%
+            {t('eval.jaccardSimilarity', {
+              value: `${(similarity * 100).toFixed(1)}%`,
+            })}
           </span>
         </div>
         <Button
@@ -67,24 +71,24 @@ export function CompareView() {
           className="text-muted-foreground hover:text-foreground shrink-0"
         >
           <X className="mr-1 h-3 w-3" />
-          Clear
+          {t('eval.clear')}
         </Button>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-auto md:grid-cols-2">
         <div className="border-border/60 overflow-auto border-b p-3 md:border-r md:border-b-0">
           <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
-            Differences
+            {t('eval.differences')}
           </div>
           <DiffText segments={diff} />
         </div>
         <div className="overflow-auto p-3">
           <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
-            Side-by-side metrics
+            {t('eval.sideBySideMetrics')}
           </div>
           <table className="w-full text-[11px]">
             <thead>
               <tr className="text-muted-foreground">
-                <th className="text-left font-normal">Metric</th>
+                <th className="text-left font-normal">{t('eval.metric')}</th>
                 <th className="text-right font-normal">
                   {pair.a.runner.label}
                 </th>
@@ -95,41 +99,41 @@ export function CompareView() {
             </thead>
             <tbody className="font-mono">
               <CompareRow
-                label="Duration"
+                label={t('eval.metricDuration')}
                 a={pair.a.result.metrics.durationMs}
                 b={pair.b.result.metrics.durationMs}
                 suffix="ms"
               />
               <CompareRow
-                label="TTFT"
+                label={t('eval.metricTtft')}
                 a={pair.a.result.metrics.ttftMs}
                 b={pair.b.result.metrics.ttftMs}
                 suffix="ms"
               />
               <CompareRow
-                label="Tokens/s"
+                label={t('eval.metricTokensPerSec')}
                 a={pair.a.result.metrics.tokensPerSec}
                 b={pair.b.result.metrics.tokensPerSec}
-                fractional
+                decimals={2}
               />
               <CompareRow
-                label="Prompt tok"
+                label={t('eval.metricPromptTokens')}
                 a={pair.a.result.metrics.promptTokens}
                 b={pair.b.result.metrics.promptTokens}
               />
               <CompareRow
-                label="Completion tok"
+                label={t('eval.metricCompletionTokens')}
                 a={pair.a.result.metrics.completionTokens}
                 b={pair.b.result.metrics.completionTokens}
               />
               <CompareRow
-                label="Cost USD"
+                label={t('eval.metricCostUsd')}
                 a={pair.a.result.metrics.costUsd}
                 b={pair.b.result.metrics.costUsd}
-                fractional
+                decimals={5}
               />
               <CompareRow
-                label="Chars"
+                label={t('eval.metricChars')}
                 a={pair.a.result.metrics.responseChars}
                 b={pair.b.result.metrics.responseChars}
               />
@@ -146,18 +150,18 @@ function CompareRow({
   a,
   b,
   suffix,
-  fractional,
+  decimals,
 }: {
   label: string;
   a: number | null;
   b: number | null;
   suffix?: string;
-  fractional?: boolean;
+  decimals?: number;
 }) {
   const format = (value: number | null): string => {
     if (value === null || !Number.isFinite(value)) return '—';
-    if (fractional) {
-      return value.toFixed(label === 'Cost USD' ? 5 : 2);
+    if (decimals !== undefined) {
+      return value.toFixed(decimals);
     }
     return Math.round(value).toString();
   };
