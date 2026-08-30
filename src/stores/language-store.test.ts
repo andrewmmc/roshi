@@ -26,4 +26,22 @@ describe('language store', () => {
       initialized: true,
     });
   });
+
+  it('falls back safely when storage is unavailable', () => {
+    const storage = globalThis.localStorage;
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      expect(() => useLanguageStore.getState().init()).not.toThrow();
+      expect(useLanguageStore.getState().language).toBe('en');
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        value: storage,
+      });
+    }
+  });
 });

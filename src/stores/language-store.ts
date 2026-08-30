@@ -12,7 +12,8 @@ export const LANGUAGE_STORAGE_KEY = 'roshi-language';
 
 function detectLanguage(): Language {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  const storage = globalThis.localStorage;
+  const stored = storage?.getItem(LANGUAGE_STORAGE_KEY);
   if (stored && isSupportedLanguage(stored)) return stored;
 
   const browserLanguages = navigator.languages.length
@@ -56,7 +57,7 @@ export const useLanguageStore = create<LanguageStore>((set) => ({
   },
   setLanguage: (language) => {
     applyLanguage(language);
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    globalThis.localStorage?.setItem(LANGUAGE_STORAGE_KEY, language);
     set({ language });
   },
 }));
