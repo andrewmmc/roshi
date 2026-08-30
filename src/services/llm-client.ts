@@ -135,7 +135,7 @@ export async function sendRequest(
       startTime,
       fetchResponse.status,
       onStreamChunk,
-      timeoutMs ?? DEFAULT_STREAM_IDLE_TIMEOUT_MS,
+      timeoutMs,
     );
   }
 

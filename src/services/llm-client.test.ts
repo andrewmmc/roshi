@@ -967,6 +967,7 @@ describe('llm-client', () => {
               id: '1',
               choices: [{ delta: { content: 'Hi' }, finish_reason: 'stop' }],
             }),
+            '',
             '[DONE]',
           ]),
         }),

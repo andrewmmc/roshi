@@ -167,14 +167,12 @@ export function getParamMax(
 export function getDisabledReason(
   support: ParamSupport | undefined,
   disabled: boolean,
-  translate?: (key: MessageKey) => string,
+  translate: (key: MessageKey) => string,
 ): string | undefined {
   if (!disabled) return undefined;
   if (support?.supported === false) return support.reason;
   if (support?.supported === 'default-only') return support.reason;
-  return translate
-    ? translate('request.paramNotSupported')
-    : 'Not supported by the selected model.';
+  return translate('request.paramNotSupported');
 }
 
 export function getCapabilitySupport(

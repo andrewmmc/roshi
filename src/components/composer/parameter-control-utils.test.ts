@@ -14,7 +14,7 @@ describe('parameter-control-utils', () => {
     expect(isParamEditable(undefined, false, true)).toBe(true);
     expect(getParamMin(undefined, 0)).toBe(0);
     expect(getParamMax(undefined, 2)).toBe(2);
-    expect(getDisabledReason(undefined, false)).toBeUndefined();
+    expect(getDisabledReason(undefined, false, (key) => key)).toBeUndefined();
   });
 
   it('respects capability support and bounds when present', () => {
@@ -34,7 +34,7 @@ describe('parameter-control-utils', () => {
     };
 
     expect(isParamEditable(support, true, true)).toBe(false);
-    expect(getDisabledReason(support, true)).toBe(support.reason);
+    expect(getDisabledReason(support, true, (key) => key)).toBe(support.reason);
     expect(getDisabledReason(undefined, true, (key) => key)).toBe(
       'request.paramNotSupported',
     );
@@ -47,7 +47,7 @@ describe('parameter-control-utils', () => {
       reason: 'Temperature is fixed for this model.',
     };
 
-    expect(getDisabledReason(support, true)).toBe(support.reason);
+    expect(getDisabledReason(support, true, (key) => key)).toBe(support.reason);
   });
 
   it('builds capability-aware parameter defaults', () => {
