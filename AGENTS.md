@@ -109,7 +109,10 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, Google Gemini, OpenR
 
 ## Notes for agents
 
-- Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage is intentionally scoped to non-visual logic in `vitest.config.ts`; thresholds are enforced when running `test:coverage` (95% lines/functions/statements/branches).
+- **Coverage thresholds:** Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage is intentionally scoped to non-visual logic in `vitest.config.ts`; thresholds are enforced when running `test:coverage` (95% lines/functions/statements/branches).
+  - Plain `npm run test` does **not** enforce thresholds, but CI does — it runs `npm run test:coverage` and fails the build when any metric drops below 95%. Run `npm run test:coverage` locally before pushing whenever you changed files inside the coverage scope (`adapters/`, `components/composer/`, `db/`, `hooks/`, `providers/`, `services/`, `stores/`).
+  - Common cause of CI coverage failures: new conditional branches (ternaries, optional params, `??`/`?.` fallbacks) that no test exercises — even "unreachable" defensive branches count as uncovered. Fix by adding a test that hits the branch, or by simplifying the code (e.g. make a parameter required if every caller already passes it) instead of leaving dead branches.
+  - When coverage fails, inspect which branches are uncovered: run `npx vitest run --coverage --coverage.reporter=json`, then check `coverage/coverage-final.json` for entries with count `0`.
 - Playwright e2e tests live in `e2e/` (`npm run test:e2e`). They start the Vite dev server, seed IndexedDB with a usable OpenAI provider/model, and mock `/api/proxy` / provider URLs so no real LLM calls are made. E2E code is typechecked via `tsconfig.e2e.json` (referenced from the root `tsconfig.json`).
 - ESLint may report pre-existing issues (e.g. unused variables, conditional hooks in `CodeView.tsx`, react-refresh noise in generated UI). Do not assume new edits caused all warnings.
 - Users enter API keys in the UI; secrets are stored locally in IndexedDB. No `.env` or server-side secrets are required for the app to run.
@@ -126,3 +129,4 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, Google Gemini, OpenR
   npm run test
   npm run lint
   ```
+  Additionally run `npm run test:coverage` (not just `npm run test`) before pushing when you changed files in the coverage scope — see the coverage thresholds note above.
