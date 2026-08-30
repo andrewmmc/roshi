@@ -5,6 +5,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { useProviderStore } from '@/stores/provider-store';
 import { filterModelsBySearch } from '@/utils/model-search';
 import type { ProviderConfig } from '@/types/provider';
+import { useTranslation } from '@/i18n';
 
 export function CustomProviderSection({
   provider,
@@ -15,6 +16,7 @@ export function CustomProviderSection({
   search: string;
   onEditProvider: (provider: ProviderConfig) => void;
 }) {
+  const { t } = useTranslation();
   const removeModelFromProvider = useProviderStore(
     (s) => s.removeModelFromProvider,
   );
@@ -31,7 +33,9 @@ export function CustomProviderSection({
           <h3 className="text-sm font-medium tracking-tight">
             {provider.name}
           </h3>
-          <span className="text-muted-foreground text-[11px]">Custom</span>
+          <span className="text-muted-foreground text-[11px]">
+            {t('custom')}
+          </span>
         </div>
         <Button
           type="button"
@@ -41,7 +45,7 @@ export function CustomProviderSection({
           onClick={() => onEditProvider(provider)}
         >
           <SettingsIcon className="h-3 w-3" />
-          Edit provider
+          {t('editProvider')}
         </Button>
       </header>
 

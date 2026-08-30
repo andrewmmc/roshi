@@ -6,8 +6,10 @@ import { HeaderEditor } from './HeaderEditor';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PanelHeader } from '@/components/ui/panel-header';
 import { useComposerStore } from '@/stores/composer-store';
+import { useTranslation } from '@/i18n';
 
 export function RequestComposer() {
+  const { t } = useTranslation();
   const systemPrompt = useComposerStore((s) => s.systemPrompt);
   const setSystemPrompt = useComposerStore((s) => s.setSystemPrompt);
   const hasCustomHeaders = useComposerStore((s) =>
@@ -19,22 +21,22 @@ export function RequestComposer() {
       <PanelHeader>
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="messages" className="px-3 text-xs">
-            Messages
+            {t('messages')}
           </TabsTrigger>
           <TabsTrigger value="system" className="px-3 text-xs">
-            System Prompt
+            {t('systemPrompt')}
             {systemPrompt.trim() && (
               <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
             )}
           </TabsTrigger>
           <TabsTrigger value="headers" className="px-3 text-xs">
-            Headers
+            {t('headers')}
             {hasCustomHeaders && (
               <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
             )}
           </TabsTrigger>
           <TabsTrigger value="parameters" className="px-3 text-xs">
-            Parameters
+            {t('parameters')}
           </TabsTrigger>
         </TabsList>
       </PanelHeader>
@@ -53,8 +55,8 @@ export function RequestComposer() {
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
-              aria-label="System prompt"
-              placeholder="System prompt (optional)"
+              aria-label={t('systemPrompt')}
+              placeholder={t('optionalSystemPrompt')}
               className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-xs"
               rows={3}
             />

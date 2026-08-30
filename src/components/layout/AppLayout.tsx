@@ -13,10 +13,12 @@ import { MainPanel } from './MainPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useUiStore } from '@/stores/ui-store';
 import { AppBanner } from './AppBanner';
+import { useTranslation } from '@/i18n';
 
 const COLLAPSE_BREAKPOINT = 768;
 
 export function AppLayout() {
+  const { t } = useTranslation();
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const panelRef = useRef<PanelImperativeHandle | null>(null);
@@ -62,7 +64,7 @@ export function AppLayout() {
         href="#main-content"
         className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:p-2 focus:shadow-md"
       >
-        Skip to main content
+        {t('skipToMainContent')}
       </a>
       <AppBanner />
       <ResizablePanelGroup

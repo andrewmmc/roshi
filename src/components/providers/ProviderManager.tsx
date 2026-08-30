@@ -23,6 +23,7 @@ import {
 import { exportProviders } from '@/utils/export';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import type { ProviderConfig } from '@/types/provider';
+import { useTranslation } from '@/i18n';
 
 type View = 'list' | 'edit' | 'add';
 
@@ -63,6 +64,7 @@ function ProviderList({
   onDeleteProvider: (provider: ProviderConfig) => void;
   onManageModels: (provider: ProviderConfig) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2 px-3 py-3">
       {sortProvidersByName(providers).map((provider) => (
@@ -75,7 +77,7 @@ function ProviderList({
               {provider.name}
               {!provider.isBuiltIn && (
                 <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
-                  Custom
+                  {t('custom')}
                 </span>
               )}
             </div>
@@ -90,7 +92,7 @@ function ProviderList({
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onManageModels(provider)}
-              tooltip="Manage models"
+              tooltip={t('manageModels')}
               aria-label={`Manage models for ${provider.name}`}
             >
               <Boxes className="h-3.5 w-3.5" />
@@ -101,7 +103,7 @@ function ProviderList({
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onEditProvider(provider)}
-              tooltip="Edit provider"
+              tooltip={t('editProvider')}
               aria-label={`Edit provider ${provider.name}`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -113,7 +115,7 @@ function ProviderList({
                 size="icon-sm"
                 className="text-muted-foreground hover:text-destructive shrink-0"
                 onClick={() => onDeleteProvider(provider)}
-                tooltip="Remove provider"
+                tooltip={t('removeProvider')}
                 aria-label={`Remove custom provider ${provider.name}`}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -145,6 +147,7 @@ export function ProviderSettingsFooter({
   onResetProvider: () => void;
   onSubmitForm: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
       {view === 'list' && (
@@ -157,10 +160,10 @@ export function ProviderSettingsFooter({
             onClick={() => exportProviders(providers)}
           >
             <Download className="mr-1 h-3 w-3" />
-            Export JSON
+            {t('exportJson')}
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>
-            Close
+            {t('close')}
           </Button>
         </>
       )}
@@ -178,16 +181,16 @@ export function ProviderSettingsFooter({
                 onClick={onResetProvider}
               >
                 <RotateCcw className="mr-1 h-3 w-3" />
-                {resettingProvider ? 'Resetting...' : 'Reset to default'}
+                {resettingProvider ? t('resetting') : t('resetToDefault')}
               </Button>
             )}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onBackToList}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="button" onClick={onSubmitForm}>
-              Update
+              {t('update')}
             </Button>
           </div>
         </>
@@ -198,10 +201,10 @@ export function ProviderSettingsFooter({
           <div />
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onBackToList}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="button" onClick={onSubmitForm}>
-              Add provider
+              {t('addProvider')}
             </Button>
           </div>
         </>
@@ -221,6 +224,7 @@ export function ProviderSettings({
   focusApiKey?: boolean;
   onConsumePendingEdit?: () => void;
 }) {
+  const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
   const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
     null,
@@ -273,9 +277,7 @@ export function ProviderSettings({
       setView('list');
     } catch (e) {
       if (e instanceof Error && e.message === 'MAX_CUSTOM_PROVIDERS') {
-        window.alert(
-          `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`,
-        );
+        window.alert(t('customProviderLimit', { count: MAX_CUSTOM_PROVIDERS }));
         return;
       }
       throw e;
@@ -338,17 +340,14 @@ export function ProviderSettings({
       <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="text-[15px] font-medium tracking-tight">
-            {view === 'list' && 'Providers'}
-            {view === 'edit' && 'Edit Provider'}
-            {view === 'add' && 'Add custom provider'}
+            {view === 'list' && t('providers')}
+            {view === 'edit' && t('editProviderTitle')}
+            {view === 'add' && t('addCustomProvider')}
           </h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {view === 'list' &&
-              'Tune credentials and endpoints for each provider. Pick models from the Models tab.'}
-            {view === 'edit' &&
-              'Update keys, headers, endpoints, and model entries without leaving the composer.'}
-            {view === 'add' &&
-              'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.'}
+            {view === 'list' && t('providerListDescription')}
+            {view === 'edit' && t('editProviderDescription')}
+            {view === 'add' && t('addProviderDescription')}
           </p>
         </div>
         {view === 'list' && (
@@ -359,11 +358,11 @@ export function ProviderSettings({
             title={
               canAddCustomProvider
                 ? undefined
-                : `You can add up to ${MAX_CUSTOM_PROVIDERS} custom providers.`
+                : t('customProviderLimit', { count: MAX_CUSTOM_PROVIDERS })
             }
           >
             <Plus className="h-3 w-3" />
-            Add
+            {t('add')}
           </Button>
         )}
         {view !== 'list' && (
@@ -371,7 +370,7 @@ export function ProviderSettings({
             variant="ghost"
             size="icon-sm"
             onClick={handleBackToList}
-            tooltip="Back to provider list"
+            tooltip={t('backToProviderList')}
           >
             <X className="h-3.5 w-3.5" />
           </IconButton>
@@ -425,15 +424,11 @@ export function ProviderSettings({
       {providerToDelete && (
         <ConfirmDeleteDialog
           open
-          title="Remove provider?"
-          description={
-            <>
-              Remove <strong>{providerToDelete.name}</strong>? Its credentials,
-              endpoint, and model configuration will be deleted from this
-              device.
-            </>
-          }
-          confirmLabel="Remove"
+          title={t('removeProviderQuestion')}
+          description={t('removeProviderWarning', {
+            name: providerToDelete.name,
+          })}
+          confirmLabel={t('remove')}
           onOpenChange={(open) => {
             if (!open) setProviderToDelete(null);
           }}

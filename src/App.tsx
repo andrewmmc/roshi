@@ -14,19 +14,24 @@ import { useTabStore } from '@/stores/tab-store';
 import { useProxyStore } from '@/stores/proxy-store';
 import { Loader2 } from 'lucide-react';
 import { loadStoreSafely } from '@/stores/load-error';
+import { useLanguageStore } from '@/stores/language-store';
+import { useTranslation } from '@/i18n';
 
 export function App() {
   const loadProviders = useProviderStore((s) => s.load);
   const loadHistory = useHistoryStore((s) => s.load);
   const initTheme = useThemeStore((s) => s.init);
+  const initLanguage = useLanguageStore((s) => s.init);
   const loadProxy = useProxyStore((s) => s.load);
   const requestSessionHydrated = useTabStore((s) => s.hydrated);
+  const { t } = useTranslation();
   useGlobalShortcuts();
   useRequestSession();
 
   useEffect(() => {
     initTheme();
-  }, [initTheme]);
+    initLanguage();
+  }, [initLanguage, initTheme]);
 
   useEffect(() => {
     loadStoreSafely('providers', loadProviders);
@@ -47,7 +52,7 @@ export function App() {
           role="status"
         >
           <Loader2 className="h-4 w-4 animate-spin" />
-          Restoring workspace…
+          {t('restoringWorkspace')}
         </div>
       )}
       <ToastContainer />

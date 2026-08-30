@@ -18,8 +18,10 @@ import {
   getDiscardDialogCopy,
   resetActiveWorkspace,
 } from '@/utils/new-request';
+import { useTranslation } from '@/i18n';
 
 function SidebarSectionTabs() {
+  const { t } = useTranslation();
   const mainView = useUiStore((s) => s.mainView);
 
   return (
@@ -33,18 +35,18 @@ function SidebarSectionTabs() {
             value="history"
             className="px-3 text-xs after:bottom-[-5px]"
           >
-            History
+            {t('history')}
           </TabsTrigger>
           <TabsTrigger
             value="collections"
             className="px-3 text-xs after:bottom-[-5px]"
           >
-            Collections
+            {t('collections')}
           </TabsTrigger>
         </>
       ) : (
         <TabsTrigger value="evals" className="px-3 text-xs after:bottom-[-5px]">
-          Collections
+          {t('collections')}
         </TabsTrigger>
       )}
     </TabsList>
@@ -63,6 +65,7 @@ function getActiveSidebarSection(
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
@@ -101,7 +104,7 @@ export function Sidebar() {
           <button
             className="text-foreground/80 hover:text-foreground inline-flex h-7 shrink-0 items-center rounded-none px-3 text-[13px] font-medium tracking-tight whitespace-nowrap transition-colors"
             onClick={() => setAboutOpen(true)}
-            title="About Roshi"
+            title={t('aboutRoshi')}
           >
             Roshi
           </button>
@@ -109,10 +112,10 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label="Collapse sidebar"
+              aria-label={t('collapseSidebar')}
               className="text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarCollapsed(true)}
-              tooltip="Collapse sidebar"
+              tooltip={t('collapseSidebar')}
             >
               <PanelLeftClose className="h-3.5 w-3.5" />
             </IconButton>
@@ -120,12 +123,12 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label="Keyboard shortcuts"
+              aria-label={t('keyboardShortcuts')}
               className="text-muted-foreground hover:text-foreground"
               onClick={() => setShortcutsOpen(true)}
               tooltip={
                 <span className="flex items-center gap-1.5">
-                  Keyboard shortcuts
+                  {t('keyboardShortcuts')}
                   <KbdShortcut mac="?" win="?" />
                 </span>
               }
@@ -135,12 +138,12 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label="New request"
+              aria-label={t('newRequest')}
               className="text-muted-foreground hover:text-foreground"
               onClick={handleNewRequest}
               tooltip={
                 <span className="flex items-center gap-1.5">
-                  New request
+                  {t('newRequest')}
                   <KbdShortcut mac="⌘⇧N" win="Ctrl+Shift+N" />
                 </span>
               }
@@ -150,7 +153,7 @@ export function Sidebar() {
           </div>
         </div>
         <nav
-          aria-label="Main navigation"
+          aria-label={t('mainNavigation')}
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {mainView === 'request' ? (

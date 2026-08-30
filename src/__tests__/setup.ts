@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import '@testing-library/jest-dom/vitest';
+import { useLanguageStore } from '@/stores/language-store';
 
 function createMemoryStorage(): Storage {
   const items = new Map<string, string>();
@@ -53,4 +54,6 @@ Object.defineProperty(Element.prototype, 'getAnimations', {
 
 afterEach(() => {
   localStorage.clear();
+  useLanguageStore.setState({ language: 'en', initialized: false });
+  document.documentElement.lang = 'en';
 });

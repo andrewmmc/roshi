@@ -14,6 +14,7 @@ import { sortProvidersByName } from '@/utils/sort-providers';
 import { builtinProviders } from '@/providers/builtins';
 import type { ProviderConfig } from '@/types/provider';
 import { loadStoreSafely } from '@/stores/load-error';
+import { useTranslation } from '@/i18n';
 
 const BUILTIN_NAMES = new Set(builtinProviders.map((p) => p.name));
 
@@ -26,6 +27,7 @@ export function ModelMarketFooter({
   onRefresh: () => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-muted/15 flex shrink-0 items-center justify-between border-t px-5 py-4">
       <Button
@@ -39,10 +41,10 @@ export function ModelMarketFooter({
         <RefreshCw
           className={cn('mr-1 h-3 w-3', refreshing && 'animate-spin')}
         />
-        {refreshing ? 'Refreshing…' : 'Refresh catalogue'}
+        {refreshing ? t('refreshing') : t('refreshCatalog')}
       </Button>
       <Button type="button" variant="outline" onClick={onClose}>
-        Close
+        {t('close')}
       </Button>
     </div>
   );
@@ -55,6 +57,7 @@ export function ModelMarket({
   onClose: () => void;
   onEditProvider: (provider: ProviderConfig) => void;
 }) {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const loaded = useProviderStore((s) => s.loaded);
   const seeding = useProviderStore((s) => s.seeding);
@@ -104,7 +107,7 @@ export function ModelMarket({
     return (
       <div className="text-muted-foreground flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-5 py-8 text-xs">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading providers…
+        {t('loadingProviders')}
       </div>
     );
   }
@@ -112,10 +115,11 @@ export function ModelMarket({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="bg-muted/20 shrink-0 border-b px-5 py-4">
-        <h2 className="text-[15px] font-medium tracking-tight">Models</h2>
+        <h2 className="text-[15px] font-medium tracking-tight">
+          {t('models')}
+        </h2>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          Pick the models you want available in the composer. Refreshing the
-          catalogue never changes the models you have already added.
+          {t('modelsDescription')}
         </p>
       </div>
 
@@ -125,18 +129,18 @@ export function ModelMarket({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search models…"
+            placeholder={t('searchModels')}
             className="h-8 pr-7 pl-7 text-xs"
-            aria-label="Search models"
+            aria-label={t('searchModelsLabel')}
           />
           {search && (
             <IconButton
               variant="ghost"
               size="icon-xs"
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
-              tooltip="Clear search"
+              tooltip={t('clearSearch')}
               onClick={() => setSearch('')}
-              aria-label="Clear search"
+              aria-label={t('clearSearch')}
             >
               <X className="h-3 w-3" />
             </IconButton>
@@ -160,7 +164,7 @@ export function ModelMarket({
                 : 'border-border text-muted-foreground hover:text-foreground',
             )}
           >
-            Added only
+            {t('addedOnly')}
           </button>
         </div>
       </div>
@@ -169,7 +173,7 @@ export function ModelMarket({
         <div className="space-y-6 px-5 py-4">
           {visible.length === 0 && (
             <div className="text-muted-foreground rounded-xl border border-dashed px-3 py-6 text-center text-xs">
-              No providers configured.
+              {t('noProvidersConfigured')}
             </div>
           )}
           {visible.map((provider) =>

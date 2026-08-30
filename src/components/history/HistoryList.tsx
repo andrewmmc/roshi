@@ -52,6 +52,7 @@ import {
   isDefaultHistoryFilters,
   type HistoryFilters,
 } from '@/utils/history-filter';
+import { useTranslation } from '@/i18n';
 
 function HistorySearchControls({
   searchQuery,
@@ -70,6 +71,7 @@ function HistorySearchControls({
   onSearchChange: (value: string) => void;
   onFilterClick: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="shrink-0 px-3 pt-2.5 pb-1.5">
       <div className="flex items-center gap-1">
@@ -80,8 +82,8 @@ function HistorySearchControls({
           />
           <Input
             ref={searchInputRef}
-            placeholder="Search history..."
-            aria-label="Search history"
+            placeholder={t('searchHistory')}
+            aria-label={t('searchHistoryLabel')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
@@ -90,8 +92,8 @@ function HistorySearchControls({
             <button
               onClick={() => onSearchChange('')}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
-              aria-label="Clear search"
-              title="Clear search"
+              aria-label={t('clearSearch')}
+              title={t('clearSearch')}
             >
               <X className="h-3 w-3" />
             </button>
@@ -106,7 +108,7 @@ function HistorySearchControls({
               : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={onFilterClick}
-          tooltip="Filter history"
+          tooltip={t('filterHistory')}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {isFiltering && (
@@ -117,9 +119,12 @@ function HistorySearchControls({
       {isFiltering && (
         <div className="flex items-center pt-1">
           <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px]">
-            Filters active ·{' '}
+            {t('filtersActive')}{' '}
             <span>
-              {filteredCount} of {totalCount}
+              {t('filterCount', {
+                filtered: filteredCount,
+                total: totalCount,
+              })}
             </span>
           </span>
         </div>
@@ -139,22 +144,22 @@ function DeleteAllHistoryDialog({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete all history?</DialogTitle>
+          <DialogTitle>{t('deleteAllHistory')}</DialogTitle>
           <DialogDescription>
-            This will permanently remove all {entryCount} history entries. This
-            action cannot be undone.
+            {t('deleteHistoryWarning', { count: entryCount })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            Delete all
+            {t('deleteAll')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -163,6 +168,7 @@ function DeleteAllHistoryDialog({
 }
 
 export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
+  const { t } = useTranslation();
   const { entries, deleteEntry, clearAll } = useHistory();
   const { collections, savedRequests } = useCollections();
   const loadComposerFromHistory = useComposerStore(
@@ -303,7 +309,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
       <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-            History
+            {t('history')}
           </span>
         )}
         {entries.length > 0 && (
@@ -324,7 +330,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
                 setCompareMode(true);
               }}
               tooltip={
-                compareMode ? 'Exit prompt compare' : 'Compare prompt diffs'
+                compareMode ? t('exitPromptCompare') : t('comparePromptDiffs')
               }
             >
               <GitCompare className="h-3.5 w-3.5" />
@@ -349,12 +355,12 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             <EmptyState
               compact
               icon={History}
-              title="No history yet"
-              description="Every request you send is saved here for quick replay."
+              title={t('noHistory')}
+              description={t('historyDescription')}
             />
           )}
           {entries.length > 0 && filtered.length === 0 && (
-            <EmptyState compact title="No matching entries" />
+            <EmptyState compact title={t('noMatchingEntries')} />
           )}
           {filtered.map((entry) => (
             <HistoryItem
@@ -376,7 +382,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => exportHistory(entries)}
-            tooltip="Export all history as JSON"
+            tooltip={t('exportHistory')}
           >
             <Download className="h-3.5 w-3.5" />
           </IconButton>
@@ -385,7 +391,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-destructive"
             onClick={() => setShowConfirm(true)}
-            tooltip="Clear all history"
+            tooltip={t('clearHistory')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </IconButton>

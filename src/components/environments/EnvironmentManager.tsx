@@ -19,6 +19,7 @@ import { toast } from '@/stores/toast-store';
 import { useEnvironments } from '@/hooks/use-environments';
 import { useUiStore } from '@/stores/ui-store';
 import type { Environment, EnvironmentVariable } from '@/types/history';
+import { useTranslation } from '@/i18n';
 
 const MANAGE_ENVIRONMENTS_VALUE = '__manage_environments__';
 
@@ -35,6 +36,7 @@ function EnvironmentCard({
   onEdit: () => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const variableCount = environment.variables.filter((v) => v.key).length;
 
   return (
@@ -43,8 +45,8 @@ function EnvironmentCard({
         <div className="truncate text-sm font-medium">{environment.name}</div>
         <p className="text-muted-foreground text-xs">
           {variableCount === 0
-            ? 'No variables'
-            : `${variableCount} variable${variableCount > 1 ? 's' : ''}`}
+            ? t('noVariables')
+            : t('variableCount', { count: variableCount })}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
@@ -52,7 +54,7 @@ function EnvironmentCard({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-foreground"
-          tooltip="Edit environment"
+          tooltip={t('editEnvironment')}
           onClick={onEdit}
         >
           <Pencil className="h-3 w-3" />
@@ -61,7 +63,7 @@ function EnvironmentCard({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-destructive"
-          tooltip="Delete environment"
+          tooltip={t('deleteEnvironment')}
           onClick={() => onDelete(environment.id)}
         >
           <Trash2 className="h-3 w-3" />
@@ -97,6 +99,7 @@ function EnvironmentEditor({
   ) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(environment.name);
   const [variables, setVariables] = useState<EnvironmentVariable[]>(
     environment.variables.length ? environment.variables : [createVariable()],
@@ -132,7 +135,7 @@ function EnvironmentEditor({
   return (
     <div className="bg-muted/20 rounded-xl border p-3">
       <Field
-        label="Name"
+        label={t('name')}
         htmlFor={`env-name-${environment.id}`}
         className="mb-3"
       >
@@ -145,9 +148,11 @@ function EnvironmentEditor({
 
       <div className="space-y-2">
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-          <span className="text-muted-foreground text-xs font-medium">Key</span>
           <span className="text-muted-foreground text-xs font-medium">
-            Value
+            {t('key')}
+          </span>
+          <span className="text-muted-foreground text-xs font-medium">
+            {t('value')}
           </span>
           <span className="w-7" />
         </div>
@@ -162,7 +167,7 @@ function EnvironmentEditor({
                 updateVariable(variable.id, { key: event.target.value })
               }
               placeholder="name"
-              aria-label="Variable key"
+              aria-label={t('variableKey')}
               className="font-mono text-xs"
             />
             <Input
@@ -171,14 +176,14 @@ function EnvironmentEditor({
                 updateVariable(variable.id, { value: event.target.value })
               }
               placeholder="value"
-              aria-label="Variable value"
+              aria-label={t('variableValue')}
               className="font-mono text-xs"
             />
             <IconButton
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground hover:text-destructive"
-              tooltip="Remove variable"
+              tooltip={t('removeVariable')}
               onClick={() => removeVariable(variable.id)}
             >
               <Trash2 className="h-3 w-3" />
@@ -196,22 +201,22 @@ function EnvironmentEditor({
           }
         >
           <Plus className="h-3 w-3" />
-          Variable
+          {t('variable')}
         </Button>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleCancel}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             size="sm"
             onClick={async () => {
               await onSave(environment.id, { name, variables });
-              toast('Environment saved');
+              toast(t('environmentSaved'));
               onCancel();
             }}
             disabled={!name.trim()}
           >
-            Save
+            {t('save')}
           </Button>
         </div>
       </div>
@@ -220,14 +225,15 @@ function EnvironmentEditor({
         open={showDiscard}
         onOpenChange={setShowDiscard}
         onConfirm={onCancel}
-        title="Discard environment changes?"
-        description="Your edits to this environment have not been saved."
+        title={t('discardEnvironmentChanges')}
+        description={t('unsavedEnvironmentChanges')}
       />
     </div>
   );
 }
 
 export function EnvironmentSettings() {
+  const { t } = useTranslation();
   const {
     environments,
     addEnvironment,
@@ -240,10 +246,10 @@ export function EnvironmentSettings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleAdd = useCallback(async () => {
-    const environment = await addEnvironment('New Environment');
+    const environment = await addEnvironment(t('newEnvironment'));
     selectEnvironment(environment.id);
     setEditingId(environment.id);
-  }, [addEnvironment, selectEnvironment]);
+  }, [addEnvironment, selectEnvironment, t]);
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -261,25 +267,24 @@ export function EnvironmentSettings() {
   const confirmDelete = useCallback(async () => {
     if (!pendingDeleteId) return;
     await handleDelete(pendingDeleteId);
-    toast('Environment deleted');
+    toast(t('environmentDeleted'));
     setPendingDeleteId(null);
-  }, [handleDelete, pendingDeleteId]);
+  }, [handleDelete, pendingDeleteId, t]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="text-[15px] font-medium tracking-tight">
-            Environments
+            {t('environments')}
           </h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Define variables and reference them in prompts or headers with{' '}
-            {'{{variableName}}'}.
+            {t('environmentsDescription')}
           </p>
         </div>
         <Button size="sm" onClick={handleAdd}>
           <Plus className="h-3 w-3" />
-          Add
+          {t('add')}
         </Button>
       </div>
 
@@ -287,8 +292,8 @@ export function EnvironmentSettings() {
         {environments.length === 0 ? (
           <EmptyState
             compact
-            title="No environments yet"
-            description="Create one to start using variables."
+            title={t('noEnvironments')}
+            description={t('createEnvironmentHint')}
           />
         ) : (
           <div className="space-y-2">
@@ -317,8 +322,8 @@ export function EnvironmentSettings() {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmDelete}
-        title="Delete environment?"
-        description="This environment and its variables will be removed permanently."
+        title={t('deleteEnvironmentQuestion')}
+        description={t('deleteEnvironmentWarning')}
       />
     </div>
   );
@@ -329,16 +334,18 @@ export function EnvironmentSettingsFooter({
 }: {
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
       <Button type="button" variant="outline" onClick={onClose}>
-        Close
+        {t('close')}
       </Button>
     </div>
   );
 }
 
 export function EnvironmentSelector() {
+  const { t } = useTranslation();
   const { environments, selectedEnvironmentId, selectEnvironment } =
     useEnvironments();
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
@@ -365,12 +372,12 @@ export function EnvironmentSelector() {
       onValueChange={handleEnvironmentChange}
     >
       <SelectTrigger
-        aria-label="Select environment"
-        title="Select environment"
+        aria-label={t('selectEnvironment')}
+        title={t('selectEnvironment')}
         className="h-8 max-w-[150px] min-w-[80px] flex-1 text-[13px]"
       >
-        <SelectValue placeholder="Environment">
-          {selectedEnvironment?.name ?? 'Environment'}
+        <SelectValue placeholder={t('environment')}>
+          {selectedEnvironment?.name ?? t('environment')}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="min-w-56">
@@ -382,13 +389,13 @@ export function EnvironmentSelector() {
           ))
         ) : (
           <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-            No environments available.
+            {t('noEnvironmentsAvailable')}
           </div>
         )}
         <SelectSeparator />
         <SelectItem value={MANAGE_ENVIRONMENTS_VALUE}>
           <Settings className="h-3 w-3" />
-          Manage environments
+          {t('manageEnvironments')}
         </SelectItem>
       </SelectContent>
     </Select>

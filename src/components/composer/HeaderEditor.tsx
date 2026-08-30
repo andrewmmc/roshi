@@ -8,8 +8,10 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useSelectedProvider } from '@/stores/provider-store';
 import { getAdapter } from '@/adapters';
 import { maskHeaderValue } from '@/components/ui/header-utils';
+import { useTranslation } from '@/i18n';
 
 export function HeaderEditor() {
+  const { t } = useTranslation();
   const customHeaders = useComposerStore((s) => s.customHeaders);
   const setCustomHeaders = useComposerStore((s) => s.setCustomHeaders);
   const provider = useSelectedProvider();
@@ -82,15 +84,15 @@ export function HeaderEditor() {
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
-            placeholder="Header name"
-            aria-label="Custom header name"
+            placeholder={t('headerName')}
+            aria-label={t('customHeaderName')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
-            placeholder="Header value"
-            aria-label="Custom header value"
+            placeholder={t('headerValue')}
+            aria-label={t('customHeaderValue')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <IconButton
@@ -99,7 +101,7 @@ export function HeaderEditor() {
             className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
-            tooltip="Remove header"
+            tooltip={t('removeHeader')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </IconButton>

@@ -3,6 +3,7 @@ import { SettingsDialog } from './SettingsDialog';
 import { useThemeStore } from '@/stores/theme-store';
 import { useUiStore } from '@/stores/ui-store';
 import { useProxyStore } from '@/stores/proxy-store';
+import { useLanguageStore } from '@/stores/language-store';
 
 vi.mock('@/components/providers/ProviderManager', () => ({
   ProviderSettings: () => <div>Provider settings</div>,
@@ -21,6 +22,7 @@ describe('SettingsDialog', () => {
   beforeEach(() => {
     useUiStore.setState({ settingsOpen: true, settingsPage: 'general' });
     useThemeStore.setState({ theme: 'light', initialized: true });
+    useLanguageStore.setState({ language: 'en', initialized: true });
     useProxyStore.setState({
       httpProxy: '',
       httpsProxy: '',
@@ -52,6 +54,19 @@ describe('SettingsDialog', () => {
 
     expect(useThemeStore.getState().theme).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('renders settings in Traditional Chinese when selected', () => {
+    useLanguageStore.getState().setLanguage('zh-TW');
+
+    render(<SettingsDialog />);
+
+    expect(screen.getByRole('button', { name: '一般' })).toBeInTheDocument();
+    expect(screen.getByText('深色模式')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '語言' })).toHaveTextContent(
+      '繁體中文',
+    );
+    expect(document.documentElement.lang).toBe('zh-TW');
   });
 
   it('configures HTTP_PROXY, HTTPS_PROXY, and NO_PROXY', async () => {

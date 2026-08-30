@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { useUiStore } from '@/stores/ui-store';
+import { useTranslation, type MessageKey } from '@/i18n';
 
 function openExternal(url: string) {
   import('@tauri-apps/plugin-opener')
@@ -18,11 +19,12 @@ function openExternal(url: string) {
 }
 
 const LINKS = [
-  { label: 'Website', url: 'https://roshi.mmc.dev' },
-  { label: 'Privacy Policy', url: 'https://roshi.mmc.dev/privacy' },
+  { label: 'website', url: 'https://roshi.mmc.dev' },
+  { label: 'privacyPolicy', url: 'https://roshi.mmc.dev/privacy' },
 ] as const;
 
 export function AboutDialog() {
+  const { t } = useTranslation();
   const open = useUiStore((s) => s.aboutOpen);
   const setOpen = useUiStore((s) => s.setAboutOpen);
   const setChecklistOpen = useUiStore((s) => s.setChecklistOpen);
@@ -50,9 +52,9 @@ export function AboutDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>About Roshi</DialogTitle>
+          <DialogTitle>{t('aboutRoshi')}</DialogTitle>
           <DialogDescription className="sr-only">
-            Information about Roshi and helpful links.
+            {t('aboutDescription')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -73,7 +75,7 @@ export function AboutDialog() {
           <Separator />
 
           <p className="text-muted-foreground text-center text-sm">
-            MIT-licensed local-first workbench for testing LLM APIs
+            {t('appTagline')}
           </p>
 
           <Separator />
@@ -88,7 +90,7 @@ export function AboutDialog() {
               className="text-foreground hover:text-primary flex w-full items-center gap-2 text-sm transition-colors"
             >
               <Rocket className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              Getting started guide
+              {t('gettingStarted')}
             </button>
             {LINKS.map(({ label, url }) => (
               <a
@@ -98,7 +100,7 @@ export function AboutDialog() {
                 className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
               >
                 <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                {label}
+                {t(label as MessageKey)}
               </a>
             ))}
           </div>

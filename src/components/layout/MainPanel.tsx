@@ -50,10 +50,12 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { PreloadedEvalView, loadEvalView } from './lazy-view-loaders';
+import { useTranslation } from '@/i18n';
 
 const EvalView = lazy(loadEvalView);
 
 export function MainPanel() {
+  const { t } = useTranslation();
   const mainView = useUiStore((s) => s.mainView);
 
   return (
@@ -64,7 +66,7 @@ export function MainPanel() {
         <Suspense
           fallback={
             <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-              Loading eval…
+              {t('loadingEval')}
             </div>
           }
         >
@@ -76,17 +78,18 @@ export function MainPanel() {
 }
 
 function RequestView() {
+  const { t } = useTranslation();
   const isLoading = useResponseStore((s) => s.isLoading);
   const { send, cancel } = useSendRequest();
   const provider = useSelectedProvider();
   const model = useSelectedModel();
   const canSend = Boolean(provider && model && provider.apiKey.trim());
   const sendDisabledReason = !provider
-    ? 'Select a provider'
+    ? t('selectAProvider')
     : !model
-      ? 'Select a model'
+      ? t('selectAModel')
       : !provider.apiKey.trim()
-        ? 'Add an API key in provider settings'
+        ? t('addApiKey')
         : undefined;
   const setMainView = useUiStore((s) => s.setMainView);
   const seedFromMainComposer = useEvalStore((s) => s.seedFromMainComposer);
@@ -102,7 +105,7 @@ function RequestView() {
     seedFromMainComposer();
     await loadEvalView().catch(() => undefined);
     setMainView('eval');
-    toast('Prompt copied to eval. Add models, then run compare.');
+    toast(t('compareToast'));
   };
 
   const sendButton = (
@@ -114,7 +117,7 @@ function RequestView() {
       aria-describedby={!canSend ? sendHintId : undefined}
     >
       <Send className="mr-1.5 h-3.5 w-3.5" />
-      Send
+      {t('send')}
       <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
         {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((key) => (
           <Kbd key={key}>{key}</Kbd>
@@ -131,14 +134,14 @@ function RequestView() {
         <DropdownMenu>
           <DropdownMenuTrigger
             className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-            aria-label="More actions"
+            aria-label={t('moreActions')}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
               <Eye className="h-3.5 w-3.5" />
-              Env preview
+              {t('envPreview')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -146,7 +149,7 @@ function RequestView() {
       {isLoading ? (
         <Button variant="destructive" size="sm" onClick={cancel}>
           <Square className="mr-1.5 h-3.5 w-3.5" />
-          Stop
+          {t('stop')}
           <Kbd className="ml-1.5">Esc</Kbd>
         </Button>
       ) : (
@@ -179,7 +182,7 @@ function RequestView() {
           <DropdownMenu>
             <DropdownMenuTrigger
               className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 border-primary-foreground/20 inline-flex h-7 w-7 items-center justify-center rounded-l-none rounded-r-lg border-l shadow-sm transition-all outline-none focus-visible:ring-3"
-              aria-label="More send actions"
+              aria-label={t('moreSendActions')}
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
@@ -189,7 +192,7 @@ function RequestView() {
                 onClick={handleComparePrompt}
               >
                 <GitCompare className="h-3.5 w-3.5" />
-                Compare prompt across models
+                {t('compareAcrossModels')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -219,11 +222,11 @@ function RequestView() {
               <IconButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Open sidebar"
+                aria-label={t('openSidebar')}
                 data-open-sidebar
                 className="text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() => setSidebarCollapsed(false)}
-                tooltip="Open sidebar"
+                tooltip={t('openSidebar')}
               >
                 <PanelLeftOpen className="h-3.5 w-3.5" />
               </IconButton>

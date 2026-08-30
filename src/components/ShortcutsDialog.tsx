@@ -8,6 +8,7 @@ import {
 import { Kbd } from '@/components/ui/kbd';
 import { IS_MAC } from '@/lib/platform';
 import { useUiStore } from '@/stores/ui-store';
+import { useTranslation } from '@/i18n';
 
 interface ShortcutRow {
   keys: string[];
@@ -121,6 +122,7 @@ function KbdSequence({ keys }: { keys: string[] }) {
 }
 
 export function ShortcutsDialog() {
+  const { t } = useTranslation();
   const open = useUiStore((s) => s.shortcutsOpen);
   const setOpen = useUiStore((s) => s.setShortcutsOpen);
   const isEval = useUiStore((s) => s.mainView === 'eval');
@@ -137,7 +139,7 @@ export function ShortcutsDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+          <DialogTitle>{t('keyboardShortcuts')}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

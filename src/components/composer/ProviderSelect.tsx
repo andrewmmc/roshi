@@ -18,11 +18,13 @@ import { supportsModelSelection } from '@/types/provider';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import { cn } from '@/lib/utils';
 import { loadStoreSafely } from '@/stores/load-error';
+import { useTranslation } from '@/i18n';
 
 const ADD_PROVIDER_VALUE = '__add_provider__';
 const BROWSE_MODELS_VALUE = '__browse_models__';
 
 export function ProviderSelect({ className }: { className?: string } = {}) {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const selectedProviderId = useProviderStore((s) => s.selectedProviderId);
   const selectedModelId = useProviderStore((s) => s.selectedModelId);
@@ -46,7 +48,7 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
     return (
       <div className="text-muted-foreground flex h-7 items-center gap-2 px-2 text-xs">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Loading providers…
+        {t('loadingProviders')}
       </div>
     );
   }
@@ -80,12 +82,12 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
         onValueChange={handleProviderChange}
       >
         <SelectTrigger
-          aria-label="Select provider"
-          title="Select provider"
+          aria-label={t('selectProvider')}
+          title={t('selectProvider')}
           className="h-8 w-[150px] min-w-[90px] shrink-0 text-[13px]"
         >
-          <SelectValue placeholder="Provider">
-            {selectedProvider?.name ?? 'Provider'}
+          <SelectValue placeholder={t('provider')}>
+            {selectedProvider?.name ?? t('provider')}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-52">
@@ -97,7 +99,7 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
           {providers.length ? <SelectSeparator /> : null}
           <SelectItem value={ADD_PROVIDER_VALUE}>
             <Plus />
-            Add provider
+            {t('addProvider')}
           </SelectItem>
         </SelectContent>
       </Select>
@@ -108,12 +110,12 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
         disabled={!providerSupportsModels}
       >
         <SelectTrigger
-          aria-label="Select model"
+          aria-label={t('selectModel')}
           className="h-8 min-w-[140px] flex-1 text-[13px]"
           title={selectedModel?.displayName}
         >
-          <SelectValue placeholder="Model">
-            {selectedModel?.displayName ?? 'Model'}
+          <SelectValue placeholder={t('model')}>
+            {selectedModel?.displayName ?? t('model')}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-64">
@@ -125,7 +127,7 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
             ))
           ) : (
             <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-              No models available.
+              {t('noModelsAvailable')}
             </div>
           )}
           {showBrowseModels ? (
@@ -133,7 +135,7 @@ export function ProviderSelect({ className }: { className?: string } = {}) {
               <SelectSeparator />
               <SelectItem value={BROWSE_MODELS_VALUE}>
                 <Plus />
-                Browse models
+                {t('browseModels')}
               </SelectItem>
             </>
           ) : null}

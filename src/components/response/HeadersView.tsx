@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useResponseStore } from '@/stores/response-store';
 import { exportHeadersJson } from '@/utils/export';
 import { maskHeaderValueForDisplay } from '@/components/ui/header-utils';
+import { useTranslation } from '@/i18n';
 
 const HeadersTable = memo(function HeadersTable({
   headers,
@@ -15,16 +16,17 @@ const HeadersTable = memo(function HeadersTable({
   headers: Record<string, string> | null;
   maskSensitive?: boolean;
 }) {
+  const { t } = useTranslation();
   if (!headers || Object.keys(headers).length === 0) {
-    return <EmptyState title="No headers available" compact />;
+    return <EmptyState title={t('noHeaders')} compact />;
   }
 
   return (
     <table className="w-full font-mono text-[13px]">
       <thead>
         <tr className="text-muted-foreground border-b text-left text-xs">
-          <th className="w-1/3 px-3 py-1 font-medium">Name</th>
-          <th className="px-3 py-1 font-medium">Value</th>
+          <th className="w-1/3 px-3 py-1 font-medium">{t('name')}</th>
+          <th className="px-3 py-1 font-medium">{t('value')}</th>
         </tr>
       </thead>
       <tbody>
@@ -55,6 +57,7 @@ const HeadersTable = memo(function HeadersTable({
 });
 
 export function HeadersView() {
+  const { t } = useTranslation();
   const requestUrl = useResponseStore((s) => s.requestUrl);
   const requestHeaders = useResponseStore((s) => s.requestHeaders);
   const responseHeaders = useResponseStore((s) => s.responseHeaders);
@@ -68,17 +71,17 @@ export function HeadersView() {
       <div className="mt-2 flex items-center justify-between px-4">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="response" className="px-3 text-xs">
-            Response
+            {t('response')}
           </TabsTrigger>
           <TabsTrigger value="request" className="px-3 text-xs">
-            Request
+            {t('request')}
           </TabsTrigger>
         </TabsList>
         <IconButton
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-foreground"
-          tooltip="Export headers as JSON"
+          tooltip={t('exportHeaders')}
           disabled={!hasHeaders}
           onClick={() =>
             exportHeadersJson({

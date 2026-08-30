@@ -9,15 +9,17 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { loadEvalView } from './lazy-view-loaders';
+import { useTranslation, type MessageKey } from '@/i18n';
 
 const VIEW_OPTIONS: MainView[] = ['request', 'eval'];
 
-const VIEW_TOOLTIPS: Record<MainView, string> = {
-  request: 'Send a single request and view the response.',
-  eval: 'Run the same prompt against multiple models and compare results side by side.',
+const VIEW_TOOLTIPS: Record<MainView, MessageKey> = {
+  request: 'requestViewDescription',
+  eval: 'evalViewDescription',
 };
 
 export function ViewToggle() {
+  const { t } = useTranslation();
   const view = useUiStore((s) => s.mainView);
   const setView = useUiStore((s) => s.setMainView);
   const [pendingView, setPendingView] = useState<MainView | null>(null);
@@ -64,7 +66,7 @@ export function ViewToggle() {
                 />
               }
             >
-              {option}
+              {t(option)}
               {pendingView === option && (
                 <LoaderCircle
                   className="h-3 w-3 animate-spin motion-reduce:animate-none"
@@ -73,7 +75,7 @@ export function ViewToggle() {
               )}
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-52">
-              {VIEW_TOOLTIPS[option]}
+              {t(VIEW_TOOLTIPS[option])}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

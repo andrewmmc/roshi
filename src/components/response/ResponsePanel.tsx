@@ -9,6 +9,7 @@ import { formatCount } from '@/utils/format';
 import { exportCurrentRequest } from '@/utils/export';
 import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -33,14 +34,16 @@ interface RetainedTabs {
 const EMPTY_TABS: ReadonlySet<ResponseTab> = new Set();
 
 function TabLoadingFallback() {
+  const { t } = useTranslation();
   return (
     <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-      Loading…
+      {t('loading')}
     </div>
   );
 }
 
 export function ResponsePanel() {
+  const { t } = useTranslation();
   const isLoading = useResponseStore((s) => s.isLoading);
   const isStreaming = useResponseStore((s) => s.isStreaming);
   const response = useResponseStore((s) => s.response);
@@ -93,14 +96,14 @@ export function ResponsePanel() {
 
   const responseState = isLoading
     ? isStreaming
-      ? 'Streaming'
-      : 'Sending'
+      ? t('streaming')
+      : t('sending')
     : isInterrupted
-      ? 'Interrupted'
+      ? t('interrupted')
       : error || hasHttpError
-        ? 'Error'
+        ? t('error')
         : response
-          ? 'Complete'
+          ? t('complete')
           : null;
 
   const responseStateClass = isLoading
@@ -113,14 +116,14 @@ export function ResponsePanel() {
 
   const statusText = isLoading
     ? isStreaming
-      ? 'Streaming response...'
-      : 'Sending request...'
+      ? t('streamingResponse')
+      : t('sendingRequest')
     : isInterrupted
-      ? 'Response interrupted'
+      ? t('responseInterrupted')
       : error
         ? `Error: ${error}`
         : response
-          ? 'Response complete'
+          ? t('responseComplete')
           : '';
 
   return (
@@ -134,19 +137,19 @@ export function ResponsePanel() {
           <TabsList
             variant="line"
             className="h-7 w-max max-w-none gap-0"
-            aria-label="Response views"
+            aria-label={t('responseViews')}
           >
             <TabsTrigger value="chat" className="px-3 text-xs">
-              Chat
+              {t('chat')}
             </TabsTrigger>
             <TabsTrigger value="raw" className="px-3 text-xs">
-              Body
+              {t('body')}
             </TabsTrigger>
             <TabsTrigger value="headers" className="px-3 text-xs">
-              Headers
+              {t('headers')}
             </TabsTrigger>
             <TabsTrigger value="code" className="px-3 text-xs">
-              Code
+              {t('code')}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -156,7 +159,7 @@ export function ResponsePanel() {
           (durationMs !== null && !isLoading)) && (
           <div
             role="group"
-            aria-label="Response details"
+            aria-label={t('responseDetails')}
             className="text-muted-foreground flex min-w-0 shrink-0 items-center gap-1.5 text-[11px] max-sm:order-2 max-sm:w-full max-sm:border-t max-sm:pt-1.5"
           >
             {responseState && (
@@ -186,7 +189,7 @@ export function ResponsePanel() {
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-red-600 dark:text-red-400',
                 )}
-                aria-label={`HTTP status ${statusCode}`}
+                aria-label={t('httpStatus', { status: statusCode })}
               >
                 HTTP {statusCode}
               </span>
@@ -194,7 +197,7 @@ export function ResponsePanel() {
             {durationMs !== null && !isLoading && (
               <span
                 className="shrink-0 font-mono tabular-nums"
-                aria-label={`Latency ${durationMs} milliseconds`}
+                aria-label={t('latency', { duration: durationMs })}
               >
                 {durationMs} ms
               </span>
@@ -202,9 +205,13 @@ export function ResponsePanel() {
             {response?.usage && (
               <span
                 className="shrink-0 font-mono tabular-nums"
-                aria-label={`${response.usage.totalTokens} total tokens`}
+                aria-label={t('totalTokens', {
+                  count: response.usage.totalTokens,
+                })}
               >
-                {formatCount(response.usage.totalTokens)} tokens
+                {t('tokens', {
+                  count: formatCount(response.usage.totalTokens),
+                })}
               </span>
             )}
             {statusCode !== null && !isLoading && (
@@ -212,7 +219,7 @@ export function ResponsePanel() {
                 variant="ghost"
                 size="icon-sm"
                 className="text-muted-foreground hover:text-foreground ml-auto shrink-0"
-                tooltip="Export request and response as JSON"
+                tooltip={t('exportRequestResponse')}
                 onClick={() =>
                   exportCurrentRequest(useResponseStore.getState())
                 }

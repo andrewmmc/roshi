@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from '@/i18n';
 
 interface ConfirmDiscardDialogProps {
   open: boolean;
@@ -20,19 +21,22 @@ export function ConfirmDiscardDialog({
   open,
   onOpenChange,
   onConfirm,
-  title = 'Discard unsent changes?',
-  description = 'You have unsent content in the composer. This action will replace it and your changes will be lost.',
+  title,
+  description,
 }: ConfirmDiscardDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{title ?? t('discardUnsentChanges')}</DialogTitle>
+          <DialogDescription>
+            {description ?? t('discardUnsentChangesDescription')}
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -41,7 +45,7 @@ export function ConfirmDiscardDialog({
               onOpenChange(false);
             }}
           >
-            Discard
+            {t('discard')}
           </Button>
         </DialogFooter>
       </DialogContent>

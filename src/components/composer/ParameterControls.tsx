@@ -21,6 +21,7 @@ import {
 import { useParameterControlsState } from '@/components/composer/use-parameter-controls-state';
 import { ModelCompatibilitySummary } from '@/components/composer/ModelCompatibilitySummary';
 import type { ResolvedSliderParam } from '@/components/composer/use-parameter-controls-state';
+import { useTranslation } from '@/i18n';
 
 function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
   return (
@@ -113,6 +114,7 @@ function SelectRow({
 }
 
 export function ParameterControls() {
+  const { t } = useTranslation();
   const {
     capabilities,
     temperature,
@@ -168,7 +170,7 @@ export function ParameterControls() {
         Optional parameters are off by default. Check a control to include it in
         the request; otherwise the model default is used.
       </p>
-      <SectionHeader>Sampling</SectionHeader>
+      <SectionHeader>{t('sampling')}</SectionHeader>
 
       {temperatureParam && (
         <div className="flex flex-col gap-1.5">
@@ -205,13 +207,13 @@ export function ParameterControls() {
         <ConfiguredSliderRow key={param.capabilityKey} param={param} />
       ))}
 
-      <SectionHeader>Penalties</SectionHeader>
+      <SectionHeader>{t('penalties')}</SectionHeader>
 
       {penaltyParams.map((param) => (
         <ConfiguredSliderRow key={param.capabilityKey} param={param} />
       ))}
 
-      <SectionHeader>Output</SectionHeader>
+      <SectionHeader>{t('output')}</SectionHeader>
 
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
@@ -270,7 +272,7 @@ export function ParameterControls() {
         }
       />
 
-      <SectionHeader>Advanced</SectionHeader>
+      <SectionHeader>{t('advanced')}</SectionHeader>
 
       <CheckboxRow
         label="Thinking"
