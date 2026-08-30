@@ -37,7 +37,7 @@ function TabLoadingFallback() {
   const { t } = useTranslation();
   return (
     <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-      {t('loading')}
+      {t('common.loading')}
     </div>
   );
 }
@@ -96,14 +96,14 @@ export function ResponsePanel() {
 
   const responseState = isLoading
     ? isStreaming
-      ? t('streaming')
-      : t('sending')
+      ? t('response.streaming')
+      : t('response.sending')
     : isInterrupted
-      ? t('interrupted')
+      ? t('response.interrupted')
       : error || hasHttpError
-        ? t('error')
+        ? t('response.error')
         : response
-          ? t('complete')
+          ? t('response.complete')
           : null;
 
   const responseStateClass = isLoading
@@ -116,14 +116,14 @@ export function ResponsePanel() {
 
   const statusText = isLoading
     ? isStreaming
-      ? t('streamingResponse')
-      : t('sendingRequest')
+      ? t('response.streamingResponse')
+      : t('response.sendingRequest')
     : isInterrupted
-      ? t('responseInterrupted')
+      ? t('response.responseInterrupted')
       : error
         ? `Error: ${error}`
         : response
-          ? t('responseComplete')
+          ? t('response.responseComplete')
           : '';
 
   return (
@@ -137,19 +137,19 @@ export function ResponsePanel() {
           <TabsList
             variant="line"
             className="h-7 w-max max-w-none gap-0"
-            aria-label={t('responseViews')}
+            aria-label={t('response.views')}
           >
             <TabsTrigger value="chat" className="px-3 text-xs">
-              {t('chat')}
+              {t('response.chat')}
             </TabsTrigger>
             <TabsTrigger value="raw" className="px-3 text-xs">
-              {t('body')}
+              {t('response.body')}
             </TabsTrigger>
             <TabsTrigger value="headers" className="px-3 text-xs">
-              {t('headers')}
+              {t('response.headers')}
             </TabsTrigger>
             <TabsTrigger value="code" className="px-3 text-xs">
-              {t('code')}
+              {t('response.code')}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -159,7 +159,7 @@ export function ResponsePanel() {
           (durationMs !== null && !isLoading)) && (
           <div
             role="group"
-            aria-label={t('responseDetails')}
+            aria-label={t('response.details')}
             className="text-muted-foreground flex min-w-0 shrink-0 items-center gap-1.5 text-[11px] max-sm:order-2 max-sm:w-full max-sm:border-t max-sm:pt-1.5"
           >
             {responseState && (
@@ -189,7 +189,7 @@ export function ResponsePanel() {
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-red-600 dark:text-red-400',
                 )}
-                aria-label={t('httpStatus', { status: statusCode })}
+                aria-label={t('response.httpStatus', { status: statusCode })}
               >
                 HTTP {statusCode}
               </span>
@@ -197,7 +197,7 @@ export function ResponsePanel() {
             {durationMs !== null && !isLoading && (
               <span
                 className="shrink-0 font-mono tabular-nums"
-                aria-label={t('latency', { duration: durationMs })}
+                aria-label={t('response.latency', { duration: durationMs })}
               >
                 {durationMs} ms
               </span>
@@ -205,11 +205,11 @@ export function ResponsePanel() {
             {response?.usage && (
               <span
                 className="shrink-0 font-mono tabular-nums"
-                aria-label={t('totalTokens', {
+                aria-label={t('response.totalTokens', {
                   count: response.usage.totalTokens,
                 })}
               >
-                {t('tokens', {
+                {t('response.tokens', {
                   count: formatCount(response.usage.totalTokens),
                 })}
               </span>
@@ -219,7 +219,7 @@ export function ResponsePanel() {
                 variant="ghost"
                 size="icon-sm"
                 className="text-muted-foreground hover:text-foreground ml-auto shrink-0"
-                tooltip={t('exportRequestResponse')}
+                tooltip={t('response.exportRequestResponse')}
                 onClick={() =>
                   exportCurrentRequest(useResponseStore.getState())
                 }

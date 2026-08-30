@@ -66,7 +66,7 @@ export function MainPanel() {
         <Suspense
           fallback={
             <div className="text-muted-foreground flex h-full items-center justify-center text-[13px]">
-              {t('loadingEval')}
+              {t('navigation.loadingEval')}
             </div>
           }
         >
@@ -85,11 +85,11 @@ function RequestView() {
   const model = useSelectedModel();
   const canSend = Boolean(provider && model && provider.apiKey.trim());
   const sendDisabledReason = !provider
-    ? t('selectAProvider')
+    ? t('request.selectAProvider')
     : !model
-      ? t('selectAModel')
+      ? t('request.selectAModel')
       : !provider.apiKey.trim()
-        ? t('addApiKey')
+        ? t('request.addApiKey')
         : undefined;
   const setMainView = useUiStore((s) => s.setMainView);
   const seedFromMainComposer = useEvalStore((s) => s.seedFromMainComposer);
@@ -105,7 +105,7 @@ function RequestView() {
     seedFromMainComposer();
     await loadEvalView().catch(() => undefined);
     setMainView('eval');
-    toast(t('compareToast'));
+    toast(t('request.compareToast'));
   };
 
   const sendButton = (
@@ -117,7 +117,7 @@ function RequestView() {
       aria-describedby={!canSend ? sendHintId : undefined}
     >
       <Send className="mr-1.5 h-3.5 w-3.5" />
-      {t('send')}
+      {t('request.send')}
       <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
         {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((key) => (
           <Kbd key={key}>{key}</Kbd>
@@ -134,14 +134,14 @@ function RequestView() {
         <DropdownMenu>
           <DropdownMenuTrigger
             className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-            aria-label={t('moreActions')}
+            aria-label={t('request.moreActions')}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
               <Eye className="h-3.5 w-3.5" />
-              {t('envPreview')}
+              {t('request.envPreview')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -149,7 +149,7 @@ function RequestView() {
       {isLoading ? (
         <Button variant="destructive" size="sm" onClick={cancel}>
           <Square className="mr-1.5 h-3.5 w-3.5" />
-          {t('stop')}
+          {t('request.stop')}
           <Kbd className="ml-1.5">Esc</Kbd>
         </Button>
       ) : (
@@ -182,7 +182,7 @@ function RequestView() {
           <DropdownMenu>
             <DropdownMenuTrigger
               className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/50 border-primary-foreground/20 inline-flex h-7 w-7 items-center justify-center rounded-l-none rounded-r-lg border-l shadow-sm transition-all outline-none focus-visible:ring-3"
-              aria-label={t('moreSendActions')}
+              aria-label={t('request.moreSendActions')}
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
@@ -192,7 +192,7 @@ function RequestView() {
                 onClick={handleComparePrompt}
               >
                 <GitCompare className="h-3.5 w-3.5" />
-                {t('compareAcrossModels')}
+                {t('request.compareAcrossModels')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -222,11 +222,11 @@ function RequestView() {
               <IconButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label={t('openSidebar')}
+                aria-label={t('navigation.openSidebar')}
                 data-open-sidebar
                 className="text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() => setSidebarCollapsed(false)}
-                tooltip={t('openSidebar')}
+                tooltip={t('navigation.openSidebar')}
               >
                 <PanelLeftOpen className="h-3.5 w-3.5" />
               </IconButton>

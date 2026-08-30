@@ -52,9 +52,9 @@ export function AboutDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('aboutRoshi')}</DialogTitle>
+          <DialogTitle>{t('about.title')}</DialogTitle>
           <DialogDescription className="sr-only">
-            {t('aboutDescription')}
+            {t('about.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -75,7 +75,7 @@ export function AboutDialog() {
           <Separator />
 
           <p className="text-muted-foreground text-center text-sm">
-            {t('appTagline')}
+            {t('about.tagline')}
           </p>
 
           <Separator />
@@ -90,7 +90,7 @@ export function AboutDialog() {
               className="text-foreground hover:text-primary flex w-full items-center gap-2 text-sm transition-colors"
             >
               <Rocket className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              {t('gettingStarted')}
+              {t('about.gettingStarted')}
             </button>
             {LINKS.map(({ label, url }) => (
               <a
@@ -100,7 +100,7 @@ export function AboutDialog() {
                 className="text-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
               >
                 <ExternalLink className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                {t(label as MessageKey)}
+                {t(`about.${label}` as MessageKey)}
               </a>
             ))}
           </div>

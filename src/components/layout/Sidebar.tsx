@@ -35,18 +35,18 @@ function SidebarSectionTabs() {
             value="history"
             className="px-3 text-xs after:bottom-[-5px]"
           >
-            {t('history')}
+            {t('navigation.history')}
           </TabsTrigger>
           <TabsTrigger
             value="collections"
             className="px-3 text-xs after:bottom-[-5px]"
           >
-            {t('collections')}
+            {t('navigation.collections')}
           </TabsTrigger>
         </>
       ) : (
         <TabsTrigger value="evals" className="px-3 text-xs after:bottom-[-5px]">
-          {t('collections')}
+          {t('navigation.collections')}
         </TabsTrigger>
       )}
     </TabsList>
@@ -104,7 +104,7 @@ export function Sidebar() {
           <button
             className="text-foreground/80 hover:text-foreground inline-flex h-7 shrink-0 items-center rounded-none px-3 text-[13px] font-medium tracking-tight whitespace-nowrap transition-colors"
             onClick={() => setAboutOpen(true)}
-            title={t('aboutRoshi')}
+            title={t('about.title')}
           >
             Roshi
           </button>
@@ -112,10 +112,10 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label={t('collapseSidebar')}
+              aria-label={t('navigation.collapseSidebar')}
               className="text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarCollapsed(true)}
-              tooltip={t('collapseSidebar')}
+              tooltip={t('navigation.collapseSidebar')}
             >
               <PanelLeftClose className="h-3.5 w-3.5" />
             </IconButton>
@@ -123,12 +123,12 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label={t('keyboardShortcuts')}
+              aria-label={t('navigation.keyboardShortcuts')}
               className="text-muted-foreground hover:text-foreground"
               onClick={() => setShortcutsOpen(true)}
               tooltip={
                 <span className="flex items-center gap-1.5">
-                  {t('keyboardShortcuts')}
+                  {t('navigation.keyboardShortcuts')}
                   <KbdShortcut mac="?" win="?" />
                 </span>
               }
@@ -138,12 +138,12 @@ export function Sidebar() {
             <IconButton
               variant="ghost"
               size="icon-sm"
-              aria-label={t('newRequest')}
+              aria-label={t('navigation.newRequest')}
               className="text-muted-foreground hover:text-foreground"
               onClick={handleNewRequest}
               tooltip={
                 <span className="flex items-center gap-1.5">
-                  {t('newRequest')}
+                  {t('navigation.newRequest')}
                   <KbdShortcut mac="⌘⇧N" win="Ctrl+Shift+N" />
                 </span>
               }
@@ -153,7 +153,7 @@ export function Sidebar() {
           </div>
         </div>
         <nav
-          aria-label={t('mainNavigation')}
+          aria-label={t('navigation.mainNavigation')}
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {mainView === 'request' ? (

@@ -77,7 +77,7 @@ function ProviderList({
               {provider.name}
               {!provider.isBuiltIn && (
                 <span className="text-muted-foreground ml-1.5 text-[11px] font-normal">
-                  {t('custom')}
+                  {t('providers.custom')}
                 </span>
               )}
             </div>
@@ -92,7 +92,7 @@ function ProviderList({
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onManageModels(provider)}
-              tooltip={t('manageModels')}
+              tooltip={t('providers.manageModels')}
               aria-label={`Manage models for ${provider.name}`}
             >
               <Boxes className="h-3.5 w-3.5" />
@@ -103,7 +103,7 @@ function ProviderList({
               size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onEditProvider(provider)}
-              tooltip={t('editProvider')}
+              tooltip={t('providers.edit')}
               aria-label={`Edit provider ${provider.name}`}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -115,7 +115,7 @@ function ProviderList({
                 size="icon-sm"
                 className="text-muted-foreground hover:text-destructive shrink-0"
                 onClick={() => onDeleteProvider(provider)}
-                tooltip={t('removeProvider')}
+                tooltip={t('providers.remove')}
                 aria-label={`Remove custom provider ${provider.name}`}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -160,10 +160,10 @@ export function ProviderSettingsFooter({
             onClick={() => exportProviders(providers)}
           >
             <Download className="mr-1 h-3 w-3" />
-            {t('exportJson')}
+            {t('common.exportJson')}
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>
-            {t('close')}
+            {t('common.close')}
           </Button>
         </>
       )}
@@ -181,16 +181,18 @@ export function ProviderSettingsFooter({
                 onClick={onResetProvider}
               >
                 <RotateCcw className="mr-1 h-3 w-3" />
-                {resettingProvider ? t('resetting') : t('resetToDefault')}
+                {resettingProvider
+                  ? t('providers.resetting')
+                  : t('providers.resetToDefault')}
               </Button>
             )}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onBackToList}>
-              {t('cancel')}
+              {t('common.cancel')}
             </Button>
             <Button type="button" onClick={onSubmitForm}>
-              {t('update')}
+              {t('common.update')}
             </Button>
           </div>
         </>
@@ -201,10 +203,10 @@ export function ProviderSettingsFooter({
           <div />
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onBackToList}>
-              {t('cancel')}
+              {t('common.cancel')}
             </Button>
             <Button type="button" onClick={onSubmitForm}>
-              {t('addProvider')}
+              {t('request.addProvider')}
             </Button>
           </div>
         </>
@@ -277,7 +279,9 @@ export function ProviderSettings({
       setView('list');
     } catch (e) {
       if (e instanceof Error && e.message === 'MAX_CUSTOM_PROVIDERS') {
-        window.alert(t('customProviderLimit', { count: MAX_CUSTOM_PROVIDERS }));
+        window.alert(
+          t('providers.customLimit', { count: MAX_CUSTOM_PROVIDERS }),
+        );
         return;
       }
       throw e;
@@ -340,14 +344,14 @@ export function ProviderSettings({
       <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="text-[15px] font-medium tracking-tight">
-            {view === 'list' && t('providers')}
-            {view === 'edit' && t('editProviderTitle')}
-            {view === 'add' && t('addCustomProvider')}
+            {view === 'list' && t('settings.providers')}
+            {view === 'edit' && t('providers.editTitle')}
+            {view === 'add' && t('providers.addCustom')}
           </h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {view === 'list' && t('providerListDescription')}
-            {view === 'edit' && t('editProviderDescription')}
-            {view === 'add' && t('addProviderDescription')}
+            {view === 'list' && t('providers.listDescription')}
+            {view === 'edit' && t('providers.editDescription')}
+            {view === 'add' && t('providers.addDescription')}
           </p>
         </div>
         {view === 'list' && (
@@ -358,11 +362,11 @@ export function ProviderSettings({
             title={
               canAddCustomProvider
                 ? undefined
-                : t('customProviderLimit', { count: MAX_CUSTOM_PROVIDERS })
+                : t('providers.customLimit', { count: MAX_CUSTOM_PROVIDERS })
             }
           >
             <Plus className="h-3 w-3" />
-            {t('add')}
+            {t('common.add')}
           </Button>
         )}
         {view !== 'list' && (
@@ -370,7 +374,7 @@ export function ProviderSettings({
             variant="ghost"
             size="icon-sm"
             onClick={handleBackToList}
-            tooltip={t('backToProviderList')}
+            tooltip={t('providers.backToList')}
           >
             <X className="h-3.5 w-3.5" />
           </IconButton>
@@ -424,11 +428,11 @@ export function ProviderSettings({
       {providerToDelete && (
         <ConfirmDeleteDialog
           open
-          title={t('removeProviderQuestion')}
-          description={t('removeProviderWarning', {
+          title={t('providers.removeQuestion')}
+          description={t('providers.removeWarning', {
             name: providerToDelete.name,
           })}
-          confirmLabel={t('remove')}
+          confirmLabel={t('common.remove')}
           onOpenChange={(open) => {
             if (!open) setProviderToDelete(null);
           }}

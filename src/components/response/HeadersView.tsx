@@ -18,15 +18,15 @@ const HeadersTable = memo(function HeadersTable({
 }) {
   const { t } = useTranslation();
   if (!headers || Object.keys(headers).length === 0) {
-    return <EmptyState title={t('noHeaders')} compact />;
+    return <EmptyState title={t('response.noHeaders')} compact />;
   }
 
   return (
     <table className="w-full font-mono text-[13px]">
       <thead>
         <tr className="text-muted-foreground border-b text-left text-xs">
-          <th className="w-1/3 px-3 py-1 font-medium">{t('name')}</th>
-          <th className="px-3 py-1 font-medium">{t('value')}</th>
+          <th className="w-1/3 px-3 py-1 font-medium">{t('common.name')}</th>
+          <th className="px-3 py-1 font-medium">{t('common.value')}</th>
         </tr>
       </thead>
       <tbody>
@@ -71,17 +71,17 @@ export function HeadersView() {
       <div className="mt-2 flex items-center justify-between px-4">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="response" className="px-3 text-xs">
-            {t('response')}
+            {t('response.title')}
           </TabsTrigger>
           <TabsTrigger value="request" className="px-3 text-xs">
-            {t('request')}
+            {t('response.request')}
           </TabsTrigger>
         </TabsList>
         <IconButton
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-foreground"
-          tooltip={t('exportHeaders')}
+          tooltip={t('response.exportHeaders')}
           disabled={!hasHeaders}
           onClick={() =>
             exportHeadersJson({

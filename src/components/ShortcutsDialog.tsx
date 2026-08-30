@@ -139,7 +139,7 @@ export function ShortcutsDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{t('keyboardShortcuts')}</DialogTitle>
+          <DialogTitle>{t('navigation.keyboardShortcuts')}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

@@ -193,7 +193,7 @@ export function ProviderForm({
     <form ref={ref} onSubmit={handleSubmit} data-1p-ignore data-lp-ignore>
       <div className="space-y-4 px-5 py-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={t('name')} htmlFor="provider-name">
+          <Field label={t('common.name')} htmlFor="provider-name">
             <Input
               id="provider-name"
               value={form.name}
@@ -204,7 +204,7 @@ export function ProviderForm({
               className="w-full"
             />
           </Field>
-          <Field label={t('type')} htmlFor="provider-type">
+          <Field label={t('providers.type')} htmlFor="provider-type">
             <Select
               value={form.type}
               onValueChange={(val) =>
@@ -229,9 +229,9 @@ export function ProviderForm({
         </div>
 
         <Field
-          label={t('apiKey')}
+          label={t('providers.apiKey')}
           htmlFor="provider-api-key"
-          hint={t('apiKeyStoredLocally')}
+          hint={t('providers.apiKeyStoredLocally')}
         >
           <PasswordInput
             id="provider-api-key"
@@ -244,7 +244,7 @@ export function ProviderForm({
           />
         </Field>
 
-        <Field label={t('baseUrl')} htmlFor="provider-base-url">
+        <Field label={t('providers.baseUrl')} htmlFor="provider-base-url">
           <Input
             id="provider-base-url"
             value={form.baseUrl}
@@ -263,10 +263,10 @@ export function ProviderForm({
             <SlidersHorizontal className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-medium">
-                {t('advancedSettings')}
+                {t('providers.advancedSettings')}
               </span>
               <span className="text-muted-foreground block truncate text-[11px]">
-                {t('advancedSettingsDescription')}
+                {t('providers.advancedSettingsDescription')}
               </span>
             </span>
             <ChevronDown className="text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" />
@@ -275,7 +275,7 @@ export function ProviderForm({
           <div className="border-border/70 space-y-4 border-t px-3 py-3">
             {form.type === 'openai-compatible' && (
               <Field
-                label={t('protocol')}
+                label={t('providers.protocol')}
                 htmlFor="provider-protocol"
                 hint={
                   form.protocol === 'openai-chat-completions'
@@ -315,7 +315,10 @@ export function ProviderForm({
             )}
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field label={t('authType')} htmlFor="provider-auth-type">
+              <Field
+                label={t('providers.authType')}
+                htmlFor="provider-auth-type"
+              >
                 <Select
                   value={form.auth.type}
                   onValueChange={(val) =>
@@ -343,7 +346,7 @@ export function ProviderForm({
               </Field>
               {form.auth.type === 'api-key-header' && (
                 <Field
-                  label={t('headerNameLabel')}
+                  label={t('providers.headerName')}
                   htmlFor="provider-auth-header-name"
                 >
                   <Input
@@ -365,14 +368,17 @@ export function ProviderForm({
               <HeaderListEditor
                 headers={headerEntries}
                 onChange={updateHeaderEntries}
-                label={t('customHeaders')}
+                label={t('providers.customHeaders')}
                 placeholderKey="x-custom-header"
                 placeholderValue="header-value"
               />
             </div>
 
             {form.protocol !== 'openai-responses' && (
-              <Field label={t('chatEndpoint')} htmlFor="provider-chat-endpoint">
+              <Field
+                label={t('providers.chatEndpoint')}
+                htmlFor="provider-chat-endpoint"
+              >
                 <Input
                   id="provider-chat-endpoint"
                   value={form.endpoints.chat}
@@ -391,7 +397,7 @@ export function ProviderForm({
               (form.protocol === 'openai-responses' ||
                 form.protocol === 'openai-chat-completions') && (
                 <Field
-                  label={t('responsesEndpoint')}
+                  label={t('providers.responsesEndpoint')}
                   htmlFor="provider-responses-endpoint"
                 >
                   <Input
@@ -412,26 +418,26 @@ export function ProviderForm({
 
         {!isBuiltIn && (
           <div className="flex flex-col gap-2">
-            <Label className="text-xs">{t('models')}</Label>
+            <Label className="text-xs">{t('providers.models')}</Label>
             {formModels.map((model, i) => (
               <div
                 key={model._formKey}
                 className="flex flex-col gap-2 sm:flex-row sm:items-center"
               >
                 <Input
-                  aria-label={t('modelId', { index: i + 1 })}
+                  aria-label={t('providers.modelId', { index: i + 1 })}
                   value={model.id}
                   onChange={(e) => updateModel(i, { id: e.target.value })}
                   placeholder="model-id"
                   className="flex-1 text-sm"
                 />
                 <Input
-                  aria-label={t('modelDisplayName', { index: i + 1 })}
+                  aria-label={t('providers.modelDisplayName', { index: i + 1 })}
                   value={model.displayName}
                   onChange={(e) =>
                     updateModel(i, { displayName: e.target.value })
                   }
-                  placeholder={t('displayName')}
+                  placeholder={t('providers.displayName')}
                   className="flex-1 text-sm"
                 />
                 {formModels.length > 1 && (
@@ -441,7 +447,7 @@ export function ProviderForm({
                     size="icon-sm"
                     className="shrink-0"
                     onClick={() => removeModel(i)}
-                    tooltip={t('removeModel')}
+                    tooltip={t('providers.removeModel')}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </IconButton>
@@ -457,7 +463,7 @@ export function ProviderForm({
               disabled={!supportsModelSelection(form.type)}
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              {t('addModel')}
+              {t('providers.addModel')}
             </Button>
           </div>
         )}

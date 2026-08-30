@@ -1,14 +1,33 @@
 import { create } from 'zustand';
+import {
+  DEFAULT_LANGUAGE,
+  isSupportedLanguage,
+  localeOptions,
+  type Language,
+} from '@/i18n/locales';
 
-export type Language = 'en' | 'zh-TW';
+export type { Language } from '@/i18n/locales';
 
 export const LANGUAGE_STORAGE_KEY = 'roshi-language';
 
 function detectLanguage(): Language {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
   const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (stored === 'en' || stored === 'zh-TW') return stored;
-  return navigator.language.toLowerCase().startsWith('zh') ? 'zh-TW' : 'en';
+  if (stored && isSupportedLanguage(stored)) return stored;
+
+  const browserLanguages = navigator.languages.length
+    ? navigator.languages
+    : [navigator.language];
+  for (const browserLanguage of browserLanguages) {
+    const normalized = browserLanguage.toLowerCase();
+    const match = localeOptions.find((option) =>
+      option.browserPrefixes.some((prefix) =>
+        normalized.startsWith(prefix.toLowerCase()),
+      ),
+    );
+    if (match) return match.code;
+  }
+  return DEFAULT_LANGUAGE;
 }
 
 function applyLanguage(language: Language) {

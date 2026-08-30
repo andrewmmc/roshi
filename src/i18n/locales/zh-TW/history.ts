@@ -1,0 +1,17 @@
+export const history = {
+  search: '搜尋歷史記錄…',
+  searchLabel: '搜尋歷史記錄',
+  filter: '篩選歷史記錄',
+  empty: '尚無歷史記錄',
+  noMatches: '沒有符合的項目',
+  deleteAllQuestion: '要刪除所有歷史記錄嗎？',
+  export: '將所有歷史記錄匯出為 JSON',
+  clear: '清除所有歷史記錄',
+  description: '傳送的每個請求都會儲存在這裡，方便快速重新執行。',
+  filtersActive: '已啟用篩選 ·',
+  filterCount: '{filtered} / {total}',
+  deleteAll: '全部刪除',
+  deleteWarning: '這將永久移除全部 {count} 筆歷史記錄，且無法復原。',
+  exitPromptCompare: '結束提示詞比較',
+  comparePromptDiffs: '比較提示詞差異',
+} as const;

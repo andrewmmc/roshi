@@ -21,22 +21,22 @@ export function RequestComposer() {
       <PanelHeader>
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="messages" className="px-3 text-xs">
-            {t('messages')}
+            {t('request.messages')}
           </TabsTrigger>
           <TabsTrigger value="system" className="px-3 text-xs">
-            {t('systemPrompt')}
+            {t('request.systemPrompt')}
             {systemPrompt.trim() && (
               <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
             )}
           </TabsTrigger>
           <TabsTrigger value="headers" className="px-3 text-xs">
-            {t('headers')}
+            {t('request.headers')}
             {hasCustomHeaders && (
               <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
             )}
           </TabsTrigger>
           <TabsTrigger value="parameters" className="px-3 text-xs">
-            {t('parameters')}
+            {t('request.parameters')}
           </TabsTrigger>
         </TabsList>
       </PanelHeader>
@@ -55,8 +55,8 @@ export function RequestComposer() {
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
-              aria-label={t('systemPrompt')}
-              placeholder={t('optionalSystemPrompt')}
+              aria-label={t('request.systemPrompt')}
+              placeholder={t('request.optionalSystemPrompt')}
               className="bg-muted/20 border-border/50 min-h-[80px] resize-y font-mono text-xs"
               rows={3}
             />

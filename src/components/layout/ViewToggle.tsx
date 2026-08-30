@@ -14,8 +14,8 @@ import { useTranslation, type MessageKey } from '@/i18n';
 const VIEW_OPTIONS: MainView[] = ['request', 'eval'];
 
 const VIEW_TOOLTIPS: Record<MainView, MessageKey> = {
-  request: 'requestViewDescription',
-  eval: 'evalViewDescription',
+  request: 'navigation.requestViewDescription',
+  eval: 'navigation.evalViewDescription',
 };
 
 export function ViewToggle() {
@@ -66,7 +66,7 @@ export function ViewToggle() {
                 />
               }
             >
-              {t(option)}
+              {t(`navigation.${option}`)}
               {pendingView === option && (
                 <LoaderCircle
                   className="h-3 w-3 animate-spin motion-reduce:animate-none"

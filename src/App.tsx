@@ -52,7 +52,7 @@ export function App() {
           role="status"
         >
           <Loader2 className="h-4 w-4 animate-spin" />
-          {t('restoringWorkspace')}
+          {t('navigation.restoringWorkspace')}
         </div>
       )}
       <ToastContainer />

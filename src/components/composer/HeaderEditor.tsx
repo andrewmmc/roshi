@@ -84,15 +84,15 @@ export function HeaderEditor() {
           <Input
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
-            placeholder={t('headerName')}
-            aria-label={t('customHeaderName')}
+            placeholder={t('request.headerName')}
+            aria-label={t('request.customHeaderName')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <Input
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
-            placeholder={t('headerValue')}
-            aria-label={t('customHeaderValue')}
+            placeholder={t('request.headerValue')}
+            aria-label={t('request.customHeaderValue')}
             className="h-7 flex-1 font-mono text-xs"
           />
           <IconButton
@@ -101,7 +101,7 @@ export function HeaderEditor() {
             className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => removeHeader(index)}
             disabled={customHeaders.length <= 1}
-            tooltip={t('removeHeader')}
+            tooltip={t('request.removeHeader')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </IconButton>

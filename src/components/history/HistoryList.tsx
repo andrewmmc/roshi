@@ -82,8 +82,8 @@ function HistorySearchControls({
           />
           <Input
             ref={searchInputRef}
-            placeholder={t('searchHistory')}
-            aria-label={t('searchHistoryLabel')}
+            placeholder={t('history.search')}
+            aria-label={t('history.searchLabel')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
@@ -92,8 +92,8 @@ function HistorySearchControls({
             <button
               onClick={() => onSearchChange('')}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
-              aria-label={t('clearSearch')}
-              title={t('clearSearch')}
+              aria-label={t('common.clearSearch')}
+              title={t('common.clearSearch')}
             >
               <X className="h-3 w-3" />
             </button>
@@ -108,7 +108,7 @@ function HistorySearchControls({
               : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={onFilterClick}
-          tooltip={t('filterHistory')}
+          tooltip={t('history.filter')}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {isFiltering && (
@@ -119,9 +119,9 @@ function HistorySearchControls({
       {isFiltering && (
         <div className="flex items-center pt-1">
           <span className="bg-sidebar-accent/70 text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px]">
-            {t('filtersActive')}{' '}
+            {t('history.filtersActive')}{' '}
             <span>
-              {t('filterCount', {
+              {t('history.filterCount', {
                 filtered: filteredCount,
                 total: totalCount,
               })}
@@ -149,17 +149,17 @@ function DeleteAllHistoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('deleteAllHistory')}</DialogTitle>
+          <DialogTitle>{t('history.deleteAllQuestion')}</DialogTitle>
           <DialogDescription>
-            {t('deleteHistoryWarning', { count: entryCount })}
+            {t('history.deleteWarning', { count: entryCount })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('cancel')}
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            {t('deleteAll')}
+            {t('history.deleteAll')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -309,7 +309,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
       <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-            {t('history')}
+            {t('navigation.history')}
           </span>
         )}
         {entries.length > 0 && (
@@ -330,7 +330,9 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
                 setCompareMode(true);
               }}
               tooltip={
-                compareMode ? t('exitPromptCompare') : t('comparePromptDiffs')
+                compareMode
+                  ? t('history.exitPromptCompare')
+                  : t('history.comparePromptDiffs')
               }
             >
               <GitCompare className="h-3.5 w-3.5" />
@@ -355,12 +357,12 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             <EmptyState
               compact
               icon={History}
-              title={t('noHistory')}
-              description={t('historyDescription')}
+              title={t('history.empty')}
+              description={t('history.description')}
             />
           )}
           {entries.length > 0 && filtered.length === 0 && (
-            <EmptyState compact title={t('noMatchingEntries')} />
+            <EmptyState compact title={t('history.noMatches')} />
           )}
           {filtered.map((entry) => (
             <HistoryItem
@@ -382,7 +384,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => exportHistory(entries)}
-            tooltip={t('exportHistory')}
+            tooltip={t('history.export')}
           >
             <Download className="h-3.5 w-3.5" />
           </IconButton>
@@ -391,7 +393,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-destructive"
             onClick={() => setShowConfirm(true)}
-            tooltip={t('clearHistory')}
+            tooltip={t('history.clear')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </IconButton>

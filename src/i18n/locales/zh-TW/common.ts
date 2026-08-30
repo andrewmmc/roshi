@@ -1,0 +1,20 @@
+export const common = {
+  close: '關閉',
+  cancel: '取消',
+  reset: '重設',
+  saving: '儲存中…',
+  loading: '載入中…',
+  clearSearch: '清除搜尋',
+  add: '新增',
+  save: '儲存',
+  update: '更新',
+  remove: '移除',
+  retry: '重試',
+  exportJson: '匯出 JSON',
+  name: '名稱',
+  value: '值',
+  discard: '放棄',
+  discardUnsentChanges: '要放棄未傳送的變更嗎？',
+  discardUnsentChangesDescription:
+    '編輯器中有尚未傳送的內容。此操作會取代內容，且變更將遺失。',
+} as const;

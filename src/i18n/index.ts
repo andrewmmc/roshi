@@ -1,17 +1,29 @@
 import { useCallback } from 'react';
-import { en, zhTW, type MessageKey } from '@/i18n/messages';
-import { useLanguageStore, type Language } from '@/stores/language-store';
+import { localeCatalogs, type Language } from '@/i18n/locales';
+import { en } from '@/i18n/locales/en';
+import type { MessageKey } from '@/i18n/types';
+import { useLanguageStore } from '@/stores/language-store';
 
 type Variables = Record<string, string | number>;
 
-const catalogs = { en, 'zh-TW': zhTW } as const;
+function getMessage(language: Language, key: MessageKey): string {
+  const [namespace, messageKey] = key.split('.');
+  const catalog = localeCatalogs[language] as Record<
+    string,
+    Record<string, string>
+  >;
+  const fallback = en as Record<string, Record<string, string>>;
+  return (
+    catalog[namespace]?.[messageKey] ?? fallback[namespace]?.[messageKey] ?? key
+  );
+}
 
 export function translate(
   language: Language,
   key: MessageKey,
   variables?: Variables,
 ): string {
-  let message: string = catalogs[language][key] ?? en[key];
+  let message = getMessage(language, key);
   if (!variables) return message;
   for (const [name, value] of Object.entries(variables)) {
     message = message.replaceAll(`{${name}}`, String(value));
@@ -41,4 +53,4 @@ export function useTranslation() {
   return { language, t, formatNumber, formatDateTime };
 }
 
-export type { MessageKey } from '@/i18n/messages';
+export type { MessageKey, Namespace, NamespaceKey } from '@/i18n/types';

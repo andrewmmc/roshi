@@ -1,0 +1,27 @@
+export const environments = {
+  description:
+    'Define variables and reference them in prompts or headers with {{variableName}}.',
+  empty: 'No environments yet',
+  createHint: 'Create one to start using variables.',
+  select: 'Select environment',
+  environment: 'Environment',
+  noneAvailable: 'No environments available.',
+  manage: 'Manage environments',
+  edit: 'Edit environment',
+  delete: 'Delete environment',
+  noVariables: 'No variables',
+  variableCount: '{count} variable(s)',
+  key: 'Key',
+  variable: 'Variable',
+  variableKey: 'Variable key',
+  variableValue: 'Variable value',
+  removeVariable: 'Remove variable',
+  saved: 'Environment saved',
+  deleted: 'Environment deleted',
+  new: 'New Environment',
+  discardChanges: 'Discard environment changes?',
+  unsavedChanges: 'Your edits to this environment have not been saved.',
+  deleteQuestion: 'Delete environment?',
+  deleteWarning:
+    'This environment and its variables will be removed permanently.',
+} as const;

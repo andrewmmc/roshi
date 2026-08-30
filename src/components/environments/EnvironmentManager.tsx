@@ -45,8 +45,8 @@ function EnvironmentCard({
         <div className="truncate text-sm font-medium">{environment.name}</div>
         <p className="text-muted-foreground text-xs">
           {variableCount === 0
-            ? t('noVariables')
-            : t('variableCount', { count: variableCount })}
+            ? t('environments.noVariables')
+            : t('environments.variableCount', { count: variableCount })}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
@@ -54,7 +54,7 @@ function EnvironmentCard({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-foreground"
-          tooltip={t('editEnvironment')}
+          tooltip={t('environments.edit')}
           onClick={onEdit}
         >
           <Pencil className="h-3 w-3" />
@@ -63,7 +63,7 @@ function EnvironmentCard({
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-destructive"
-          tooltip={t('deleteEnvironment')}
+          tooltip={t('environments.delete')}
           onClick={() => onDelete(environment.id)}
         >
           <Trash2 className="h-3 w-3" />
@@ -135,7 +135,7 @@ function EnvironmentEditor({
   return (
     <div className="bg-muted/20 rounded-xl border p-3">
       <Field
-        label={t('name')}
+        label={t('common.name')}
         htmlFor={`env-name-${environment.id}`}
         className="mb-3"
       >
@@ -149,10 +149,10 @@ function EnvironmentEditor({
       <div className="space-y-2">
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
           <span className="text-muted-foreground text-xs font-medium">
-            {t('key')}
+            {t('environments.key')}
           </span>
           <span className="text-muted-foreground text-xs font-medium">
-            {t('value')}
+            {t('common.value')}
           </span>
           <span className="w-7" />
         </div>
@@ -167,7 +167,7 @@ function EnvironmentEditor({
                 updateVariable(variable.id, { key: event.target.value })
               }
               placeholder="name"
-              aria-label={t('variableKey')}
+              aria-label={t('environments.variableKey')}
               className="font-mono text-xs"
             />
             <Input
@@ -176,14 +176,14 @@ function EnvironmentEditor({
                 updateVariable(variable.id, { value: event.target.value })
               }
               placeholder="value"
-              aria-label={t('variableValue')}
+              aria-label={t('environments.variableValue')}
               className="font-mono text-xs"
             />
             <IconButton
               variant="ghost"
               size="icon-sm"
               className="text-muted-foreground hover:text-destructive"
-              tooltip={t('removeVariable')}
+              tooltip={t('environments.removeVariable')}
               onClick={() => removeVariable(variable.id)}
             >
               <Trash2 className="h-3 w-3" />
@@ -201,22 +201,22 @@ function EnvironmentEditor({
           }
         >
           <Plus className="h-3 w-3" />
-          {t('variable')}
+          {t('environments.variable')}
         </Button>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleCancel}>
-            {t('cancel')}
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
             onClick={async () => {
               await onSave(environment.id, { name, variables });
-              toast(t('environmentSaved'));
+              toast(t('environments.saved'));
               onCancel();
             }}
             disabled={!name.trim()}
           >
-            {t('save')}
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -225,8 +225,8 @@ function EnvironmentEditor({
         open={showDiscard}
         onOpenChange={setShowDiscard}
         onConfirm={onCancel}
-        title={t('discardEnvironmentChanges')}
-        description={t('unsavedEnvironmentChanges')}
+        title={t('environments.discardChanges')}
+        description={t('environments.unsavedChanges')}
       />
     </div>
   );
@@ -246,7 +246,7 @@ export function EnvironmentSettings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleAdd = useCallback(async () => {
-    const environment = await addEnvironment(t('newEnvironment'));
+    const environment = await addEnvironment(t('environments.new'));
     selectEnvironment(environment.id);
     setEditingId(environment.id);
   }, [addEnvironment, selectEnvironment, t]);
@@ -267,7 +267,7 @@ export function EnvironmentSettings() {
   const confirmDelete = useCallback(async () => {
     if (!pendingDeleteId) return;
     await handleDelete(pendingDeleteId);
-    toast(t('environmentDeleted'));
+    toast(t('environments.deleted'));
     setPendingDeleteId(null);
   }, [handleDelete, pendingDeleteId, t]);
 
@@ -276,15 +276,15 @@ export function EnvironmentSettings() {
       <div className="bg-muted/20 flex shrink-0 items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="text-[15px] font-medium tracking-tight">
-            {t('environments')}
+            {t('settings.environments')}
           </h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {t('environmentsDescription')}
+            {t('environments.description')}
           </p>
         </div>
         <Button size="sm" onClick={handleAdd}>
           <Plus className="h-3 w-3" />
-          {t('add')}
+          {t('common.add')}
         </Button>
       </div>
 
@@ -292,8 +292,8 @@ export function EnvironmentSettings() {
         {environments.length === 0 ? (
           <EmptyState
             compact
-            title={t('noEnvironments')}
-            description={t('createEnvironmentHint')}
+            title={t('environments.empty')}
+            description={t('environments.createHint')}
           />
         ) : (
           <div className="space-y-2">
@@ -322,8 +322,8 @@ export function EnvironmentSettings() {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmDelete}
-        title={t('deleteEnvironmentQuestion')}
-        description={t('deleteEnvironmentWarning')}
+        title={t('environments.deleteQuestion')}
+        description={t('environments.deleteWarning')}
       />
     </div>
   );
@@ -338,7 +338,7 @@ export function EnvironmentSettingsFooter({
   return (
     <div className="bg-muted/15 flex shrink-0 items-center justify-end border-t px-5 py-4">
       <Button type="button" variant="outline" onClick={onClose}>
-        {t('close')}
+        {t('common.close')}
       </Button>
     </div>
   );
@@ -372,12 +372,12 @@ export function EnvironmentSelector() {
       onValueChange={handleEnvironmentChange}
     >
       <SelectTrigger
-        aria-label={t('selectEnvironment')}
-        title={t('selectEnvironment')}
+        aria-label={t('environments.select')}
+        title={t('environments.select')}
         className="h-8 max-w-[150px] min-w-[80px] flex-1 text-[13px]"
       >
-        <SelectValue placeholder={t('environment')}>
-          {selectedEnvironment?.name ?? t('environment')}
+        <SelectValue placeholder={t('environments.environment')}>
+          {selectedEnvironment?.name ?? t('environments.environment')}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="min-w-56">
@@ -389,13 +389,13 @@ export function EnvironmentSelector() {
           ))
         ) : (
           <div className="text-muted-foreground px-2 py-3 text-center text-xs">
-            {t('noEnvironmentsAvailable')}
+            {t('environments.noneAvailable')}
           </div>
         )}
         <SelectSeparator />
         <SelectItem value={MANAGE_ENVIRONMENTS_VALUE}>
           <Settings className="h-3 w-3" />
-          {t('manageEnvironments')}
+          {t('environments.manage')}
         </SelectItem>
       </SelectContent>
     </Select>

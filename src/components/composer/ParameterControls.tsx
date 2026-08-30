@@ -170,7 +170,7 @@ export function ParameterControls() {
         Optional parameters are off by default. Check a control to include it in
         the request; otherwise the model default is used.
       </p>
-      <SectionHeader>{t('sampling')}</SectionHeader>
+      <SectionHeader>{t('request.sampling')}</SectionHeader>
 
       {temperatureParam && (
         <div className="flex flex-col gap-1.5">
@@ -207,13 +207,13 @@ export function ParameterControls() {
         <ConfiguredSliderRow key={param.capabilityKey} param={param} />
       ))}
 
-      <SectionHeader>{t('penalties')}</SectionHeader>
+      <SectionHeader>{t('request.penalties')}</SectionHeader>
 
       {penaltyParams.map((param) => (
         <ConfiguredSliderRow key={param.capabilityKey} param={param} />
       ))}
 
-      <SectionHeader>{t('output')}</SectionHeader>
+      <SectionHeader>{t('request.output')}</SectionHeader>
 
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export function ParameterControls() {
         }
       />
 
-      <SectionHeader>{t('advanced')}</SectionHeader>
+      <SectionHeader>{t('request.advanced')}</SectionHeader>
 
       <CheckboxRow
         label="Thinking"

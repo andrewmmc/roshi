@@ -64,7 +64,7 @@ export function AppLayout() {
         href="#main-content"
         className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:p-2 focus:shadow-md"
       >
-        {t('skipToMainContent')}
+        {t('navigation.skipToMainContent')}
       </a>
       <AppBanner />
       <ResizablePanelGroup

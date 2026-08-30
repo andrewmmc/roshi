@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/select';
 import { useLanguageStore, type Language } from '@/stores/language-store';
 import { useTranslation, type MessageKey } from '@/i18n';
+import { localeOptions } from '@/i18n/locales';
 
 type SettingsSection = {
   id: SettingsPage;
@@ -60,11 +61,11 @@ type SettingsSection = {
 };
 
 const SECTIONS: SettingsSection[] = [
-  { id: 'general', label: 'general', icon: MonitorCog },
-  { id: 'proxy', label: 'proxy', icon: Network },
-  { id: 'providers', label: 'providers', icon: Server },
-  { id: 'models', label: 'models', icon: Boxes },
-  { id: 'environments', label: 'environments', icon: Variable },
+  { id: 'general', label: 'settings.general', icon: MonitorCog },
+  { id: 'proxy', label: 'settings.proxy', icon: Network },
+  { id: 'providers', label: 'settings.providers', icon: Server },
+  { id: 'models', label: 'settings.models', icon: Boxes },
+  { id: 'environments', label: 'settings.environments', icon: Variable },
 ];
 
 function validateProxyUrl(value: string): boolean {
@@ -107,11 +108,11 @@ function ProxySettings() {
 
   const handleSave = async () => {
     if (!validateProxyUrl(draft.httpProxy)) {
-      setError(t('invalidProxyUrl', { name: 'HTTP_PROXY' }));
+      setError(t('settings.invalidProxyUrl', { name: 'HTTP_PROXY' }));
       return;
     }
     if (!validateProxyUrl(draft.httpsProxy)) {
-      setError(t('invalidProxyUrl', { name: 'HTTPS_PROXY' }));
+      setError(t('settings.invalidProxyUrl', { name: 'HTTPS_PROXY' }));
       return;
     }
     setSaving(true);
@@ -120,7 +121,7 @@ function ProxySettings() {
       await save(draft);
       setSaved(true);
     } catch {
-      setError(t('proxySaveFailed'));
+      setError(t('settings.proxySaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -129,9 +130,11 @@ function ProxySettings() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-border bg-muted/20 border-b px-5 py-4">
-        <h2 className="text-[15px] font-medium tracking-tight">{t('proxy')}</h2>
+        <h2 className="text-[15px] font-medium tracking-tight">
+          {t('settings.proxy')}
+        </h2>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          {t('proxyDescription')}
+          {t('settings.proxyDescription')}
         </p>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -148,7 +151,7 @@ function ProxySettings() {
             autoCapitalize="none"
           />
           <p className="text-muted-foreground text-[11px]">
-            {t('httpProxyDescription')}
+            {t('settings.httpProxyDescription')}
           </p>
         </div>
         <div className="space-y-1.5">
@@ -164,7 +167,7 @@ function ProxySettings() {
             autoCapitalize="none"
           />
           <p className="text-muted-foreground text-[11px]">
-            {t('httpsProxyDescription')}
+            {t('settings.httpsProxyDescription')}
           </p>
         </div>
         <div className="space-y-1.5">
@@ -180,7 +183,7 @@ function ProxySettings() {
             autoCapitalize="none"
           />
           <p className="text-muted-foreground text-[11px]">
-            {t('noProxyDescription')}
+            {t('settings.noProxyDescription')}
           </p>
         </div>
         {error && (
@@ -190,11 +193,11 @@ function ProxySettings() {
         )}
         <div className="flex items-center gap-3 pt-1">
           <Button size="sm" disabled={saving} onClick={() => void handleSave()}>
-            {saving ? t('saving') : t('saveProxySettings')}
+            {saving ? t('common.saving') : t('settings.saveProxySettings')}
           </Button>
           {saved && (
             <span className="text-muted-foreground text-xs" role="status">
-              {t('proxySaved')}
+              {t('settings.proxySaved')}
             </span>
           )}
         </div>
@@ -226,7 +229,7 @@ function ResetConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogClose render={<Button variant="outline" size="sm" />}>
-            {t('cancel')}
+            {t('common.cancel')}
           </AlertDialogClose>
           <Button
             size="sm"
@@ -236,7 +239,7 @@ function ResetConfirmDialog({
               onOpenChange(false);
             }}
           >
-            {t('reset')}
+            {t('common.reset')}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -250,6 +253,9 @@ function GeneralSettings() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const darkMode = theme === 'dark';
+  const selectedLocale = localeOptions.find(
+    (option) => option.code === language,
+  );
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     mode: 'all' | 'providers';
@@ -267,26 +273,26 @@ function GeneralSettings() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-border bg-muted/20 border-b px-5 py-4">
         <h2 className="text-[15px] font-medium tracking-tight">
-          {t('general')}
+          {t('settings.general')}
         </h2>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          {t('configurePreferences')}
+          {t('settings.configurePreferences')}
         </p>
       </div>
 
       <div className="flex-1 space-y-3 px-5 py-4">
         <div className="border-border/70 bg-muted/20 flex items-center justify-between gap-4 rounded-lg border p-3">
           <div>
-            <div className="text-sm font-medium">{t('darkMode')}</div>
+            <div className="text-sm font-medium">{t('settings.darkMode')}</div>
             <p className="text-muted-foreground mt-1 text-xs">
-              {t('darkModeDescription')}
+              {t('settings.darkModeDescription')}
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={darkMode}
-            aria-label={t('darkMode')}
+            aria-label={t('settings.darkMode')}
             onClick={() => setTheme(darkMode ? 'light' : 'dark')}
             className={cn(
               'focus-visible:border-ring focus-visible:ring-ring/50 relative h-6 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors outline-none focus-visible:ring-3',
@@ -306,33 +312,41 @@ function GeneralSettings() {
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Languages className="text-muted-foreground h-3.5 w-3.5" />
-              {t('language')}
+              {t('settings.language')}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              {t('languageDescription')}
+              {t('settings.languageDescription')}
             </p>
           </div>
           <Select
             value={language}
             onValueChange={(value) => setLanguage(value as Language)}
           >
-            <SelectTrigger className="w-44 shrink-0" aria-label={t('language')}>
+            <SelectTrigger
+              className="w-44 shrink-0"
+              aria-label={t('settings.language')}
+            >
               <span className="flex-1 text-left">
-                {language === 'en' ? t('english') : t('traditionalChinese')}
+                {selectedLocale?.nativeName ?? language}
               </span>
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="en">{t('english')}</SelectItem>
-              <SelectItem value="zh-TW">{t('traditionalChinese')}</SelectItem>
+              {localeOptions.map((option) => (
+                <SelectItem key={option.code} value={option.code}>
+                  {option.nativeName}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="border-border/70 bg-muted/20 flex items-center justify-between gap-4 rounded-lg border p-3">
           <div>
-            <div className="text-sm font-medium">{t('resetApplication')}</div>
+            <div className="text-sm font-medium">
+              {t('settings.resetApplication')}
+            </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              {t('resetApplicationDescription')}
+              {t('settings.resetApplicationDescription')}
             </p>
           </div>
           <div className="flex shrink-0 items-center">
@@ -343,7 +357,7 @@ function GeneralSettings() {
               onClick={() => setConfirmDialog({ open: true, mode: 'all' })}
             >
               <RotateCcw className="h-3 w-3" />
-              {t('reset')}
+              {t('common.reset')}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -352,7 +366,7 @@ function GeneralSettings() {
                     variant="outline"
                     size="sm"
                     className="text-destructive hover:text-destructive rounded-l-none px-1.5"
-                    aria-label={t('moreResetOptions')}
+                    aria-label={t('settings.moreResetOptions')}
                   />
                 }
               >
@@ -369,7 +383,7 @@ function GeneralSettings() {
                   onClick={() => setConfirmDialog({ open: true, mode: 'all' })}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  {t('resetEntireApplication')}
+                  {t('settings.resetEntireApplication')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
@@ -378,7 +392,7 @@ function GeneralSettings() {
                   }
                 >
                   <Server className="h-3.5 w-3.5" />
-                  {t('resetProvidersOnly')}
+                  {t('settings.resetProvidersOnly')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -391,13 +405,13 @@ function GeneralSettings() {
         onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
         title={
           confirmDialog.mode === 'all'
-            ? t('resetEntireApplicationQuestion')
-            : t('resetProvidersQuestion')
+            ? t('settings.resetEntireApplicationQuestion')
+            : t('settings.resetProvidersQuestion')
         }
         description={
           confirmDialog.mode === 'all'
-            ? t('resetEntireApplicationWarning')
-            : t('resetProvidersWarning')
+            ? t('settings.resetEntireApplicationWarning')
+            : t('settings.resetProvidersWarning')
         }
         onConfirm={handleConfirmReset}
       />
@@ -430,12 +444,12 @@ export function SettingsDialog() {
       <IconButton
         variant="ghost"
         size="icon-sm"
-        aria-label={t('settings')}
+        aria-label={t('settings.title')}
         className="text-muted-foreground hover:text-foreground"
         onClick={() => setSettingsOpen(true)}
         tooltip={
           <span className="flex items-center gap-1.5">
-            {t('settings')}
+            {t('settings.title')}
             <KbdShortcut mac="⌘⇧," win="Ctrl+Shift+," />
           </span>
         }
@@ -454,14 +468,14 @@ export function SettingsDialog() {
         >
           <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-2.5">
             <DialogTitle className="text-[15px] tracking-tight">
-              {t('settings')}
+              {t('settings.title')}
             </DialogTitle>
             <IconButton
               variant="ghost"
               size="icon-sm"
               onClick={handleClose}
-              tooltip={t('close')}
-              aria-label={t('close')}
+              tooltip={t('common.close')}
+              aria-label={t('common.close')}
             >
               <X className="h-4 w-4" />
             </IconButton>
@@ -469,7 +483,7 @@ export function SettingsDialog() {
 
           <div className="flex min-h-0 flex-1 max-sm:flex-col">
             <nav
-              aria-label={t('settingsSections')}
+              aria-label={t('settings.sections')}
               className="border-border flex w-32 shrink-0 flex-col gap-0.5 border-r p-1.5 max-sm:w-full max-sm:flex-row max-sm:overflow-x-auto max-sm:border-r-0 max-sm:border-b"
             >
               {SECTIONS.map(({ id, label, icon: Icon }) => (

@@ -1,0 +1,40 @@
+export const providers = {
+  edit: 'Edit provider',
+  editTitle: 'Edit Provider',
+  addCustom: 'Add custom provider',
+  manageModels: 'Manage models',
+  remove: 'Remove provider',
+  resetToDefault: 'Reset to default',
+  resetting: 'Resetting…',
+  backToList: 'Back to provider list',
+  listDescription:
+    'Tune credentials and endpoints for each provider. Pick models from the Models tab.',
+  editDescription:
+    'Update keys, headers, endpoints, and model entries without leaving the composer.',
+  addDescription:
+    'Configure a Chat Completions–compatible endpoint, credentials, and the models you want listed.',
+  custom: 'Custom',
+  removeQuestion: 'Remove provider?',
+  removeWarning:
+    'Remove {name}? Its credentials, endpoint, and model configuration will be deleted from this device.',
+  customLimit: 'You can add up to {count} custom providers.',
+  type: 'Type',
+  apiKey: 'API Key',
+  apiKeyStoredLocally: 'Stored only on this device.',
+  baseUrl: 'Base URL',
+  advancedSettings: 'Advanced settings',
+  advancedSettingsDescription:
+    'Protocol, authentication, headers, and endpoints',
+  protocol: 'Protocol',
+  authType: 'Auth Type',
+  headerName: 'Header Name',
+  customHeaders: 'Custom Headers',
+  chatEndpoint: 'Chat Endpoint',
+  responsesEndpoint: 'Responses Endpoint',
+  models: 'Models',
+  modelId: 'Model ID {index}',
+  modelDisplayName: 'Model display name {index}',
+  displayName: 'Display Name',
+  removeModel: 'Remove model',
+  addModel: 'Add Model',
+} as const;

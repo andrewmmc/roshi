@@ -1,0 +1,20 @@
+export const common = {
+  close: 'Close',
+  cancel: 'Cancel',
+  reset: 'Reset',
+  saving: 'Saving…',
+  loading: 'Loading…',
+  clearSearch: 'Clear search',
+  add: 'Add',
+  save: 'Save',
+  update: 'Update',
+  remove: 'Remove',
+  retry: 'Retry',
+  exportJson: 'Export JSON',
+  name: 'Name',
+  value: 'Value',
+  discard: 'Discard',
+  discardUnsentChanges: 'Discard unsent changes?',
+  discardUnsentChangesDescription:
+    'You have unsent content in the composer. This action will replace it and your changes will be lost.',
+} as const;

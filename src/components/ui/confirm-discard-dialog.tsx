@@ -29,14 +29,14 @@ export function ConfirmDiscardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title ?? t('discardUnsentChanges')}</DialogTitle>
+          <DialogTitle>{title ?? t('common.discardUnsentChanges')}</DialogTitle>
           <DialogDescription>
-            {description ?? t('discardUnsentChangesDescription')}
+            {description ?? t('common.discardUnsentChangesDescription')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('cancel')}
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -45,7 +45,7 @@ export function ConfirmDiscardDialog({
               onOpenChange(false);
             }}
           >
-            {t('discard')}
+            {t('common.discard')}
           </Button>
         </DialogFooter>
       </DialogContent>

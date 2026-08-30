@@ -34,7 +34,7 @@ export function CustomProviderSection({
             {provider.name}
           </h3>
           <span className="text-muted-foreground text-[11px]">
-            {t('custom')}
+            {t('providers.custom')}
           </span>
         </div>
         <Button
@@ -45,7 +45,7 @@ export function CustomProviderSection({
           onClick={() => onEditProvider(provider)}
         >
           <SettingsIcon className="h-3 w-3" />
-          {t('editProvider')}
+          {t('providers.edit')}
         </Button>
       </header>
 

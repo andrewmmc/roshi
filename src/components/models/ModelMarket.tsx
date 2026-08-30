@@ -41,10 +41,10 @@ export function ModelMarketFooter({
         <RefreshCw
           className={cn('mr-1 h-3 w-3', refreshing && 'animate-spin')}
         />
-        {refreshing ? t('refreshing') : t('refreshCatalog')}
+        {refreshing ? t('models.refreshing') : t('models.refreshCatalog')}
       </Button>
       <Button type="button" variant="outline" onClick={onClose}>
-        {t('close')}
+        {t('common.close')}
       </Button>
     </div>
   );
@@ -107,7 +107,7 @@ export function ModelMarket({
     return (
       <div className="text-muted-foreground flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-5 py-8 text-xs">
         <Loader2 className="h-4 w-4 animate-spin" />
-        {t('loadingProviders')}
+        {t('request.loadingProviders')}
       </div>
     );
   }
@@ -116,10 +116,10 @@ export function ModelMarket({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="bg-muted/20 shrink-0 border-b px-5 py-4">
         <h2 className="text-[15px] font-medium tracking-tight">
-          {t('models')}
+          {t('settings.models')}
         </h2>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          {t('modelsDescription')}
+          {t('models.description')}
         </p>
       </div>
 
@@ -129,18 +129,18 @@ export function ModelMarket({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('searchModels')}
+            placeholder={t('models.search')}
             className="h-8 pr-7 pl-7 text-xs"
-            aria-label={t('searchModelsLabel')}
+            aria-label={t('models.searchLabel')}
           />
           {search && (
             <IconButton
               variant="ghost"
               size="icon-xs"
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
-              tooltip={t('clearSearch')}
+              tooltip={t('common.clearSearch')}
               onClick={() => setSearch('')}
-              aria-label={t('clearSearch')}
+              aria-label={t('common.clearSearch')}
             >
               <X className="h-3 w-3" />
             </IconButton>
@@ -164,7 +164,7 @@ export function ModelMarket({
                 : 'border-border text-muted-foreground hover:text-foreground',
             )}
           >
-            {t('addedOnly')}
+            {t('models.addedOnly')}
           </button>
         </div>
       </div>
@@ -173,7 +173,7 @@ export function ModelMarket({
         <div className="space-y-6 px-5 py-4">
           {visible.length === 0 && (
             <div className="text-muted-foreground rounded-xl border border-dashed px-3 py-6 text-center text-xs">
-              {t('noProvidersConfigured')}
+              {t('models.noProvidersConfigured')}
             </div>
           )}
           {visible.map((provider) =>

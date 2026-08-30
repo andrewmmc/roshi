@@ -1,0 +1,16 @@
+export const navigation = {
+  history: '歷史記錄',
+  collections: '收藏',
+  keyboardShortcuts: '鍵盤快速鍵',
+  collapseSidebar: '收合側邊欄',
+  openSidebar: '開啟側邊欄',
+  newRequest: '新增請求',
+  mainNavigation: '主要導覽',
+  skipToMainContent: '跳至主要內容',
+  request: '請求',
+  eval: '評測',
+  requestViewDescription: '傳送單一請求並查看回應。',
+  evalViewDescription: '以多個模型執行相同提示詞，並排比較結果。',
+  restoringWorkspace: '正在還原工作區…',
+  loadingEval: '正在載入評測…',
+} as const;
