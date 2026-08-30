@@ -92,17 +92,6 @@ export const evalStrings = {
   evalSystemPromptAria: '評測系統提示詞',
   customHeadersLabel: '自訂',
   addHeader: '新增標頭',
-  paramsIntro:
-    '選用參數預設為關閉。勾選控制項即會將其加入請求；否則將使用模型預設值。',
-  temperature: '溫度',
-  topP: 'Top P',
-  topK: 'Top K',
-  frequencyPenalty: '頻率懲罰',
-  presencePenalty: '出現懲罰',
-  maxTokens: '最大 Token 數',
-  includeMaxTokens: '包含最大 Token 數',
-  stream: '串流',
-  resetToDefaults: '重設為預設值',
 
   // Eval runs list
   untitledRun: '未命名評測執行',

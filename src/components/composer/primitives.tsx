@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { PARAM_INFO } from '@/components/composer/parameter-control-utils';
+import { useTranslation } from '@/i18n';
 
 /**
  * Shared presentational building blocks for the request and eval composers.
@@ -15,11 +16,12 @@ import { PARAM_INFO } from '@/components/composer/parameter-control-utils';
  */
 
 export function InfoTooltip({ content }: { content: string }) {
+  const { t } = useTranslation();
   return (
     <TooltipProvider delay={300}>
       <Tooltip>
         <TooltipTrigger
-          aria-label="More information"
+          aria-label={t('request.moreInformation')}
           className="text-muted-foreground/40 hover:text-muted-foreground inline-flex cursor-default items-center"
         >
           <svg
@@ -85,14 +87,16 @@ export function SliderNumberRow({
   enableDisabled?: boolean;
   enableDisabledReason?: string;
 }) {
+  const { t } = useTranslation();
   const inputId = `param-${paramKey}`;
-  const info = PARAM_INFO[paramKey];
+  const infoKey = PARAM_INFO[paramKey];
   const isOptIn = onEnabledChange !== undefined;
   const optedOut = isOptIn && !enabled;
   const controlsDisabled = disabled || optedOut;
   const controlsTitle =
     disabledReason ??
-    (optedOut ? `Enable ${label} to include it in the request.` : undefined);
+    (optedOut ? t('request.enableParamHint', { label }) : undefined);
+  const info = infoKey ? t(infoKey) : undefined;
 
   return (
     <div className="flex flex-col gap-1">
@@ -105,7 +109,7 @@ export function SliderNumberRow({
               onChange={(e) => onEnabledChange(e.target.checked)}
               disabled={enableDisabled}
               title={enableDisabledReason}
-              aria-label={`Include ${label}`}
+              aria-label={t('request.includeParamAria', { label })}
               className="rounded"
             />
           )}
@@ -146,7 +150,7 @@ export function SliderNumberRow({
         max={max}
         step={step}
         disabled={controlsDisabled}
-        aria-label={`${label} slider`}
+        aria-label={t('request.paramSliderAria', { label })}
       />
     </div>
   );
@@ -167,8 +171,10 @@ export function CheckboxRow({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const { t } = useTranslation();
   const inputId = `param-${paramKey}`;
-  const info = PARAM_INFO[paramKey];
+  const infoKey = PARAM_INFO[paramKey];
+  const info = infoKey ? t(infoKey) : undefined;
   return (
     <div className="flex items-center gap-2">
       <div className="flex flex-1 items-center gap-1.5">

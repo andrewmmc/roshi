@@ -24,60 +24,52 @@ import {
   createDefaultParamEnabled,
   type ParamEnabledState,
 } from '@/types/optional-params';
+import type { MessageKey } from '@/i18n/types';
 
-export const PARAM_INFO: Record<string, string> = {
-  temperature:
-    'Controls output randomness. 0 = consistent/predictable. 1 = default. 2 = highly varied. Check to include in the request; leave unchecked to use the model default.',
-  'top-p':
-    'Limits the vocabulary the model samples from. Lower = more focused; higher = more varied. Check to include; on most providers use either temperature or Top P — not both.',
-  'top-k':
-    'Caps the number of candidate tokens the model can pick from. Lower = more predictable. Check to include. Supported by Anthropic and Gemini; ignored by OpenAI-compatible APIs.',
-  'frequency-penalty':
-    'Discourages the model from repeating words it has already used. Check to include. Positive values reduce repetition; negative values allow it. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
-  'presence-penalty':
-    'Pushes the model to introduce new topics by penalising any word that has appeared at all. Check to include. Positive values = more varied output. Range −2 to 2 (OpenAI). 0 to 2 (Gemini).',
-  'max-tokens':
-    'Hard limit on response length. Check to include; leave unchecked to omit and use the model default. Higher values allow longer replies but cost more API credits.',
-  stream:
-    'Receive tokens as they arrive instead of waiting for the full response. Useful for long outputs and latency testing.',
-  thinking:
-    'Lets the model reason internally before answering — can improve accuracy on hard or ambiguous questions. Supported on Claude 3.7+, Gemini thinking models, and GPT-5 series.',
-  'budget-tokens':
-    'How many tokens the model may spend on hidden reasoning steps. More = deeper analysis, slower response, higher cost.',
-  effort:
-    'Reasoning depth for o-series and Claude Opus 4.7+ models. Higher effort = more thorough output at greater cost and latency.',
-  'reasoning-mode':
-    'Selects standard or pro reasoning execution for supported GPT-5.6 models.',
-  'thinking-level':
-    'Controls reasoning depth for Gemini 3 and newer models. Supported levels vary by model.',
-  verbosity:
-    'Controls how long and detailed the final answer is (GPT-5 Responses API).',
+export const PARAM_INFO: Record<string, MessageKey> = {
+  temperature: 'request.paramInfoTemperature',
+  'top-p': 'request.paramInfoTopP',
+  'top-k': 'request.paramInfoTopK',
+  'frequency-penalty': 'request.paramInfoFrequencyPenalty',
+  'presence-penalty': 'request.paramInfoPresencePenalty',
+  'max-tokens': 'request.paramInfoMaxTokens',
+  stream: 'request.paramInfoStream',
+  thinking: 'request.paramInfoThinking',
+  'budget-tokens': 'request.paramInfoBudgetTokens',
+  effort: 'request.paramInfoEffort',
+  'reasoning-mode': 'request.paramInfoReasoningMode',
+  'thinking-level': 'request.paramInfoThinkingLevel',
+  verbosity: 'request.paramInfoVerbosity',
 };
 
 export const TEMP_PRESETS = [
   {
-    label: 'Determ.',
+    labelKey: 'request.presetDeterministic',
+    titleKey: 'request.presetDeterministicTitle',
     value: 0,
-    title: 'Deterministic — reproducible, exact outputs (temp = 0)',
   },
   {
-    label: 'Balanced',
+    labelKey: 'request.presetBalanced',
+    titleKey: 'request.presetBalancedTitle',
     value: 0.7,
-    title: 'Balanced — good default for most tasks (temp = 0.7)',
   },
   {
-    label: 'Creative',
+    labelKey: 'request.presetCreative',
+    titleKey: 'request.presetCreativeTitle',
     value: 1.2,
-    title: 'Creative — more varied, imaginative responses (temp = 1.2)',
   },
-  { label: 'Random', value: 2, title: 'Maximum variance (temp = 2)' },
+  {
+    labelKey: 'request.presetRandom',
+    titleKey: 'request.presetRandomTitle',
+    value: 2,
+  },
 ] as const;
 
 export type SliderCapabilityKey =
   'temperature' | 'topP' | 'topK' | 'frequencyPenalty' | 'presencePenalty';
 
 export interface SliderParamConfig {
-  label: string;
+  labelKey: MessageKey;
   paramKey: string;
   capabilityKey: SliderCapabilityKey;
   fallbackEditable: boolean;
@@ -90,7 +82,7 @@ export interface SliderParamConfig {
 
 export const SLIDER_PARAM_CONFIGS: SliderParamConfig[] = [
   {
-    label: 'Temperature',
+    labelKey: 'request.temperature',
     paramKey: 'temperature',
     capabilityKey: 'temperature',
     fallbackEditable: true,
@@ -101,7 +93,7 @@ export const SLIDER_PARAM_CONFIGS: SliderParamConfig[] = [
     section: 'sampling',
   },
   {
-    label: 'Top P',
+    labelKey: 'request.topP',
     paramKey: 'top-p',
     capabilityKey: 'topP',
     fallbackEditable: true,
@@ -112,7 +104,7 @@ export const SLIDER_PARAM_CONFIGS: SliderParamConfig[] = [
     section: 'sampling',
   },
   {
-    label: 'Top K',
+    labelKey: 'request.topK',
     paramKey: 'top-k',
     capabilityKey: 'topK',
     fallbackEditable: false,
@@ -123,7 +115,7 @@ export const SLIDER_PARAM_CONFIGS: SliderParamConfig[] = [
     section: 'sampling',
   },
   {
-    label: 'Frequency Penalty',
+    labelKey: 'request.frequencyPenalty',
     paramKey: 'frequency-penalty',
     capabilityKey: 'frequencyPenalty',
     fallbackEditable: true,
@@ -134,7 +126,7 @@ export const SLIDER_PARAM_CONFIGS: SliderParamConfig[] = [
     section: 'penalties',
   },
   {
-    label: 'Presence Penalty',
+    labelKey: 'request.presencePenalty',
     paramKey: 'presence-penalty',
     capabilityKey: 'presencePenalty',
     fallbackEditable: true,
@@ -175,11 +167,14 @@ export function getParamMax(
 export function getDisabledReason(
   support: ParamSupport | undefined,
   disabled: boolean,
+  translate?: (key: MessageKey) => string,
 ): string | undefined {
   if (!disabled) return undefined;
   if (support?.supported === false) return support.reason;
   if (support?.supported === 'default-only') return support.reason;
-  return 'Not supported by the selected model.';
+  return translate
+    ? translate('request.paramNotSupported')
+    : 'Not supported by the selected model.';
 }
 
 export function getCapabilitySupport(

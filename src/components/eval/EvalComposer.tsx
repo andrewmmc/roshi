@@ -187,13 +187,13 @@ export function EvalParametersEditor() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-muted-foreground/70 text-xs leading-snug">
-        {t('eval.paramsIntro')}
+        {t('request.paramsIntro')}
       </p>
       <SectionHeader>{t('request.sampling')}</SectionHeader>
 
       <div className="flex flex-col gap-1.5">
         <SliderNumberRow
-          label={t('eval.temperature')}
+          label={t('request.temperature')}
           paramKey="temperature"
           value={composer.temperature}
           onChange={setTemperature}
@@ -208,10 +208,10 @@ export function EvalParametersEditor() {
         <div className="flex gap-1 pl-0">
           {TEMP_PRESETS.map((preset) => (
             <Button
-              key={preset.label}
+              key={preset.labelKey}
               variant="outline"
               size="xs"
-              title={preset.title}
+              title={t(preset.titleKey)}
               aria-pressed={
                 enabled.temperature &&
                 Math.abs(composer.temperature - preset.value) < 0.001
@@ -228,14 +228,14 @@ export function EvalParametersEditor() {
                   : ''
               }`}
             >
-              {preset.label}
+              {t(preset.labelKey)}
             </Button>
           ))}
         </div>
       </div>
 
       <SliderNumberRow
-        label={t('eval.topP')}
+        label={t('request.topP')}
         paramKey="top-p"
         value={composer.topP}
         onChange={setTopP}
@@ -248,7 +248,7 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
       <SliderNumberRow
-        label={t('eval.topK')}
+        label={t('request.topK')}
         paramKey="top-k"
         value={composer.topK}
         onChange={(value) => setTopK(Math.max(0, Math.round(value)))}
@@ -265,7 +265,7 @@ export function EvalParametersEditor() {
       <SectionHeader>{t('request.penalties')}</SectionHeader>
 
       <SliderNumberRow
-        label={t('eval.frequencyPenalty')}
+        label={t('request.frequencyPenalty')}
         paramKey="frequency-penalty"
         value={composer.frequencyPenalty}
         onChange={setFrequencyPenalty}
@@ -278,7 +278,7 @@ export function EvalParametersEditor() {
         enableDisabled={isRunning}
       />
       <SliderNumberRow
-        label={t('eval.presencePenalty')}
+        label={t('request.presencePenalty')}
         paramKey="presence-penalty"
         value={composer.presencePenalty}
         onChange={setPresencePenalty}
@@ -301,16 +301,16 @@ export function EvalParametersEditor() {
               checked={enabled.maxTokens}
               onChange={(e) => setParamEnabled('maxTokens', e.target.checked)}
               disabled={isRunning}
-              aria-label={t('eval.includeMaxTokens')}
+              aria-label={t('request.includeMaxTokens')}
               className="rounded"
             />
             <Label
               htmlFor="eval-param-max-tokens"
               className={`text-xs ${maxTokensControlsDisabled ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
             >
-              {t('eval.maxTokens')}
+              {t('request.maxTokens')}
             </Label>
-            <InfoTooltip content={PARAM_INFO['max-tokens']} />
+            <InfoTooltip content={t(PARAM_INFO['max-tokens'])} />
           </div>
           <Input
             id="eval-param-max-tokens"
@@ -329,7 +329,7 @@ export function EvalParametersEditor() {
       </div>
 
       <CheckboxRow
-        label={t('eval.stream')}
+        label={t('request.stream')}
         paramKey="stream"
         checked={composer.stream}
         onChange={setStream}
@@ -343,7 +343,7 @@ export function EvalParametersEditor() {
           onClick={resetParameters}
           disabled={isRunning}
         >
-          {t('eval.resetToDefaults')}
+          {t('request.resetToDefaults')}
         </Button>
       </div>
     </div>

@@ -94,17 +94,6 @@ export const evalStrings = {
   evalSystemPromptAria: 'Eval system prompt',
   customHeadersLabel: 'Custom',
   addHeader: 'Add header',
-  paramsIntro:
-    'Optional parameters are off by default. Check a control to include it in the request; otherwise the model default is used.',
-  temperature: 'Temperature',
-  topP: 'Top P',
-  topK: 'Top K',
-  frequencyPenalty: 'Frequency Penalty',
-  presencePenalty: 'Presence Penalty',
-  maxTokens: 'Max Tokens',
-  includeMaxTokens: 'Include Max Tokens',
-  stream: 'Stream',
-  resetToDefaults: 'Reset to defaults',
 
   // Eval runs list
   untitledRun: 'Untitled eval run',

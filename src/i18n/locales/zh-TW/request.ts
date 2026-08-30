@@ -34,4 +34,74 @@ export const request = {
   headerName: '標頭名稱',
   headerValue: '標頭值',
   removeHeader: '移除標頭',
+
+  // Parameter controls (shared by request and eval composers)
+  temperature: '溫度',
+  topP: 'Top P',
+  topK: 'Top K',
+  frequencyPenalty: '頻率懲罰',
+  presencePenalty: '出現懲罰',
+  maxTokens: '最大 Token 數',
+  includeMaxTokens: '包含最大 Token 數',
+  stream: '串流',
+  thinking: '思考',
+  budgetTokens: 'Token 預算',
+  effort: '推理努力',
+  thinkingLevel: '思考層級',
+  verbosity: '詳細程度',
+  reasoningMode: '推理模式',
+  resetToDefaults: '重設為預設值',
+  paramsIntro:
+    '選用參數預設為關閉。勾選控制項即會將其加入請求；否則將使用模型預設值。',
+  maxTokensUnsupported: '所選模型不支援最大 Token 數。',
+  enableMaxTokensHint: '啟用最大 Token 數以將其加入請求。',
+  streamUnsupported: '所選模型不支援串流。',
+  thinkingUnsupported: '所選模型不支援思考控制項。',
+  adaptiveThinkingNote: '此模型使用自適應思考 — 推理深度會自動設定。',
+  modelNotes: '模型備註',
+  modelLimit: '模型上限：{count}',
+  paramNotSupported: '所選模型不支援此參數。',
+  enableParamHint: '啟用「{label}」以將其加入請求。',
+  includeParamAria: '包含{label}',
+  paramSliderAria: '{label}滑桿',
+  moreInformation: '更多資訊',
+  levelNone: '無',
+  levelLow: '低',
+  levelMedium: '中',
+  levelHigh: '高',
+  levelXhigh: '超高',
+  levelMax: '最大',
+  presetDeterministic: '確定',
+  presetDeterministicTitle: '確定性 — 可重現、精確的輸出（溫度 = 0）',
+  presetBalanced: '平衡',
+  presetBalancedTitle: '平衡 — 適合大多數任務的預設值（溫度 = 0.7）',
+  presetCreative: '創意',
+  presetCreativeTitle: '創意 — 更多元、更有想像力的回應（溫度 = 1.2）',
+  presetRandom: '隨機',
+  presetRandomTitle: '最大變異性（溫度 = 2）',
+  paramInfoTemperature:
+    '控制輸出的隨機性。0 = 一致且可預測；1 = 預設值；2 = 高度多變。勾選後會加入請求；取消勾選則使用模型預設值。',
+  paramInfoTopP:
+    '限制模型取樣的字詞範圍。越低越集中，越高越多變。勾選後會加入請求；多數供應商建議擇一使用溫度或 Top P，不要同時使用。',
+  paramInfoTopK:
+    '限制模型可挑選的候選 Token 數量。越低越可預測。勾選後會加入請求。支援 Anthropic 與 Gemini；OpenAI 相容 API 會忽略此參數。',
+  paramInfoFrequencyPenalty:
+    '降低模型重複使用已出現字詞的傾向。勾選後會加入請求。正值可減少重複，負值則允許重複。範圍 −2 至 2（OpenAI）、0 至 2（Gemini）。',
+  paramInfoPresencePenalty:
+    '透過懲罰任何已出現的字詞，促使模型引入新主題。勾選後會加入請求。正值代表輸出更多變。範圍 −2 至 2（OpenAI）、0 至 2（Gemini）。',
+  paramInfoMaxTokens:
+    '回應長度的上限。勾選後會加入請求；取消勾選則省略並使用模型預設值。數值越高可產生越長的回覆，但會消耗更多 API 額度。',
+  paramInfoStream:
+    '以串流方式即時接收 Token，而不是等待完整回應。適合長輸出與延遲測試。',
+  paramInfoThinking:
+    '讓模型在回答前先進行內部推理，可提升困難或模糊問題的準確度。支援 Claude 3.7+、Gemini 思考模型與 GPT-5 系列。',
+  paramInfoBudgetTokens:
+    '模型可用於隱藏推理步驟的 Token 數量。越多 = 分析越深入、速度越慢、成本越高。',
+  paramInfoEffort:
+    'o 系列與 Claude Opus 4.7+ 模型的推理深度。越高的推理努力代表輸出越完整，但成本與延遲也越高。',
+  paramInfoReasoningMode:
+    '為支援的 GPT-5.6 模型選擇標準或專業（pro）推理執行模式。',
+  paramInfoThinkingLevel:
+    '控制 Gemini 3 及更新模型的推理深度。支援的層級因模型而異。',
+  paramInfoVerbosity: '控制最終答案的長度與詳細程度（GPT-5 Responses API）。',
 } as const;

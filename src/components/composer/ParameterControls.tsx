@@ -21,12 +21,13 @@ import {
 import { useParameterControlsState } from '@/components/composer/use-parameter-controls-state';
 import { ModelCompatibilitySummary } from '@/components/composer/ModelCompatibilitySummary';
 import type { ResolvedSliderParam } from '@/components/composer/use-parameter-controls-state';
-import { useTranslation } from '@/i18n';
+import { useTranslation, type MessageKey } from '@/i18n';
 
 function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
+  const { t } = useTranslation();
   return (
     <SliderNumberRow
-      label={param.label}
+      label={t(param.labelKey)}
       paramKey={param.paramKey}
       value={param.value}
       onChange={param.onChange}
@@ -44,13 +45,13 @@ function ConfiguredSliderRow({ param }: { param: ResolvedSliderParam }) {
   );
 }
 
-const LEVEL_LABELS: Record<string, string> = {
-  none: 'None',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  xhigh: 'Extra High',
-  max: 'Max',
+const LEVEL_LABELS: Record<string, MessageKey> = {
+  none: 'request.levelNone',
+  low: 'request.levelLow',
+  medium: 'request.levelMedium',
+  high: 'request.levelHigh',
+  xhigh: 'request.levelXhigh',
+  max: 'request.levelMax',
 };
 
 function SelectRow({
@@ -70,8 +71,10 @@ function SelectRow({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const { t } = useTranslation();
   const inputId = `param-${paramKey}`;
-  const info = PARAM_INFO[paramKey];
+  const infoKey = PARAM_INFO[paramKey];
+  const info = infoKey ? t(infoKey) : undefined;
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-2">
@@ -98,12 +101,14 @@ function SelectRow({
             className="h-6 w-28 text-xs"
             title={disabledReason}
           >
-            <SelectValue>{LEVEL_LABELS[value] ?? value}</SelectValue>
+            <SelectValue>
+              {value in LEVEL_LABELS ? t(LEVEL_LABELS[value]) : value}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {values.map((item) => (
               <SelectItem key={item} value={item}>
-                {LEVEL_LABELS[item] ?? item}
+                {item in LEVEL_LABELS ? t(LEVEL_LABELS[item]) : item}
               </SelectItem>
             ))}
           </SelectContent>
@@ -158,17 +163,16 @@ export function ParameterControls() {
 
   const maxTokensControlsDisabled = !canEditMaxTokens || !maxTokensEnabled;
   const maxTokensTitle = !canEditMaxTokens
-    ? 'Max tokens is not supported by the selected model.'
+    ? t('request.maxTokensUnsupported')
     : !maxTokensEnabled
-      ? 'Enable Max Tokens to include it in the request.'
+      ? t('request.enableMaxTokensHint')
       : undefined;
 
   return (
     <div className="flex flex-col gap-3">
       <ModelCompatibilitySummary />
       <p className="text-muted-foreground/70 text-xs leading-snug">
-        Optional parameters are off by default. Check a control to include it in
-        the request; otherwise the model default is used.
+        {t('request.paramsIntro')}
       </p>
       <SectionHeader>{t('request.sampling')}</SectionHeader>
 
@@ -179,10 +183,10 @@ export function ParameterControls() {
             <div className="flex gap-1 pl-0">
               {TEMP_PRESETS.map((preset) => (
                 <Button
-                  key={preset.label}
+                  key={preset.labelKey}
                   variant="outline"
                   size="xs"
-                  title={preset.title}
+                  title={t(preset.titleKey)}
                   aria-pressed={
                     temperatureParam.enabled &&
                     Math.abs(temperature - preset.value) < 0.001
@@ -195,7 +199,7 @@ export function ParameterControls() {
                       : ''
                   }`}
                 >
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </Button>
               ))}
             </div>
@@ -225,10 +229,10 @@ export function ParameterControls() {
               disabled={!canEditMaxTokens}
               title={
                 !canEditMaxTokens
-                  ? 'Max tokens is not supported by the selected model.'
+                  ? t('request.maxTokensUnsupported')
                   : undefined
               }
-              aria-label="Include Max Tokens"
+              aria-label={t('request.includeMaxTokens')}
               className="rounded"
             />
             <Label
@@ -236,9 +240,9 @@ export function ParameterControls() {
               className={`text-xs ${!canEditMaxTokens || !maxTokensEnabled ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
               title={maxTokensTitle}
             >
-              Max Tokens
+              {t('request.maxTokens')}
             </Label>
-            <InfoTooltip content={PARAM_INFO['max-tokens']} />
+            <InfoTooltip content={t(PARAM_INFO['max-tokens'])} />
           </div>
           <Input
             id="param-max-tokens"
@@ -254,36 +258,34 @@ export function ParameterControls() {
         </div>
         {capabilities?.tokenLimits?.output && (
           <p className="text-muted-foreground/60 text-right text-xs">
-            model limit: {capabilities.tokenLimits.output.toLocaleString()}
+            {t('request.modelLimit', {
+              count: capabilities.tokenLimits.output.toLocaleString(),
+            })}
           </p>
         )}
       </div>
 
       <CheckboxRow
-        label="Stream"
+        label={t('request.stream')}
         paramKey="stream"
         checked={stream && supportsStreaming}
         onChange={setStream}
         disabled={!supportsStreaming}
         disabledReason={
-          !supportsStreaming
-            ? 'Streaming is not supported by the selected model.'
-            : undefined
+          !supportsStreaming ? t('request.streamUnsupported') : undefined
         }
       />
 
       <SectionHeader>{t('request.advanced')}</SectionHeader>
 
       <CheckboxRow
-        label="Thinking"
+        label={t('request.thinking')}
         paramKey="thinking"
         checked={thinkingEnabled}
         onChange={setThinkingEnabled}
         disabled={!supportsThinking}
         disabledReason={
-          !supportsThinking
-            ? 'Thinking controls are not supported by the selected model.'
-            : undefined
+          !supportsThinking ? t('request.thinkingUnsupported') : undefined
         }
       />
 
@@ -294,9 +296,9 @@ export function ParameterControls() {
               htmlFor="param-budget-tokens"
               className="text-muted-foreground text-xs"
             >
-              Budget Tokens
+              {t('request.budgetTokens')}
             </Label>
-            <InfoTooltip content={PARAM_INFO['budget-tokens']} />
+            <InfoTooltip content={t(PARAM_INFO['budget-tokens'])} />
           </div>
           <Input
             id="param-budget-tokens"
@@ -317,8 +319,7 @@ export function ParameterControls() {
 
       {supportsThinking && isAdaptiveThinkingOnly && thinkingEnabled && (
         <p className="text-muted-foreground/60 text-xs">
-          This model uses adaptive thinking — the reasoning depth is set
-          automatically.
+          {t('request.adaptiveThinkingNote')}
         </p>
       )}
 
@@ -326,8 +327,8 @@ export function ParameterControls() {
         <SelectRow
           label={
             effortSupport.wireName.endsWith('thinkingLevel')
-              ? 'Thinking Level'
-              : 'Effort'
+              ? t('request.thinkingLevel')
+              : t('request.effort')
           }
           paramKey={
             effortSupport.wireName.endsWith('thinkingLevel')
@@ -346,7 +347,7 @@ export function ParameterControls() {
 
       {verbositySupport && (
         <SelectRow
-          label="Verbosity"
+          label={t('request.verbosity')}
           paramKey="verbosity"
           value={
             verbositySupport.levels.includes(verbosity)
@@ -360,7 +361,7 @@ export function ParameterControls() {
 
       {reasoningModeSupport && (
         <SelectRow
-          label="Reasoning Mode"
+          label={t('request.reasoningMode')}
           paramKey="reasoning-mode"
           value={
             reasoningModeSupport.levels.includes(reasoningMode)
@@ -375,7 +376,7 @@ export function ParameterControls() {
       {capabilities?.quirks && capabilities.quirks.length > 0 && (
         <div className="border-border/50 mt-1 rounded-lg border p-2">
           <p className="text-muted-foreground/60 mb-1 text-[11px] font-medium tracking-wide uppercase">
-            Model notes
+            {t('request.modelNotes')}
           </p>
           <ul className="text-muted-foreground/70 flex flex-col gap-0.5 text-xs">
             {capabilities.quirks.map((q) => (
@@ -390,7 +391,7 @@ export function ParameterControls() {
 
       <div className="flex justify-end pt-1">
         <Button variant="ghost" size="sm" onClick={resetParameters}>
-          Reset to defaults
+          {t('request.resetToDefaults')}
         </Button>
       </div>
     </div>

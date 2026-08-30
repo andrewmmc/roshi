@@ -35,8 +35,8 @@ describe('parameter-control-utils', () => {
 
     expect(isParamEditable(support, true, true)).toBe(false);
     expect(getDisabledReason(support, true)).toBe(support.reason);
-    expect(getDisabledReason(undefined, true)).toBe(
-      'Not supported by the selected model.',
+    expect(getDisabledReason(undefined, true, (key) => key)).toBe(
+      'request.paramNotSupported',
     );
   });
 

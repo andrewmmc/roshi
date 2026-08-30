@@ -16,6 +16,7 @@ import {
   SLIDER_PARAM_CONFIGS,
   type SliderParamConfig,
 } from '@/components/composer/parameter-control-utils';
+import { useTranslation } from '@/i18n';
 
 export interface ResolvedSliderParam extends SliderParamConfig {
   value: number;
@@ -68,6 +69,7 @@ export interface ParameterControlsState {
 }
 
 export function useParameterControlsState(): ParameterControlsState {
+  const { t } = useTranslation();
   const capabilities = useSelectedModelCapabilities();
   const hasCapabilities = Boolean(capabilities);
 
@@ -135,7 +137,7 @@ export function useParameterControlsState(): ParameterControlsState {
       min: getParamMin(support, config.fallbackMin),
       max: getParamMax(support, config.fallbackMax),
       canEdit,
-      disabledReason: getDisabledReason(support, !canEdit),
+      disabledReason: getDisabledReason(support, !canEdit, t),
       enabled: composer.paramEnabled[config.capabilityKey],
       onEnabledChange: (enabled: boolean) =>
         composer.setParamEnabled(config.capabilityKey, enabled),
