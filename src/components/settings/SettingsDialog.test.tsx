@@ -62,6 +62,9 @@ describe('SettingsDialog', () => {
     render(<SettingsDialog />);
 
     expect(screen.getByRole('button', { name: '一般' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '代理伺服器' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('深色模式')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: '語言' })).toHaveTextContent(
       '繁體中文',

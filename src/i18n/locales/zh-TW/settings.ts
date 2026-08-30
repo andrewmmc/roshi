@@ -1,7 +1,7 @@
 export const settings = {
   title: '設定',
   general: '一般',
-  proxy: 'Proxy',
+  proxy: '代理伺服器',
   providers: '供應商',
   models: '模型',
   environments: '環境變數',
@@ -23,12 +23,12 @@ export const settings = {
     '這將永久刪除所有供應商、歷史記錄、已儲存的請求、環境變數與設定。應用程式將以初始狀態重新載入。',
   resetProvidersWarning:
     '這會將所有供應商重設為預設值並移除自訂供應商。歷史記錄及其他資料會保留。',
-  proxyDescription: '透過 Proxy 傳送供應商、評測及模型目錄的請求。',
+  proxyDescription: '透過代理伺服器傳送供應商、評測及模型目錄的請求。',
   httpProxyDescription: '用於 HTTP 目的地。URL 可包含驗證資訊。',
   httpsProxyDescription: '用於 HTTPS 目的地，包括 LLM API 與 models.dev。',
   noProxyDescription: '以逗號分隔要直接連線的主機、網域或 host:port。',
   invalidProxyUrl: '{name} 必須是有效的 http:// 或 https:// URL。',
-  proxySaveFailed: '無法儲存 Proxy 設定。',
-  saveProxySettings: '儲存 Proxy 設定',
+  proxySaveFailed: '無法儲存代理伺服器設定。',
+  saveProxySettings: '儲存代理伺服器設定',
   proxySaved: '已儲存。新請求會立即使用這些設定。',
 } as const;
