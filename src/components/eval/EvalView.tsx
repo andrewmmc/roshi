@@ -46,9 +46,11 @@ import { RunnerPicker } from './RunnerPicker';
 import { JudgeConfig } from './JudgeConfig';
 import { ResultsGrid } from './ResultsGrid';
 import { CompareView } from './CompareView';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 export function EvalView() {
+  const { t } = useTranslation();
   const loadProviders = useProviderStore((s) => s.load);
   const loaded = useProviderStore((s) => s.loaded);
 
@@ -79,21 +81,21 @@ export function EvalView() {
     <div className="flex shrink-0 items-center gap-2">
       {isJudging && (
         <span className="text-muted-foreground animate-pulse text-xs motion-reduce:animate-none">
-          Judging…
+          {t('eval.judging')}
         </span>
       )}
       {narrow && (
         <DropdownMenu>
           <DropdownMenuTrigger
             className="text-muted-foreground hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-            aria-label="More actions"
+            aria-label={t('request.moreActions')}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEnvPreviewOpen(true)}>
               <Eye className="h-3.5 w-3.5" />
-              Env preview
+              {t('request.envPreview')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -101,7 +103,7 @@ export function EvalView() {
       {isBusy ? (
         <Button variant="destructive" size="sm" onClick={cancelAll}>
           <Square className="mr-1.5 h-3.5 w-3.5" />
-          Stop all
+          {t('eval.stopAll')}
           <Kbd className="ml-1.5">Esc</Kbd>
         </Button>
       ) : (
@@ -110,12 +112,10 @@ export function EvalView() {
           onClick={handleStart}
           disabled={runners.length === 0 || isJudging}
           className="shadow-sm"
-          title={
-            runners.length === 0 ? 'Add a runner before starting' : undefined
-          }
+          title={runners.length === 0 ? t('eval.addRunnerHint') : undefined}
         >
           <Play className="mr-1.5 h-3.5 w-3.5" />
-          Run eval
+          {t('eval.runEval')}
           <span className="ml-1.5 hidden items-center gap-0.5 sm:inline-flex">
             {(IS_MAC ? ['⌘', '↵'] : ['Ctrl', '↵']).map((key) => (
               <Kbd key={key}>{key}</Kbd>
@@ -146,11 +146,11 @@ export function EvalView() {
               <IconButton
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Open sidebar"
+                aria-label={t('navigation.openSidebar')}
                 data-open-sidebar
                 className="text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() => setSidebarCollapsed(false)}
-                tooltip="Open sidebar"
+                tooltip={t('navigation.openSidebar')}
               >
                 <PanelLeftOpen className="h-3.5 w-3.5" />
               </IconButton>
@@ -214,6 +214,7 @@ export function EvalView() {
 }
 
 function EvalResultsPanel() {
+  const { t } = useTranslation();
   const runners = useEvalStore((s) => s.runners);
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const isRunning = useEvalStore((s) => s.isRunning);
@@ -234,10 +235,10 @@ function EvalResultsPanel() {
       <PanelHeader className="justify-between">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="results" className="px-3 text-xs">
-            Results
+            {t('eval.results')}
           </TabsTrigger>
           <TabsTrigger value="compare" className="px-3 text-xs">
-            Compare
+            {t('eval.compare')}
             {compareSelection.length > 0 && (
               <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none">
                 {compareSelection.length}
@@ -250,7 +251,7 @@ function EvalResultsPanel() {
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
-            tooltip="Export run as JSON"
+            tooltip={t('eval.exportRunJson')}
             onClick={handleExportJson}
             disabled={exportDisabled}
           >
@@ -260,7 +261,7 @@ function EvalResultsPanel() {
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
-            tooltip="Export metrics as CSV"
+            tooltip={t('eval.exportMetricsCsv')}
             onClick={handleExportCsv}
             disabled={exportDisabled}
           >
@@ -297,6 +298,7 @@ function EvalSetupTabs({
   hasCustomHeaders: boolean;
   judgeEnabled: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Tabs defaultValue="runners" className="flex h-full flex-col gap-0">
       <PanelHeader className="min-w-0">
@@ -306,7 +308,7 @@ function EvalSetupTabs({
             className="h-7 w-max max-w-none shrink-0 gap-0"
           >
             <TabsTrigger value="runners" className="px-3 text-xs">
-              Runners
+              {t('eval.runners')}
               {runnerCount > 0 && (
                 <span className="bg-primary text-primary-foreground ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none">
                   {runnerCount}
@@ -314,25 +316,25 @@ function EvalSetupTabs({
               )}
             </TabsTrigger>
             <TabsTrigger value="messages" className="px-3 text-xs">
-              Messages
+              {t('request.messages')}
             </TabsTrigger>
             <TabsTrigger value="system" className="px-3 text-xs">
-              System Prompt
+              {t('request.systemPrompt')}
               {hasSystemPrompt && (
                 <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
               )}
             </TabsTrigger>
             <TabsTrigger value="headers" className="px-3 text-xs">
-              Headers
+              {t('request.headers')}
               {hasCustomHeaders && (
                 <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
               )}
             </TabsTrigger>
             <TabsTrigger value="parameters" className="px-3 text-xs">
-              Parameters
+              {t('request.parameters')}
             </TabsTrigger>
             <TabsTrigger value="judge" className="px-3 text-xs">
-              Judge
+              {t('eval.judge')}
               {judgeEnabled && (
                 <span className="bg-primary ml-1 inline-block h-1.5 w-1.5 rounded-full" />
               )}

@@ -2,6 +2,7 @@ import { about } from './about';
 import { collections } from './collections';
 import { common } from './common';
 import { environments } from './environments';
+import { evalStrings } from './eval';
 import { history } from './history';
 import { models } from './models';
 import { navigation } from './navigation';
@@ -22,4 +23,5 @@ export const en = {
   models,
   environments,
   about,
+  eval: evalStrings,
 } as const;

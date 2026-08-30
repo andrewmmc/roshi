@@ -1,10 +1,12 @@
 import { FlaskConical } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useTranslation } from '@/i18n';
 import { useEvalStore } from '@/stores/eval-store';
 import { emptyResult } from '@/types/eval';
 import { ResultCard } from './ResultCard';
 
 export function ResultsGrid() {
+  const { t } = useTranslation();
   const runners = useEvalStore((s) => s.runners);
   const results = useEvalStore((s) => s.results);
   const judgeResult = useEvalStore((s) => s.judgeResult);
@@ -13,8 +15,8 @@ export function ResultsGrid() {
     return (
       <EmptyState
         icon={FlaskConical}
-        title="Add at least one runner to start evaluating."
-        description="Pick a provider + model in the Runners tab, then run the eval to compare results here."
+        title={t('eval.emptyResultsTitle')}
+        description={t('eval.emptyResultsDescription')}
       />
     );
   }
