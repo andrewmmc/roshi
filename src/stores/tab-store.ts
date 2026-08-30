@@ -28,6 +28,7 @@ import {
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { toast } from '@/stores/toast-store';
+import { translateNow } from '@/i18n';
 import {
   createLoadGuard,
   loadSetting,
@@ -170,7 +171,7 @@ const EMPTY_RESPONSE_SNAPSHOT: ResponseSnapshot = {
 export function computeTabLabel(messages: NormalizedMessage[]): string {
   const first = messages.find((m) => m.role === 'user');
   const text = first?.content?.trim();
-  if (!text) return 'New Request';
+  if (!text) return translateNow('navigation.cmdNewRequest');
   return text.length > 22 ? text.slice(0, 22).trimEnd() + '\u2026' : text;
 }
 
@@ -238,7 +239,7 @@ function applyResponseSnapshot(snapshot: ResponseSnapshot): void {
 function newBlankTab(): RequestTab {
   return {
     id: nanoid(),
-    label: 'New Request',
+    label: translateNow('navigation.cmdNewRequest'),
     composer: createDefaultComposerSnapshot(),
     response: { ...EMPTY_RESPONSE_SNAPSHOT },
   };
@@ -413,11 +414,11 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
   createTab: () => {
     if (get().tabs.length >= MAX_TABS) {
-      toast(`Maximum of ${MAX_TABS} tabs reached.`);
+      toast(translateNow('request.maxTabsReached', { count: MAX_TABS }));
       return;
     }
     if (useResponseStore.getState().isLoading) {
-      toast('Cannot create a new tab while a request is running.');
+      toast(translateNow('request.newTabWhileRunning'));
       return;
     }
 
@@ -446,11 +447,11 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
   duplicateActiveTab: () => {
     if (get().tabs.length >= MAX_TABS) {
-      toast(`Maximum of ${MAX_TABS} tabs reached.`);
+      toast(translateNow('request.maxTabsReached', { count: MAX_TABS }));
       return;
     }
     if (useResponseStore.getState().isLoading) {
-      toast('Cannot duplicate a tab while a request is running.');
+      toast(translateNow('request.duplicateTabWhileRunning'));
       return;
     }
 
@@ -460,7 +461,10 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     const duplicate: RequestTab = {
       id: nanoid(),
-      label: label === 'New Request' ? 'New Request' : label + ' (copy)',
+      label:
+        label === translateNow('navigation.cmdNewRequest')
+          ? translateNow('navigation.cmdNewRequest')
+          : label + ` ${translateNow('common.copySuffix')}`,
       composer: { ...composerSnap, scrollGeneration: 0 },
       response: { ...responseSnap },
     };
@@ -490,7 +494,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
     if (index === -1) return;
 
     if (id === activeTabId && useResponseStore.getState().isLoading) {
-      toast('Cannot close the active tab while a request is running.');
+      toast(translateNow('request.closeTabWhileRunning'));
       return;
     }
 
@@ -512,7 +516,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
     if (targetId === activeTabId) return;
 
     if (useResponseStore.getState().isLoading) {
-      toast('Cannot switch tabs while a request is running.');
+      toast(translateNow('request.switchTabWhileRunning'));
       return;
     }
 

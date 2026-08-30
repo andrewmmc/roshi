@@ -12,6 +12,7 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
 import { buildEnvironmentPreview, maskSecretValue } from '@/utils/variables';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 import type { NormalizedMessage } from '@/types/normalized';
 import type { HeaderEntry } from '@/utils/headers';
 
@@ -35,6 +36,7 @@ export function EnvironmentPreviewButton({
   systemPrompt?: string;
   customHeaders?: HeaderEntry[];
 } = {}) {
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : internalOpen;
@@ -77,8 +79,8 @@ export function EnvironmentPreviewButton({
             ? 'text-amber-600 hover:text-amber-700 dark:text-amber-400'
             : 'text-muted-foreground hover:text-foreground',
         )}
-        tooltip="Preview environment variables"
-        aria-label="Preview environment variables"
+        tooltip={t('environments.previewTooltip')}
+        aria-label={t('environments.previewTooltip')}
         onClick={() => handleOpenChange(true)}
       >
         <Eye className="h-3 w-3" />
@@ -89,21 +91,23 @@ export function EnvironmentPreviewButton({
           overlayClassName="duration-100"
         >
           <SheetHeader>
-            <SheetTitle>Environment preview</SheetTitle>
+            <SheetTitle>{t('environments.previewTitle')}</SheetTitle>
             <SheetDescription>
-              Resolved placeholders for{' '}
-              {preview.environmentName ?? 'no environment selected'}.
+              {t('environments.previewDescription', {
+                name:
+                  preview.environmentName ??
+                  t('environments.noEnvironmentSelected'),
+              })}
             </SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
             {!preview.hasPlaceholders ? (
               <p className="text-muted-foreground px-2 py-2 text-xs">
-                No {'{{variable}}'} placeholders in the current request.
+                {t('environments.noPlaceholders')}
               </p>
             ) : preview.variables.length === 0 ? (
               <p className="text-muted-foreground px-2 py-2 text-xs">
-                Placeholders found, but no variables are defined in the selected
-                environment.
+                {t('environments.noVariablesDefined')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -132,7 +136,13 @@ export function EnvironmentPreviewButton({
                             'bg-muted text-muted-foreground',
                         )}
                       >
-                        {variable.status}
+                        {t(
+                          variable.status === 'resolved'
+                            ? 'environments.statusResolved'
+                            : variable.status === 'missing'
+                              ? 'environments.statusMissing'
+                              : 'environments.statusUnused',
+                        )}
                       </span>
                     </div>
                     <div className="text-muted-foreground mt-1 font-mono text-[11px] break-all">
@@ -147,7 +157,9 @@ export function EnvironmentPreviewButton({
             )}
             {hasMissing && (
               <p className="mt-4 text-xs text-amber-700 dark:text-amber-300">
-                Missing variables: {preview.missingVariables.join(', ')}
+                {t('environments.missingVariables', {
+                  list: preview.missingVariables.join(', '),
+                })}
               </p>
             )}
           </div>

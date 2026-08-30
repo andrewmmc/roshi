@@ -6,6 +6,7 @@ import {
   type JsonTokenType,
 } from '@/utils/json-highlight';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 const TOKEN_CLASS: Record<JsonTokenType, string> = {
   key: 'text-sky-700 dark:text-sky-300',
@@ -23,6 +24,7 @@ export function JsonHighlight({
   json: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const highlightState = useMemo(() => {
     if (json.length > JSON_HIGHLIGHT_MAX_CHARS) {
       return { highlighted: false as const };
@@ -42,7 +44,7 @@ export function JsonHighlight({
     return (
       <div className="flex flex-col">
         <div className="text-muted-foreground border-b px-4 py-2 text-xs">
-          Syntax highlighting disabled for large payload
+          {t('common.highlightingDisabled')}
         </div>
         <pre
           className={cn(

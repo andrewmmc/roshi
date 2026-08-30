@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from '@/i18n';
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -26,10 +27,12 @@ export function ConfirmDeleteDialog({
   open,
   title,
   description,
-  confirmLabel = 'Delete',
+  confirmLabel,
   onOpenChange,
   onConfirm,
 }: ConfirmDeleteDialogProps) {
+  const { t } = useTranslation();
+  const label = confirmLabel ?? t('common.delete');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -39,7 +42,7 @@ export function ConfirmDeleteDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -48,7 +51,7 @@ export function ConfirmDeleteDialog({
               onOpenChange(false);
             }}
           >
-            {confirmLabel}
+            {label}
           </Button>
         </DialogFooter>
       </DialogContent>

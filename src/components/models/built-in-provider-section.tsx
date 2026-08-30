@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import { useMemo, useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ export function BuiltInProviderSection({
   search: string;
   addedOnly?: boolean;
 }) {
+  const { t } = useTranslation();
   const catalog = useModelCatalogStore((s) =>
     s.getModelsForProvider(provider.name),
   );
@@ -66,14 +68,17 @@ export function BuiltInProviderSection({
       <header className="flex items-baseline justify-between">
         <h3 className="text-sm font-medium tracking-tight">{provider.name}</h3>
         <span className="text-muted-foreground text-[11px]">
-          {pickedIds.size} of {catalog.length} added
+          {t('models.addedCount', {
+            picked: pickedIds.size,
+            total: catalog.length,
+          })}
         </span>
       </header>
 
       {isLoading && (
         <div className="text-muted-foreground flex items-center gap-2 rounded-xl border border-dashed px-3 py-4 text-xs">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Loading catalogue…
+          {t('models.loadingCatalog')}
         </div>
       )}
 
@@ -81,7 +86,7 @@ export function BuiltInProviderSection({
         <div className="text-muted-foreground flex items-center justify-between rounded-xl border border-dashed px-3 py-4 text-xs">
           <span className="flex items-center gap-2">
             <AlertCircle className="text-destructive h-3.5 w-3.5" />
-            Failed to load catalogue{error ? `: ${error}` : '.'}
+            {t('models.loadFailed', { error: error ? `: ${error}` : '.' })}
           </span>
           <Button
             type="button"
@@ -90,7 +95,7 @@ export function BuiltInProviderSection({
             className="text-xs"
             onClick={() => void load(true)}
           >
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       )}
@@ -99,11 +104,11 @@ export function BuiltInProviderSection({
         <div className="text-muted-foreground rounded-xl border border-dashed px-3 py-4 text-center text-xs">
           {addedOnly
             ? provider.models.length === 0
-              ? 'No models added yet.'
-              : 'No added models match your search.'
+              ? t('models.noModelsAdded')
+              : t('models.noAddedModelsMatch')
             : catalog.length === 0
-              ? 'No models available from the catalogue.'
-              : 'No models match your search.'}
+              ? t('models.noCatalogModels')
+              : t('models.noModelsMatch')}
         </div>
       )}
 

@@ -6,8 +6,10 @@ import {
 } from '@/components/ui/tooltip';
 import { useTokenCount } from '@/hooks/use-token-count';
 import { formatCount } from '@/utils/format';
+import { useTranslation } from '@/i18n';
 
 export function TokenCountBadge() {
+  const { t } = useTranslation();
   const tokenCount = useTokenCount();
 
   if (tokenCount === null || tokenCount === 0) return null;
@@ -16,10 +18,12 @@ export function TokenCountBadge() {
     <TooltipProvider delay={0}>
       <Tooltip>
         <TooltipTrigger className="text-muted-foreground hover:text-foreground cursor-default font-mono text-xs tabular-nums transition-colors">
-          ~{formatCount(tokenCount)} tokens
+          {t('request.tokenEstimate', { count: formatCount(tokenCount) })}
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          Estimated prompt tokens: {tokenCount.toLocaleString()}
+          {t('request.tokenEstimateDetail', {
+            count: tokenCount.toLocaleString(),
+          })}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

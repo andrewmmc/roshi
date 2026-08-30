@@ -1,3 +1,4 @@
+import type { MessageKey } from '@/i18n/types';
 import {
   DEFAULT_FREQUENCY_PENALTY,
   DEFAULT_MAX_TOKENS,
@@ -61,14 +62,25 @@ export function resolveHistorySelection(
   };
 }
 
+export type HistoryRestoreWarning = {
+  key: MessageKey;
+  vars?: Record<string, string>;
+};
+
 export function buildHistoryRestoreWarning(
   selection: HistoryRestoreSelection,
-): string | null {
+): HistoryRestoreWarning | null {
   if (selection.providerMissing) {
-    return 'Original provider/model is no longer configured.';
+    return { key: 'history.restoreProviderMissing' };
   }
   if (selection.modelMissing) {
-    return `Original model "${selection.originalModelId}" is no longer configured for ${selection.originalProviderName}.`;
+    return {
+      key: 'history.restoreModelMissing',
+      vars: {
+        model: selection.originalModelId,
+        provider: selection.originalProviderName,
+      },
+    };
   }
   return null;
 }

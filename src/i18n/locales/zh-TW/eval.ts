@@ -134,4 +134,9 @@ export const evalStrings = {
   runNameAria: '評測執行名稱',
   folderLabel: '資料夾',
   selectFolderAria: '選擇資料夾',
+
+  // Eval store errors
+  unknownProvider: '未知供應商',
+  noRunnersError: '請先至少新增一個執行項目，再開始評測。',
+  noMessagesError: '請先輸入至少一則訊息，再開始評測。',
 } as const;

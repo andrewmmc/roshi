@@ -21,10 +21,10 @@ export function getRoleLabel(role: MessageRole): string {
 export function getRoleAriaLabel(role: MessageRole): string {
   switch (role) {
     case 'user':
-      return 'User';
+      return 'request.user';
     case 'assistant':
-      return 'Assistant';
+      return 'request.assistant';
     case 'system':
-      return 'System';
+      return 'request.system';
   }
 }

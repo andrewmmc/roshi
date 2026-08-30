@@ -9,11 +9,10 @@ import {
   isFirstRunSetupIncomplete,
 } from '@/utils/onboarding';
 import { cn } from '@/lib/utils';
-
-const SAMPLE_PROMPT =
-  'Explain what an LLM API request looks like in one short paragraph.';
+import { useTranslation } from '@/i18n';
 
 export function FirstRunChecklist() {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const selectedProvider = useSelectedProvider();
   const openProviderSettings = useUiStore((s) => s.openProviderSettings);
@@ -41,35 +40,35 @@ export function FirstRunChecklist() {
     if (firstUserIndex >= 0) {
       updateMessage(firstUserIndex, {
         ...messages[firstUserIndex],
-        content: SAMPLE_PROMPT,
+        content: t('onboarding.samplePrompt'),
       });
       return;
     }
-    addMessage({ role: 'user', content: SAMPLE_PROMPT });
+    addMessage({ role: 'user', content: t('onboarding.samplePrompt') });
   };
 
   const steps = [
     {
       id: 'api-key',
-      label: 'Add a provider API key',
+      label: t('onboarding.stepApiKey'),
       complete: apiKeyDone,
-      actionLabel: 'Add API key',
+      actionLabel: t('onboarding.actionAddApiKey'),
       onAction: () => openProviderSettings(setupProvider?.id ?? null, true),
       visible: true,
     },
     {
       id: 'model',
-      label: 'Pick at least one model',
+      label: t('onboarding.stepModel'),
       complete: modelDone,
-      actionLabel: 'Browse Models',
+      actionLabel: t('onboarding.actionBrowseModels'),
       onAction: () => openModelMarket(setupProvider?.id ?? null),
       visible: true,
     },
     {
       id: 'send',
-      label: 'Send a sample prompt',
+      label: t('onboarding.stepSend'),
       complete: false,
-      actionLabel: 'Insert sample',
+      actionLabel: t('onboarding.actionInsertSample'),
       onAction: handleSamplePrompt,
       visible: apiKeyDone && modelDone,
     },
@@ -80,7 +79,7 @@ export function FirstRunChecklist() {
       {showCloseButton && (
         <button
           type="button"
-          aria-label="Close checklist"
+          aria-label={t('onboarding.closeChecklist')}
           onClick={() => setChecklistOpen(false)}
           className="text-muted-foreground/60 hover:text-muted-foreground absolute top-1.5 right-1.5 inline-flex size-7 items-center justify-center rounded transition-colors"
         >
@@ -90,10 +89,10 @@ export function FirstRunChecklist() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-foreground text-[13px] font-medium">
-            Get started with Roshi
+            {t('onboarding.title')}
           </p>
           <p className="text-muted-foreground mt-0.5 text-[13px]">
-            Complete these steps to send your first request.
+            {t('onboarding.subtitle')}
           </p>
         </div>
         <ol className="flex min-w-[280px] flex-1 flex-col gap-1.5 sm:max-w-xl">

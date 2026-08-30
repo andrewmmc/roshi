@@ -6,6 +6,7 @@ import { evalStrings } from './eval';
 import { history } from './history';
 import { models } from './models';
 import { navigation } from './navigation';
+import { onboarding } from './onboarding';
 import { providers } from './providers';
 import { request } from './request';
 import { response } from './response';
@@ -22,6 +23,7 @@ export const en = {
   providers,
   models,
   environments,
+  onboarding,
   about,
   eval: evalStrings,
 } as const;

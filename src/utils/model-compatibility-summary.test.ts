@@ -8,14 +8,14 @@ describe('model-compatibility-summary', () => {
       defaultCapabilitiesForProviderType('anthropic'),
     );
 
-    expect(summary.map((item) => item.label)).toEqual([
-      'Streaming',
-      'Images',
-      'Thinking',
-      'Context',
-      'Max output',
+    expect(summary.map((item) => item.labelKey)).toEqual([
+      'request.paramLabelStream',
+      'request.paramLabelImages',
+      'request.thinking',
+      'request.paramLabelContext',
+      'request.paramLabelMaxOutput',
     ]);
-    expect(summary[0]?.value).toBe('Supported');
-    expect(summary[1]?.value).toBe('Supported');
+    expect(summary[0]?.valueKey).toBe('request.supported');
+    expect(summary[1]?.valueKey).toBe('request.supported');
   });
 });

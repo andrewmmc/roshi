@@ -31,8 +31,8 @@ describe('filterRequestByCapabilities', () => {
     expect(result.warnings).toEqual([
       'Temperature was omitted: Use reasoning effort and verbosity controls for GPT-5 models.',
       'Top P was omitted: Use reasoning effort and verbosity controls for GPT-5 models.',
-      'Frequency penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
-      'Presence penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
+      'Frequency Penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
+      'Presence Penalty was omitted: Legacy sampling penalties are not a GPT-5 control surface.',
     ]);
   });
 
@@ -128,7 +128,7 @@ describe('filterRequestByCapabilities', () => {
     expect(supported.request.reasoningMode).toBe('pro');
     expect(unsupported.request.reasoningMode).toBeUndefined();
     expect(unsupported.warnings).toContain(
-      'Reasoning mode was omitted: Reasoning mode is not supported by this model.',
+      'Reasoning Mode was omitted: Reasoning mode is not supported by this model.',
     );
   });
 

@@ -1,21 +1,23 @@
 import type { NormalizedRequest } from '@/types/normalized';
+import type { MessageKey } from '@/i18n/types';
+import { translateNow } from '@/i18n';
 import type { ModelCapabilities, ParamSupport } from './capabilities';
 
 type FilterableRequestParam =
   'temperature' | 'topP' | 'topK' | 'frequencyPenalty' | 'presencePenalty';
 
-const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, string>> = {
-  stream: 'Streaming',
-  temperature: 'Temperature',
-  topP: 'Top P',
-  topK: 'Top K',
-  frequencyPenalty: 'Frequency penalty',
-  presencePenalty: 'Presence penalty',
-  maxTokens: 'Max tokens',
-  thinking: 'Thinking',
-  effort: 'Effort',
-  reasoningMode: 'Reasoning mode',
-  verbosity: 'Verbosity',
+const PARAM_LABELS: Partial<Record<keyof NormalizedRequest, MessageKey>> = {
+  stream: 'request.paramLabelStream',
+  temperature: 'request.temperature',
+  topP: 'request.topP',
+  topK: 'request.topK',
+  frequencyPenalty: 'request.frequencyPenalty',
+  presencePenalty: 'request.presencePenalty',
+  maxTokens: 'request.maxTokens',
+  thinking: 'request.thinking',
+  effort: 'request.effort',
+  reasoningMode: 'request.reasoningMode',
+  verbosity: 'request.verbosity',
 };
 
 export interface OmittedRequestParam {
@@ -31,14 +33,16 @@ export interface RequestCompatibilityResult {
 }
 
 function getUnsupportedReason(support: ParamSupport | undefined): string {
-  if (!support) return 'This parameter is not supported by this model.';
+  if (!support) return translateNow('request.paramUnsupportedGeneric');
   if (support.supported === false) {
-    return support.reason ?? 'This parameter is not supported by this model.';
+    return support.reason ?? translateNow('request.paramUnsupportedGeneric');
   }
   if (support.supported === 'default-only') {
     return (
       support.reason ??
-      `This model only supports the default value (${support.default}).`
+      translateNow('request.paramDefaultOnly', {
+        default: String(support.default),
+      })
     );
   }
   return '';
@@ -58,8 +62,9 @@ function applyParamSupport(
 
 function getWarnings(omittedParams: OmittedRequestParam[]): string[] {
   return omittedParams.map(({ param, reason }) => {
-    const label = PARAM_LABELS[param] ?? param;
-    return `${label} was omitted: ${reason}`;
+    const labelKey = PARAM_LABELS[param];
+    const label = labelKey ? translateNow(labelKey) : param;
+    return translateNow('request.paramOmittedWarning', { label, reason });
   });
 }
 
@@ -73,7 +78,7 @@ export function filterRequestByCapabilities(
   if (compatibleRequest.stream && !capabilities.streaming) {
     omittedParams.push({
       param: 'stream',
-      reason: 'Streaming is not supported by this model.',
+      reason: translateNow('request.streamUnsupportedModel'),
     });
     compatibleRequest.stream = false;
   }
@@ -115,7 +120,7 @@ export function filterRequestByCapabilities(
   ) {
     omittedParams.push({
       param: 'maxTokens',
-      reason: 'Max tokens is not supported by this model.',
+      reason: translateNow('request.maxTokensUnsupportedModel'),
     });
     compatibleRequest.maxTokens = undefined;
   }
@@ -126,7 +131,7 @@ export function filterRequestByCapabilities(
   ) {
     omittedParams.push({
       param: 'thinking',
-      reason: 'Thinking controls are not supported by this model.',
+      reason: translateNow('request.thinkingUnsupportedModel'),
     });
     compatibleRequest.thinking = undefined;
   }
@@ -138,7 +143,7 @@ export function filterRequestByCapabilities(
   ) {
     omittedParams.push({
       param: 'effort',
-      reason: 'Effort is not supported by this model.',
+      reason: translateNow('request.effortUnsupported'),
     });
     compatibleRequest.effort = undefined;
   }
@@ -152,7 +157,7 @@ export function filterRequestByCapabilities(
   ) {
     omittedParams.push({
       param: 'reasoningMode',
-      reason: 'Reasoning mode is not supported by this model.',
+      reason: translateNow('request.reasoningModeUnsupported'),
     });
     compatibleRequest.reasoningMode = undefined;
   }
@@ -166,7 +171,7 @@ export function filterRequestByCapabilities(
   ) {
     omittedParams.push({
       param: 'verbosity',
-      reason: 'Verbosity is not supported by this model.',
+      reason: translateNow('request.verbosityUnsupported'),
     });
     compatibleRequest.verbosity = undefined;
   }

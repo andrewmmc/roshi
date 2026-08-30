@@ -54,6 +54,7 @@ function DialogContent({
   showCloseButton?: boolean;
   showOverlay?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <DialogPortal>
       <DialogOverlay
@@ -80,16 +81,16 @@ function DialogContent({
                         variant="ghost"
                         className="absolute top-2 right-2"
                         size="icon-sm"
-                        aria-label="Close"
+                        aria-label={t('common.close')}
                       />
                     }
                   />
                 }
               >
                 <XIcon />
-                <span className="sr-only">Close</span>
+                <span className="sr-only">{t('common.close')}</span>
               </TooltipTrigger>
-              <TooltipContent>Close</TooltipContent>
+              <TooltipContent>{t('common.close')}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}

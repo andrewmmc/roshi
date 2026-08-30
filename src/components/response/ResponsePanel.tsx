@@ -10,6 +10,7 @@ import { exportCurrentRequest } from '@/utils/export';
 import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
+import { STREAM_INTERRUPTED_SUMMARY } from '@/hooks/use-send-request';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -91,7 +92,7 @@ export function ResponsePanel() {
 
   const hasContent = response || error || isStreaming || isLoading;
   const isInterrupted =
-    error === 'Response interrupted' && Boolean(response?.content);
+    error === STREAM_INTERRUPTED_SUMMARY && Boolean(response?.content);
   const hasHttpError = statusCode !== null && statusCode >= 400;
 
   const responseState = isLoading
@@ -121,7 +122,7 @@ export function ResponsePanel() {
     : isInterrupted
       ? t('response.responseInterrupted')
       : error
-        ? `Error: ${error}`
+        ? t('response.errorWithDetail', { error })
         : response
           ? t('response.responseComplete')
           : '';
@@ -191,7 +192,7 @@ export function ResponsePanel() {
                 )}
                 aria-label={t('response.httpStatus', { status: statusCode })}
               >
-                HTTP {statusCode}
+                {t('response.httpBadge', { status: statusCode })}
               </span>
             )}
             {durationMs !== null && !isLoading && (

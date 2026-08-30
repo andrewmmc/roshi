@@ -35,6 +35,7 @@ import {
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { guessMimeType, SUPPORTED_FILE_ACCEPT } from '@/utils/mime';
 import { toast } from '@/stores/toast-store';
+import { useTranslation } from '@/i18n';
 import type { MessageAttachment, NormalizedMessage } from '@/types/normalized';
 
 /**
@@ -89,6 +90,7 @@ export function MessageEditorView({
   addMessageButtonRef,
 }: MessageEditorViewProps) {
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
+  const { t } = useTranslation();
   const [urlInputIndex, setUrlInputIndex] = useState<number | null>(null);
   const [urlValue, setUrlValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<{
@@ -123,12 +125,12 @@ export function MessageEditorView({
 
   const handleFileSelect = (index: number, file: File) => {
     if (file.size > MAX_ATTACHMENT_BYTES) {
-      toast('Attachment must be 5 MB or smaller.');
+      toast(t('request.attachmentTooLarge'));
       return;
     }
     const reader = new FileReader();
     reader.onerror = () => {
-      toast('Could not read the selected file.');
+      toast(t('request.attachmentReadError'));
     };
     reader.onload = () => {
       const dataUri = reader.result as string;
@@ -170,20 +172,22 @@ export function MessageEditorView({
               disabled={disabled}
             >
               <SelectTrigger
-                aria-label={`Role for message ${index + 1}`}
+                aria-label={t('request.roleForMessage', { index: index + 1 })}
                 className="h-7 w-[100px] shrink-0 text-xs"
               >
                 <SelectValue>
                   {msg.role === 'user'
-                    ? 'User'
+                    ? t('request.user')
                     : msg.role === 'assistant'
-                      ? 'Assistant'
+                      ? t('request.assistant')
                       : msg.role}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="assistant">Assistant</SelectItem>
+                <SelectItem value="user">{t('request.user')}</SelectItem>
+                <SelectItem value="assistant">
+                  {t('request.assistant')}
+                </SelectItem>
               </SelectContent>
             </Select>
             <div className="min-w-0 flex-1">
@@ -192,8 +196,18 @@ export function MessageEditorView({
                 value={msg.content}
                 onChange={(e) => handleContentChange(index, e.target.value)}
                 disabled={disabled}
-                aria-label={`${msg.role} message ${index + 1}`}
-                placeholder={`${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} message...`}
+                aria-label={t('request.messageAria', {
+                  role: msg.role,
+                  index: index + 1,
+                })}
+                placeholder={t('request.messagePlaceholder', {
+                  role:
+                    msg.role === 'user'
+                      ? t('request.user')
+                      : msg.role === 'assistant'
+                        ? t('request.assistant')
+                        : msg.role,
+                })}
                 className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-xs"
                 rows={2}
               />
@@ -226,7 +240,7 @@ export function MessageEditorView({
                     onClick={() => handleUrlSubmit(index)}
                     disabled={!urlValue.trim()}
                   >
-                    Add
+                    {t('common.add')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -237,7 +251,7 @@ export function MessageEditorView({
                       setUrlValue('');
                     }}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                 </div>
               )}
@@ -250,7 +264,9 @@ export function MessageEditorView({
                 }}
                 type="file"
                 accept={SUPPORTED_FILE_ACCEPT}
-                aria-label={`Attach file to message ${index + 1}`}
+                aria-label={t('request.attachFileToMessage', {
+                  index: index + 1,
+                })}
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -264,14 +280,16 @@ export function MessageEditorView({
                     <TooltipTrigger
                       render={
                         <DropdownMenuTrigger
-                          aria-label="Message options"
+                          aria-label={t('request.messageOptions')}
                           className="text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex size-7 cursor-pointer items-center justify-center rounded-[min(var(--radius-md),12px)] transition-colors"
                         />
                       }
                     >
                       <Ellipsis className="h-3.5 w-3.5" />
                     </TooltipTrigger>
-                    <TooltipContent>Message options</TooltipContent>
+                    <TooltipContent>
+                      {t('request.messageOptions')}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <DropdownMenuContent
@@ -283,7 +301,7 @@ export function MessageEditorView({
                     onClick={() => fileInputRefs.current.get(index)?.click()}
                   >
                     <Paperclip className="h-3.5 w-3.5" />
-                    Attach file
+                    {t('request.attachFile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
@@ -292,7 +310,7 @@ export function MessageEditorView({
                     }}
                   >
                     <Link className="h-3.5 w-3.5" />
-                    Attach URL
+                    {t('request.attachUrl')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -303,7 +321,7 @@ export function MessageEditorView({
                     }
                   >
                     <Eraser className="h-3.5 w-3.5" />
-                    Clear message
+                    {t('request.clearMessage')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
@@ -311,7 +329,7 @@ export function MessageEditorView({
                     disabled={messages.length <= 1}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    Delete message
+                    {t('request.deleteMessage')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -329,7 +347,7 @@ export function MessageEditorView({
         disabled={disabled}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add message
+        {t('request.addMessage')}
       </Button>
 
       <Dialog
@@ -342,18 +360,18 @@ export function MessageEditorView({
           <DialogHeader>
             <DialogTitle>
               {confirmAction?.type === 'clear'
-                ? 'Clear message?'
-                : 'Delete message?'}
+                ? t('request.clearMessageQuestion')
+                : t('request.deleteMessageQuestion')}
             </DialogTitle>
             <DialogDescription>
               {confirmAction?.type === 'clear'
-                ? 'This will clear all content and attachments from this message.'
-                : 'This message has content that will be lost. This action cannot be undone.'}
+                ? t('request.clearMessageDescription')
+                : t('request.deleteMessageDescription')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmAction(null)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -371,7 +389,9 @@ export function MessageEditorView({
                 setConfirmAction(null);
               }}
             >
-              {confirmAction?.type === 'clear' ? 'Clear' : 'Delete'}
+              {confirmAction?.type === 'clear'
+                ? t('request.clearAction')
+                : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

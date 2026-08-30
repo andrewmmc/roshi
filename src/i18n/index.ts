@@ -53,4 +53,12 @@ export function useTranslation() {
   return { language, t, formatNumber, formatDateTime };
 }
 
+/**
+ * Translate outside React components (stores, utils) where hooks are
+ * unavailable. Snapshots the current language at call time.
+ */
+export function translateNow(key: MessageKey, variables?: Variables): string {
+  return translate(useLanguageStore.getState().language, key, variables);
+}
+
 export type { MessageKey, Namespace, NamespaceKey } from '@/i18n/types';

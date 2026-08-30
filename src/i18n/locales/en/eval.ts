@@ -138,4 +138,9 @@ export const evalStrings = {
   runNameAria: 'Eval run name',
   folderLabel: 'Folder',
   selectFolderAria: 'Select folder',
+
+  // Eval store errors
+  unknownProvider: 'Unknown provider',
+  noRunnersError: 'Add at least one runner before starting an eval.',
+  noMessagesError: 'Enter at least one message before starting an eval.',
 } as const;

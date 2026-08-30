@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from '@/i18n';
 import type { Collection, SavedRequest } from '@/types/history';
 
 const UNGROUPED_VALUE = '__ungrouped__';
@@ -38,6 +39,7 @@ export function SaveRequestDialog({
   onSaveRequest,
   onUpdateRequest,
 }: SaveRequestDialogProps) {
+  const { t } = useTranslation();
   const [requestName, setRequestName] = useState('');
   const [selectedCollectionId, setSelectedCollectionId] =
     useState(UNGROUPED_VALUE);
@@ -93,39 +95,44 @@ export function SaveRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save request</DialogTitle>
+          <DialogTitle>{t('collections.saveRequest')}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update this saved request with the current composer, or save it as a new request.'
-              : 'Store the current composer in a folder so it can be reused later.'}
+              ? t('collections.editDescription')
+              : t('collections.saveDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <Field label="Request name" required>
+          <Field label={t('collections.requestName')} required>
             <Input
               value={requestName}
               onChange={(e) => setRequestName(e.target.value)}
-              placeholder="Summarize customer support prompt"
-              aria-label="Request name"
+              placeholder={t('collections.requestNamePlaceholder')}
+              aria-label={t('collections.requestName')}
               autoFocus
             />
           </Field>
 
-          <Field label="Folder">
+          <Field label={t('collections.folder')}>
             <Select
               value={selectedCollectionId}
               onValueChange={(value) =>
                 setSelectedCollectionId(value ?? UNGROUPED_VALUE)
               }
             >
-              <SelectTrigger aria-label="Select folder" className="w-full">
+              <SelectTrigger
+                aria-label={t('collections.selectFolder')}
+                className="w-full"
+              >
                 <SelectValue>
-                  {selectedCollection?.name ?? 'Ungrouped'}
+                  {selectedCollection?.name ?? t('collections.ungrouped')}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UNGROUPED_VALUE}>Ungrouped</SelectItem>
+                <SelectItem value={UNGROUPED_VALUE}>
+                  {t('collections.ungrouped')}
+                </SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.name}
@@ -138,7 +145,7 @@ export function SaveRequestDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           {isEditing ? (
             <>
@@ -147,18 +154,18 @@ export function SaveRequestDialog({
                 onClick={handleSaveNew}
                 disabled={saveDisabled}
               >
-                Save as new
+                {t('collections.saveAsNew')}
               </Button>
               <Button
                 onClick={handleUpdate}
                 disabled={busy || !requestName.trim()}
               >
-                Update
+                {t('common.update')}
               </Button>
             </>
           ) : (
             <Button onClick={handleSaveNew} disabled={saveDisabled}>
-              Save request
+              {t('collections.saveRequest')}
             </Button>
           )}
         </DialogFooter>

@@ -24,4 +24,16 @@ export const environments = {
   deleteQuestion: 'Delete environment?',
   deleteWarning:
     'This environment and its variables will be removed permanently.',
+  previewTooltip: 'Preview environment variables',
+  previewTitle: 'Environment preview',
+  previewDescription: 'Resolved placeholders for {name}.',
+  noEnvironmentSelected: 'no environment selected',
+  noPlaceholders: 'No {{{variable}}} placeholders in the current request.',
+  noVariablesDefined:
+    'Placeholders found, but no variables are defined in the selected environment.',
+  statusResolved: 'Resolved',
+  statusMissing: 'Missing',
+  statusUnused: 'Unused',
+  missingVariables: 'Missing variables: {list}',
+  nameRequired: 'Environment name is required.',
 } as const;

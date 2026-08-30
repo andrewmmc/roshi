@@ -1,13 +1,17 @@
+import type { MessageKey } from '@/i18n/types';
 import type { ModelCapabilities } from '@/models/capabilities';
 
 export interface CompatibilitySummaryItem {
-  label: string;
-  value: string;
+  labelKey: MessageKey;
+  /** Translation key for the value, when the value is a fixed message. */
+  valueKey: MessageKey | null;
+  /** Raw value (e.g. a formatted token count) when valueKey is null. */
+  value: string | null;
   supported: boolean;
 }
 
-function formatTokenLimit(value: number | undefined): string {
-  if (value === undefined) return 'Unknown';
+function formatTokenLimit(value: number | undefined): string | null {
+  if (value === undefined) return null;
   return value.toLocaleString();
 }
 
@@ -16,11 +20,36 @@ export function buildModelCompatibilitySummary(
 ): CompatibilitySummaryItem[] {
   if (!capabilities) {
     return [
-      { label: 'Streaming', value: 'Unknown', supported: true },
-      { label: 'Images', value: 'Unknown', supported: true },
-      { label: 'Thinking', value: 'Unknown', supported: true },
-      { label: 'Context', value: 'Unknown', supported: true },
-      { label: 'Max output', value: 'Unknown', supported: true },
+      {
+        labelKey: 'request.paramLabelStream',
+        valueKey: 'common.unknown',
+        value: null,
+        supported: true,
+      },
+      {
+        labelKey: 'request.paramLabelImages',
+        valueKey: 'common.unknown',
+        value: null,
+        supported: true,
+      },
+      {
+        labelKey: 'request.thinking',
+        valueKey: 'common.unknown',
+        value: null,
+        supported: true,
+      },
+      {
+        labelKey: 'request.paramLabelContext',
+        valueKey: 'common.unknown',
+        value: null,
+        supported: true,
+      },
+      {
+        labelKey: 'request.paramLabelMaxOutput',
+        valueKey: 'common.unknown',
+        value: null,
+        supported: true,
+      },
     ];
   }
 
@@ -29,27 +58,34 @@ export function buildModelCompatibilitySummary(
 
   return [
     {
-      label: 'Streaming',
-      value: capabilities.streaming ? 'Supported' : 'Not supported',
+      labelKey: 'request.paramLabelStream',
+      valueKey: capabilities.streaming
+        ? 'request.supported'
+        : 'request.notSupported',
+      value: null,
       supported: capabilities.streaming,
     },
     {
-      label: 'Images',
-      value: supportsImages ? 'Supported' : 'Not supported',
+      labelKey: 'request.paramLabelImages',
+      valueKey: supportsImages ? 'request.supported' : 'request.notSupported',
+      value: null,
       supported: supportsImages,
     },
     {
-      label: 'Thinking',
-      value: supportsThinking ? 'Supported' : 'Not supported',
+      labelKey: 'request.thinking',
+      valueKey: supportsThinking ? 'request.supported' : 'request.notSupported',
+      value: null,
       supported: supportsThinking,
     },
     {
-      label: 'Context',
+      labelKey: 'request.paramLabelContext',
+      valueKey: null,
       value: formatTokenLimit(capabilities.tokenLimits?.context),
       supported: true,
     },
     {
-      label: 'Max output',
+      labelKey: 'request.paramLabelMaxOutput',
+      valueKey: null,
       value: formatTokenLimit(capabilities.tokenLimits?.output),
       supported: true,
     },

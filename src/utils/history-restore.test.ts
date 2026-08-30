@@ -105,9 +105,9 @@ describe('history-restore', () => {
       originalProviderName: 'Old Provider',
       restoredModel: null,
     });
-    expect(buildHistoryRestoreWarning(resolveHistorySelection(entry, []))).toBe(
-      'Original provider/model is no longer configured.',
-    );
+    expect(
+      buildHistoryRestoreWarning(resolveHistorySelection(entry, [])),
+    ).toEqual({ key: 'history.restoreProviderMissing' });
   });
 
   it('detects missing model when provider still exists', () => {
@@ -129,9 +129,10 @@ describe('history-restore', () => {
     expect(selection.providerMissing).toBe(false);
     expect(selection.modelMissing).toBe(true);
     expect(selection.restoredModel).toEqual(buildRestoredModel('custom-model'));
-    expect(buildHistoryRestoreWarning(selection)).toBe(
-      'Original model "custom-model" is no longer configured for OpenAI.',
-    );
+    expect(buildHistoryRestoreWarning(selection)).toEqual({
+      key: 'history.restoreModelMissing',
+      vars: { model: 'custom-model', provider: 'OpenAI' },
+    });
   });
 
   it('builds response restore data', () => {

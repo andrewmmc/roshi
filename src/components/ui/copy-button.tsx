@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
 import { KbdShortcut } from '@/components/ui/kbd';
 import { toast } from '@/stores/toast-store';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { Copy, Check } from 'lucide-react';
 
@@ -26,26 +27,27 @@ export function CopyButton({
     };
   }, []);
 
+  const { t } = useTranslation();
   const handleCopy = useCallback(async () => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
     if (!mountedRef.current) return;
     setCopied(true);
-    toast('Copied to clipboard');
+    toast(t('common.copiedToClipboard'));
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), 2000);
-  }, [text]);
+  }, [t, text]);
 
   const tooltipContent =
     copied || !shortcut ? (
       copied ? (
-        'Copied'
+        t('common.copied')
       ) : (
-        'Copy to clipboard'
+        t('common.copyToClipboard')
       )
     ) : (
       <span className="flex items-center gap-1.5">
-        Copy to clipboard
+        {t('common.copyToClipboard')}
         <KbdShortcut mac={shortcut.mac} win={shortcut.win} />
       </span>
     );

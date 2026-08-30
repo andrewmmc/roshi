@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import type { ProviderConfig } from '@/types/provider';
 
@@ -10,6 +11,7 @@ export function ProviderFilterChips({
   activeProviderId: string | null;
   onChange: (id: string | null) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <button
@@ -23,7 +25,7 @@ export function ProviderFilterChips({
             : 'border-border text-muted-foreground hover:text-foreground',
         )}
       >
-        All
+        {t('common.all')}
       </button>
       {providers.map((p) => (
         <button

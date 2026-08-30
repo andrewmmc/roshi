@@ -9,6 +9,7 @@ import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
 import { ConfirmDiscardDialog } from '@/components/ui/confirm-discard-dialog';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 /**
  * Horizontal tab bar shown above the request toolbar.
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
  * when there is 1 tab so that the single-tab affordance never flashes.
  */
 export function TabBar() {
+  const { t } = useTranslation();
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const switchTab = useTabStore((s) => s.switchTab);
@@ -153,7 +155,7 @@ export function TabBar() {
           tabs.length <= 1 && 'hidden',
         )}
         role="tablist"
-        aria-label="Request tabs"
+        aria-label={t('navigation.requestTabs')}
         onKeyDown={handleTabListKeyDown}
       >
         {/* Scrollable tab list */}
@@ -193,8 +195,8 @@ export function TabBar() {
                 {canClose && (
                   <button
                     type="button"
-                    aria-label={`Close tab: ${label}`}
-                    title={`Close tab: ${label}`}
+                    aria-label={t('navigation.closeTabNamed', { label })}
+                    title={t('navigation.closeTabNamed', { label })}
                     onClick={(e) => {
                       e.stopPropagation();
                       requestClose(tab.id);
@@ -217,8 +219,8 @@ export function TabBar() {
         {/* New-tab button */}
         <button
           type="button"
-          aria-label="New tab"
-          title="New tab"
+          aria-label={t('navigation.newTab')}
+          title={t('navigation.newTab')}
           onClick={createTab}
           className="text-muted-foreground hover:text-foreground hover:bg-sidebar-accent flex h-full shrink-0 cursor-pointer items-center px-2.5 transition-colors"
         >
@@ -230,8 +232,8 @@ export function TabBar() {
         open={showDiscard}
         onOpenChange={setShowDiscard}
         onConfirm={handleDiscardConfirm}
-        title="Close tab?"
-        description="This tab has unsaved composer content or a response that will be lost if you close it."
+        title={t('navigation.closeTabQuestion')}
+        description={t('navigation.closeTabUnsavedDescription')}
       />
     </>
   );

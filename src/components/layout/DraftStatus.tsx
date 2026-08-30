@@ -1,6 +1,7 @@
 import { useComposerStore } from '@/stores/composer-store';
 import { useTabStore } from '@/stores/tab-store';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 function hasDraftContent(state: ReturnType<typeof useComposerStore.getState>) {
   return (
@@ -16,6 +17,7 @@ function hasDraftContent(state: ReturnType<typeof useComposerStore.getState>) {
 }
 
 export function DraftStatus() {
+  const { t } = useTranslation();
   const hasDraft = useComposerStore(hasDraftContent);
   const status = useTabStore((state) => state.draftPersistenceStatus);
 
@@ -23,10 +25,10 @@ export function DraftStatus() {
 
   const label =
     status === 'saving'
-      ? 'Saving draft…'
+      ? t('request.draftSaving')
       : status === 'error'
-        ? 'Draft not saved'
-        : 'Saved locally';
+        ? t('request.draftError')
+        : t('request.draftSaved');
 
   return (
     <span
@@ -37,8 +39,8 @@ export function DraftStatus() {
       )}
       title={
         status === 'error'
-          ? 'Roshi could not save this local draft.'
-          : 'Unsent request drafts are stored on this device.'
+          ? t('request.draftErrorTitle')
+          : t('request.draftSavedTitle')
       }
     >
       <span

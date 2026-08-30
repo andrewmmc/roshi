@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { exportCodeSnippet } from '@/utils/export';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 import { buildCompatibleRequestFromComposer } from '@/utils/build-normalized-request';
 import { getSendableMessages } from '@/services/codegen/shared';
 import { headersToRecord } from '@/utils/headers';
@@ -76,6 +77,7 @@ function getCodeViewState(): CodeViewState {
 }
 
 export function CodeView({ isActive = true }: CodeViewProps) {
+  const { t } = useTranslation();
   const [storedState, setStoredState] = useState<CodeViewState>(() =>
     getCodeViewState(),
   );
@@ -220,33 +222,23 @@ export function CodeView({ isActive = true }: CodeViewProps) {
   }, [activeTab, compatibleRequest, customHeaderRecord, generators, provider]);
 
   if (!provider || !model) {
-    return (
-      <EmptyState
-        icon={Code2}
-        title="Select a provider and model to see code"
-      />
-    );
+    return <EmptyState icon={Code2} title={t('response.codeNoProvider')} />;
   }
 
   if (generators.length === 0) {
-    return (
-      <EmptyState
-        icon={Code2}
-        title="Code generation is not available for this provider type"
-      />
-    );
+    return <EmptyState icon={Code2} title={t('response.codegenUnavailable')} />;
   }
 
   if (!hasMessages) {
-    return <EmptyState icon={Code2} title="Enter a message to see code" />;
+    return <EmptyState icon={Code2} title={t('response.codeEnterMessage')} />;
   }
 
   if (hasAttachments) {
     return (
       <EmptyState
         icon={Code2}
-        title="Attachment code generation is not available"
-        description="Use the Raw request view to inspect or copy the complete request without dropping attachments."
+        title={t('response.codegenAttachmentsUnavailable')}
+        description={t('response.codegenAttachmentsHint')}
       />
     );
   }
@@ -283,7 +275,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
                 : 'text-muted-foreground',
             )}
           >
-            {stream ? 'stream' : 'sync'}
+            {stream ? t('response.streamMode') : t('response.syncMode')}
           </Button>
         </div>
         <div className="flex items-center">
@@ -291,7 +283,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
-            tooltip="Export code snippet"
+            tooltip={t('response.exportCodeSnippet')}
             disabled={!activeCode}
             onClick={() => exportCodeSnippet(activeCode, activeTab)}
           >

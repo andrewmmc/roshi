@@ -1,3 +1,4 @@
+import { translateNow } from '@/i18n';
 import { EventSourceParserStream } from 'eventsource-parser/stream';
 import type { ProviderConfig } from '@/types/provider';
 import type {
@@ -141,8 +142,8 @@ export async function sendRequest(
   const responseText = await fetchResponse.text();
   const rawResponse = parseJsonObject(responseText);
   if (!rawResponse) {
-    throw createRequestError('Provider returned invalid JSON', {
-      error: 'Provider returned invalid JSON',
+    throw createRequestError(translateNow('request.invalidJson'), {
+      error: translateNow('request.invalidJson'),
       body: responseText,
     });
   }
@@ -232,7 +233,10 @@ function throwStreamError(
   rawResponse: Record<string, unknown>,
 ): never {
   const durationMs = Math.round(performance.now() - startTime);
-  const message = cause instanceof Error ? cause.message : 'Stream interrupted';
+  const message =
+    cause instanceof Error
+      ? cause.message
+      : translateNow('request.streamInterrupted');
   throw new StreamError(
     message,
     statusCode,
@@ -294,7 +298,7 @@ async function handleStream(
     clearIdleTimer();
     idleTimer = setTimeout(() => {
       readError = new DOMException(
-        'The stream stopped receiving data before completion. The provider may be overloaded or unreachable.',
+        translateNow('request.streamIdleTimeout'),
         'TimeoutError',
       );
       void reader.cancel();
@@ -365,9 +369,7 @@ async function handleStream(
   }
 
   if (!readError && !pipeError && !terminalEventSeen) {
-    readError = new Error(
-      'The stream ended before the provider sent a completion event.',
-    );
+    readError = new Error(translateNow('request.streamEndedEarly'));
   }
 
   const { response, rawResponse } = buildStreamState(

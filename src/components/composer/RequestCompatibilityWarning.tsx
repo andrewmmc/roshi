@@ -1,7 +1,9 @@
+import { useTranslation } from '@/i18n';
 import { AlertTriangle } from 'lucide-react';
 import { useRequestCompatibilityPreview } from '@/hooks/use-request-compatibility-preview';
 
 export function RequestCompatibilityWarning() {
+  const { t } = useTranslation();
   const { warnings } = useRequestCompatibilityPreview();
 
   if (warnings.length === 0) {
@@ -16,9 +18,7 @@ export function RequestCompatibilityWarning() {
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <div>
-          <p className="font-medium">
-            Some settings will be omitted when sending
-          </p>
+          <p className="font-medium">{t('request.settingsOmitted')}</p>
           <ul className="mt-1 list-disc space-y-1 pl-4">
             {warnings.map((warning) => (
               <li key={warning}>{warning}</li>

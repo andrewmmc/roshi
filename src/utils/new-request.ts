@@ -1,3 +1,4 @@
+import type { MessageKey } from '@/i18n/types';
 import {
   selectHasUnsavedChanges,
   useComposerStore,
@@ -74,20 +75,18 @@ export function getActiveResponseText(): string {
 }
 
 export function getDiscardDialogCopy(mainView: MainView): {
-  title: string;
-  description: string;
+  titleKey: MessageKey;
+  descriptionKey: MessageKey;
 } {
   if (mainView === 'eval') {
     return {
-      title: 'Discard current eval?',
-      description:
-        'You have changes in the eval workspace. This action will clear the prompt, runners, and results.',
+      titleKey: 'navigation.discardEvalQuestion',
+      descriptionKey: 'navigation.discardEvalDescription',
     };
   }
 
   return {
-    title: 'Discard unsent changes?',
-    description:
-      'You have unsent content in the composer. This action will replace it and your changes will be lost.',
+    titleKey: 'common.discardUnsentChanges',
+    descriptionKey: 'common.discardUnsentChangesDescription',
   };
 }

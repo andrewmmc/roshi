@@ -109,4 +109,94 @@ export const request = {
     'Controls reasoning depth for Gemini 3 and newer models. Supported levels vary by model.',
   paramInfoVerbosity:
     'Controls how long and detailed the final answer is (GPT-5 Responses API).',
+
+  // Composer misc
+  system: 'System',
+  draftSaving: 'Saving draft…',
+  draftError: 'Draft not saved',
+  draftSaved: 'Saved locally',
+  draftErrorTitle: 'Roshi could not save this local draft.',
+  draftSavedTitle: 'Unsent request drafts are stored on this device.',
+  tokenEstimate: '~{count} tokens',
+  tokenEstimateDetail: 'Estimated prompt tokens: {count}',
+  attachmentTooLarge: 'Attachment must be 5 MB or smaller.',
+  attachmentReadError: 'Could not read the selected file.',
+  roleForMessage: 'Role for message {index}',
+  messageAria: '{role} message {index}',
+  messagePlaceholder: '{role} message...',
+  attachFileToMessage: 'Attach file to message {index}',
+  attachFile: 'Attach file',
+  attachUrl: 'Attach URL',
+  clearMessage: 'Clear message',
+  deleteMessage: 'Delete message',
+  addMessage: 'Add message',
+  clearMessageQuestion: 'Clear message?',
+  deleteMessageQuestion: 'Delete message?',
+  clearMessageDescription:
+    'This will clear all content and attachments from this message.',
+  deleteMessageDescription:
+    'This message has content that will be lost. This action cannot be undone.',
+  clearAction: 'Clear',
+  headerNameAria: 'Header {index} name',
+  headerValueAria: 'Header {index} value',
+  addHeader: 'Add header',
+  fromProvider: 'From provider',
+  customLabel: 'Custom',
+  providerHeaderName: 'Provider header name: {key}',
+  providerHeaderValue: 'Provider header value for {key}',
+  settingsOmitted: 'Some settings will be omitted when sending',
+
+  // Tabs
+  maxTabsReached: 'Maximum of {count} tabs reached.',
+  newTabWhileRunning: 'Cannot create a new tab while a request is running.',
+  duplicateTabWhileRunning:
+    'Cannot duplicate a tab while a request is running.',
+  closeTabWhileRunning:
+    'Cannot close the active tab while a request is running.',
+  switchTabWhileRunning: 'Cannot switch tabs while a request is running.',
+
+  // Send / validation errors
+  messageRequired: 'Please enter at least one message',
+  providerAndModelRequired: 'Please select a provider and model',
+  missingEnvVariables: 'Missing environment variables: {variables}',
+  missingEnvVarsWithEnv:
+    'Add these variables to the selected environment or remove the placeholders before sending.',
+  missingEnvVarsNoEnv:
+    'Select an environment with these variables or remove the placeholders before sending.',
+  historySaveFailed:
+    'Response completed, but history could not be saved locally.',
+  providerHttpError: 'Provider returned HTTP {status}',
+  networkError: 'Network request failed before the provider responded',
+  networkErrorDetail:
+    'The app did not receive an HTTP response from the provider. This usually means DNS, TLS/certificate validation, connectivity, or an unreachable host.',
+  unexpectedError: 'Unexpected request error',
+  timedOut: 'Request timed out',
+  timeoutDetail:
+    'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
+  cancelled: 'Request cancelled',
+  invalidJson: 'Provider returned invalid JSON',
+  streamInterrupted: 'Stream interrupted',
+  streamIdleTimeout:
+    'The stream stopped receiving data before completion. The provider may be overloaded or unreachable.',
+  streamEndedEarly:
+    'The stream ended before the provider sent a completion event.',
+
+  // Model compatibility
+  paramLabelStream: 'Streaming',
+  paramLabelImages: 'Images',
+  paramLabelContext: 'Context',
+  paramLabelMaxOutput: 'Max output',
+  paramUnsupportedGeneric: 'This parameter is not supported by this model.',
+  paramDefaultOnly: 'This model only supports the default value ({default}).',
+  paramOmittedWarning: '{label} was omitted: {reason}',
+  streamUnsupportedModel: 'Streaming is not supported by this model.',
+  maxTokensUnsupportedModel: 'Max tokens is not supported by this model.',
+  thinkingUnsupportedModel:
+    'Thinking controls are not supported by this model.',
+  effortUnsupported: 'Effort is not supported by this model.',
+  reasoningModeUnsupported: 'Reasoning mode is not supported by this model.',
+  verbosityUnsupported: 'Verbosity is not supported by this model.',
+  modelCompatibility: 'Model compatibility',
+  supported: 'Supported',
+  notSupported: 'Not supported',
 } as const;

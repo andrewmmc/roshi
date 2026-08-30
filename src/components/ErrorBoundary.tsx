@@ -1,6 +1,8 @@
 import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 import { Button } from '@/components/ui/button';
+import { translate } from '@/i18n';
+import { useLanguageStore } from '@/stores/language-store';
 
 interface Props {
   children: ReactNode;
@@ -24,6 +26,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      const t = (
+        key: Parameters<typeof translate>[1],
+        vars?: Parameters<typeof translate>[2],
+      ) => translate(useLanguageStore.getState().language, key, vars);
       const containerClass = this.props.panel
         ? 'flex flex-col items-center justify-center h-full gap-3 p-6 text-center'
         : 'flex flex-col items-center justify-center h-screen gap-4 p-8 text-center';
@@ -31,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className={containerClass}>
           <h1 className="text-destructive text-lg font-semibold">
-            Something went wrong
+            {t('common.errorTitle')}
           </h1>
           <p className="text-muted-foreground max-w-lg font-mono text-sm break-all">
             {this.state.error.message}
@@ -40,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
             variant="outline"
             onClick={() => this.setState({ error: null })}
           >
-            Try again
+            {t('common.tryAgain')}
           </Button>
         </div>
       );

@@ -7,6 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { CopyButton } from '@/components/ui/copy-button';
 import { cn, getRoleAriaLabel, getRoleLabel } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
+import { STREAM_INTERRUPTED_SUMMARY } from '@/hooks/use-send-request';
 
 const ROLE_LABEL_BASE =
   'w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase';
@@ -65,6 +67,7 @@ function scheduleFrame(
 }
 
 export function ChatView() {
+  const { t } = useTranslation();
   const sentRequest = useResponseStore((s) => s.sentRequest);
   const messages = sentRequest?.messages ?? [];
   const systemPrompt = sentRequest?.systemPrompt ?? '';
@@ -139,7 +142,7 @@ export function ChatView() {
   const completedContent = response?.content ?? '';
   const displayContent = completedContent || streamingDisplayContent;
   const isInterrupted =
-    error === 'Response interrupted' && Boolean(displayContent);
+    error === STREAM_INTERRUPTED_SUMMARY && Boolean(displayContent);
   const showLoading = isLoading && !displayContent;
 
   useEffect(() => {
@@ -176,7 +179,7 @@ export function ChatView() {
       <ScrollArea className="h-full">
         <div className="flex flex-col gap-2 p-4">
           {systemPrompt && (
-            <MessageRow label="sys" ariaLabel="System">
+            <MessageRow label="sys" ariaLabel={t('request.system')}>
               <div className="bg-muted/30 text-muted-foreground flex-1 rounded-lg px-3 py-2 text-[13px] italic select-text">
                 {systemPrompt}
               </div>
@@ -225,11 +228,11 @@ export function ChatView() {
           {compatibilityWarnings.length > 0 && (
             <MessageRow
               label="warn"
-              ariaLabel="Warning"
+              ariaLabel={t('response.warning')}
               labelClassName="text-amber-600 dark:text-amber-400"
             >
               <div className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100">
-                <div className="font-medium">Warnings</div>
+                <div className="font-medium">{t('response.warnings')}</div>
                 <ul className="mt-1 list-disc space-y-1 pl-4">
                   {compatibilityWarnings.map((warning) => (
                     <li key={warning}>{warning}</li>
@@ -278,14 +281,16 @@ export function ChatView() {
           {isInterrupted && (
             <MessageRow
               label="warn"
-              ariaLabel="Warning"
+              ariaLabel={t('response.warning')}
               labelClassName="text-amber-600 dark:text-amber-400"
             >
               <div
                 role="alert"
                 className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-900 dark:text-amber-100"
               >
-                <div className="font-medium">Response interrupted</div>
+                <div className="font-medium">
+                  {t('response.responseInterrupted')}
+                </div>
                 {errorDetail && (
                   <div className="mt-1 font-mono text-xs break-words whitespace-pre-wrap">
                     {errorDetail}
@@ -303,7 +308,7 @@ export function ChatView() {
           {error && !isInterrupted && (
             <MessageRow
               label="err"
-              ariaLabel="Error"
+              ariaLabel={t('response.error')}
               labelClassName="text-destructive"
             >
               <div

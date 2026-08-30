@@ -52,8 +52,8 @@ export function CustomProviderSection({
       {filtered.length === 0 ? (
         <div className="text-muted-foreground rounded-xl border border-dashed px-3 py-4 text-center text-xs">
           {provider.models.length === 0
-            ? 'No models defined. Edit the provider to add custom models.'
-            : 'No models match your search.'}
+            ? t('models.noModelsDefined')
+            : t('models.noModelsMatch')}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -75,8 +75,10 @@ export function CustomProviderSection({
                 variant="ghost"
                 size="icon-sm"
                 className="text-muted-foreground hover:text-destructive shrink-0"
-                tooltip="Remove model"
-                aria-label={`Remove ${model.displayName || model.id}`}
+                tooltip={t('providers.removeModel')}
+                aria-label={t('models.removeModelNamed', {
+                  name: model.displayName || model.id,
+                })}
                 onClick={() =>
                   void removeModelFromProvider(provider.id, model.id)
                 }

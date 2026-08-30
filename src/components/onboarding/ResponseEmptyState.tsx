@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useProviderStore, useSelectedProvider } from '@/stores/provider-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useTranslation } from '@/i18n';
 import {
   selectedProviderNeedsApiKey,
   selectedProviderNeedsModel,
 } from '@/utils/onboarding';
 
 export function ResponseEmptyState() {
+  const { t } = useTranslation();
   const providers = useProviderStore((s) => s.providers);
   const selectedProvider = useSelectedProvider();
   const openProviderSettings = useUiStore((s) => s.openProviderSettings);
@@ -18,13 +20,14 @@ export function ResponseEmptyState() {
   const needsApiKey =
     !hasProviders || selectedProviderNeedsApiKey(selectedProvider);
   const needsModel = selectedProviderNeedsModel(selectedProvider);
+  const providerName = selectedProvider?.name ?? t('common.unknown');
   const message = !hasProviders
-    ? 'Add a provider API key to send your first request.'
+    ? t('onboarding.emptyNoProviders')
     : needsApiKey
-      ? `Add an API key for ${selectedProvider?.name ?? 'this provider'} before sending.`
+      ? t('onboarding.emptyNeedsApiKey', { name: providerName })
       : needsModel
-        ? `Pick a model for ${selectedProvider?.name ?? 'this provider'} before sending.`
-        : 'Write a message, then send the request to see the response here.';
+        ? t('onboarding.emptyNeedsModel', { name: providerName })
+        : t('onboarding.emptyWriteMessage');
 
   return (
     <EmptyState
@@ -42,7 +45,7 @@ export function ResponseEmptyState() {
               }
             >
               <Server className="h-3 w-3" />
-              Add API key
+              {t('onboarding.actionAddApiKey')}
             </Button>
           )}
           {needsModel && (
@@ -53,7 +56,7 @@ export function ResponseEmptyState() {
               onClick={() => openModelMarket(selectedProvider?.id ?? null)}
             >
               <Boxes className="h-3 w-3" />
-              Pick a model
+              {t('onboarding.actionPickModel')}
             </Button>
           )}
         </>

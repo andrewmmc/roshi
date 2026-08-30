@@ -14,6 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useTranslation } from '@/i18n';
 import type { HistoryFilters } from '@/utils/history-filter';
 
 const STATUS_CODE_FILTERS = [
@@ -25,13 +26,6 @@ const STATUS_CODE_FILTERS = [
   'none',
 ] as const;
 const DATE_FILTERS = ['all', 'today', '7d', '30d'] as const;
-
-function getDateLabel(value: string): string {
-  if (value === 'today') return 'Today';
-  if (value === '7d') return 'Last 7 days';
-  if (value === '30d') return 'Last 30 days';
-  return 'Any time';
-}
 
 export function HistoryFiltersSheet({
   open,
@@ -56,24 +50,32 @@ export function HistoryFiltersSheet({
   onFilterChange: (updates: Partial<HistoryFilters>) => void;
   onClearFilters: () => void;
 }) {
+  const { t } = useTranslation();
+  const getDateLabel = (value: string): string => {
+    if (value === 'today') return t('history.dateToday');
+    if (value === '7d') return t('history.dateLast7Days');
+    if (value === '30d') return t('history.dateLast30Days');
+    return t('history.dateAnyTime');
+  };
   const providerLabel =
     filters.providerId === 'all'
-      ? 'All providers'
+      ? t('history.allProviders')
       : (providerOptions.find((provider) => provider.id === filters.providerId)
-          ?.name ?? 'Provider');
-  const modelLabel = filters.modelId === 'all' ? 'All models' : filters.modelId;
+          ?.name ?? t('history.provider'));
+  const modelLabel =
+    filters.modelId === 'all' ? t('history.allModels') : filters.modelId;
   const collectionLabel =
     filters.collectionId === 'all'
-      ? 'All folders'
+      ? t('history.allFolders')
       : (collectionOptions.find(
           (collection) => collection.id === filters.collectionId,
-        )?.name ?? 'Folder');
+        )?.name ?? t('history.folder'));
   const savedRequestLabel =
     filters.savedRequestId === 'all'
-      ? 'All requests'
+      ? t('history.allRequests')
       : (savedRequestOptions.find(
           (request) => request.id === filters.savedRequestId,
-        )?.name ?? 'Request');
+        )?.name ?? t('history.request'));
 
   const handleClearFilters = () => {
     onClearFilters();
@@ -84,16 +86,15 @@ export function HistoryFiltersSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent aria-describedby="history-filters-description">
         <SheetHeader className="pr-12">
-          <SheetTitle>History filters</SheetTitle>
+          <SheetTitle>{t('history.filtersTitle')}</SheetTitle>
           <SheetDescription id="history-filters-description">
-            Narrow history by provider, model, date, response, folder, or saved
-            request.
+            {t('history.filtersDescription')}
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Provider
+              {t('history.provider')}
             </span>
             <Select
               value={filters.providerId}
@@ -102,13 +103,13 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by provider"
+                aria-label={t('history.filterByProvider')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{providerLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All providers</SelectItem>
+                <SelectItem value="all">{t('history.allProviders')}</SelectItem>
                 {providerOptions.map((provider) => (
                   <SelectItem key={provider.id} value={provider.id}>
                     {provider.name}
@@ -119,7 +120,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Model
+              {t('history.model')}
             </span>
             <Select
               value={filters.modelId}
@@ -128,13 +129,13 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by model"
+                aria-label={t('history.filterByModel')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{modelLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All models</SelectItem>
+                <SelectItem value="all">{t('history.allModels')}</SelectItem>
                 {modelOptions.map((modelId) => (
                   <SelectItem key={modelId} value={modelId}>
                     {modelId}
@@ -145,7 +146,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Date range
+              {t('history.dateRange')}
             </span>
             <Select
               value={filters.dateRange}
@@ -157,7 +158,7 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by date"
+                aria-label={t('history.filterByDate')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{getDateLabel(filters.dateRange)}</SelectValue>
@@ -173,7 +174,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Status code
+              {t('history.statusCode')}
             </span>
             <Select
               value={filters.statusCodeClass}
@@ -185,14 +186,14 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by status code"
+                aria-label={t('history.filterByStatusCode')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>
                   {filters.statusCodeClass === 'all'
-                    ? 'Any HTTP'
+                    ? t('history.anyHttp')
                     : filters.statusCodeClass === 'none'
-                      ? 'No status'
+                      ? t('history.noStatus')
                       : filters.statusCodeClass}
                 </SelectValue>
               </SelectTrigger>
@@ -200,9 +201,9 @@ export function HistoryFiltersSheet({
                 {STATUS_CODE_FILTERS.map((statusCodeClass) => (
                   <SelectItem key={statusCodeClass} value={statusCodeClass}>
                     {statusCodeClass === 'all'
-                      ? 'Any HTTP status'
+                      ? t('history.anyHttpStatus')
                       : statusCodeClass === 'none'
-                        ? 'No status'
+                        ? t('history.noStatus')
                         : statusCodeClass}
                   </SelectItem>
                 ))}
@@ -211,7 +212,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Folder
+              {t('history.folder')}
             </span>
             <Select
               value={filters.collectionId}
@@ -220,13 +221,13 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by folder"
+                aria-label={t('history.filterByFolder')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{collectionLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All folders</SelectItem>
+                <SelectItem value="all">{t('history.allFolders')}</SelectItem>
                 {collectionOptions.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.name}
@@ -237,7 +238,7 @@ export function HistoryFiltersSheet({
           </div>
           <div className="space-y-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Saved request
+              {t('history.savedRequest')}
             </span>
             <Select
               value={filters.savedRequestId}
@@ -246,13 +247,13 @@ export function HistoryFiltersSheet({
               }
             >
               <SelectTrigger
-                aria-label="Filter by saved request"
+                aria-label={t('history.filterBySavedRequest')}
                 className="h-8 w-full text-xs"
               >
                 <SelectValue>{savedRequestLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All requests</SelectItem>
+                <SelectItem value="all">{t('history.allRequests')}</SelectItem>
                 {savedRequestOptions.map((request) => (
                   <SelectItem key={request.id} value={request.id}>
                     {request.name}
@@ -269,7 +270,7 @@ export function HistoryFiltersSheet({
             disabled={!isFiltering}
             onClick={handleClearFilters}
           >
-            Clear all filters
+            {t('history.clearAllFilters')}
           </Button>
         </SheetFooter>
       </SheetContent>

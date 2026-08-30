@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 function Sheet({ ...props }: DialogPrimitive.Root.Props) {
@@ -44,6 +45,7 @@ function SheetContent({
   overlayClassName?: string;
   showCloseButton?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <SheetPortal>
       <SheetOverlay className={overlayClassName} />
@@ -64,12 +66,12 @@ function SheetContent({
                 variant="ghost"
                 size="icon-sm"
                 className="absolute top-2 right-2"
-                aria-label="Close"
+                aria-label={t('common.close')}
               />
             }
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>

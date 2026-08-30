@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DiffText } from '@/components/ui/diff-text';
 import type { HistoryEntry } from '@/types/history';
 import { diffWords, jaccardSimilarity } from '@/utils/diff';
+import { useTranslation } from '@/i18n';
 import { formatHistoryPrompt } from '@/utils/prompt-diff';
 
 export function HistoryCompareDrawer({
@@ -13,6 +14,7 @@ export function HistoryCompareDrawer({
   entries: [HistoryEntry, HistoryEntry];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [entryA, entryB] = entries;
 
   const diff = useMemo(() => {
@@ -29,24 +31,26 @@ export function HistoryCompareDrawer({
       <div className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-1.5">
         <div className="text-foreground min-w-0 truncate text-xs font-medium">
           {entryA.providerName} / {entryA.modelId}
-          <span className="text-muted-foreground mx-2">vs</span>
+          <span className="text-muted-foreground mx-2">{t('history.vs')}</span>
           {entryB.providerName} / {entryB.modelId}
         </div>
         <span className="text-muted-foreground shrink-0 text-[11px]">
-          similarity: {(diff.similarity * 100).toFixed(1)}%
+          {t('history.similarity', {
+            percent: (diff.similarity * 100).toFixed(1),
+          })}
         </span>
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={onClose}
-          aria-label="Close prompt compare"
+          aria-label={t('history.closePromptCompare')}
         >
           <X className="h-3 w-3" />
         </Button>
       </div>
       <div className="max-h-72 overflow-auto p-3">
         <div className="text-muted-foreground mb-1 text-[11px] font-semibold tracking-wider uppercase">
-          Prompt diff
+          {t('history.promptDiff')}
         </div>
         <DiffText segments={diff.segments} />
       </div>

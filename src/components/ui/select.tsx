@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Select as SelectPrimitive } from '@base-ui/react/select';
 
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from 'lucide-react';
 
@@ -154,11 +155,12 @@ function SelectScrollUpButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
+  const { t } = useTranslation();
   return (
     <SelectPrimitive.ScrollUpArrow
       data-slot="select-scroll-up-button"
-      aria-label="Scroll up"
-      title="Scroll up"
+      aria-label={t('common.scrollUp')}
+      title={t('common.scrollUp')}
       className={cn(
         "bg-popover top-0 z-10 flex w-full cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
         className,
@@ -174,11 +176,12 @@ function SelectScrollDownButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
+  const { t } = useTranslation();
   return (
     <SelectPrimitive.ScrollDownArrow
       data-slot="select-scroll-down-button"
-      aria-label="Scroll down"
-      title="Scroll down"
+      aria-label={t('common.scrollDown')}
+      title={t('common.scrollDown')}
       className={cn(
         "bg-popover bottom-0 z-10 flex w-full cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
         className,

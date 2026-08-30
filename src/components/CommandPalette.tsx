@@ -13,6 +13,7 @@ import { useResponseStore } from '@/stores/response-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { useSendRequest } from '@/hooks/use-send-request';
 import { toast } from '@/stores/toast-store';
+import { useTranslation } from '@/i18n';
 import {
   activeWorkspaceHasUnsavedChanges,
   getActiveResponseText,
@@ -54,6 +55,7 @@ function findNextEnabledIndex(
 // ---------------------------------------------------------------------------
 
 function PaletteContent({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
@@ -81,26 +83,26 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
   );
   const sendDisabledReason = isEval
     ? isEvalBusy
-      ? 'An eval is already running'
+      ? t('navigation.cmdEvalRunning')
       : runners.length === 0
-        ? 'Add at least one runner'
+        ? t('navigation.cmdNeedRunner')
         : undefined
     : isLoading
-      ? 'A request is already running'
+      ? t('navigation.cmdRequestRunning')
       : !selectedProvider
-        ? 'Select a provider'
+        ? t('request.selectAProvider')
         : !selectedModel
-          ? 'Select a model'
+          ? t('request.selectAModel')
           : !selectedProvider.apiKey.trim()
-            ? 'Add an API key in provider settings'
+            ? t('request.addApiKey')
             : undefined;
   const cancelDisabledReason = isEval
     ? isEvalBusy
       ? undefined
-      : 'No eval is running'
+      : t('navigation.cmdNoEvalRunning')
     : isLoading
       ? undefined
-      : 'No request is running';
+      : t('navigation.cmdNoRequestRunning');
   const activeResponseText = isEval
     ? runners
         .map((runner) => evalResults[runner.id]?.content?.trim() ?? '')
@@ -108,10 +110,10 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         .join('\n\n')
     : response?.content || streamingContent;
   const tabLimitReason =
-    tabs.length >= MAX_TABS ? `Maximum of ${MAX_TABS} tabs reached` : undefined;
-  const tabBusyReason = isLoading
-    ? 'Stop the running request first'
-    : undefined;
+    tabs.length >= MAX_TABS
+      ? t('navigation.cmdTabLimit', { count: MAX_TABS })
+      : undefined;
+  const tabBusyReason = isLoading ? t('navigation.cmdTabBusy') : undefined;
 
   // Build the full command list. Dynamic provider/model entries are derived
   // from store state at memo time; actions read live state via getState().
@@ -119,8 +121,10 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     const cmds: Command[] = [
       {
         id: 'send',
-        label: isEval ? 'Run Eval' : 'Send Request',
-        group: 'Actions',
+        label: isEval
+          ? t('navigation.cmdRunEval')
+          : t('navigation.cmdSendRequest'),
+        group: t('navigation.groupActions'),
         keywords: ['run', 'execute', 'submit', 'prompt'],
         shortcut: { mac: '⌘↵', win: 'Ctrl+↵' },
         disabledReason: sendDisabledReason,
@@ -139,8 +143,10 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       },
       {
         id: 'cancel',
-        label: isEval ? 'Stop Eval' : 'Stop Request',
-        group: 'Actions',
+        label: isEval
+          ? t('navigation.cmdStopEval')
+          : t('navigation.cmdStopRequest'),
+        group: t('navigation.groupActions'),
         keywords: ['cancel', 'abort', 'interrupt'],
         shortcut: { mac: 'Esc', win: 'Esc' },
         disabledReason: cancelDisabledReason,
@@ -156,12 +162,14 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       },
       {
         id: 'new-request',
-        label: isEval ? 'New Eval' : 'New Request',
-        group: 'Actions',
+        label: isEval
+          ? t('navigation.cmdNewEval')
+          : t('navigation.cmdNewRequest'),
+        group: t('navigation.groupActions'),
         keywords: ['clear', 'reset', 'fresh'],
         shortcut: { mac: '⌘⇧N', win: 'Ctrl+Shift+N' },
         disabledReason:
-          isEvalBusy || isLoading ? 'Stop the running task first' : undefined,
+          isEvalBusy || isLoading ? t('navigation.cmdTaskBusy') : undefined,
         action: () => {
           if (activeWorkspaceHasUnsavedChanges()) {
             useUiStore.getState().setNewRequestDiscardOpen(true);
@@ -176,8 +184,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         : [
             {
               id: 'new-tab',
-              label: 'New Tab',
-              group: 'Actions',
+              label: t('navigation.cmdNewTab'),
+              group: t('navigation.groupActions'),
               keywords: ['create', 'request', 'workspace'],
               shortcut: { mac: '⌘T', win: 'Ctrl+T' },
               disabledReason: tabBusyReason ?? tabLimitReason,
@@ -185,8 +193,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
             },
             {
               id: 'duplicate-tab',
-              label: 'Duplicate Tab',
-              group: 'Actions',
+              label: t('navigation.cmdDuplicateTab'),
+              group: t('navigation.groupActions'),
               keywords: ['copy', 'clone', 'request'],
               shortcut: { mac: '⌘⇧D', win: 'Ctrl+Shift+D' },
               disabledReason: tabBusyReason ?? tabLimitReason,
@@ -194,39 +202,41 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
             },
             {
               id: 'close-tab',
-              label: 'Close Tab',
-              group: 'Actions',
+              label: t('navigation.cmdCloseTab'),
+              group: t('navigation.groupActions'),
               keywords: ['remove', 'dismiss', 'request'],
               shortcut: { mac: '⌘W', win: 'Ctrl+W' },
               disabledReason:
                 tabBusyReason ??
-                (tabs.length <= 1
-                  ? 'At least one request tab stays open'
-                  : undefined),
+                (tabs.length <= 1 ? t('navigation.cmdMinOneTab') : undefined),
               action: requestCloseActiveTab,
             },
           ]),
       {
         id: 'toggle-theme',
-        label: 'Toggle Theme',
-        group: 'Actions',
+        label: t('navigation.cmdToggleTheme'),
+        group: t('navigation.groupActions'),
         keywords: ['dark', 'light', 'appearance', 'color'],
         shortcut: { mac: '⌥T', win: 'Alt+T' },
         action: () => useThemeStore.getState().toggle(),
       },
       {
         id: 'copy-response',
-        label: isEval ? 'Copy Results' : 'Copy Response',
-        group: 'Actions',
+        label: isEval
+          ? t('navigation.cmdCopyResults')
+          : t('navigation.cmdCopyResponse'),
+        group: t('navigation.groupActions'),
         keywords: ['clipboard', 'output', 'result'],
         shortcut: { mac: '⌥C', win: 'Alt+C' },
-        disabledReason: activeResponseText ? undefined : 'No response to copy',
+        disabledReason: activeResponseText
+          ? undefined
+          : t('navigation.cmdNoResponseToCopy'),
         action: () => {
           const text = activeResponseText || getActiveResponseText();
           if (text) {
             navigator.clipboard
               .writeText(text)
-              .then(() => toast('Copied to clipboard'))
+              .then(() => toast(t('common.copiedToClipboard')))
               .catch(() => {});
           }
         },
@@ -237,8 +247,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         : [
             {
               id: 'focus-history',
-              label: 'Search History',
-              group: 'Navigation',
+              label: t('navigation.cmdSearchHistory'),
+              group: t('navigation.groupNavigation'),
               keywords: ['find', 'requests', 'recent'],
               shortcut: { mac: '⌘P', win: 'Ctrl+P' },
               action: () => useUiStore.getState().focusHistorySearch(),
@@ -246,46 +256,46 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
           ]),
       {
         id: 'settings-general',
-        label: 'Settings: General',
-        group: 'Navigation',
+        label: t('navigation.cmdSettingsGeneral'),
+        group: t('navigation.groupNavigation'),
         keywords: ['preferences', 'theme', 'reset'],
         shortcut: { mac: '⌘⇧,', win: 'Ctrl+Shift+,' },
         action: () => useUiStore.getState().setSettingsOpen(true, 'general'),
       },
       {
         id: 'settings-providers',
-        label: 'Settings: Providers',
-        group: 'Navigation',
+        label: t('navigation.cmdSettingsProviders'),
+        group: t('navigation.groupNavigation'),
         keywords: ['api key', 'credentials', 'endpoint', 'connection'],
         action: () => useUiStore.getState().setSettingsOpen(true, 'providers'),
       },
       {
         id: 'settings-environments',
-        label: 'Settings: Environments',
-        group: 'Navigation',
+        label: t('navigation.cmdSettingsEnvironments'),
+        group: t('navigation.groupNavigation'),
         keywords: ['variables', 'secrets', 'template'],
         action: () =>
           useUiStore.getState().setSettingsOpen(true, 'environments'),
       },
       {
         id: 'settings-models',
-        label: 'Settings: Models',
-        group: 'Navigation',
+        label: t('navigation.cmdSettingsModels'),
+        group: t('navigation.groupNavigation'),
         keywords: ['catalog', 'market', 'add model'],
         action: () => useUiStore.getState().openModelMarket(),
       },
       {
         id: 'show-shortcuts',
-        label: 'Keyboard Shortcuts',
-        group: 'Navigation',
+        label: t('navigation.keyboardShortcuts'),
+        group: t('navigation.groupNavigation'),
         keywords: ['keys', 'hotkeys', 'help'],
         shortcut: { mac: '?', win: '?' },
         action: () => useUiStore.getState().setShortcutsOpen(true),
       },
       {
         id: 'about',
-        label: 'About Roshi',
-        group: 'Navigation',
+        label: t('about.title'),
+        group: t('navigation.groupNavigation'),
         keywords: ['version', 'info', 'help'],
         action: () => useUiStore.getState().setAboutOpen(true),
       },
@@ -295,8 +305,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     for (const p of providers) {
       cmds.push({
         id: `switch-provider-${p.id}`,
-        label: `Switch to: ${p.name}`,
-        group: 'Providers',
+        label: t('navigation.cmdSwitchProvider', { name: p.name }),
+        group: t('navigation.groupProviders'),
         keywords: ['provider', 'connection', 'api', p.name],
         action: () => useProviderStore.getState().selectProvider(p.id),
       });
@@ -307,8 +317,8 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       for (const m of selectedProvider.models) {
         cmds.push({
           id: `select-model-${m.id}`,
-          label: `Model: ${m.displayName}`,
-          group: 'Models',
+          label: t('navigation.cmdSelectModel', { name: m.displayName }),
+          group: t('navigation.groupModels'),
           keywords: ['model', m.id, m.displayName],
           action: () => useProviderStore.getState().selectModel(m.id),
         });
@@ -330,6 +340,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
     tabBusyReason,
     tabLimitReason,
     tabs.length,
+    t,
   ]);
 
   const filteredCommands = useMemo(() => {
@@ -425,12 +436,12 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
         <input
           autoFocus
           role="combobox"
-          aria-label="Search commands"
+          aria-label={t('navigation.searchCommandsAria')}
           aria-controls="command-palette-listbox"
           aria-expanded="true"
           aria-activedescendant={activeOptionId}
           className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
-          placeholder="Search commands…"
+          placeholder={t('navigation.searchCommands')}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -444,7 +455,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
       <ScrollArea className="max-h-[340px]">
         {filteredCommands.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">
-            No commands found.
+            {t('navigation.noCommands')}
           </p>
         ) : (
           <div role="listbox" id="command-palette-listbox" className="py-1">
@@ -507,6 +518,7 @@ function PaletteContent({ onClose }: { onClose: () => void }) {
 // ---------------------------------------------------------------------------
 
 export function CommandPalette() {
+  const { t } = useTranslation();
   const open = useUiStore((s) => s.commandPaletteOpen);
   const setOpen = useUiStore((s) => s.setCommandPaletteOpen);
   // Each time the palette opens the store increments this counter. Passing it
@@ -551,8 +563,8 @@ export function CommandPalette() {
         open={newRequestDiscardOpen}
         onOpenChange={setNewRequestDiscardOpen}
         onConfirm={resetActiveWorkspace}
-        title={discardDialogCopy.title}
-        description={discardDialogCopy.description}
+        title={t(discardDialogCopy.titleKey)}
+        description={t(discardDialogCopy.descriptionKey)}
       />
 
       <ConfirmDiscardDialog
@@ -566,8 +578,8 @@ export function CommandPalette() {
           }
           setPendingTabCloseId(null);
         }}
-        title="Close tab?"
-        description="This tab has local composer content or a response that will be discarded when it closes."
+        title={t('navigation.closeTabQuestion')}
+        description={t('navigation.closeTabDescription')}
       />
     </>
   );

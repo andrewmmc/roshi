@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import { Check, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,7 @@ export function CatalogRow({
   onAdd: () => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="border-border/60 bg-background/80 flex items-center gap-3 rounded-xl border px-3 py-2.5">
       <div className="min-w-0 flex-1">
@@ -73,10 +75,12 @@ export function CatalogRow({
             className="h-7 gap-1 text-xs"
             disabled={busy}
             onClick={onRemove}
-            aria-label={`Remove ${model.displayName || model.id}`}
+            aria-label={t('models.removeModelNamed', {
+              name: model.displayName || model.id,
+            })}
           >
             <Check className="h-3 w-3" />
-            Added
+            {t('models.added')}
           </Button>
         ) : (
           <Button
@@ -86,10 +90,12 @@ export function CatalogRow({
             className="h-7 gap-1 text-xs"
             disabled={busy}
             onClick={onAdd}
-            aria-label={`Add ${model.displayName || model.id}`}
+            aria-label={t('models.addModelNamed', {
+              name: model.displayName || model.id,
+            })}
           >
             <Plus className="h-3 w-3" />
-            Add
+            {t('common.add')}
           </Button>
         )}
       </div>

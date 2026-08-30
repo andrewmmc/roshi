@@ -31,6 +31,7 @@ import {
   filterComposerMessages,
 } from '@/utils/build-normalized-request';
 import { interpolateComposerFields } from '@/utils/variables';
+import { translateNow } from '@/i18n';
 
 type BaseHistoryEntry = Pick<
   HistoryEntry,
@@ -51,8 +52,6 @@ type RequestValidationResult =
     }
   | { ok: false; error: string };
 
-const MESSAGE_REQUIRED_ERROR = 'Please enter at least one message';
-
 function validateRequestInputs(
   provider: ProviderConfig | null,
   model: ProviderModel | null,
@@ -60,12 +59,15 @@ function validateRequestInputs(
 ): RequestValidationResult {
   const needsModel = provider ? supportsModelSelection(provider.type) : true;
   if (!provider || (needsModel && !model)) {
-    return { ok: false, error: 'Please select a provider and model' };
+    return {
+      ok: false,
+      error: translateNow('request.providerAndModelRequired'),
+    };
   }
 
   const messages = filterComposerMessages(composer.messages);
   if (messages.length === 0) {
-    return { ok: false, error: MESSAGE_REQUIRED_ERROR };
+    return { ok: false, error: translateNow('request.messageRequired') };
   }
 
   return { ok: true, provider, model, messages };
@@ -127,10 +129,7 @@ function saveHistoryEntry(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): void {
     .getState()
     .addEntry(entry)
     .catch(() => {
-      toast(
-        'Response completed, but history could not be saved locally.',
-        4000,
-      );
+      toast(translateNow('request.historySaveFailed'), 4000);
     });
 }
 
@@ -183,7 +182,7 @@ function completeSuccessfulRequest(
   }
 }
 
-const STREAM_INTERRUPTED_SUMMARY = 'Response interrupted';
+export const STREAM_INTERRUPTED_SUMMARY = 'Response interrupted';
 
 function completeInterruptedStream(
   respStore: ResponseStore,
@@ -212,7 +211,9 @@ function completeRequestError(
   err: RequestError,
 ): { summary: string; detail: string | null } {
   const detail = extractProviderErrorDetail(err.rawResponse);
-  const summary = `Provider returned HTTP ${err.status}`;
+  const summary = translateNow('request.providerHttpError', {
+    status: err.status,
+  });
 
   respStore.completeWithError({
     error: summary,
@@ -265,18 +266,16 @@ function isLikelyNetworkFailure(message: string): boolean {
 }
 
 function getNetworkErrorDetail(message: string): string {
-  return [
-    message,
-    'The app did not receive an HTTP response from the provider. This usually means DNS, TLS/certificate validation, connectivity, or an unreachable host.',
-  ].join(' ');
+  return [message, translateNow('request.networkErrorDetail')].join(' ');
 }
 
 function completeUnknownError(respStore: ResponseStore, err: unknown): void {
-  const message = err instanceof Error ? err.message : 'Unknown error';
+  const message =
+    err instanceof Error ? err.message : translateNow('common.unknown');
   if (err instanceof Error && isLikelyNetworkFailure(message)) {
     const detail = getNetworkErrorDetail(message);
     respStore.completeWithError({
-      error: 'Network request failed before the provider responded',
+      error: translateNow('request.networkError'),
       errorDetail: detail,
       rawResponse: {
         type: 'network_error',
@@ -286,13 +285,13 @@ function completeUnknownError(respStore: ResponseStore, err: unknown): void {
     });
   } else if (err instanceof Error) {
     respStore.completeWithError({
-      error: 'Unexpected request error',
+      error: translateNow('request.unexpectedError'),
       errorDetail: message,
       rawResponse: { type: 'unexpected_error', message },
     });
   } else {
     respStore.completeWithError({
-      error: 'Unknown error',
+      error: translateNow('common.unknown'),
       errorDetail: String(err),
       rawResponse: {
         type: 'unknown_error',
@@ -326,10 +325,12 @@ export function useSendRequest() {
 
     if (interpolated.missingVariables.length > 0) {
       respStore.failValidation(
-        `Missing environment variables: ${interpolated.missingVariables.join(', ')}`,
+        translateNow('request.missingEnvVariables', {
+          variables: interpolated.missingVariables.join(', '),
+        }),
         environment
-          ? 'Add these variables to the selected environment or remove the placeholders before sending.'
-          : 'Select an environment with these variables or remove the placeholders before sending.',
+          ? translateNow('request.missingEnvVarsWithEnv')
+          : translateNow('request.missingEnvVarsNoEnv'),
       );
       sendInFlight = false;
       return;
@@ -345,7 +346,7 @@ export function useSendRequest() {
     const validation = validateRequestInputs(provider, model, requestComposer);
     if (!validation.ok) {
       respStore.failValidation(validation.error, null);
-      if (validation.error === MESSAGE_REQUIRED_ERROR) {
+      if (validation.error === translateNow('request.messageRequired')) {
         toast(validation.error);
       }
       sendInFlight = false;
@@ -468,14 +469,12 @@ export function useSendRequest() {
         });
       } else if (err instanceof DOMException && err.name === 'TimeoutError') {
         respStore.completeWithError({
-          error: 'Request timed out',
-          errorDetail:
-            err.message ||
-            'The request exceeded the 120-second timeout. The provider may be overloaded or unreachable.',
+          error: translateNow('request.timedOut'),
+          errorDetail: err.message || translateNow('request.timeoutDetail'),
         });
       } else if (err instanceof DOMException && err.name === 'AbortError') {
         respStore.completeWithError({
-          error: 'Request cancelled',
+          error: translateNow('request.cancelled'),
           errorDetail: null,
         });
       } else {

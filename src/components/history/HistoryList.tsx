@@ -237,7 +237,10 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
         );
         selectModel(selection.restoredModel.id);
         toast(
-          `Added "${selection.originalModelId}" back to ${selection.originalProviderName}.`,
+          t('history.modelRestored', {
+            model: selection.originalModelId,
+            provider: selection.originalProviderName,
+          }),
         );
       } else if (selection.modelId) {
         selectModel(selection.modelId);
@@ -247,7 +250,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
       loadResponseFromHistory(buildResponseHistoryRestore(entry));
 
       if (warning) {
-        toast(warning, 4000);
+        toast(t(warning.key, warning.vars), 4000);
       }
     },
     [
@@ -257,6 +260,7 @@ export function HistoryList({ headerSlot }: { headerSlot?: ReactNode }) {
       addModelToProvider,
       loadComposerFromHistory,
       loadResponseFromHistory,
+      t,
     ],
   );
 

@@ -1,0 +1,17 @@
+export const onboarding = {
+  samplePrompt: '請用一小段文字說明 LLM API 請求的樣子。',
+  stepApiKey: '新增供應商 API 金鑰',
+  actionAddApiKey: '新增 API 金鑰',
+  stepModel: '至少選擇一個模型',
+  actionBrowseModels: '瀏覽模型',
+  stepSend: '傳送範例提示詞',
+  actionInsertSample: '插入範例',
+  closeChecklist: '關閉檢查清單',
+  title: '開始使用 Roshi',
+  subtitle: '完成這些步驟即可傳送你的第一個請求。',
+  emptyNoProviders: '請先新增供應商 API 金鑰，以傳送你的第一個請求。',
+  emptyNeedsApiKey: '請先為 {name} 新增 API 金鑰，才能傳送。',
+  emptyNeedsModel: '請先為 {name} 選擇模型，才能傳送。',
+  emptyWriteMessage: '撰寫訊息後傳送請求，回應就會顯示在這裡。',
+  actionPickModel: '選擇模型',
+} as const;

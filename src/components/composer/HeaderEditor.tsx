@@ -51,7 +51,7 @@ export function HeaderEditor() {
       {presetHeaders.length > 0 && (
         <>
           <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-            From provider
+            {t('request.fromProvider')}
           </p>
           {presetHeaders.map(({ key, value }) => (
             <div key={key} className="flex items-center gap-2">
@@ -59,14 +59,14 @@ export function HeaderEditor() {
                 value={key}
                 readOnly
                 disabled
-                aria-label={`Provider header name: ${key}`}
+                aria-label={t('request.providerHeaderName', { key })}
                 className="h-7 flex-1 font-mono text-xs"
               />
               <Input
                 value={maskHeaderValue(key, value, provider?.apiKey)}
                 readOnly
                 disabled
-                aria-label={`Provider header value for ${key}`}
+                aria-label={t('request.providerHeaderValue', { key })}
                 className="h-7 flex-1 font-mono text-xs"
               />
               <div className="text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center">
@@ -75,7 +75,7 @@ export function HeaderEditor() {
             </div>
           ))}
           <p className="text-muted-foreground mt-2 text-[11px] font-medium tracking-wide uppercase">
-            Custom
+            {t('request.customLabel')}
           </p>
         </>
       )}
@@ -114,7 +114,7 @@ export function HeaderEditor() {
         onClick={addHeader}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add header
+        {t('request.addHeader')}
       </Button>
     </div>
   );

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from '@/i18n';
 import type { HeaderEntry } from '@/utils/headers';
 
 export type { HeaderEntry } from '@/utils/headers';
@@ -19,10 +20,14 @@ interface HeaderListEditorProps {
 export function HeaderListEditor({
   headers,
   onChange,
-  label = 'Headers',
-  placeholderKey = 'Header name',
-  placeholderValue = 'Header value',
+  label,
+  placeholderKey,
+  placeholderValue,
 }: HeaderListEditorProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('request.headers');
+  const resolvedPlaceholderKey = placeholderKey ?? t('request.headerName');
+  const resolvedPlaceholderValue = placeholderValue ?? t('request.headerValue');
   const updateKey = (index: number, key: string) => {
     onChange(headers.map((h, i) => (i === index ? { ...h, key } : h)));
   };
@@ -41,25 +46,25 @@ export function HeaderListEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      {label && <Label className="text-xs">{label}</Label>}
+      {resolvedLabel && <Label className="text-xs">{resolvedLabel}</Label>}
       {headers.map((header, index) => (
         <div key={header.id} className="flex items-center gap-2">
           <Input
-            aria-label={`Header ${index + 1} name`}
+            aria-label={t('request.headerNameAria', { index: index + 1 })}
             value={header.key}
             onChange={(e) => updateKey(index, e.target.value)}
-            placeholder={placeholderKey}
+            placeholder={resolvedPlaceholderKey}
             className="h-8 flex-1 font-mono text-xs"
           />
           <Input
-            aria-label={`Header ${index + 1} value`}
+            aria-label={t('request.headerValueAria', { index: index + 1 })}
             value={header.value}
             onChange={(e) => updateValue(index, e.target.value)}
-            placeholder={placeholderValue}
+            placeholder={resolvedPlaceholderValue}
             className="h-8 flex-1 font-mono text-xs"
           />
           <IconButton
-            tooltip="Remove header"
+            tooltip={t('request.removeHeader')}
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive shrink-0"
@@ -77,7 +82,7 @@ export function HeaderListEditor({
         onClick={addHeader}
       >
         <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Add header
+        {t('request.addHeader')}
       </Button>
     </div>
   );

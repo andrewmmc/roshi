@@ -9,26 +9,27 @@ import { JsonHighlight } from '@/components/ui/json-highlight';
 import { buildCurlCommand } from '@/utils/curl';
 import { exportRawRequestJson, exportRawResponseJson } from '@/utils/export';
 import { redactHeaders, redactUrlQueryParams } from '@/utils/redact';
+import { useTranslation } from '@/i18n';
 
-const JsonBlock = memo(function JsonBlock({
-  json,
-  label,
-}: {
-  json: string;
-  label: string;
-}) {
+function JsonBlockBase({ json, label }: { json: string; label: string }) {
+  const { t } = useTranslation();
   if (!json) {
-    return <EmptyState title={`No ${label} data available`} compact />;
+    return (
+      <EmptyState title={t('response.noDataAvailable', { label })} compact />
+    );
   }
 
   return <JsonHighlight json={json} />;
-});
+}
+
+const JsonBlock = memo(JsonBlockBase);
 
 function serializeJson(data: unknown): string {
   return data ? JSON.stringify(data, null, 2) : '';
 }
 
 export function RawJsonView() {
+  const { t } = useTranslation();
   const rawRequest = useResponseStore((s) => s.rawRequest);
   const rawResponse = useResponseStore((s) => s.rawResponse);
   const requestUrl = useResponseStore((s) => s.requestUrl);
@@ -77,10 +78,10 @@ export function RawJsonView() {
       <div className="mt-2 flex items-center justify-between px-4">
         <TabsList variant="line" className="h-7 gap-0">
           <TabsTrigger value="response" className="px-3 text-xs">
-            Response
+            {t('response.title')}
           </TabsTrigger>
           <TabsTrigger value="request" className="px-3 text-xs">
-            Request
+            {t('response.request')}
           </TabsTrigger>
         </TabsList>
         <div className="flex items-center">
@@ -91,8 +92,8 @@ export function RawJsonView() {
             className="text-muted-foreground hover:text-foreground"
             tooltip={
               activeTab === 'response'
-                ? 'Export raw response JSON'
-                : 'Export raw request JSON'
+                ? t('response.exportRawResponseJson')
+                : t('response.exportRawRequestJson')
             }
             disabled={!activeData}
             onClick={() =>
@@ -110,7 +111,7 @@ export function RawJsonView() {
         value="response"
         className="mt-0 min-h-0 flex-1 overflow-y-auto"
       >
-        <JsonBlock json={responseJson} label="response" />
+        <JsonBlock json={responseJson} label={t('response.title')} />
       </TabsContent>
       <TabsContent
         value="request"
@@ -125,7 +126,7 @@ export function RawJsonView() {
             <CopyButton text={safeRequestUrl} className="ml-2 shrink-0" />
           </div>
         )}
-        <JsonBlock json={requestJson} label="request" />
+        <JsonBlock json={requestJson} label={t('response.request')} />
       </TabsContent>
     </Tabs>
   );

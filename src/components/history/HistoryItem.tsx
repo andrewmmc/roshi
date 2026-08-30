@@ -10,6 +10,7 @@ import {
 import { exportHistoryEntry } from '@/utils/export';
 import { formatRelativeTime } from '@/utils/relative-time';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 import type { HistoryEntry } from '@/types/history';
 
 const TRIGGER_CLASS =
@@ -32,10 +33,12 @@ export function HistoryItem({
   compareSelected = false,
   onToggleCompare,
 }: HistoryItemProps) {
+  const { t } = useTranslation();
   const lastUserMessage = [...entry.request.messages]
     .reverse()
     .find((m) => m.role === 'user' && m.content.trim());
-  const preview = lastUserMessage?.content.slice(0, 80) || 'No message';
+  const preview =
+    lastUserMessage?.content.slice(0, 80) || t('history.noMessage');
   const hasError = !!entry.error;
 
   const handleClick = () => {
@@ -53,7 +56,7 @@ export function HistoryItem({
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="History entry actions"
+            aria-label={t('history.entryActions')}
             className={TRIGGER_CLASS}
             onClick={(e) => e.stopPropagation()}
           >
@@ -62,7 +65,7 @@ export function HistoryItem({
           <DropdownMenuContent align="end" className="w-auto min-w-40">
             <DropdownMenuItem onClick={() => exportHistoryEntry(entry)}>
               <Download className="h-3.5 w-3.5" />
-              Export as JSON
+              {t('history.exportAsJson')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -70,7 +73,7 @@ export function HistoryItem({
               onClick={() => onDelete(entry.id)}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -32,6 +32,7 @@ import { ConfirmDeleteDialog } from '@/components/collections/ConfirmDeleteDialo
 import { NameDialog } from '@/components/collections/NameDialog';
 import { SaveRequestDialog } from '@/components/collections/SaveRequestDialog';
 import { toast } from '@/stores/toast-store';
+import { useTranslation } from '@/i18n';
 import { useCollections } from '@/hooks/use-collections';
 import {
   useComposerStore,
@@ -63,11 +64,12 @@ function SavedRequestItem({
   onMove: (request: SavedRequest, collectionId: string | null) => void;
   onDelete: (request: SavedRequest) => void;
 }) {
+  const { t } = useTranslation();
   const preview =
     request.request.messages.find((message) => message.role === 'user')
       ?.content ||
     request.request.systemPrompt ||
-    'No prompt text';
+    t('collections.noPromptText');
   const currentCollectionId = request.collectionId ?? null;
   const moveTargets = collections.filter(
     (collection) => collection.id !== currentCollectionId,
@@ -81,7 +83,7 @@ function SavedRequestItem({
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Saved request actions"
+            aria-label={t('collections.savedRequestActions')}
             className={TRIGGER_CLASS}
             onClick={(e) => e.stopPropagation()}
           >
@@ -90,18 +92,20 @@ function SavedRequestItem({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onRename(request)}>
               <Pencil className="h-3.5 w-3.5" />
-              Rename
+              {t('common.rename')}
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger disabled={!canMove}>
                 <FolderOpen className="h-3.5 w-3.5" />
-                Move to
+                {t('eval.moveTo')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {currentCollectionId !== null && (
                   <DropdownMenuItem onClick={() => onMove(request, null)}>
                     <Folder className="h-3.5 w-3.5" />
-                    <span className="truncate">Ungrouped</span>
+                    <span className="truncate">
+                      {t('collections.ungrouped')}
+                    </span>
                   </DropdownMenuItem>
                 )}
                 {moveTargets.map((collection) => (
@@ -121,7 +125,7 @@ function SavedRequestItem({
               onClick={() => onDelete(request)}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -169,6 +173,7 @@ function CollectionSection({
   onMoveRequest: (request: SavedRequest, collectionId: string | null) => void;
   onDeleteRequest: (request: SavedRequest) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <section className="space-y-1">
       <div className="group hover:bg-sidebar-accent/50 flex items-center gap-1 rounded-md px-1 py-1">
@@ -192,7 +197,7 @@ function CollectionSection({
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Folder actions"
+            aria-label={t('collections.folderActions')}
             className={`${TRIGGER_CLASS} opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[popup-open]:opacity-100`}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
@@ -200,7 +205,7 @@ function CollectionSection({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onRenameCollection(collection)}>
               <Pencil className="h-3.5 w-3.5" />
-              Rename
+              {t('common.rename')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -208,7 +213,7 @@ function CollectionSection({
               onClick={() => onDeleteCollection(collection)}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -216,7 +221,7 @@ function CollectionSection({
       {!collapsed &&
         (requests.length === 0 ? (
           <p className="text-muted-foreground/70 px-2.5 pb-1 pl-6 text-[11px]">
-            No saved requests
+            {t('collections.noSavedRequests')}
           </p>
         ) : (
           requests.map((request) => (
@@ -246,6 +251,7 @@ type ConfirmState =
   | { kind: 'request'; id: string; name: string };
 
 export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
+  const { t } = useTranslation();
   const {
     collections,
     savedRequests,
@@ -309,7 +315,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
     for (const [key, requests] of requestsByCollection) {
       const collectionName =
         key === UNGROUPED_ID
-          ? 'ungrouped'
+          ? t('collections.ungrouped').toLowerCase()
           : (userCollections.find((c) => c.id === key)?.name.toLowerCase() ??
             '');
       const collectionMatches = collectionName.includes(query);
@@ -321,7 +327,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
       }
     }
     return filtered;
-  }, [isSearching, requestsByCollection, userCollections, query]);
+  }, [isSearching, requestsByCollection, userCollections, query, t]);
 
   const filteredCollections = useMemo(() => {
     if (!isSearching) return userCollections;
@@ -388,27 +394,27 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
   const handleCreateCollection = useCallback(
     async (name: string) => {
       const collection = await addCollection(name);
-      toast('Folder created');
+      toast(t('collections.folderCreated'));
       return collection;
     },
-    [addCollection],
+    [addCollection, t],
   );
 
   const handleSaveRequest = useCallback(
     async (collectionId: string | null, name: string) => {
       await saveCurrentRequest(collectionId, name);
-      toast('Request saved');
+      toast(t('collections.requestSaved'));
     },
-    [saveCurrentRequest],
+    [saveCurrentRequest, t],
   );
 
   const handleUpdateRequest = useCallback(
     async (name: string) => {
       if (!activeSavedRequestId) return;
       await updateSavedRequest(activeSavedRequestId, name);
-      toast('Saved request updated');
+      toast(t('collections.savedRequestUpdated'));
     },
-    [activeSavedRequestId, updateSavedRequest],
+    [activeSavedRequestId, updateSavedRequest, t],
   );
 
   const handleMoveRequest = useCallback(
@@ -417,9 +423,13 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
       const target = collectionId
         ? collections.find((collection) => collection.id === collectionId)
         : null;
-      toast(target ? `Moved to ${target.name}` : 'Moved to Ungrouped');
+      toast(
+        target
+          ? t('collections.movedToToast', { name: target.name })
+          : t('collections.movedToToast', { name: t('collections.ungrouped') }),
+      );
     },
-    [collections, moveSavedRequest],
+    [collections, moveSavedRequest, t],
   );
 
   const handleNameSubmit = useCallback(
@@ -429,49 +439,55 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         await handleCreateCollection(name);
       } else if (nameDialog.mode === 'rename-collection') {
         await renameCollection(nameDialog.id, name);
-        toast('Folder renamed');
+        toast(t('collections.folderRenamed'));
       } else {
         await renameSavedRequest(nameDialog.id, name);
-        toast('Request renamed');
+        toast(t('collections.requestRenamed'));
       }
     },
-    [handleCreateCollection, nameDialog, renameCollection, renameSavedRequest],
+    [
+      handleCreateCollection,
+      nameDialog,
+      renameCollection,
+      renameSavedRequest,
+      t,
+    ],
   );
 
   const handleConfirmDelete = useCallback(async () => {
     if (!confirm) return;
     if (confirm.kind === 'collection') {
       await deleteCollection(confirm.id);
-      toast('Folder deleted');
+      toast(t('collections.folderDeleted'));
     } else {
       await deleteSavedRequest(confirm.id);
-      toast('Request deleted');
+      toast(t('collections.requestDeleted'));
     }
-  }, [confirm, deleteCollection, deleteSavedRequest]);
+  }, [confirm, deleteCollection, deleteSavedRequest, t]);
 
   const nameDialogConfig = nameDialog
     ? nameDialog.mode === 'create-collection'
       ? {
-          title: 'New folder',
-          label: 'Folder name',
-          placeholder: 'Folder name',
+          title: t('collections.newFolder'),
+          label: t('collections.folderName'),
+          placeholder: t('collections.folderName'),
           initialValue: '',
-          submitLabel: 'Create',
+          submitLabel: t('common.create'),
         }
       : nameDialog.mode === 'rename-collection'
         ? {
-            title: 'Rename folder',
-            label: 'Folder name',
-            placeholder: 'Folder name',
+            title: t('collections.renameFolder'),
+            label: t('collections.folderName'),
+            placeholder: t('collections.folderName'),
             initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
+            submitLabel: t('common.rename'),
           }
         : {
-            title: 'Rename request',
-            label: 'Request name',
-            placeholder: 'Request name',
+            title: t('collections.renameRequest'),
+            label: t('collections.requestName'),
+            placeholder: t('collections.requestName'),
             initialValue: nameDialog.initialValue,
-            submitLabel: 'Rename',
+            submitLabel: t('common.rename'),
           }
     : null;
 
@@ -483,7 +499,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
       <div className="border-sidebar-border flex h-11 shrink-0 items-center justify-between border-b px-3">
         {headerSlot ?? (
           <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-            Collections
+            {t('collections.title')}
           </span>
         )}
         <div className="flex items-center">
@@ -492,7 +508,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => setNameDialog({ mode: 'create-collection' })}
-            tooltip="New folder"
+            tooltip={t('collections.newFolder')}
           >
             <FolderPlus className="h-3.5 w-3.5" />
           </IconButton>
@@ -501,7 +517,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => setSaveOpen(true)}
-            tooltip="Save current request"
+            tooltip={t('collections.saveCurrentRequest')}
             disabled={saveDisabled}
           >
             <Save className="h-3.5 w-3.5" />
@@ -517,8 +533,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               aria-hidden="true"
             />
             <Input
-              placeholder="Search collections..."
-              aria-label="Search collections"
+              placeholder={t('collections.search')}
+              aria-label={t('collections.searchLabel')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-sidebar-accent/30 border-sidebar-border h-7 pr-7 pl-7 text-xs"
@@ -527,8 +543,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
               <button
                 onClick={() => setSearchQuery('')}
                 className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0.5 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
-                aria-label="Clear search"
-                title="Clear search"
+                aria-label={t('common.clearSearch')}
+                title={t('common.clearSearch')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -542,8 +558,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
           <EmptyState
             compact
             icon={FolderOpen}
-            title="No saved requests"
-            description="Use Save current request to store a prompt in a folder or leave it ungrouped."
+            title={t('collections.noSavedRequests')}
+            description={t('collections.emptyDescription')}
           />
         ) : isSearching &&
           filteredCollections.length === 0 &&
@@ -551,8 +567,8 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
           <EmptyState
             compact
             icon={Search}
-            title="No results"
-            description="Try a different search term."
+            title={t('collections.noResults')}
+            description={t('collections.noResultsDescription')}
           />
         ) : (
           <div className="flex flex-col gap-2 p-2">
@@ -613,7 +629,7 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
                       }`}
                     />
                     <span className="text-muted-foreground flex-1 truncate text-[11px] font-medium tracking-wide uppercase">
-                      Ungrouped
+                      {t('collections.ungrouped')}
                     </span>
                     <span className="text-muted-foreground/60 text-[11px]">
                       {ungroupedRequests.length}
@@ -679,14 +695,14 @@ export function CollectionsList({ headerSlot }: { headerSlot?: ReactNode }) {
         open={confirm !== null}
         title={
           confirm?.kind === 'collection'
-            ? 'Delete folder?'
-            : 'Delete saved request?'
+            ? t('collections.deleteFolderQuestion')
+            : t('collections.deleteRequestQuestion')
         }
         description={
           confirm?.kind === 'collection'
-            ? `"${confirm.name}" and all of its saved requests will be permanently deleted.`
+            ? t('collections.deleteFolderWarning', { name: confirm.name })
             : confirm
-              ? `"${confirm.name}" will be permanently deleted.`
+              ? t('collections.deleteRequestWarning', { name: confirm.name })
               : ''
         }
         onOpenChange={(open) => {

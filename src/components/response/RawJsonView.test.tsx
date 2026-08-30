@@ -85,10 +85,10 @@ describe('RawJsonView', () => {
   it('shows the empty state when no raw payloads are available', () => {
     render(<RawJsonView />);
 
-    expect(screen.getByText('No response data available')).toBeInTheDocument();
+    expect(screen.getByText('No Response data available')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Request' }));
-    expect(screen.getByText('No request data available')).toBeInTheDocument();
+    expect(screen.getByText('No Request data available')).toBeInTheDocument();
   });
 
   it('copies the request as cURL when request data is available', async () => {

@@ -30,6 +30,7 @@ import { runEval, type EvalRunnerUpdate } from '@/services/eval-runner';
 import { runJudge, DEFAULT_JUDGE_RUBRIC } from '@/services/judge-runner';
 import { useProviderStore } from '@/stores/provider-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
+import { translateNow } from '@/i18n';
 import { interpolateComposerFields } from '@/utils/variables';
 import {
   createEmptyHeaderEntry,
@@ -242,7 +243,7 @@ function makeRunnerLabel(
   modelId: string,
 ): { label: string; providerName: string } {
   const provider = providers.find((p) => p.id === providerId);
-  const providerName = provider?.name ?? 'Unknown provider';
+  const providerName = provider?.name ?? translateNow('eval.unknownProvider');
   return { providerName, label: `${providerName} / ${modelId}` };
 }
 
@@ -448,12 +449,12 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     const state = get();
     if (state.isRunning || state.isJudging) return;
     if (state.runners.length === 0) {
-      set({ error: 'Add at least one runner before starting an eval.' });
+      set({ error: translateNow('eval.noRunnersError') });
       return;
     }
     const sharedFromComposer = composerToSharedRequest(state.composer);
     if (sharedFromComposer.messages.length === 0) {
-      set({ error: 'Enter at least one message before starting an eval.' });
+      set({ error: translateNow('eval.noMessagesError') });
       return;
     }
 
@@ -467,7 +468,9 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
 
     if (interpolated.missingVariables.length > 0) {
       set({
-        error: `Missing environment variables: ${interpolated.missingVariables.join(', ')}`,
+        error: translateNow('request.missingEnvVariables', {
+          variables: interpolated.missingVariables.join(', '),
+        }),
       });
       return;
     }

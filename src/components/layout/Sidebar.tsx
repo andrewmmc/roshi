@@ -186,8 +186,8 @@ export function Sidebar() {
         open={showDiscard}
         onOpenChange={setShowDiscard}
         onConfirm={reset}
-        title={discardDialogCopy.title}
-        description={discardDialogCopy.description}
+        title={t(discardDialogCopy.titleKey)}
+        description={t(discardDialogCopy.descriptionKey)}
       />
     </div>
   );

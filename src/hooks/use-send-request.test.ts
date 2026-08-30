@@ -1124,7 +1124,7 @@ describe('useSendRequest', () => {
         await result.current.send();
       });
 
-      expect(useResponseStore.getState().error).toBe('Unknown error');
+      expect(useResponseStore.getState().error).toBe('Unknown');
       expect(useResponseStore.getState().errorDetail).toBe('string error');
     });
   });
