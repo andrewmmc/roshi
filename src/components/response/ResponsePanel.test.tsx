@@ -421,6 +421,7 @@ describe('ResponsePanel', () => {
         finishReason: null,
       },
       error: 'Response interrupted',
+      rawResponse: { interrupted: true },
       statusCode: 200,
       durationMs: 180,
     });

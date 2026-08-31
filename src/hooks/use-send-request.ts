@@ -182,13 +182,12 @@ function completeSuccessfulRequest(
   }
 }
 
-export const STREAM_INTERRUPTED_SUMMARY = 'Response interrupted';
-
 function completeInterruptedStream(
   respStore: ResponseStore,
   err: StreamError,
 ): { summary: string; detail: string } {
   const detail = err.message;
+  const summary = translateNow('response.responseInterrupted');
 
   respStore.completeResponse({
     response: err.partialResponse,
@@ -200,10 +199,10 @@ function completeInterruptedStream(
     durationMs: err.durationMs,
     statusCode: err.status,
   });
-  respStore.setError(STREAM_INTERRUPTED_SUMMARY);
+  respStore.setError(summary);
   respStore.setErrorDetail(detail);
 
-  return { summary: STREAM_INTERRUPTED_SUMMARY, detail };
+  return { summary, detail };
 }
 
 function completeRequestError(

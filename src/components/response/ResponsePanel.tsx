@@ -10,7 +10,6 @@ import { exportCurrentRequest } from '@/utils/export';
 import { ResponseEmptyState } from '@/components/onboarding/ResponseEmptyState';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
-import { STREAM_INTERRUPTED_SUMMARY } from '@/hooks/use-send-request';
 
 const ChatView = lazy(() =>
   import('./ChatView').then((m) => ({ default: m.ChatView })),
@@ -52,6 +51,7 @@ export function ResponsePanel() {
   const durationMs = useResponseStore((s) => s.durationMs);
   const statusCode = useResponseStore((s) => s.statusCode);
   const sentRequest = useResponseStore((s) => s.sentRequest);
+  const rawResponse = useResponseStore((s) => s.rawResponse);
 
   const [activeTab, setActiveTab] = useState<ResponseTab>('chat');
   const [retention, setRetention] = useState<RetainedTabs>(() => ({
@@ -92,7 +92,7 @@ export function ResponsePanel() {
 
   const hasContent = response || error || isStreaming || isLoading;
   const isInterrupted =
-    error === STREAM_INTERRUPTED_SUMMARY && Boolean(response?.content);
+    rawResponse?.interrupted === true && Boolean(response?.content);
   const hasHttpError = statusCode !== null && statusCode >= 400;
 
   const responseState = isLoading
@@ -206,13 +206,19 @@ export function ResponsePanel() {
             {response?.usage && (
               <span
                 className="shrink-0 font-mono tabular-nums"
-                aria-label={t('response.totalTokens', {
-                  count: response.usage.totalTokens,
-                })}
+                aria-label={t(
+                  response.usage.totalTokens === 1
+                    ? 'response.totalTokensSingular'
+                    : 'response.totalTokens',
+                  { count: response.usage.totalTokens },
+                )}
               >
-                {t('response.tokens', {
-                  count: formatCount(response.usage.totalTokens),
-                })}
+                {t(
+                  response.usage.totalTokens === 1
+                    ? 'response.tokensSingular'
+                    : 'response.tokens',
+                  { count: formatCount(response.usage.totalTokens) },
+                )}
               </span>
             )}
             {statusCode !== null && !isLoading && (

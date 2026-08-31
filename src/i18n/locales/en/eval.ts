@@ -42,6 +42,7 @@ export const evalStrings = {
   statusError: 'Error',
   judgeWinner: 'Judge winner',
   waitingForResponse: 'Waiting for response…',
+  wordCountSingular: '{count} word',
   wordCount: '{count} words',
   scoreHelpful: 'Helpful',
   scoreAccurate: 'Accurate',

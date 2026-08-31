@@ -11,6 +11,7 @@ export const history = {
   filtersActive: '已啟用篩選 ·',
   filterCount: '{filtered} / {total}',
   deleteAll: '全部刪除',
+  deleteWarningSingular: '這將永久移除 {count} 筆歷史記錄，且無法復原。',
   deleteWarning: '這將永久移除全部 {count} 筆歷史記錄，且無法復原。',
   exitPromptCompare: '結束提示詞比較',
   comparePromptDiffs: '比較提示詞差異',

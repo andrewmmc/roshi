@@ -6,6 +6,7 @@ import { useProviderStore } from '@/stores/provider-store';
 import { useHistoryStore } from '@/stores/history-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
 import { useToastStore } from '@/stores/toast-store';
+import { useLanguageStore } from '@/stores/language-store';
 import { makeProvider, makeModel, makeMessage } from '@/__tests__/fixtures';
 
 const { mockSendRequest, MockRequestError, MockStreamError } = vi.hoisted(
@@ -926,6 +927,40 @@ describe('useSendRequest', () => {
           error: 'Response interrupted: connection reset',
           rawResponse: expect.objectContaining({ interrupted: true }),
         }),
+      );
+    });
+
+    it('localizes an interrupted stream summary', async () => {
+      useLanguageStore.setState({ language: 'zh-TW' });
+      mockSendRequest.mockRejectedValue(
+        new MockStreamError(
+          'connection reset',
+          200,
+          { interrupted: true },
+          { model: 'm1' },
+          {},
+          {},
+          'https://api.example.com/v1/chat',
+          180,
+          {
+            id: '1',
+            model: 'm1',
+            content: 'Partial answer',
+            role: 'assistant',
+            finishReason: null,
+            usage: null,
+          },
+        ),
+      );
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => {
+        await result.current.send();
+      });
+
+      expect(useResponseStore.getState().error).toBe('回應已中斷');
+      expect(mockDb.history.add).toHaveBeenCalledWith(
+        expect.objectContaining({ error: '回應已中斷: connection reset' }),
       );
     });
 

@@ -9,6 +9,7 @@ export const environments = {
   edit: '編輯環境',
   delete: '刪除環境',
   noVariables: '沒有變數',
+  variableCountSingular: '{count} 個變數',
   variableCount: '{count} 個變數',
   key: '鍵',
   variable: '變數',

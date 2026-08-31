@@ -14,7 +14,11 @@ export const localeOptions: ReadonlyArray<{
   browserPrefixes: readonly string[];
 }> = [
   { code: 'en', nativeName: 'English', browserPrefixes: ['en'] },
-  { code: 'zh-TW', nativeName: '繁體中文', browserPrefixes: ['zh'] },
+  {
+    code: 'zh-TW',
+    nativeName: '繁體中文',
+    browserPrefixes: ['zh-TW', 'zh-Hant', 'zh-HK', 'zh-MO'],
+  },
 ];
 
 export const DEFAULT_LANGUAGE: Language = 'en';

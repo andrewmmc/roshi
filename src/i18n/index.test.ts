@@ -1,4 +1,4 @@
-import { translate } from '@/i18n';
+import { countWords, translate } from '@/i18n';
 import { localeCatalogs } from '@/i18n/locales';
 
 describe('translate', () => {
@@ -26,5 +26,35 @@ describe('translate', () => {
         );
       }
     }
+  });
+
+  it('keeps interpolation variables aligned across locales', () => {
+    const variablesIn = (message: string) =>
+      [...message.matchAll(/\{([a-zA-Z]\w*)\}/g)]
+        .map((match) => match[1])
+        .sort();
+
+    for (const [namespace, englishMessages] of Object.entries(
+      localeCatalogs.en,
+    )) {
+      for (const [key, englishMessage] of Object.entries(englishMessages)) {
+        for (const catalog of Object.values(localeCatalogs)) {
+          expect(
+            variablesIn(
+              catalog[namespace as keyof typeof catalog][
+                key as keyof (typeof catalog)[keyof typeof catalog]
+              ],
+            ),
+          ).toEqual(variablesIn(englishMessage));
+        }
+      }
+    }
+  });
+});
+
+describe('countWords', () => {
+  it('counts words according to the active locale', () => {
+    expect(countWords('en', 'Hello, world!')).toBe(2);
+    expect(countWords('zh-TW', '這是一段中文回應。')).toBe(4);
   });
 });

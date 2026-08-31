@@ -9,6 +9,10 @@ describe('language store', () => {
     useLanguageStore.setState({ language: 'en', initialized: false });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('persists and applies the selected language', () => {
     useLanguageStore.getState().setLanguage('zh-TW');
 
@@ -25,6 +29,22 @@ describe('language store', () => {
       language: 'zh-TW',
       initialized: true,
     });
+  });
+
+  it('detects Traditional Chinese browser locales', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['zh-Hant-HK']);
+
+    useLanguageStore.getState().init();
+
+    expect(useLanguageStore.getState().language).toBe('zh-TW');
+  });
+
+  it('does not show Traditional Chinese for Simplified Chinese locales', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['zh-CN']);
+
+    useLanguageStore.getState().init();
+
+    expect(useLanguageStore.getState().language).toBe('en');
   });
 
   it('falls back safely when storage is unavailable', () => {

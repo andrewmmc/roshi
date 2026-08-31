@@ -31,6 +31,13 @@ export function translate(
   return message;
 }
 
+export function countWords(language: Language, value: string): number {
+  const segments = new Intl.Segmenter(language, {
+    granularity: 'word',
+  }).segment(value);
+  return [...segments].filter((segment) => segment.isWordLike).length;
+}
+
 export function useTranslation() {
   const language = useLanguageStore((state) => state.language);
   const t = useCallback(

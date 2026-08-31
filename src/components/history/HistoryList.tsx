@@ -151,7 +151,12 @@ function DeleteAllHistoryDialog({
         <DialogHeader>
           <DialogTitle>{t('history.deleteAllQuestion')}</DialogTitle>
           <DialogDescription>
-            {t('history.deleteWarning', { count: entryCount })}
+            {t(
+              entryCount === 1
+                ? 'history.deleteWarningSingular'
+                : 'history.deleteWarning',
+              { count: entryCount },
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

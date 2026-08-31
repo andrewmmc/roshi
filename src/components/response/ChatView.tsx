@@ -8,7 +8,6 @@ import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { CopyButton } from '@/components/ui/copy-button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
-import { STREAM_INTERRUPTED_SUMMARY } from '@/hooks/use-send-request';
 import type { NormalizedMessage } from '@/types/normalized';
 
 const ROLE_LABEL_BASE =
@@ -149,7 +148,7 @@ export function ChatView() {
   const completedContent = response?.content ?? '';
   const displayContent = completedContent || streamingDisplayContent;
   const isInterrupted =
-    error === STREAM_INTERRUPTED_SUMMARY && Boolean(displayContent);
+    rawResponse?.interrupted === true && Boolean(displayContent);
   const showLoading = isLoading && !displayContent;
 
   useEffect(() => {

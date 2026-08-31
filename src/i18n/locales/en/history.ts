@@ -11,6 +11,8 @@ export const history = {
   filtersActive: 'Filters active ·',
   filterCount: '{filtered} of {total}',
   deleteAll: 'Delete all',
+  deleteWarningSingular:
+    'This will permanently remove {count} history entry. This action cannot be undone.',
   deleteWarning:
     'This will permanently remove all {count} history entries. This action cannot be undone.',
   exitPromptCompare: 'Exit prompt compare',

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EvalRunResult, EvalRunner, JudgeResult } from '@/types/eval';
-import { useTranslation } from '@/i18n';
+import { countWords, useTranslation } from '@/i18n';
 import { useEvalStore } from '@/stores/eval-store';
 import { MetricsBar } from './MetricsBar';
 import { RatingControl } from './RatingControl';
@@ -31,7 +31,7 @@ function statusBadgeClass(status: EvalRunResult['status']): string {
 }
 
 export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
   const removeRunner = useEvalStore((s) => s.removeRunner);
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const toggleCompare = useEvalStore((s) => s.toggleCompare);
@@ -44,8 +44,8 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
   const isWinner = judgeResult?.winnerRunnerId === runner.id;
 
   const wordCount = useMemo(
-    () => result.content.match(/\S+/g)?.length ?? 0,
-    [result.content],
+    () => countWords(language, result.content),
+    [language, result.content],
   );
 
   const statusLabels: Record<EvalRunResult['status'], string> = {
@@ -139,7 +139,9 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
             onThumbsChange={(thumbs) => setThumbs(runner.id, thumbs)}
           />
           <span className="text-muted-foreground text-[11px]">
-            {t('eval.wordCount', { count: wordCount })}
+            {t(wordCount === 1 ? 'eval.wordCountSingular' : 'eval.wordCount', {
+              count: wordCount,
+            })}
           </span>
         </div>
 

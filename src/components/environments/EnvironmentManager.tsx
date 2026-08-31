@@ -46,7 +46,12 @@ function EnvironmentCard({
         <p className="text-muted-foreground text-xs">
           {variableCount === 0
             ? t('environments.noVariables')
-            : t('environments.variableCount', { count: variableCount })}
+            : t(
+                variableCount === 1
+                  ? 'environments.variableCountSingular'
+                  : 'environments.variableCount',
+                { count: variableCount },
+              )}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
