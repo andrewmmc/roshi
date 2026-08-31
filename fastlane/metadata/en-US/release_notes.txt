@@ -1,1 +1,1 @@
-Configure HTTP_PROXY, HTTPS_PROXY, and NO_PROXY for provider, model catalog, and evaluation traffic. This release also improves streaming error handling, Gemini safety reporting, export security, credential redaction, and local data resilience.
+Use Roshi in Traditional Chinese across requests, responses, history, collections, environments, providers, models, evaluations, and settings. This release also improves locale detection, translated error handling, pluralization, and word counting.
