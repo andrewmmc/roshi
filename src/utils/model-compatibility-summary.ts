@@ -10,13 +10,17 @@ export interface CompatibilitySummaryItem {
   supported: boolean;
 }
 
-function formatTokenLimit(value: number | undefined): string | null {
+function formatTokenLimit(
+  value: number | undefined,
+  formatNumber: (value: number) => string,
+): string | null {
   if (value === undefined) return null;
-  return value.toLocaleString();
+  return formatNumber(value);
 }
 
 export function buildModelCompatibilitySummary(
   capabilities: ModelCapabilities | null,
+  formatNumber: (value: number) => string,
 ): CompatibilitySummaryItem[] {
   if (!capabilities) {
     return [
@@ -80,13 +84,13 @@ export function buildModelCompatibilitySummary(
     {
       labelKey: 'request.paramLabelContext',
       valueKey: null,
-      value: formatTokenLimit(capabilities.tokenLimits?.context),
+      value: formatTokenLimit(capabilities.tokenLimits?.context, formatNumber),
       supported: true,
     },
     {
       labelKey: 'request.paramLabelMaxOutput',
       valueKey: null,
-      value: formatTokenLimit(capabilities.tokenLimits?.output),
+      value: formatTokenLimit(capabilities.tokenLimits?.output, formatNumber),
       supported: true,
     },
   ];

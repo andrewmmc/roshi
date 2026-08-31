@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
 
 export function ModelCompatibilitySummary() {
-  const { t } = useTranslation();
+  const { t, formatNumber } = useTranslation();
   const capabilities = useSelectedModelCapabilities();
-  const items = buildModelCompatibilitySummary(capabilities);
+  const items = buildModelCompatibilitySummary(capabilities, formatNumber);
 
   return (
     <div className="border-border/50 bg-muted/30 rounded-lg border p-2.5">

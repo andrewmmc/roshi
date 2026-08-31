@@ -48,6 +48,7 @@ export const history = {
   filterBySavedRequest: 'Filter by saved request',
   clearAllFilters: 'Clear all filters',
   noMessage: 'No message',
+  duration: '{duration}ms',
   entryActions: 'History entry actions',
   exportAsJson: 'Export as JSON',
   modelRestored: 'Added "{model}" back to {provider}.',

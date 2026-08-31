@@ -65,6 +65,9 @@ export const evalStrings = {
   titleCost: 'Estimated cost using models.dev pricing',
   titleChars: 'Length of the response in characters',
   titleFinish: 'Provider-reported finish reason',
+  durationMilliseconds: '{value}ms',
+  durationSeconds: '{value}s',
+  tokensPerSecond: '{value} tok/s',
 
   // Rating control
   starRating: 'Star rating',
@@ -143,4 +146,17 @@ export const evalStrings = {
   unknownProvider: 'Unknown provider',
   noRunnersError: 'Add at least one runner before starting an eval.',
   noMessagesError: 'Enter at least one message before starting an eval.',
+  providerNotFound: 'Provider not found (id={id}). It may have been deleted.',
+  streamInterrupted: 'Stream interrupted: {detail}',
+  cancelled: 'Cancelled',
+  unknownError: 'Unknown error: {detail}',
+  judgeNotEnabled: 'Judge not enabled',
+  judgeProviderNotFound: 'Judge provider not found',
+  judgeProviderNoApiKey: 'Judge provider has no API key',
+  noSuccessfulCandidates: 'No successful candidate responses to judge',
+  judgeRunCancelled: 'Judge run cancelled',
+  judgeCallFailed: 'Judge call failed: {detail}',
+  judgeNonJson: 'Judge returned non-JSON content',
+  judgeJsonParseFailed: 'Could not parse judge JSON: {detail}',
+  judgeJsonNotObject: 'Judge JSON was not an object',
 } as const;

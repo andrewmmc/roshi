@@ -18,6 +18,7 @@ export const response = {
   responseComplete: '回應完成',
   httpStatus: 'HTTP 狀態 {status}',
   latency: '延遲 {duration} 毫秒',
+  latencyValue: '{duration} 毫秒',
   totalTokens: '共 {count} 個 token',
   tokens: '{count} 個 token',
   exportRequestResponse: '將請求與回應匯出為 JSON',

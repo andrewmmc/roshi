@@ -119,7 +119,7 @@ function SelectRow({
 }
 
 export function ParameterControls() {
-  const { t } = useTranslation();
+  const { t, formatNumber } = useTranslation();
   const {
     capabilities,
     temperature,
@@ -259,7 +259,7 @@ export function ParameterControls() {
         {capabilities?.tokenLimits?.output && (
           <p className="text-muted-foreground/60 text-right text-xs">
             {t('request.modelLimit', {
-              count: capabilities.tokenLimits.output.toLocaleString(),
+              count: formatNumber(capabilities.tokenLimits.output),
             })}
           </p>
         )}

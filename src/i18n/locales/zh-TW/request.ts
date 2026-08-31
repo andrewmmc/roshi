@@ -122,6 +122,7 @@ export const request = {
   attachFileToMessage: '將檔案附加到訊息 {index}',
   attachFile: '附加檔案',
   attachUrl: '附加網址',
+  removeAttachment: '移除 {name}',
   clearMessage: '清除訊息',
   deleteMessage: '刪除訊息',
   addMessage: '新增訊息',

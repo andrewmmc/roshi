@@ -6,6 +6,7 @@ import { useEvalStore } from '@/stores/eval-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useTabStore } from '@/stores/tab-store';
 import { toast } from '@/stores/toast-store';
+import { translateNow } from '@/i18n';
 import { useSendRequest } from '@/hooks/use-send-request';
 import {
   activeWorkspaceHasUnsavedChanges,
@@ -167,7 +168,7 @@ export function useGlobalShortcuts() {
         if (text) {
           navigator.clipboard
             .writeText(text)
-            .then(() => toast('Copied to clipboard'))
+            .then(() => toast(translateNow('common.copiedToClipboard')))
             .catch(() => {});
         }
         return;

@@ -3,22 +3,51 @@ import { Check, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { ProviderModel } from '@/types/provider';
+import type { ModelModality } from '@/models/capabilities';
 
-function formatContextTokens(tokens?: number): string | null {
+type Translator = ReturnType<typeof useTranslation>['t'];
+
+const MODALITY_LABELS: Record<
+  Exclude<ModelModality, 'text'>,
+  Parameters<Translator>[0]
+> = {
+  image: 'models.modalityImage',
+  pdf: 'models.modalityPdf',
+  audio: 'models.modalityAudio',
+  video: 'models.modalityVideo',
+};
+
+function formatContextTokens(
+  tokens: number | undefined,
+  t: Translator,
+): string | null {
   if (!tokens) return null;
+  let value: string;
   if (tokens >= 1_000_000) {
-    return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M ctx`;
+    value = `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M`;
+  } else if (tokens >= 1000) {
+    value = `${Math.round(tokens / 1000)}K`;
+  } else {
+    value = String(tokens);
   }
-  if (tokens >= 1000) {
-    return `${Math.round(tokens / 1000)}K ctx`;
-  }
-  return `${tokens} ctx`;
+  return t('models.contextTokens', { value });
 }
 
-function ModelCapabilityBadges({ model }: { model: ProviderModel }) {
-  const context = formatContextTokens(model.capabilities?.tokenLimits?.context);
+function ModelCapabilityBadges({
+  model,
+  t,
+}: {
+  model: ProviderModel;
+  t: Translator;
+}) {
+  const context = formatContextTokens(
+    model.capabilities?.tokenLimits?.context,
+    t,
+  );
   const modalities = model.capabilities?.inputModalities ?? [];
-  const nonTextModalities = modalities.filter((m) => m !== 'text');
+  const nonTextModalities = modalities.filter(
+    (m): m is Exclude<ModelModality, 'text'> => m !== 'text',
+  );
   return (
     <div className="flex flex-wrap items-center gap-1">
       {context && (
@@ -28,7 +57,7 @@ function ModelCapabilityBadges({ model }: { model: ProviderModel }) {
       )}
       {nonTextModalities.map((m) => (
         <Badge key={m} variant="ghost" className="text-[11px] capitalize">
-          {m}
+          {t(MODALITY_LABELS[m])}
         </Badge>
       ))}
     </div>
@@ -63,7 +92,7 @@ export function CatalogRow({
           </code>
         </div>
         <div className="mt-1.5">
-          <ModelCapabilityBadges model={model} />
+          <ModelCapabilityBadges model={model} t={t} />
         </div>
       </div>
       <div className="shrink-0">

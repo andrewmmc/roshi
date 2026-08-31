@@ -25,7 +25,7 @@ import {
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
 import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '@/constants/defaults';
 import { nanoid } from 'nanoid';
-import { useTranslation } from '@/i18n';
+import { useTranslation, type MessageKey } from '@/i18n';
 
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 type FormModel = ProviderModel & { _formKey: string };
@@ -38,28 +38,28 @@ interface ProviderFormProps {
   autoFocusApiKey?: boolean;
 }
 
-const PROVIDER_TYPE_LABELS: Record<ProviderConfig['type'], string> = {
-  'openai-compatible': 'OpenAI Compatible',
-  anthropic: 'Anthropic',
-  'google-gemini': 'Google Gemini',
+const PROVIDER_TYPE_LABELS: Record<ProviderConfig['type'], MessageKey> = {
+  'openai-compatible': 'providers.typeOpenaiCompatible',
+  anthropic: 'providers.typeAnthropic',
+  'google-gemini': 'providers.typeGoogleGemini',
 };
 
 const PROTOCOL_LABELS: Record<
   NonNullable<ProviderConfig['protocol']>,
-  string
+  MessageKey
 > = {
-  'openai-compatible-chat': 'Chat Completions',
-  'openai-chat-completions': 'Chat Completions (OpenAI)',
-  'openai-responses': 'Responses API',
-  'anthropic-messages': 'Anthropic Messages',
-  'gemini-generate-content': 'Gemini Generate Content',
+  'openai-compatible-chat': 'providers.protocolChatCompletions',
+  'openai-chat-completions': 'providers.protocolChatCompletionsOpenai',
+  'openai-responses': 'providers.protocolResponsesApi',
+  'anthropic-messages': 'providers.protocolAnthropicMessages',
+  'gemini-generate-content': 'providers.protocolGeminiGenerateContent',
 };
 
-const AUTH_TYPE_LABELS: Record<ProviderConfig['auth']['type'], string> = {
-  bearer: 'Bearer Token',
-  'api-key-header': 'API Key Header',
-  'query-param': 'Query Parameter',
-  none: 'None',
+const AUTH_TYPE_LABELS: Record<ProviderConfig['auth']['type'], MessageKey> = {
+  bearer: 'providers.authBearerToken',
+  'api-key-header': 'providers.authApiKeyHeader',
+  'query-param': 'providers.authQueryParameter',
+  none: 'providers.authNone',
 };
 
 const defaultFormData: ProviderFormData = {
@@ -198,7 +198,7 @@ export function ProviderForm({
               id="provider-name"
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
-              placeholder="My Provider"
+              placeholder={t('providers.namePlaceholder')}
               required
               disabled={isBuiltIn}
               className="w-full"
@@ -213,16 +213,18 @@ export function ProviderForm({
               disabled={isBuiltIn}
             >
               <SelectTrigger id="provider-type" className="w-full">
-                <SelectValue>
-                  {PROVIDER_TYPE_LABELS[form.type] ?? form.type}
-                </SelectValue>
+                <SelectValue>{t(PROVIDER_TYPE_LABELS[form.type])}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="openai-compatible">
-                  OpenAI Compatible
+                  {t('providers.typeOpenaiCompatible')}
                 </SelectItem>
-                <SelectItem value="anthropic">Anthropic</SelectItem>
-                <SelectItem value="google-gemini">Google Gemini</SelectItem>
+                <SelectItem value="anthropic">
+                  {t('providers.typeAnthropic')}
+                </SelectItem>
+                <SelectItem value="google-gemini">
+                  {t('providers.typeGoogleGemini')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -279,9 +281,9 @@ export function ProviderForm({
                 htmlFor="provider-protocol"
                 hint={
                   form.protocol === 'openai-chat-completions'
-                    ? 'For the official OpenAI API. Automatically uses the Responses API for GPT-5 models.'
+                    ? t('providers.protocolOpenaiHint')
                     : form.protocol === 'openai-responses'
-                      ? 'Uses the OpenAI Responses API format directly for all models.'
+                      ? t('providers.protocolResponsesHint')
                       : undefined
                 }
               >
@@ -294,20 +296,22 @@ export function ProviderForm({
                 >
                   <SelectTrigger id="provider-protocol" className="w-full">
                     <SelectValue>
-                      {PROTOCOL_LABELS[
-                        form.protocol ?? 'openai-compatible-chat'
-                      ] ?? form.protocol}
+                      {t(
+                        PROTOCOL_LABELS[
+                          form.protocol ?? 'openai-compatible-chat'
+                        ],
+                      )}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="openai-compatible-chat">
-                      Chat Completions
+                      {t('providers.protocolChatCompletions')}
                     </SelectItem>
                     <SelectItem value="openai-chat-completions">
-                      Chat Completions (OpenAI)
+                      {t('providers.protocolChatCompletionsOpenai')}
                     </SelectItem>
                     <SelectItem value="openai-responses">
-                      Responses API
+                      {t('providers.protocolResponsesApi')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -331,16 +335,22 @@ export function ProviderForm({
                 >
                   <SelectTrigger id="provider-auth-type">
                     <SelectValue>
-                      {AUTH_TYPE_LABELS[form.auth.type] ?? form.auth.type}
+                      {t(AUTH_TYPE_LABELS[form.auth.type])}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bearer">Bearer Token</SelectItem>
-                    <SelectItem value="api-key-header">
-                      API Key Header
+                    <SelectItem value="bearer">
+                      {t('providers.authBearerToken')}
                     </SelectItem>
-                    <SelectItem value="query-param">Query Parameter</SelectItem>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="api-key-header">
+                      {t('providers.authApiKeyHeader')}
+                    </SelectItem>
+                    <SelectItem value="query-param">
+                      {t('providers.authQueryParameter')}
+                    </SelectItem>
+                    <SelectItem value="none">
+                      {t('providers.authNone')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </Field>

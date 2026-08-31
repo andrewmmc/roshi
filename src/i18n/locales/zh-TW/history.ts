@@ -47,6 +47,7 @@ export const history = {
   filterBySavedRequest: '依已儲存的請求篩選',
   clearAllFilters: '清除所有篩選',
   noMessage: '沒有訊息',
+  duration: '{duration} 毫秒',
   entryActions: '歷史記錄項目操作',
   exportAsJson: '匯出為 JSON',
   modelRestored: '已將「{model}」加回 {provider}。',

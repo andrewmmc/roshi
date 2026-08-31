@@ -4,12 +4,14 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 function PasswordInput({
   className,
   ...props
 }: Omit<React.ComponentProps<'input'>, 'type'>) {
   const [visible, setVisible] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="relative">
@@ -23,7 +25,7 @@ function PasswordInput({
         variant="ghost"
         size="icon-sm"
         className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 -translate-y-1/2"
-        tooltip={visible ? 'Hide password' : 'Show password'}
+        tooltip={visible ? t('common.hidePassword') : t('common.showPassword')}
         onClick={() => setVisible((v) => !v)}
         tabIndex={-1}
       >

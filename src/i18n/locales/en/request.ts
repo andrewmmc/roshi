@@ -127,6 +127,7 @@ export const request = {
   attachFileToMessage: 'Attach file to message {index}',
   attachFile: 'Attach file',
   attachUrl: 'Attach URL',
+  removeAttachment: 'Remove {name}',
   clearMessage: 'Clear message',
   deleteMessage: 'Delete message',
   addMessage: 'Add message',

@@ -1,6 +1,7 @@
 import { FileText, Image, X } from 'lucide-react';
 import { isImageMimeType } from '@/utils/mime';
 import type { MessageAttachment } from '@/types/normalized';
+import { useTranslation } from '@/i18n';
 
 interface AttachmentChipProps {
   attachment: MessageAttachment;
@@ -8,6 +9,7 @@ interface AttachmentChipProps {
 }
 
 export function AttachmentChip({ attachment, onRemove }: AttachmentChipProps) {
+  const { t } = useTranslation();
   const Icon = isImageMimeType(attachment.mimeType) ? Image : FileText;
 
   return (
@@ -19,8 +21,12 @@ export function AttachmentChip({ attachment, onRemove }: AttachmentChipProps) {
           type="button"
           className="hover:text-destructive shrink-0 transition-colors"
           onClick={onRemove}
-          aria-label={`Remove ${attachment.filename}`}
-          title={`Remove ${attachment.filename}`}
+          aria-label={t('request.removeAttachment', {
+            name: attachment.filename,
+          })}
+          title={t('request.removeAttachment', {
+            name: attachment.filename,
+          })}
         >
           <X className="h-3 w-3" />
         </button>

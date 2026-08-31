@@ -68,7 +68,7 @@ function EvalRunItem({
   onMove: (record: EvalRunRecord, collectionId: string | null) => void;
   onDelete: (record: EvalRunRecord) => void;
 }) {
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
   const successCount = record.results.filter(
     (r) => r.status === 'success',
   ).length;
@@ -150,7 +150,7 @@ function EvalRunItem({
                   ok: successCount,
                 })}
           </span>
-          <span>{formatRelativeTime(record.createdAt)}</span>
+          <span>{formatRelativeTime(record.createdAt, language)}</span>
         </div>
         {winnerLabel && (
           <div className="text-muted-foreground text-[11px]">

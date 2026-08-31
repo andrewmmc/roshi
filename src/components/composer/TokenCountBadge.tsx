@@ -9,7 +9,7 @@ import { formatCount } from '@/utils/format';
 import { useTranslation } from '@/i18n';
 
 export function TokenCountBadge() {
-  const { t } = useTranslation();
+  const { t, formatNumber } = useTranslation();
   const tokenCount = useTokenCount();
 
   if (tokenCount === null || tokenCount === 0) return null;
@@ -22,7 +22,7 @@ export function TokenCountBadge() {
         </TooltipTrigger>
         <TooltipContent side="bottom">
           {t('request.tokenEstimateDetail', {
-            count: tokenCount.toLocaleString(),
+            count: formatNumber(tokenCount),
           })}
         </TooltipContent>
       </Tooltip>

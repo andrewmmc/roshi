@@ -1,4 +1,4 @@
-import type { MessageKey } from '@/i18n/types';
+import { translateNow, type MessageKey } from '@/i18n';
 import {
   selectHasUnsavedChanges,
   useComposerStore,
@@ -31,11 +31,11 @@ export function activeWorkspaceHasUnsavedChanges(): boolean {
 export function requestCloseActiveTab(): void {
   const { tabs, activeTabId, closeTab } = useTabStore.getState();
   if (tabs.length <= 1) {
-    toast('At least one request tab stays open.');
+    toast(translateNow('navigation.cmdMinOneTab'));
     return;
   }
   if (useResponseStore.getState().isLoading) {
-    toast('Stop the running request before closing this tab.');
+    toast(translateNow('navigation.cmdTabBusy'));
     return;
   }
   if (activeRequestTabHasStoredWork()) {

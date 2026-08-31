@@ -23,4 +23,23 @@ describe('formatRelativeTime', () => {
 
     expect(formatRelativeTime('2026-07-01T00:00:10.000Z')).toBe('0s ago');
   });
+
+  it('uses the selected locale for relative-time units', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(
+      new Date('2026-07-01T00:00:00.000Z').getTime(),
+    );
+
+    expect(formatRelativeTime('2026-06-30T23:59:45.000Z', 'zh-TW')).toBe(
+      '15 秒前',
+    );
+    expect(formatRelativeTime('2026-06-30T23:45:00.000Z', 'zh-TW')).toBe(
+      '15 分鐘前',
+    );
+    expect(formatRelativeTime('2026-06-30T21:00:00.000Z', 'zh-TW')).toBe(
+      '3 小時前',
+    );
+    expect(formatRelativeTime('2026-06-29T00:00:00.000Z', 'zh-TW')).toBe(
+      '2 天前',
+    );
+  });
 });

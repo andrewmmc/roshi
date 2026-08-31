@@ -12,6 +12,7 @@ import type {
 import { emptyResult, buildNormalizedRequestForRunner } from '@/types/eval';
 import { buildCompatibleRequestFromComposer } from '@/utils/build-normalized-request';
 import { estimateCostUsd } from '@/utils/cost';
+import { translateNow } from '@/i18n';
 import { sendRequest, RequestError, StreamError } from './llm-client';
 
 export interface EvalRunnerUpdate {
@@ -88,7 +89,7 @@ async function runSingleRunner(
     const result: EvalRunResult = {
       ...emptyResult(runner.id),
       status: 'error',
-      error: `Provider not found (id=${runner.providerId}). It may have been deleted.`,
+      error: translateNow('eval.providerNotFound', { id: runner.providerId }),
     };
     onUpdate({ runnerId: runner.id, result });
     return result;
@@ -227,7 +228,7 @@ function handleRunnerError(args: HandleRunnerErrorArgs): EvalRunResult {
       ...emptyResult(runner.id),
       status: 'partial',
       content,
-      error: `Stream interrupted: ${err.message}`,
+      error: translateNow('eval.streamInterrupted', { detail: err.message }),
       metrics: buildMetrics({
         response: err.partialResponse,
         durationMs: err.durationMs,
@@ -245,7 +246,7 @@ function handleRunnerError(args: HandleRunnerErrorArgs): EvalRunResult {
       ...emptyResult(runner.id),
       status: 'cancelled',
       content: streamedContent,
-      error: 'Cancelled',
+      error: translateNow('eval.cancelled'),
       metrics: { ...emptyResult(runner.id).metrics, ttftMs },
     };
     onUpdate({ runnerId: runner.id, result: cloneResult(result) });
@@ -271,7 +272,9 @@ function handleRunnerError(args: HandleRunnerErrorArgs): EvalRunResult {
   }
 
   const message =
-    err instanceof Error ? err.message : `Unknown error: ${String(err)}`;
+    err instanceof Error
+      ? err.message
+      : translateNow('eval.unknownError', { detail: String(err) });
   const result: EvalRunResult = {
     ...emptyResult(runner.id),
     status: 'error',
@@ -350,7 +353,7 @@ function buildCatastrophicResult(
   const message =
     reason instanceof Error
       ? reason.message
-      : `Unknown error: ${String(reason)}`;
+      : translateNow('eval.unknownError', { detail: String(reason) });
   return {
     ...emptyResult(runner.id),
     status: 'error',

@@ -17,4 +17,10 @@ export const models = {
   noModelsAdded: '尚未加入任何模型。',
   noAddedModelsMatch: '沒有符合搜尋的已加入模型。',
   noCatalogModels: '目錄中沒有可用的模型。',
+  contextTokens: '{value} 上下文',
+  modalityImage: '圖片',
+  modalityPdf: 'PDF',
+  modalityAudio: '音訊',
+  modalityVideo: '影片',
+  catalogLoadError: '無法載入模型',
 } as const;

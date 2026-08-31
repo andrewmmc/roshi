@@ -8,17 +8,17 @@ import {
 import { Kbd } from '@/components/ui/kbd';
 import { IS_MAC } from '@/lib/platform';
 import { useUiStore } from '@/stores/ui-store';
-import { useTranslation } from '@/i18n';
+import { useTranslation, type MessageKey } from '@/i18n';
 
 interface ShortcutRow {
   keys: string[];
-  description: string;
+  descriptionKey: MessageKey;
   /** Only relevant in request mode (hidden while the eval workspace is active). */
   requestOnly?: boolean;
 }
 
 interface ShortcutSection {
-  label: string;
+  labelKey: MessageKey;
   rows: ShortcutRow[];
   /** Only relevant in request mode (hidden while the eval workspace is active). */
   requestOnly?: boolean;
@@ -26,76 +26,123 @@ interface ShortcutSection {
 
 const MAC_SECTIONS: ShortcutSection[] = [
   {
-    label: 'Requests',
+    labelKey: 'navigation.shortcutRequests',
     rows: [
-      { keys: ['⌘', '↵'], description: 'Send request / run eval' },
-      { keys: ['Esc'], description: 'Cancel running request / eval' },
-      { keys: ['⌘', '⇧', 'N'], description: 'New request' },
+      { keys: ['⌘', '↵'], descriptionKey: 'navigation.shortcutSend' },
+      { keys: ['Esc'], descriptionKey: 'navigation.shortcutCancel' },
+      {
+        keys: ['⌘', '⇧', 'N'],
+        descriptionKey: 'navigation.shortcutNewRequest',
+      },
     ],
   },
   {
-    label: 'Composer',
+    labelKey: 'navigation.shortcutComposer',
     rows: [
-      { keys: ['⌘', 'K'], description: 'Open command palette' },
-      { keys: ['⌘', 'P'], description: 'Search history', requestOnly: true },
-      { keys: ['⌘', '⇧', ','], description: 'Open settings' },
+      {
+        keys: ['⌘', 'K'],
+        descriptionKey: 'navigation.shortcutCommandPalette',
+      },
+      {
+        keys: ['⌘', 'P'],
+        descriptionKey: 'navigation.shortcutSearchHistory',
+        requestOnly: true,
+      },
+      { keys: ['⌘', '⇧', ','], descriptionKey: 'navigation.shortcutSettings' },
     ],
   },
   {
-    label: 'Tabs',
+    labelKey: 'navigation.shortcutTabs',
     requestOnly: true,
     rows: [
-      { keys: ['⌘', 'T'], description: 'Open new tab' },
-      { keys: ['⌘', 'W'], description: 'Close active tab' },
-      { keys: ['⌘', '⇧', 'D'], description: 'Duplicate active tab' },
-      { keys: ['⌃', 'Tab'], description: 'Next tab' },
-      { keys: ['⌃', '⇧', 'Tab'], description: 'Previous tab' },
+      { keys: ['⌘', 'T'], descriptionKey: 'navigation.shortcutNewTab' },
+      { keys: ['⌘', 'W'], descriptionKey: 'navigation.shortcutCloseTab' },
+      {
+        keys: ['⌘', '⇧', 'D'],
+        descriptionKey: 'navigation.shortcutDuplicateTab',
+      },
+      { keys: ['⌃', 'Tab'], descriptionKey: 'navigation.shortcutNextTab' },
+      {
+        keys: ['⌃', '⇧', 'Tab'],
+        descriptionKey: 'navigation.shortcutPreviousTab',
+      },
     ],
   },
   {
-    label: 'View',
+    labelKey: 'navigation.shortcutView',
     rows: [
-      { keys: ['⌥', 'T'], description: 'Toggle dark/light theme' },
-      { keys: ['⌥', 'C'], description: 'Copy response to clipboard' },
-      { keys: ['?'], description: 'Show this dialog' },
+      {
+        keys: ['⌥', 'T'],
+        descriptionKey: 'navigation.shortcutToggleTheme',
+      },
+      {
+        keys: ['⌥', 'C'],
+        descriptionKey: 'navigation.shortcutCopyResponse',
+      },
+      { keys: ['?'], descriptionKey: 'navigation.shortcutShowDialog' },
     ],
   },
 ];
 
 const WIN_SECTIONS: ShortcutSection[] = [
   {
-    label: 'Requests',
+    labelKey: 'navigation.shortcutRequests',
     rows: [
-      { keys: ['Ctrl', 'Enter'], description: 'Send request / run eval' },
-      { keys: ['Esc'], description: 'Cancel running request / eval' },
-      { keys: ['Ctrl', 'Shift', 'N'], description: 'New request' },
+      { keys: ['Ctrl', 'Enter'], descriptionKey: 'navigation.shortcutSend' },
+      { keys: ['Esc'], descriptionKey: 'navigation.shortcutCancel' },
+      {
+        keys: ['Ctrl', 'Shift', 'N'],
+        descriptionKey: 'navigation.shortcutNewRequest',
+      },
     ],
   },
   {
-    label: 'Composer',
+    labelKey: 'navigation.shortcutComposer',
     rows: [
-      { keys: ['Ctrl', 'K'], description: 'Open command palette' },
-      { keys: ['Ctrl', 'P'], description: 'Search history', requestOnly: true },
-      { keys: ['Ctrl', 'Shift', ','], description: 'Open settings' },
+      {
+        keys: ['Ctrl', 'K'],
+        descriptionKey: 'navigation.shortcutCommandPalette',
+      },
+      {
+        keys: ['Ctrl', 'P'],
+        descriptionKey: 'navigation.shortcutSearchHistory',
+        requestOnly: true,
+      },
+      {
+        keys: ['Ctrl', 'Shift', ','],
+        descriptionKey: 'navigation.shortcutSettings',
+      },
     ],
   },
   {
-    label: 'Tabs',
+    labelKey: 'navigation.shortcutTabs',
     requestOnly: true,
     rows: [
-      { keys: ['Ctrl', 'T'], description: 'Open new tab' },
-      { keys: ['Ctrl', 'W'], description: 'Close active tab' },
-      { keys: ['Ctrl', 'Shift', 'D'], description: 'Duplicate active tab' },
-      { keys: ['Ctrl', 'Tab'], description: 'Next tab' },
-      { keys: ['Ctrl', 'Shift', 'Tab'], description: 'Previous tab' },
+      { keys: ['Ctrl', 'T'], descriptionKey: 'navigation.shortcutNewTab' },
+      { keys: ['Ctrl', 'W'], descriptionKey: 'navigation.shortcutCloseTab' },
+      {
+        keys: ['Ctrl', 'Shift', 'D'],
+        descriptionKey: 'navigation.shortcutDuplicateTab',
+      },
+      { keys: ['Ctrl', 'Tab'], descriptionKey: 'navigation.shortcutNextTab' },
+      {
+        keys: ['Ctrl', 'Shift', 'Tab'],
+        descriptionKey: 'navigation.shortcutPreviousTab',
+      },
     ],
   },
   {
-    label: 'View',
+    labelKey: 'navigation.shortcutView',
     rows: [
-      { keys: ['Alt', 'T'], description: 'Toggle dark/light theme' },
-      { keys: ['Alt', 'C'], description: 'Copy response to clipboard' },
-      { keys: ['?'], description: 'Show this dialog' },
+      {
+        keys: ['Alt', 'T'],
+        descriptionKey: 'navigation.shortcutToggleTheme',
+      },
+      {
+        keys: ['Alt', 'C'],
+        descriptionKey: 'navigation.shortcutCopyResponse',
+      },
+      { keys: ['?'], descriptionKey: 'navigation.shortcutShowDialog' },
     ],
   },
 ];
@@ -144,9 +191,9 @@ export function ShortcutsDialog() {
 
         <div className="flex flex-col gap-4">
           {sections.map((section) => (
-            <div key={section.label} className="flex flex-col gap-1.5">
+            <div key={section.labelKey} className="flex flex-col gap-1.5">
               <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                {section.label}
+                {t(section.labelKey)}
               </span>
               <div className="flex flex-col gap-1">
                 {section.rows.map((row, i) => (
@@ -155,7 +202,7 @@ export function ShortcutsDialog() {
                     className="flex items-center justify-between gap-4"
                   >
                     <span className="text-foreground text-xs">
-                      {row.description}
+                      {t(row.descriptionKey)}
                     </span>
                     <KbdSequence keys={row.keys} />
                   </div>

@@ -33,7 +33,7 @@ export function HistoryItem({
   compareSelected = false,
   onToggleCompare,
 }: HistoryItemProps) {
-  const { t } = useTranslation();
+  const { language, t, formatDateTime } = useTranslation();
   const lastUserMessage = [...entry.request.messages]
     .reverse()
     .find((m) => m.role === 'user' && m.content.trim());
@@ -103,10 +103,12 @@ export function HistoryItem({
           {preview}
         </div>
         <div className="text-muted-foreground/70 mt-0.5 text-[11px]">
-          <span title={new Date(entry.createdAt).toLocaleString()}>
-            {formatRelativeTime(entry.createdAt)}
+          <span title={formatDateTime(entry.createdAt)}>
+            {formatRelativeTime(entry.createdAt, language)}
           </span>
-          {entry.durationMs !== null && ` · ${entry.durationMs}ms`}
+          {entry.durationMs !== null && (
+            <> · {t('history.duration', { duration: entry.durationMs })}</>
+          )}
         </div>
       </div>
     </SidebarRow>

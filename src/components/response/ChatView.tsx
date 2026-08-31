@@ -6,9 +6,10 @@ import { StreamingIndicator } from './StreamingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AttachmentChip } from '@/components/ui/attachment-chip';
 import { CopyButton } from '@/components/ui/copy-button';
-import { cn, getRoleAriaLabel, getRoleLabel } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
 import { STREAM_INTERRUPTED_SUMMARY } from '@/hooks/use-send-request';
+import type { NormalizedMessage } from '@/types/normalized';
 
 const ROLE_LABEL_BASE =
   'w-14 shrink-0 pt-1.5 text-right text-[11px] font-medium tracking-wide uppercase';
@@ -68,6 +69,12 @@ function scheduleFrame(
 
 export function ChatView() {
   const { t } = useTranslation();
+  const roleLabel = (role: NormalizedMessage['role']) =>
+    role === 'user'
+      ? t('request.user')
+      : role === 'assistant'
+        ? t('request.assistant')
+        : t('request.system');
   const sentRequest = useResponseStore((s) => s.sentRequest);
   const messages = sentRequest?.messages ?? [];
   const systemPrompt = sentRequest?.systemPrompt ?? '';
@@ -179,7 +186,10 @@ export function ChatView() {
       <ScrollArea className="h-full">
         <div className="flex flex-col gap-2 p-4">
           {systemPrompt && (
-            <MessageRow label="sys" ariaLabel={t('request.system')}>
+            <MessageRow
+              label={roleLabel('system')}
+              ariaLabel={t('request.system')}
+            >
               <div className="bg-muted/30 text-muted-foreground flex-1 rounded-lg px-3 py-2 text-[13px] italic select-text">
                 {systemPrompt}
               </div>
@@ -191,11 +201,14 @@ export function ChatView() {
               (m) =>
                 m.content.trim() || (m.attachments && m.attachments.length > 0),
             )
-            .map((msg) => (
+            .map((msg, index) => (
               <MessageRow
                 key={msg.id}
-                label={getRoleLabel(msg.role)}
-                ariaLabel={getRoleAriaLabel(msg.role)}
+                label={roleLabel(msg.role)}
+                ariaLabel={t('request.messageAria', {
+                  role: roleLabel(msg.role),
+                  index: index + 1,
+                })}
               >
                 <div
                   className={cn(
@@ -244,8 +257,8 @@ export function ChatView() {
 
           {showLoading && (
             <MessageRow
-              label={getRoleLabel('assistant')}
-              ariaLabel={getRoleAriaLabel('assistant')}
+              label={roleLabel('assistant')}
+              ariaLabel={t('request.assistant')}
             >
               <div className="bg-muted/40 flex-1 rounded-lg px-3 py-2 text-[13px]">
                 <Loader2 className="text-muted-foreground h-4 w-4 animate-spin motion-reduce:animate-none" />
@@ -255,8 +268,8 @@ export function ChatView() {
 
           {displayContent && (
             <MessageRow
-              label={getRoleLabel('assistant')}
-              ariaLabel={getRoleAriaLabel('assistant')}
+              label={roleLabel('assistant')}
+              ariaLabel={t('request.assistant')}
             >
               <div className="bg-muted/40 prose prose-sm dark:prose-invert prose-pre:bg-foreground/[0.03] dark:prose-pre:bg-foreground/[0.06] prose-pre:border prose-pre:rounded-md prose-pre:p-3 prose-code:text-xs relative max-w-none flex-1 rounded-lg px-3 py-2 text-[13px] select-text">
                 {!isStreaming && (

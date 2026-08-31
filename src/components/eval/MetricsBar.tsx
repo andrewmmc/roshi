@@ -3,16 +3,20 @@ import { useTranslation } from '@/i18n';
 import { formatCount } from '@/utils/format';
 import { formatCostUsd } from '@/utils/cost';
 
-function formatMs(ms: number | null): string {
+type Translator = ReturnType<typeof useTranslation>['t'];
+
+function formatMs(ms: number | null, t: Translator): string {
   if (ms === null || !Number.isFinite(ms)) return '—';
-  if (ms >= 10_000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${ms}ms`;
+  if (ms >= 10_000) {
+    return t('eval.durationSeconds', { value: (ms / 1000).toFixed(1) });
+  }
+  return t('eval.durationMilliseconds', { value: ms });
 }
 
-function formatTps(tps: number | null): string {
+function formatTps(tps: number | null, t: Translator): string {
   if (tps === null || !Number.isFinite(tps)) return '—';
-  if (tps >= 100) return `${tps.toFixed(0)} tok/s`;
-  return `${tps.toFixed(1)} tok/s`;
+  const value = tps >= 100 ? tps.toFixed(0) : tps.toFixed(1);
+  return t('eval.tokensPerSecond', { value });
 }
 
 interface MetricChipProps {
@@ -45,17 +49,17 @@ export function MetricsBar({ metrics }: MetricsBarProps) {
     <div className="flex flex-wrap gap-1.5">
       <MetricChip
         label={t('eval.metricDuration')}
-        value={formatMs(metrics.durationMs)}
+        value={formatMs(metrics.durationMs, t)}
         title={t('eval.titleDuration')}
       />
       <MetricChip
         label={t('eval.metricTtft')}
-        value={formatMs(metrics.ttftMs)}
+        value={formatMs(metrics.ttftMs, t)}
         title={t('eval.titleTtft')}
       />
       <MetricChip
         label={t('eval.metricThroughput')}
-        value={formatTps(metrics.tokensPerSec)}
+        value={formatTps(metrics.tokensPerSec, t)}
         title={t('eval.titleThroughput')}
       />
       <MetricChip

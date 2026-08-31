@@ -8,6 +8,7 @@ import type {
   JudgeCriterionScore,
   JudgeResult,
 } from '@/types/eval';
+import { translateNow } from '@/i18n';
 import { sendRequest, RequestError } from './llm-client';
 
 export const DEFAULT_JUDGE_RUBRIC = `You are an impartial judge evaluating responses from multiple AI models.
@@ -66,15 +67,15 @@ async function runJudgeInternal(
   const { config, providers, request, runners, results, signal } = options;
 
   if (!config.enabled || !config.runner) {
-    return emptyJudgeResult('Judge not enabled');
+    return emptyJudgeResult(translateNow('eval.judgeNotEnabled'));
   }
 
   const provider = providers.find((p) => p.id === config.runner!.providerId);
   if (!provider) {
-    return emptyJudgeResult('Judge provider not found');
+    return emptyJudgeResult(translateNow('eval.judgeProviderNotFound'));
   }
   if (!provider.apiKey) {
-    return emptyJudgeResult('Judge provider has no API key');
+    return emptyJudgeResult(translateNow('eval.judgeProviderNoApiKey'));
   }
 
   const candidates = runners
@@ -88,7 +89,7 @@ async function runJudgeInternal(
     );
 
   if (candidates.length === 0) {
-    return emptyJudgeResult('No successful candidate responses to judge');
+    return emptyJudgeResult(translateNow('eval.noSuccessfulCandidates'));
   }
 
   const rubric = config.rubric || DEFAULT_JUDGE_RUBRIC;
@@ -115,14 +116,20 @@ async function runJudgeInternal(
     return parseJudgeContent(sendResult.response.content, candidates);
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      return emptyJudgeResult('Judge run cancelled');
+      return emptyJudgeResult(translateNow('eval.judgeRunCancelled'));
     }
     if (err instanceof RequestError) {
-      return emptyJudgeResult(`Judge call failed: ${err.message}`);
+      return emptyJudgeResult(
+        translateNow('eval.judgeCallFailed', { detail: err.message }),
+      );
     }
     const message =
-      err instanceof Error ? err.message : `Unknown error: ${String(err)}`;
-    return emptyJudgeResult(`Judge call failed: ${message}`);
+      err instanceof Error
+        ? err.message
+        : translateNow('eval.unknownError', { detail: String(err) });
+    return emptyJudgeResult(
+      translateNow('eval.judgeCallFailed', { detail: message }),
+    );
   }
 }
 
@@ -191,7 +198,7 @@ export function parseJudgeContent(
       scores: {},
       winnerRunnerId: null,
       rawContent: content,
-      error: 'Judge returned non-JSON content',
+      error: translateNow('eval.judgeNonJson'),
     };
   }
 
@@ -203,7 +210,9 @@ export function parseJudgeContent(
       scores: {},
       winnerRunnerId: null,
       rawContent: content,
-      error: `Could not parse judge JSON: ${(err as Error).message}`,
+      error: translateNow('eval.judgeJsonParseFailed', {
+        detail: (err as Error).message,
+      }),
     };
   }
 
@@ -212,7 +221,7 @@ export function parseJudgeContent(
       scores: {},
       winnerRunnerId: null,
       rawContent: content,
-      error: 'Judge JSON was not an object',
+      error: translateNow('eval.judgeJsonNotObject'),
     };
   }
 

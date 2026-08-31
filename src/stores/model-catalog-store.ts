@@ -6,6 +6,7 @@ import {
   fetchModelsForProvider,
 } from '@/services/models-api';
 import { builtinProviders } from '@/providers/builtins';
+import { translateNow } from '@/i18n';
 
 export type CatalogStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -61,7 +62,7 @@ export const useModelCatalogStore = create<ModelCatalogStore>((set, get) => ({
     } catch (error) {
       set({
         status: 'error',
-        error: toErrorMessage(error, 'Failed to load models'),
+        error: toErrorMessage(error, translateNow('models.catalogLoadError')),
       });
     }
   },

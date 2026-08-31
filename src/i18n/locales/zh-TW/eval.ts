@@ -63,6 +63,9 @@ export const evalStrings = {
   titleCost: '依 models.dev 定價估算的成本',
   titleChars: '回應的字元長度',
   titleFinish: '供應商回報的結束原因',
+  durationMilliseconds: '{value} 毫秒',
+  durationSeconds: '{value} 秒',
+  tokensPerSecond: '{value} Token／秒',
 
   // Rating control
   starRating: '星級評分',
@@ -139,4 +142,17 @@ export const evalStrings = {
   unknownProvider: '未知供應商',
   noRunnersError: '請先至少新增一個執行項目，再開始評測。',
   noMessagesError: '請先輸入至少一則訊息，再開始評測。',
+  providerNotFound: '找不到供應商（ID={id}），可能已被刪除。',
+  streamInterrupted: '串流中斷：{detail}',
+  cancelled: '已取消',
+  unknownError: '未知錯誤：{detail}',
+  judgeNotEnabled: '未啟用評審',
+  judgeProviderNotFound: '找不到評審供應商',
+  judgeProviderNoApiKey: '評審供應商未設定 API 金鑰',
+  noSuccessfulCandidates: '沒有可供評審的成功候選回應',
+  judgeRunCancelled: '評審執行已取消',
+  judgeCallFailed: '評審呼叫失敗：{detail}',
+  judgeNonJson: '評審回傳的內容不是 JSON',
+  judgeJsonParseFailed: '無法解析評審 JSON：{detail}',
+  judgeJsonNotObject: '評審 JSON 不是物件',
 } as const;

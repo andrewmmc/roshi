@@ -91,6 +91,12 @@ export function MessageEditorView({
 }: MessageEditorViewProps) {
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
   const { t } = useTranslation();
+  const roleLabel = (role: NormalizedMessage['role']) =>
+    role === 'user'
+      ? t('request.user')
+      : role === 'assistant'
+        ? t('request.assistant')
+        : t('request.system');
   const [urlInputIndex, setUrlInputIndex] = useState<number | null>(null);
   const [urlValue, setUrlValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<{
@@ -175,13 +181,7 @@ export function MessageEditorView({
                 aria-label={t('request.roleForMessage', { index: index + 1 })}
                 className="h-7 w-[100px] shrink-0 text-xs"
               >
-                <SelectValue>
-                  {msg.role === 'user'
-                    ? t('request.user')
-                    : msg.role === 'assistant'
-                      ? t('request.assistant')
-                      : msg.role}
-                </SelectValue>
+                <SelectValue>{roleLabel(msg.role)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">{t('request.user')}</SelectItem>
@@ -197,16 +197,11 @@ export function MessageEditorView({
                 onChange={(e) => handleContentChange(index, e.target.value)}
                 disabled={disabled}
                 aria-label={t('request.messageAria', {
-                  role: msg.role,
+                  role: roleLabel(msg.role),
                   index: index + 1,
                 })}
                 placeholder={t('request.messagePlaceholder', {
-                  role:
-                    msg.role === 'user'
-                      ? t('request.user')
-                      : msg.role === 'assistant'
-                        ? t('request.assistant')
-                        : msg.role,
+                  role: roleLabel(msg.role),
                 })}
                 className="bg-muted/20 border-border/50 min-h-[52px] resize-y font-mono text-xs"
                 rows={2}

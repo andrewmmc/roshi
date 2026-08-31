@@ -6,6 +6,7 @@ describe('model-compatibility-summary', () => {
   it('summarizes streaming, images, thinking, and token limits', () => {
     const summary = buildModelCompatibilitySummary(
       defaultCapabilitiesForProviderType('anthropic'),
+      (value) => value.toLocaleString('en-US'),
     );
 
     expect(summary.map((item) => item.labelKey)).toEqual([

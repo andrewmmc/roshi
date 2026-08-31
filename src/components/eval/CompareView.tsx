@@ -50,6 +50,10 @@ export function CompareView() {
     pair.a.result.content,
     pair.b.result.content,
   );
+  const formatDuration = (value: number | null): string => {
+    if (value === null || !Number.isFinite(value)) return '—';
+    return t('eval.durationMilliseconds', { value: Math.round(value) });
+  };
 
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
@@ -102,13 +106,13 @@ export function CompareView() {
                 label={t('eval.metricDuration')}
                 a={pair.a.result.metrics.durationMs}
                 b={pair.b.result.metrics.durationMs}
-                suffix="ms"
+                formatValue={formatDuration}
               />
               <CompareRow
                 label={t('eval.metricTtft')}
                 a={pair.a.result.metrics.ttftMs}
                 b={pair.b.result.metrics.ttftMs}
-                suffix="ms"
+                formatValue={formatDuration}
               />
               <CompareRow
                 label={t('eval.metricTokensPerSec')}
@@ -149,13 +153,13 @@ function CompareRow({
   label,
   a,
   b,
-  suffix,
+  formatValue,
   decimals,
 }: {
   label: string;
   a: number | null;
   b: number | null;
-  suffix?: string;
+  formatValue?: (value: number | null) => string;
   decimals?: number;
 }) {
   const format = (value: number | null): string => {
@@ -165,8 +169,8 @@ function CompareRow({
     }
     return Math.round(value).toString();
   };
-  const aLabel = `${format(a)}${suffix && a !== null ? suffix : ''}`;
-  const bLabel = `${format(b)}${suffix && b !== null ? suffix : ''}`;
+  const aLabel = formatValue ? formatValue(a) : format(a);
+  const bLabel = formatValue ? formatValue(b) : format(b);
   return (
     <tr className="border-border/40 border-t">
       <td className="py-0.5 pr-2">{label}</td>

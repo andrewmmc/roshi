@@ -27,7 +27,10 @@ import { useTranslation } from '@/i18n';
 
 type View = 'list' | 'edit' | 'add';
 
-function getProviderDetails(provider: ProviderConfig): string {
+function getProviderDetails(
+  provider: ProviderConfig,
+  t: ReturnType<typeof useTranslation>['t'],
+): string {
   const builtin = builtinProviders.find((b) => b.name === provider.name);
   const hasApiKey = Boolean(provider.apiKey);
   const hasCustomHeaders = Object.keys(provider.customHeaders ?? {}).length > 0;
@@ -39,15 +42,20 @@ function getProviderDetails(provider: ProviderConfig): string {
   const modelCount = provider.models.length;
   const modelsLabel =
     modelCount === 0
-      ? 'No models added'
-      : `${modelCount} model${modelCount === 1 ? '' : 's'}`;
+      ? t('providers.noModelsAdded')
+      : t(
+          modelCount === 1
+            ? 'providers.modelCountSingular'
+            : 'providers.modelCountPlural',
+          { count: modelCount },
+        );
 
   return [
     modelsLabel,
-    hasApiKey ? 'API key configured' : 'No API key',
-    hasCustomHeaders && 'Custom headers',
-    hasCustomEndpoint && 'Custom endpoint',
-    hasCustomBaseUrl && 'Custom base URL',
+    hasApiKey ? t('providers.apiKeyConfigured') : t('providers.noApiKey'),
+    hasCustomHeaders && t('providers.customHeadersConfigured'),
+    hasCustomEndpoint && t('providers.customEndpointConfigured'),
+    hasCustomBaseUrl && t('providers.customBaseUrlConfigured'),
   ]
     .filter(Boolean)
     .join(' · ');
@@ -82,7 +90,7 @@ function ProviderList({
               )}
             </div>
             <div className="text-muted-foreground mt-1 text-xs">
-              {getProviderDetails(provider)}
+              {getProviderDetails(provider, t)}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -93,7 +101,9 @@ function ProviderList({
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onManageModels(provider)}
               tooltip={t('providers.manageModels')}
-              aria-label={`Manage models for ${provider.name}`}
+              aria-label={t('providers.manageModelsNamed', {
+                name: provider.name,
+              })}
             >
               <Boxes className="h-3.5 w-3.5" />
             </IconButton>
@@ -104,7 +114,9 @@ function ProviderList({
               className="text-muted-foreground hover:text-foreground shrink-0"
               onClick={() => onEditProvider(provider)}
               tooltip={t('providers.edit')}
-              aria-label={`Edit provider ${provider.name}`}
+              aria-label={t('providers.editProviderNamed', {
+                name: provider.name,
+              })}
             >
               <Pencil className="h-3.5 w-3.5" />
             </IconButton>
@@ -116,7 +128,9 @@ function ProviderList({
                 className="text-muted-foreground hover:text-destructive shrink-0"
                 onClick={() => onDeleteProvider(provider)}
                 tooltip={t('providers.remove')}
-                aria-label={`Remove custom provider ${provider.name}`}
+                aria-label={t('providers.removeCustomProviderNamed', {
+                  name: provider.name,
+                })}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </IconButton>

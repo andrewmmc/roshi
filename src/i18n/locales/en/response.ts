@@ -18,6 +18,7 @@ export const response = {
   responseComplete: 'Response complete',
   httpStatus: 'HTTP status {status}',
   latency: 'Latency {duration} milliseconds',
+  latencyValue: '{duration} ms',
   totalTokens: '{count} total tokens',
   tokens: '{count} tokens',
   exportRequestResponse: 'Export request and response as JSON',

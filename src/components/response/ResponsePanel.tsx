@@ -200,7 +200,7 @@ export function ResponsePanel() {
                 className="shrink-0 font-mono tabular-nums"
                 aria-label={t('response.latency', { duration: durationMs })}
               >
-                {durationMs} ms
+                {t('response.latencyValue', { duration: durationMs })}
               </span>
             )}
             {response?.usage && (

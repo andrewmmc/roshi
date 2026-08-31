@@ -166,7 +166,7 @@ function EnvironmentEditor({
               onChange={(event) =>
                 updateVariable(variable.id, { key: event.target.value })
               }
-              placeholder="name"
+              placeholder={t('common.name')}
               aria-label={t('environments.variableKey')}
               className="font-mono text-xs"
             />
@@ -175,7 +175,7 @@ function EnvironmentEditor({
               onChange={(event) =>
                 updateVariable(variable.id, { value: event.target.value })
               }
-              placeholder="value"
+              placeholder={t('common.value')}
               aria-label={t('environments.variableValue')}
               className="font-mono text-xs"
             />

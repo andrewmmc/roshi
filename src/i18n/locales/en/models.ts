@@ -18,4 +18,10 @@ export const models = {
   noModelsAdded: 'No models added yet.',
   noAddedModelsMatch: 'No added models match your search.',
   noCatalogModels: 'No models available from the catalogue.',
+  contextTokens: '{value} ctx',
+  modalityImage: 'image',
+  modalityPdf: 'PDF',
+  modalityAudio: 'audio',
+  modalityVideo: 'video',
+  catalogLoadError: 'Failed to load models',
 } as const;

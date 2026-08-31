@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { useUiStore } from '@/stores/ui-store';
+import { useLanguageStore } from '@/stores/language-store';
 
 describe('ShortcutsDialog', () => {
   beforeEach(() => {
@@ -24,5 +25,15 @@ describe('ShortcutsDialog', () => {
     expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();
     expect(screen.queryByText('Open new tab')).not.toBeInTheDocument();
     expect(screen.queryByText('Next tab')).not.toBeInTheDocument();
+  });
+
+  it('translates shortcut sections and descriptions in Traditional Chinese', async () => {
+    useLanguageStore.getState().setLanguage('zh-TW');
+    render(<ShortcutsDialog />);
+
+    expect(await screen.findByText('鍵盤快速鍵')).toBeInTheDocument();
+    expect(screen.getByText('開啟新分頁')).toBeInTheDocument();
+    expect(screen.getByText('複製目前分頁')).toBeInTheDocument();
+    expect(screen.getByText('傳送請求／執行評測')).toBeInTheDocument();
   });
 });
