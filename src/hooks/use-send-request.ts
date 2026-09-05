@@ -252,6 +252,14 @@ function extractProviderErrorDetail(
   return null;
 }
 
+function isAbortError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { name?: string }).name === 'AbortError'
+  );
+}
+
 function isLikelyNetworkFailure(message: string): boolean {
   const normalized = message.toLowerCase();
   return [
@@ -471,7 +479,7 @@ export function useSendRequest() {
           error: translateNow('request.timedOut'),
           errorDetail: err.message || translateNow('request.timeoutDetail'),
         });
-      } else if (err instanceof DOMException && err.name === 'AbortError') {
+      } else if (isAbortError(err)) {
         respStore.completeWithError({
           error: translateNow('request.cancelled'),
           errorDetail: null,
