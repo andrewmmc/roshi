@@ -160,4 +160,16 @@ export const evalStrings = {
   judgeNonJson: 'Judge returned non-JSON content',
   judgeJsonParseFailed: 'Could not parse judge JSON: {detail}',
   judgeJsonNotObject: 'Judge JSON was not an object',
+  judgeScoresNotObject: 'Judge scores must be an object',
+  judgeMissingCandidateScore:
+    'Judge score is missing for candidate {candidateId}',
+  judgeScoreNotFinite:
+    'Judge score for candidate {candidateId} criterion {criterion} must be a finite number',
+  judgeScoreOutOfRange:
+    'Judge score for candidate {candidateId} criterion {criterion} must be between 1 and 5',
+  judgeInvalidRationale:
+    'Judge rationale for candidate {candidateId} must be a string',
+  judgeInvalidWinner: 'Judge winner must be one of the scored candidates',
+  judgeWinnerScoreMismatch:
+    'Judge winner {winner} does not have a highest overall score',
 } as const;

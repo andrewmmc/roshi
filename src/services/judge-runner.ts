@@ -216,34 +216,52 @@ export function parseJudgeContent(
     };
   }
 
-  if (!parsed || typeof parsed !== 'object') {
-    return {
-      scores: {},
-      winnerRunnerId: null,
-      rawContent: content,
-      error: translateNow('eval.judgeJsonNotObject'),
-    };
+  if (!isRecord(parsed)) {
+    return invalidJudgeResult(content, translateNow('eval.judgeJsonNotObject'));
   }
 
-  const root = parsed as Record<string, unknown>;
+  const rawScores = parsed.scores;
+  if (!isRecord(rawScores)) {
+    return invalidJudgeResult(
+      content,
+      translateNow('eval.judgeScoresNotObject'),
+    );
+  }
+
   const scores: Record<string, JudgeCriterionScore> = {};
-  const rawScores = isRecord(root.scores) ? root.scores : null;
-
-  if (rawScores) {
-    for (const candidate of candidates) {
-      const entry = rawScores[candidate.runner.id];
-      const score = coerceCriterionScore(entry);
-      if (score) scores[candidate.runner.id] = score;
+  for (const candidate of candidates) {
+    const candidateId = candidate.runner.id;
+    const entry = rawScores[candidateId];
+    if (!isRecord(entry)) {
+      return invalidJudgeResult(
+        content,
+        translateNow('eval.judgeMissingCandidateScore', { candidateId }),
+      );
     }
+
+    const score = parseCriterionScore(entry, candidateId, content);
+    if ('error' in score) return score.error;
+    scores[candidateId] = score.value;
   }
 
-  const winner = typeof root.winner === 'string' ? root.winner : null;
-  const winnerRunnerId =
-    winner && candidates.some((c) => c.runner.id === winner) ? winner : null;
+  const winner = parsed.winner;
+  if (typeof winner !== 'string' || !scores[winner]) {
+    return invalidJudgeResult(content, translateNow('eval.judgeInvalidWinner'));
+  }
+
+  const highestOverall = Math.max(
+    ...Object.values(scores).map((score) => score.overall),
+  );
+  if (scores[winner].overall < highestOverall) {
+    return invalidJudgeResult(
+      content,
+      translateNow('eval.judgeWinnerScoreMismatch', { winner }),
+    );
+  }
 
   return {
     scores,
-    winnerRunnerId,
+    winnerRunnerId: winner,
     rawContent: content,
     error: null,
   };
@@ -262,29 +280,83 @@ function extractJson(text: string): string | null {
   return text.slice(start, end + 1);
 }
 
-function coerceCriterionScore(value: unknown): JudgeCriterionScore | null {
-  if (!isRecord(value)) return null;
-  const helpfulness = clampScore(value.helpfulness);
-  const accuracy = clampScore(value.accuracy);
-  const clarity = clampScore(value.clarity);
-  const overall = clampScore(
-    value.overall ?? (helpfulness + accuracy + clarity) / 3,
-  );
-  const rationale =
-    typeof value.rationale === 'string' ? value.rationale.trim() : '';
-  return { helpfulness, accuracy, clarity, overall, rationale };
-}
+const SCORE_CRITERIA = [
+  'helpfulness',
+  'accuracy',
+  'clarity',
+  'overall',
+] as const;
 
-function clampScore(value: unknown): number {
-  const num = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(num)) return 0;
-  if (num < 1) return 1;
-  if (num > 5) return 5;
-  return Math.round(num * 10) / 10;
+type CriterionScoreParseResult =
+  { value: JudgeCriterionScore } | { error: JudgeResult };
+
+function parseCriterionScore(
+  entry: Record<string, unknown>,
+  candidateId: string,
+  rawContent: string,
+): CriterionScoreParseResult {
+  const values: Record<(typeof SCORE_CRITERIA)[number], number> = {
+    helpfulness: 0,
+    accuracy: 0,
+    clarity: 0,
+    overall: 0,
+  };
+
+  for (const criterion of SCORE_CRITERIA) {
+    const value = entry[criterion];
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return {
+        error: invalidJudgeResult(
+          rawContent,
+          translateNow('eval.judgeScoreNotFinite', {
+            candidateId,
+            criterion,
+          }),
+        ),
+      };
+    }
+    if (value < 1 || value > 5) {
+      return {
+        error: invalidJudgeResult(
+          rawContent,
+          translateNow('eval.judgeScoreOutOfRange', {
+            candidateId,
+            criterion,
+          }),
+        ),
+      };
+    }
+    values[criterion] = value;
+  }
+
+  if (typeof entry.rationale !== 'string') {
+    return {
+      error: invalidJudgeResult(
+        rawContent,
+        translateNow('eval.judgeInvalidRationale', { candidateId }),
+      ),
+    };
+  }
+
+  return {
+    value: {
+      ...values,
+      rationale: entry.rationale.trim(),
+    },
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function invalidJudgeResult(rawContent: string, error: string): JudgeResult {
+  return {
+    scores: {},
+    winnerRunnerId: null,
+    rawContent,
+    error,
+  };
 }
 
 function emptyJudgeResult(error: string | null): JudgeResult {

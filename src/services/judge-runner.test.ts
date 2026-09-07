@@ -123,32 +123,123 @@ describe('parseJudgeContent', () => {
   });
 
   it('strips ```json code fences', () => {
-    const content = '```json\n{ "scores": {}, "winner": "r1" }\n```';
+    const content = `\`\`\`json
+${JSON.stringify({
+  scores: {
+    r1: {
+      helpfulness: 5,
+      accuracy: 5,
+      clarity: 5,
+      overall: 5,
+      rationale: 'Best',
+    },
+    r2: {
+      helpfulness: 3,
+      accuracy: 3,
+      clarity: 3,
+      overall: 3,
+      rationale: 'Fine',
+    },
+  },
+  winner: 'r1',
+})}
+\`\`\``;
     const parsed = parseJudgeContent(content, candidates);
     expect(parsed.winnerRunnerId).toBe('r1');
     expect(parsed.error).toBeNull();
   });
 
-  it('clamps numeric scores into 1-5', () => {
+  it('rejects a missing scores object', () => {
+    const parsed = parseJudgeContent('{}', candidates);
+    expect(parsed.error).toBe('Judge scores must be an object');
+    expect(parsed.scores).toEqual({});
+    expect(parsed.winnerRunnerId).toBeNull();
+  });
+
+  it('rejects a missing candidate score', () => {
     const content = JSON.stringify({
       scores: {
         r1: {
-          helpfulness: 9,
-          accuracy: 0,
-          clarity: 3.6,
-          overall: 100,
-          rationale: 'oops',
+          helpfulness: 4,
+          accuracy: 4,
+          clarity: 4,
+          overall: 4,
+          rationale: 'Good',
         },
       },
-      winner: 'unknown',
+      winner: 'r1',
     });
     const parsed = parseJudgeContent(content, candidates);
-    expect(parsed.scores.r1.helpfulness).toBe(5);
-    expect(parsed.scores.r1.accuracy).toBe(1);
-    expect(parsed.scores.r1.clarity).toBe(3.6);
-    expect(parsed.scores.r1.overall).toBe(5);
-    // unknown winner is rejected
-    expect(parsed.winnerRunnerId).toBeNull();
+    expect(parsed.error).toContain('missing for candidate r2');
+    expect(parsed.scores).toEqual({});
+  });
+
+  it('rejects an empty candidate score instead of manufacturing zeros', () => {
+    const content = JSON.stringify({
+      scores: { r1: {}, r2: {} },
+      winner: 'r1',
+    });
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toContain('r1 criterion helpfulness');
+    expect(parsed.error).toContain('finite number');
+    expect(parsed.scores).toEqual({});
+  });
+
+  it.each([
+    ['numeric strings', '"4"'],
+    ['non-finite numbers', '1e400'],
+  ])('rejects %s', (_label, helpfulness) => {
+    const content = `{
+      "scores": {
+        "r1": {
+          "helpfulness": ${helpfulness},
+          "accuracy": 4,
+          "clarity": 4,
+          "overall": 4,
+          "rationale": "Good"
+        }
+      },
+      "winner": "r1"
+    }`;
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toContain('must be a finite number');
+    expect(parsed.scores).toEqual({});
+  });
+
+  it.each([0, 6])('rejects the out-of-range score %s', (helpfulness) => {
+    const content = JSON.stringify({
+      scores: {
+        r1: {
+          helpfulness,
+          accuracy: 4,
+          clarity: 4,
+          overall: 4,
+          rationale: 'Good',
+        },
+      },
+      winner: 'r1',
+    });
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toContain('must be between 1 and 5');
+    expect(parsed.scores).toEqual({});
+  });
+
+  it('rejects a non-string rationale', () => {
+    const content = JSON.stringify({
+      scores: {
+        r1: {
+          helpfulness: 4,
+          accuracy: 4,
+          clarity: 4,
+          overall: 4,
+          rationale: null,
+        },
+      },
+      winner: 'r1',
+    });
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toContain('rationale for candidate r1');
+    expect(parsed.scores).toEqual({});
   });
 
   it('returns an error for non-JSON content', () => {
@@ -162,14 +253,70 @@ describe('parseJudgeContent', () => {
     expect(parsed.error).toMatch(/parse judge JSON/i);
   });
 
-  it('derives overall from other scores when missing', () => {
+  it('rejects a missing overall score', () => {
     const content = JSON.stringify({
       scores: {
         r1: { helpfulness: 4, accuracy: 4, clarity: 4, rationale: '' },
       },
+      winner: 'r1',
     });
     const parsed = parseJudgeContent(content, candidates);
-    expect(parsed.scores.r1.overall).toBe(4);
+    expect(parsed.error).toContain('r1 criterion overall');
+    expect(parsed.scores).toEqual({});
+  });
+
+  it('rejects a winner that is not a scored candidate', () => {
+    const content = JSON.stringify({
+      scores: {
+        r1: {
+          helpfulness: 4,
+          accuracy: 4,
+          clarity: 4,
+          overall: 4,
+          rationale: 'Good',
+        },
+        r2: {
+          helpfulness: 3,
+          accuracy: 3,
+          clarity: 3,
+          overall: 3,
+          rationale: 'Fine',
+        },
+      },
+      winner: 'unknown',
+    });
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toBe(
+      'Judge winner must be one of the scored candidates',
+    );
+    expect(parsed.winnerRunnerId).toBeNull();
+    expect(parsed.scores).toEqual({});
+  });
+
+  it('rejects a winner whose overall score is not highest', () => {
+    const content = JSON.stringify({
+      scores: {
+        r1: {
+          helpfulness: 5,
+          accuracy: 5,
+          clarity: 5,
+          overall: 5,
+          rationale: 'Best',
+        },
+        r2: {
+          helpfulness: 3,
+          accuracy: 3,
+          clarity: 3,
+          overall: 3,
+          rationale: 'Fine',
+        },
+      },
+      winner: 'r2',
+    });
+    const parsed = parseJudgeContent(content, candidates);
+    expect(parsed.error).toContain('r2 does not have a highest overall score');
+    expect(parsed.winnerRunnerId).toBeNull();
+    expect(parsed.scores).toEqual({});
   });
 });
 

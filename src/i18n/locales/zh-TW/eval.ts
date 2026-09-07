@@ -156,4 +156,13 @@ export const evalStrings = {
   judgeNonJson: '評審回傳的內容不是 JSON',
   judgeJsonParseFailed: '無法解析評審 JSON：{detail}',
   judgeJsonNotObject: '評審 JSON 不是物件',
+  judgeScoresNotObject: '評審分數必須是物件',
+  judgeMissingCandidateScore: '缺少候選項目 {candidateId} 的評審分數',
+  judgeScoreNotFinite:
+    '候選項目 {candidateId} 的 {criterion} 分數必須是有限數值',
+  judgeScoreOutOfRange:
+    '候選項目 {candidateId} 的 {criterion} 分數必須介於 1 到 5 之間',
+  judgeInvalidRationale: '候選項目 {candidateId} 的評審理由必須是字串',
+  judgeInvalidWinner: '評審優勝者必須是已評分的候選項目之一',
+  judgeWinnerScoreMismatch: '評審優勝者 {winner} 的總分並非最高分',
 } as const;
