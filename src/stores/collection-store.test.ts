@@ -33,6 +33,16 @@ vi.mock('nanoid', () => ({
 
 vi.mock('@/db', () => ({ db: mockDb }));
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 function makeCollection(overrides?: Partial<Collection>): Collection {
   return {
     id: 'collection-1',
@@ -204,7 +214,7 @@ describe('collection-store', () => {
       );
     });
 
-    it('rolls back state when DB add fails', async () => {
+    it('leaves state unchanged when DB add fails', async () => {
       const existing = [makeCollection()];
       useCollectionStore.setState({ collections: existing });
       mockDb.collections.add.mockRejectedValueOnce(new Error('db failed'));
@@ -213,6 +223,22 @@ describe('collection-store', () => {
         'db failed',
       );
       expect(getState().collections).toEqual(existing);
+    });
+
+    it('keeps a later successful add when an earlier add fails', async () => {
+      const pendingAdd = deferred<void>();
+      mockDb.collections.add
+        .mockReturnValueOnce(pendingAdd.promise)
+        .mockResolvedValueOnce(undefined);
+
+      const failedAdd = getState().addCollection('Fails');
+      const failedAddAssertion = expect(failedAdd).rejects.toThrow('db failed');
+      const added = await getState().addCollection('Succeeds');
+
+      pendingAdd.reject(new Error('db failed'));
+      await failedAddAssertion;
+
+      expect(getState().collections).toEqual([added]);
     });
   });
 

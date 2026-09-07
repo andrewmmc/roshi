@@ -19,6 +19,16 @@ const { mockDb } = vi.hoisted(() => {
 
 vi.mock('@/db', () => ({ db: mockDb }));
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 function setupOrderByChain(entries: unknown[] = []) {
   mockDb.history.orderBy.mockReturnValue({
     reverse: vi.fn().mockReturnValue({
@@ -84,7 +94,7 @@ describe('history-store', () => {
       expect(getState().entries[1].id).toBe('existing');
     });
 
-    it('restores entries and rethrows when the DB add fails', async () => {
+    it('leaves entries unchanged and rethrows when the DB add fails', async () => {
       const existing = makeHistoryEntry({ id: 'existing' });
       useHistoryStore.setState({ entries: [existing] });
       mockDb.history.add.mockRejectedValueOnce(new Error('db add failed'));
@@ -109,7 +119,7 @@ describe('history-store', () => {
       expect(getState().entries[0].id).toBe('b');
     });
 
-    it('restores entries and rethrows when the DB delete fails', async () => {
+    it('leaves entries unchanged and rethrows when the DB delete fails', async () => {
       const entries = [
         makeHistoryEntry({ id: 'a' }),
         makeHistoryEntry({ id: 'b' }),
@@ -126,6 +136,28 @@ describe('history-store', () => {
     });
   });
 
+  describe('overlapping mutations', () => {
+    it('keeps a later successful add when an earlier delete fails', async () => {
+      const existing = makeHistoryEntry({ id: 'existing' });
+      useHistoryStore.setState({ entries: [existing] });
+      const pendingDelete = deferred<void>();
+      mockDb.history.delete.mockReturnValueOnce(pendingDelete.promise);
+
+      const failedDelete = getState().deleteEntry(existing.id);
+      const failedDeleteAssertion =
+        expect(failedDelete).rejects.toThrow('db delete failed');
+      const added = await getState().addEntry(addEntryData());
+
+      pendingDelete.reject(new Error('db delete failed'));
+      await failedDeleteAssertion;
+
+      expect(getState().entries.map((entry) => entry.id)).toEqual([
+        added.id,
+        existing.id,
+      ]);
+    });
+  });
+
   describe('clearAll', () => {
     it('clears DB and empties state', async () => {
       useHistoryStore.setState({
@@ -138,7 +170,7 @@ describe('history-store', () => {
       expect(getState().entries).toEqual([]);
     });
 
-    it('restores entries and rethrows when the DB clear fails', async () => {
+    it('leaves entries unchanged and rethrows when the DB clear fails', async () => {
       const entries = [makeHistoryEntry({ id: 'a' })];
       useHistoryStore.setState({ entries });
       mockDb.history.clear.mockRejectedValueOnce(new Error('db clear failed'));

@@ -16,7 +16,7 @@ interface HistoryStore {
   clearAll: () => Promise<void>;
 }
 
-export const useHistoryStore = create<HistoryStore>((set, get) => ({
+export const useHistoryStore = create<HistoryStore>((set) => ({
   entries: [],
   loaded: false,
 
@@ -31,36 +31,18 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
       id: nanoid(),
       createdAt: new Date(),
     };
-    const prevEntries = get().entries;
-    try {
-      await db.history.add(entry);
-      set((state) => ({ entries: [entry, ...state.entries] }));
-      return entry;
-    } catch (error) {
-      set({ entries: prevEntries });
-      throw error;
-    }
+    await db.history.add(entry);
+    set((state) => ({ entries: [entry, ...state.entries] }));
+    return entry;
   },
 
   deleteEntry: async (id) => {
-    const prevEntries = get().entries;
-    try {
-      await db.history.delete(id);
-      set((state) => ({ entries: removeById(state.entries, id) }));
-    } catch (error) {
-      set({ entries: prevEntries });
-      throw error;
-    }
+    await db.history.delete(id);
+    set((state) => ({ entries: removeById(state.entries, id) }));
   },
 
   clearAll: async () => {
-    const prevEntries = get().entries;
-    try {
-      await db.history.clear();
-      set({ entries: [] });
-    } catch (error) {
-      set({ entries: prevEntries });
-      throw error;
-    }
+    await db.history.clear();
+    set({ entries: [] });
   },
 }));

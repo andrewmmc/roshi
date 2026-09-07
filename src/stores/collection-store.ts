@@ -118,74 +118,52 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       createdAt: new Date(),
     };
 
-    const prevCollections = get().collections;
-    try {
-      await db.collections.add(collection);
-      set((state) => ({
-        collections: sortedCollections([...state.collections, collection]),
-      }));
-      return collection;
-    } catch (error) {
-      set({ collections: prevCollections });
-      throw error;
-    }
+    await db.collections.add(collection);
+    set((state) => ({
+      collections: sortedCollections([...state.collections, collection]),
+    }));
+    return collection;
   },
 
   renameCollection: async (id, name) => {
     const trimmedName = name.trim();
     if (!trimmedName) throw new AppError('COLLECTION_NAME_REQUIRED');
 
-    const prevCollections = get().collections;
-    try {
-      await db.collections.update(id, { name: trimmedName });
-      set((state) => ({
-        collections: sortedCollections(
-          replaceById(state.collections, id, { name: trimmedName }),
-        ),
-      }));
-    } catch (error) {
-      set({ collections: prevCollections });
-      throw error;
-    }
+    await db.collections.update(id, { name: trimmedName });
+    set((state) => ({
+      collections: sortedCollections(
+        replaceById(state.collections, id, { name: trimmedName }),
+      ),
+    }));
   },
 
   deleteCollection: async (id) => {
     const collection = get().collections.find((item) => item.id === id);
     if (collection?.kind === 'templates') return;
 
-    const prevCollections = get().collections;
-    const prevSavedRequests = get().savedRequests;
     const deletedRequestIds = new Set(
-      prevSavedRequests
-        .filter((request) => request.collectionId === id)
+      get()
+        .savedRequests.filter((request) => request.collectionId === id)
         .map((request) => request.id),
     );
-    try {
-      await db.transaction('rw', db.collections, db.savedRequests, async () => {
-        await db.savedRequests.where('collectionId').equals(id).delete();
-        await db.collections.delete(id);
-      });
+    await db.transaction('rw', db.collections, db.savedRequests, async () => {
+      await db.savedRequests.where('collectionId').equals(id).delete();
+      await db.collections.delete(id);
+    });
 
-      set((state) => ({
-        collections: removeById(state.collections, id),
-        savedRequests: state.savedRequests.filter(
-          (request) => request.collectionId !== id,
-        ),
-      }));
-      const composer = useComposerStore.getState();
-      if (
-        composer.activeCollectionId === id ||
-        (composer.activeSavedRequestId !== null &&
-          deletedRequestIds.has(composer.activeSavedRequestId))
-      ) {
-        composer.setSavedRequestContext(null, null);
-      }
-    } catch (error) {
-      set({
-        collections: prevCollections,
-        savedRequests: prevSavedRequests,
-      });
-      throw error;
+    set((state) => ({
+      collections: removeById(state.collections, id),
+      savedRequests: state.savedRequests.filter(
+        (request) => request.collectionId !== id,
+      ),
+    }));
+    const composer = useComposerStore.getState();
+    if (
+      composer.activeCollectionId === id ||
+      (composer.activeSavedRequestId !== null &&
+        deletedRequestIds.has(composer.activeSavedRequestId))
+    ) {
+      composer.setSavedRequestContext(null, null);
     }
   },
 
@@ -213,33 +191,17 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       updatedAt: now,
     };
 
-    const prevSavedRequests = get().savedRequests;
-    const prevComposerContext = {
-      collectionId: composer.activeCollectionId,
-      savedRequestId: composer.activeSavedRequestId,
-    };
-    try {
-      await db.savedRequests.add(savedRequest);
-      useComposerStore
-        .getState()
-        .setSavedRequestContext(collectionId, savedRequest.id);
-      set((state) => ({
-        savedRequests: sortedSavedRequests([
-          ...state.savedRequests,
-          savedRequest,
-        ]),
-      }));
-      return savedRequest;
-    } catch (error) {
-      useComposerStore
-        .getState()
-        .setSavedRequestContext(
-          prevComposerContext.collectionId,
-          prevComposerContext.savedRequestId,
-        );
-      set({ savedRequests: prevSavedRequests });
-      throw error;
-    }
+    await db.savedRequests.add(savedRequest);
+    useComposerStore
+      .getState()
+      .setSavedRequestContext(collectionId, savedRequest.id);
+    set((state) => ({
+      savedRequests: sortedSavedRequests([
+        ...state.savedRequests,
+        savedRequest,
+      ]),
+    }));
+    return savedRequest;
   },
 
   updateSavedRequest: async (id, name) => {
@@ -268,34 +230,18 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       updatedAt: new Date(),
     };
 
-    const prevSavedRequests = get().savedRequests;
-    const prevComposerContext = {
-      collectionId: composer.activeCollectionId,
-      savedRequestId: composer.activeSavedRequestId,
-    };
-    try {
-      await db.savedRequests.update(id, updates);
-      useComposerStore
-        .getState()
-        .setSavedRequestContext(existing.collectionId ?? null, existing.id);
-      set((state) => ({
-        savedRequests: sortedSavedRequests(
-          replaceById(state.savedRequests, id, (request) => ({
-            ...request,
-            ...updates,
-          })),
-        ),
-      }));
-    } catch (error) {
-      useComposerStore
-        .getState()
-        .setSavedRequestContext(
-          prevComposerContext.collectionId,
-          prevComposerContext.savedRequestId,
-        );
-      set({ savedRequests: prevSavedRequests });
-      throw error;
-    }
+    await db.savedRequests.update(id, updates);
+    useComposerStore
+      .getState()
+      .setSavedRequestContext(existing.collectionId ?? null, existing.id);
+    set((state) => ({
+      savedRequests: sortedSavedRequests(
+        replaceById(state.savedRequests, id, (request) => ({
+          ...request,
+          ...updates,
+        })),
+      ),
+    }));
   },
 
   renameSavedRequest: async (id, name) => {
@@ -312,21 +258,15 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       updatedAt: new Date(),
     };
 
-    const prevSavedRequests = get().savedRequests;
-    try {
-      await db.savedRequests.update(id, updates);
-      set((state) => ({
-        savedRequests: sortedSavedRequests(
-          replaceById(state.savedRequests, id, (request) => ({
-            ...request,
-            ...updates,
-          })),
-        ),
-      }));
-    } catch (error) {
-      set({ savedRequests: prevSavedRequests });
-      throw error;
-    }
+    await db.savedRequests.update(id, updates);
+    set((state) => ({
+      savedRequests: sortedSavedRequests(
+        replaceById(state.savedRequests, id, (request) => ({
+          ...request,
+          ...updates,
+        })),
+      ),
+    }));
   },
 
   moveSavedRequest: async (id, collectionId) => {
@@ -347,24 +287,18 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
       updatedAt: new Date(),
     };
 
-    const prevSavedRequests = get().savedRequests;
     const composer = useComposerStore.getState();
-    try {
-      await db.savedRequests.update(id, updates);
-      set((state) => ({
-        savedRequests: sortedSavedRequests(
-          replaceById(state.savedRequests, id, (request) => ({
-            ...request,
-            ...updates,
-          })),
-        ),
-      }));
-      if (composer.activeSavedRequestId === id) {
-        composer.setSavedRequestContext(collectionId, id);
-      }
-    } catch (error) {
-      set({ savedRequests: prevSavedRequests });
-      throw error;
+    await db.savedRequests.update(id, updates);
+    set((state) => ({
+      savedRequests: sortedSavedRequests(
+        replaceById(state.savedRequests, id, (request) => ({
+          ...request,
+          ...updates,
+        })),
+      ),
+    }));
+    if (composer.activeSavedRequestId === id) {
+      composer.setSavedRequestContext(collectionId, id);
     }
   },
 
@@ -372,30 +306,14 @@ export const useCollectionStore = create<CollectionStore>((set, get) => ({
     const existing = get().savedRequests.find((request) => request.id === id);
     if (existing?.isTemplate) return;
 
-    const prevSavedRequests = get().savedRequests;
     const composer = useComposerStore.getState();
-    const prevComposerContext = {
-      collectionId: composer.activeCollectionId,
-      savedRequestId: composer.activeSavedRequestId,
-    };
-    try {
-      await db.savedRequests.delete(id);
-      set((state) => ({
-        savedRequests: removeById(state.savedRequests, id),
-      }));
+    await db.savedRequests.delete(id);
+    set((state) => ({
+      savedRequests: removeById(state.savedRequests, id),
+    }));
 
-      if (composer.activeSavedRequestId === id) {
-        composer.setSavedRequestContext(null, null);
-      }
-    } catch (error) {
-      useComposerStore
-        .getState()
-        .setSavedRequestContext(
-          prevComposerContext.collectionId,
-          prevComposerContext.savedRequestId,
-        );
-      set({ savedRequests: prevSavedRequests });
-      throw error;
+    if (composer.activeSavedRequestId === id) {
+      composer.setSavedRequestContext(null, null);
     }
   },
 }));
