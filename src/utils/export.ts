@@ -4,7 +4,11 @@ import { sortProvidersByName } from '@/utils/sort-providers';
 import type { NormalizedRequest, NormalizedResponse } from '@/types/normalized';
 import type { EvalRunRecord } from '@/types/eval';
 import { isTauri } from '@tauri-apps/api/core';
-import { normalizeProviderConfig } from '@/stores/provider-store';
+import {
+  normalizeProviderConfig,
+  useProviderStore,
+} from '@/stores/provider-store';
+import { redactExportData } from '@/utils/export-redact';
 import {
   redactHeaderEntries,
   redactHeaders,
@@ -31,8 +35,17 @@ interface ExportEnvelope<T> {
   data: T;
 }
 
-async function downloadJson(data: unknown, filename: string): Promise<void> {
-  const json = JSON.stringify(data, null, 2);
+async function downloadJson(
+  data: unknown,
+  filename: string,
+  providers: ProviderConfig[] = useProviderStore.getState().providers,
+  redact = true,
+): Promise<void> {
+  const json = JSON.stringify(
+    redact ? redactExportData(data, providers) : data,
+    null,
+    2,
+  );
   await downloadFile(json, filename, 'application/json', 'JSON', 'json');
 }
 
@@ -96,7 +109,12 @@ export function exportProviders(
     type: 'providers',
     data,
   };
-  downloadJson(envelope, `roshi-providers-${dateTag()}.json`);
+  downloadJson(
+    envelope,
+    `roshi-providers-${dateTag()}.json`,
+    providers,
+    redactKeys,
+  );
 }
 
 export function exportHistory(entries: HistoryEntry[]): void {
@@ -254,6 +272,7 @@ export function exportEvalRunJson(record: EvalRunRecord): void {
 }
 
 export function buildEvalRunCsv(record: EvalRunRecord): string {
+  record = redactExportData(record, useProviderStore.getState().providers);
   const header = [
     'runner_id',
     'provider',

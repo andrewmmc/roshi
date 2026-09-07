@@ -79,19 +79,33 @@ export async function sendRequest(
 
   const startTime = performance.now();
 
-  const isStreaming = compatibleRequest.stream;
-  const combinedSignal = isStreaming
-    ? signal
-    : signal
-      ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
-      : AbortSignal.timeout(timeoutMs);
+  // Streaming requests need a deadline for response headers, but an active
+  // stream must be allowed to outlive it. Non-streaming requests retain their
+  // full-response deadline.
+  const headerController = new AbortController();
+  const deadlineSignal = compatibleRequest.stream
+    ? headerController.signal
+    : AbortSignal.timeout(timeoutMs);
+  const combinedSignal = signal
+    ? AbortSignal.any([signal, deadlineSignal])
+    : deadlineSignal;
+  const headerTimer = setTimeout(() => {
+    headerController.abort(
+      new DOMException('Response headers timed out', 'TimeoutError'),
+    );
+  }, timeoutMs);
 
-  const fetchResponse = await runtimeFetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    signal: combinedSignal,
-  });
+  let fetchResponse: Response;
+  try {
+    fetchResponse = await runtimeFetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: combinedSignal,
+    });
+  } finally {
+    clearTimeout(headerTimer);
+  }
 
   const responseHeaders: Record<string, string> = {};
   fetchResponse.headers.forEach((value, key) => {
@@ -301,7 +315,7 @@ async function handleStream(
         translateNow('request.streamIdleTimeout'),
         'TimeoutError',
       );
-      void reader.cancel();
+      void reader.cancel().catch(() => {});
     }, idleTimeoutMs);
   };
 
@@ -362,6 +376,9 @@ async function handleStream(
     }
   } finally {
     clearIdleTimer();
+    // Releasing the lock alone leaves an open upstream pipe waiting forever
+    // after a provider error (or a throwing parser/callback).
+    await reader.cancel().catch(() => {});
     reader.releaseLock();
     await pipePromise.catch((error) => {
       pipeError = error;

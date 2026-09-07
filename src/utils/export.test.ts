@@ -35,6 +35,7 @@ import {
   exportCodeSnippet,
 } from './export';
 import type { CurrentRequestExport } from './export';
+import { useProviderStore } from '@/stores/provider-store';
 import { emptyResult } from '@/types/eval';
 import type { EvalRunRecord } from '@/types/eval';
 
@@ -127,6 +128,7 @@ describe('export', () => {
   let downloadFilename: string;
 
   beforeEach(() => {
+    useProviderStore.setState({ providers: [] });
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-15T12:00:00Z'));
 
@@ -191,6 +193,44 @@ describe('export', () => {
       expect(envelope.data[0].apiKey).toBe('REDACTED');
       expect(envelope.type).toBe('providers');
       expect(envelope.app).toBe('roshi');
+    });
+
+    it('redacts provider credentials in custom headers and URLs without mutating providers', async () => {
+      const provider = makeProvider({
+        apiKey: 'provider-value',
+        auth: { type: 'api-key-header', headerName: 'X-Company' },
+        baseUrl: 'https://example.com?%61pi_key=url-value&region=us',
+        endpoints: { chat: '/chat?X-Company=query-value' },
+        customHeaders: {
+          'x-company': 'override-value',
+          'X-Custom-Token': 'header-value',
+          'X-Debug': 'provider-value',
+          Accept: 'application/json',
+        },
+      });
+      const original = structuredClone(provider);
+      exportProviders([provider]);
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const text = await blob.text();
+      for (const secret of [
+        'provider-value',
+        'url-value',
+        'query-value',
+        'override-value',
+        'header-value',
+      ])
+        expect(text).not.toContain(secret);
+      const exported = JSON.parse(text).data[0];
+      expect(exported.customHeaders.Accept).toBe('application/json');
+      expect(exported.baseUrl).toContain('region=us');
+      expect(exported.auth.headerName).toBe('X-Company');
+      expect(provider).toEqual(original);
+
+      exportProviders([provider], { redactKeys: false });
+      const unredacted: Blob = createObjectURLSpy.mock.calls[1][0];
+      expect(JSON.parse(await unredacted.text()).data[0].customHeaders).toEqual(
+        provider.customHeaders,
+      );
     });
 
     it('exportProviders preserves keys when redactKeys is false', async () => {
@@ -505,6 +545,41 @@ describe('export', () => {
       expect(envelope.type).toBe('eval-run');
       expect(envelope.data.id).toBe('rec-1');
       expect(envelope.data.runners).toHaveLength(2);
+    });
+
+    it('redacts eval headers and known credentials in JSON and CSV, preserving the live record', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            apiKey: 'provider-value',
+            auth: { type: 'api-key-header', headerName: 'X-Company' },
+          }),
+        ],
+      });
+      const record = makeEvalRecord();
+      record.request.customHeaders = [
+        { key: 'Authorization', value: 'Bearer custom-value' },
+        { key: 'x-company', value: 'override-value' },
+        { key: 'X-Custom-Token', value: 'header-value' },
+        { key: 'Accept', value: 'application/json' },
+      ];
+      record.results[1].error = 'Rejected provider-value';
+      const original = structuredClone(record);
+      exportEvalRunJson(record);
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const text = await blob.text();
+      for (const secret of [
+        'custom-value',
+        'override-value',
+        'header-value',
+        'provider-value',
+      ])
+        expect(text).not.toContain(secret);
+      expect(JSON.parse(text).data.request.customHeaders[3].value).toBe(
+        'application/json',
+      );
+      expect(buildEvalRunCsv(record)).not.toContain('provider-value');
+      expect(record).toEqual(original);
     });
 
     it('buildEvalRunCsv writes one row per runner with quoted fields when needed', () => {

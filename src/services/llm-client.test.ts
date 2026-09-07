@@ -379,7 +379,7 @@ describe('llm-client', () => {
       );
     });
 
-    it('does not apply a wall-clock timeout to streaming fetch requests', async () => {
+    it('clears the response-header deadline after streaming fetch resolves', async () => {
       mockAdapter = createMockAdapter({
         parseStreamChunk: vi.fn().mockReturnValue(null),
       });
@@ -398,7 +398,91 @@ describe('llm-client', () => {
         request: makeRequest({ stream: true }),
       });
 
-      expect(mockFetch.mock.calls[0][1].signal).toBeUndefined();
+      const signal = mockFetch.mock.calls[0][1].signal as AbortSignal;
+      expect(signal).toBeInstanceOf(AbortSignal);
+      expect(signal.aborted).toBe(false);
+    });
+
+    it('times out a streaming request that never receives response headers', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(
+            (_url, init) =>
+              new Promise((_resolve, reject) => {
+                init.signal.addEventListener('abort', () =>
+                  reject(init.signal.reason),
+                );
+              }),
+          ),
+        );
+        const pending = sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+          timeoutMs: 50,
+        });
+        const rejected = expect(pending).rejects.toMatchObject({
+          name: 'TimeoutError',
+        });
+        await vi.advanceTimersByTimeAsync(51);
+        await rejected;
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('allows a healthy stream to outlive the response-header deadline and still cancel', async () => {
+      vi.useFakeTimers();
+      try {
+        let streamController: ReadableStreamDefaultController<Uint8Array>;
+        let fetchSignal: AbortSignal;
+        const controller = new AbortController();
+        const onChunk = vi.fn();
+        mockAdapter.parseStreamChunk = vi
+          .fn()
+          .mockReturnValue({ content: 'hi' });
+        vi.stubGlobal(
+          'fetch',
+          vi.fn((_url, init) => {
+            fetchSignal = init.signal;
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              headers: new Headers(),
+              body: new ReadableStream<Uint8Array>({
+                start(c) {
+                  streamController = c;
+                  fetchSignal.addEventListener('abort', () =>
+                    c.error(fetchSignal.reason),
+                  );
+                },
+              }),
+            });
+          }),
+        );
+        const pending = sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+          signal: controller.signal,
+          timeoutMs: 50,
+          onStreamChunk: onChunk,
+        });
+        const rejected = expect(pending).rejects.toMatchObject({
+          name: 'AbortError',
+        });
+        await vi.advanceTimersByTimeAsync(0);
+        for (let i = 0; i < 4; i++) {
+          streamController!.enqueue(new TextEncoder().encode('data: {}\n\n'));
+          await vi.advanceTimersByTimeAsync(30);
+        }
+        expect(onChunk).toHaveBeenCalledTimes(4);
+        expect(fetchSignal!.aborted).toBe(false);
+        controller.abort(new DOMException('Cancelled', 'AbortError'));
+        await rejected;
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('applies a wall-clock timeout to non-streaming fetch requests', async () => {
@@ -981,6 +1065,41 @@ describe('llm-client', () => {
       // parseStreamChunk should be called only once (not for [DONE])
       expect(mockAdapter.parseStreamChunk).toHaveBeenCalledTimes(1);
       expect(result.response.content).toBe('Hi');
+    });
+
+    it('cancels an open upstream after a provider error instead of hanging in cleanup', async () => {
+      const cancel = vi.fn();
+      mockAdapter.parseStreamError = vi
+        .fn()
+        .mockReturnValue('rate limit exceeded');
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          body: new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(
+                new TextEncoder().encode(
+                  'data: {"error":"rate limit exceeded"}\n\n',
+                ),
+              );
+            },
+            cancel,
+          }),
+        }),
+      );
+      await expect(
+        sendRequest({
+          provider: makeProvider(),
+          request: makeRequest({ stream: true }),
+        }),
+      ).rejects.toMatchObject({
+        name: 'StreamError',
+        message: 'rate limit exceeded',
+      });
+      expect(cancel).toHaveBeenCalledOnce();
     });
 
     it('throws StreamError when the stream idles past the timeout', async () => {
