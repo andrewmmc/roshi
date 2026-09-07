@@ -27,6 +27,8 @@ import {
 } from '@/types/optional-params';
 import { useComposerStore } from '@/stores/composer-store';
 import { useResponseStore } from '@/stores/response-store';
+import { useProviderStore } from '@/stores/provider-store';
+import { useEnvironmentStore } from '@/stores/environment-store';
 import { toast } from '@/stores/toast-store';
 import { translateNow } from '@/i18n';
 import {
@@ -77,11 +79,18 @@ export interface ResponseSnapshot {
   compatibilityWarnings: string[];
 }
 
+export interface RequestSelection {
+  providerId: string | null;
+  modelId: string | null;
+  environmentId: string | null;
+}
+
 export interface RequestTab {
   id: string;
   /** Persisted label (updated lazily on tab switch). Active tab label is derived live in the TabBar. */
   label: string;
   composer: ComposerSnapshot;
+  selection: RequestSelection;
   response: ResponseSnapshot;
 }
 
@@ -97,7 +106,11 @@ export type DraftPersistenceStatus = 'idle' | 'saving' | 'saved' | 'error';
 interface PersistedRequestSession {
   version: 1;
   activeTabId: string;
-  tabs: Array<Pick<RequestTab, 'id' | 'label' | 'composer'>>;
+  tabs: Array<
+    Pick<RequestTab, 'id' | 'label' | 'composer'> & {
+      selection?: RequestSelection;
+    }
+  >;
 }
 
 const requestSessionLoadGuard = createLoadGuard();
@@ -175,6 +188,38 @@ export function computeTabLabel(messages: NormalizedMessage[]): string {
   return text.length > 22 ? text.slice(0, 22).trimEnd() + '\u2026' : text;
 }
 
+function captureSelection(): RequestSelection {
+  const provider = useProviderStore.getState();
+  return {
+    providerId: provider.selectedProviderId,
+    modelId: provider.selectedModelId,
+    environmentId: useEnvironmentStore.getState().selectedEnvironmentId,
+  };
+}
+
+function applySelection(selection: RequestSelection): void {
+  const providers = useProviderStore.getState();
+  const provider = providers.providers.find(
+    (item) => item.id === selection.providerId,
+  );
+  // A deleted selection must require a fresh choice, never silently redirect
+  // an existing prompt to a different provider or model.
+  providers.selectProvider(provider?.id ?? null);
+  providers.selectModel(
+    provider?.models.some((model) => model.id === selection.modelId)
+      ? selection.modelId
+      : null,
+  );
+  const environments = useEnvironmentStore.getState();
+  environments.selectEnvironment(
+    environments.environments.some(
+      (item) => item.id === selection.environmentId,
+    )
+      ? selection.environmentId
+      : null,
+  );
+}
+
 function captureComposerSnapshot(): ComposerSnapshot {
   const s = useComposerStore.getState();
   return {
@@ -241,6 +286,7 @@ function newBlankTab(): RequestTab {
     id: nanoid(),
     label: translateNow('navigation.cmdNewRequest'),
     composer: createDefaultComposerSnapshot(),
+    selection: captureSelection(),
     response: { ...EMPTY_RESPONSE_SNAPSHOT },
   };
 }
@@ -262,7 +308,16 @@ function isPersistedRequestSession(
         typeof tab.label === 'string' &&
         tab.composer &&
         Array.isArray(tab.composer.messages) &&
-        Array.isArray(tab.composer.customHeaders),
+        Array.isArray(tab.composer.customHeaders) &&
+        (tab.selection === undefined ||
+          (tab.selection !== null &&
+            typeof tab.selection === 'object' &&
+            ['providerId', 'modelId', 'environmentId'].every((key) => {
+              const id = (tab.selection as unknown as Record<string, unknown>)[
+                key
+              ];
+              return id === null || typeof id === 'string';
+            }))),
     )
   );
 }
@@ -280,6 +335,8 @@ function buildPersistedRequestSession(): PersistedRequestSession {
           ? computeTabLabel(activeComposer.messages)
           : tab.label,
       composer: tab.id === state.activeTabId ? activeComposer : tab.composer,
+      selection:
+        tab.id === state.activeTabId ? captureSelection() : tab.selection,
     })),
   };
 }
@@ -377,6 +434,11 @@ export const useTabStore = create<TabStore>((set, get) => ({
       () => get().hydrated,
       async () => {
         try {
+          // Selection validation must wait for the referenced records to load.
+          await Promise.all([
+            useProviderStore.getState().load(),
+            useEnvironmentStore.getState().load(),
+          ]);
           const saved = await loadSetting<unknown>(REQUEST_SESSION_SETTING_KEY);
           if (isPersistedRequestSession(saved)) {
             const restoredTabs: RequestTab[] = saved.tabs
@@ -384,6 +446,9 @@ export const useTabStore = create<TabStore>((set, get) => ({
               .map((tab) => ({
                 id: tab.id,
                 label: tab.label,
+                // Older drafts shared the global selection. Capture it once
+                // during migration so future tab switches are independent.
+                selection: tab.selection ?? captureSelection(),
                 composer: normalizeComposerSnapshot({
                   ...tab.composer,
                   scrollGeneration: 0,
@@ -399,6 +464,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
               hydrated: true,
               draftPersistenceStatus: 'idle',
             });
+            applySelection(activeTab.selection);
             applyComposerSnapshot(activeTab.composer);
             applyResponseSnapshot(activeTab.response);
           } else {
@@ -424,6 +490,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     const composerSnap = captureComposerSnapshot();
     const responseSnap = captureResponseSnapshot();
+    const selection = captureSelection();
     const label = computeTabLabel(composerSnap.messages);
 
     const newTab = newBlankTab();
@@ -432,7 +499,13 @@ export const useTabStore = create<TabStore>((set, get) => ({
       tabs: [
         ...s.tabs.map((t) =>
           t.id === s.activeTabId
-            ? { ...t, label, composer: composerSnap, response: responseSnap }
+            ? {
+                ...t,
+                label,
+                composer: composerSnap,
+                response: responseSnap,
+                selection,
+              }
             : t,
         ),
         newTab,
@@ -457,6 +530,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     const composerSnap = captureComposerSnapshot();
     const responseSnap = captureResponseSnapshot();
+    const selection = captureSelection();
     const label = computeTabLabel(composerSnap.messages);
 
     const duplicate: RequestTab = {
@@ -466,6 +540,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
           ? translateNow('navigation.cmdNewRequest')
           : label + ` ${translateNow('common.copySuffix')}`,
       composer: { ...composerSnap, scrollGeneration: 0 },
+      selection,
       response: { ...responseSnap },
     };
 
@@ -473,7 +548,13 @@ export const useTabStore = create<TabStore>((set, get) => ({
       tabs: [
         ...s.tabs.map((t) =>
           t.id === s.activeTabId
-            ? { ...t, label, composer: composerSnap, response: responseSnap }
+            ? {
+                ...t,
+                label,
+                composer: composerSnap,
+                response: responseSnap,
+                selection,
+              }
             : t,
         ),
         duplicate,
@@ -503,6 +584,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
     if (id === activeTabId) {
       const targetTab = newTabs[Math.min(index, newTabs.length - 1)];
       set({ tabs: newTabs, activeTabId: targetTab.id });
+      applySelection(targetTab.selection);
       applyComposerSnapshot(targetTab.composer);
       applyResponseSnapshot(targetTab.response);
     } else {
@@ -522,24 +604,31 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
     const composerSnap = captureComposerSnapshot();
     const responseSnap = captureResponseSnapshot();
+    const selection = captureSelection();
     const label = computeTabLabel(composerSnap.messages);
 
     // Find the target before mutating state (get() is already fresh)
     const target = get().tabs.find((t) => t.id === targetId);
+    if (!target) return;
 
     set((s) => ({
       tabs: s.tabs.map((t) =>
         t.id === activeTabId
-          ? { ...t, label, composer: composerSnap, response: responseSnap }
+          ? {
+              ...t,
+              label,
+              composer: composerSnap,
+              response: responseSnap,
+              selection,
+            }
           : t,
       ),
       activeTabId: targetId,
     }));
 
-    if (target) {
-      applyComposerSnapshot(target.composer);
-      applyResponseSnapshot(target.response);
-    }
+    applySelection(target.selection);
+    applyComposerSnapshot(target.composer);
+    applyResponseSnapshot(target.response);
     scheduleRequestSessionPersistence();
   },
 }));

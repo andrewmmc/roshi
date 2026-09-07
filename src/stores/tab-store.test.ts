@@ -1,4 +1,7 @@
 import { db } from '@/db';
+import { makeProvider, makeModel } from '@/__tests__/fixtures';
+import { useProviderStore } from './provider-store';
+import { useEnvironmentStore } from './environment-store';
 import {
   useTabStore,
   MAX_TABS,
@@ -10,7 +13,55 @@ import {
 import { useComposerStore } from './composer-store';
 import { useResponseStore } from './response-store';
 
+const providers = [
+  makeProvider({
+    id: 'p1',
+    models: [makeModel({ id: 'm1' }), makeModel({ id: 'm2' })],
+  }),
+  makeProvider({ id: 'p2', models: [makeModel({ id: 'm3' })] }),
+];
+const environments = ['e1', 'e2'].map((id) => ({
+  id,
+  name: id,
+  variables: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}));
+function select(
+  providerId: string | null,
+  modelId: string | null,
+  environmentId: string | null,
+) {
+  useProviderStore.getState().selectProvider(providerId);
+  useProviderStore.getState().selectModel(modelId);
+  useEnvironmentStore.getState().selectEnvironment(environmentId);
+}
+function expectSelection(
+  providerId: string | null,
+  modelId: string | null,
+  environmentId: string | null,
+) {
+  expect(useProviderStore.getState()).toMatchObject({
+    selectedProviderId: providerId,
+    selectedModelId: modelId,
+  });
+  expect(useEnvironmentStore.getState().selectedEnvironmentId).toBe(
+    environmentId,
+  );
+}
+
 function resetAll() {
+  useProviderStore.setState({
+    providers,
+    loaded: true,
+    selectedProviderId: 'p1',
+    selectedModelId: 'm2',
+  });
+  useEnvironmentStore.setState({
+    environments,
+    loaded: true,
+    selectedEnvironmentId: 'e1',
+  });
   useComposerStore.getState().resetComposer();
   useResponseStore.getState().resetResponse();
   // Reset tab store to a single blank tab
@@ -184,6 +235,58 @@ describe('tab-store', () => {
     });
   });
 
+  describe('per-tab selections', () => {
+    it('restores selections when switching and closing tabs, including explicit empty choices', () => {
+      const first = useTabStore.getState().activeTabId;
+      useTabStore.getState().createTab();
+      const second = useTabStore.getState().activeTabId;
+      expectSelection('p1', 'm2', 'e1');
+      select('p2', 'm3', 'e2');
+      useTabStore.getState().switchTab(first);
+      expectSelection('p1', 'm2', 'e1');
+      useTabStore.getState().switchTab(second);
+      expectSelection('p2', 'm3', 'e2');
+      select(null, null, null);
+      useTabStore.getState().switchTab(first);
+      useTabStore.getState().switchTab(second);
+      expectSelection(null, null, null);
+      useTabStore.getState().closeTab(second);
+      expectSelection('p1', 'm2', 'e1');
+    });
+
+    it('copies selections when duplicating without sharing future changes', () => {
+      const first = useTabStore.getState().activeTabId;
+      useTabStore.getState().duplicateActiveTab();
+      expectSelection('p1', 'm2', 'e1');
+      select('p2', 'm3', 'e2');
+      useTabStore.getState().switchTab(first);
+      expectSelection('p1', 'm2', 'e1');
+    });
+
+    it('clears deleted provider and environment references instead of using the current tab selection', () => {
+      const first = useTabStore.getState().activeTabId;
+      useTabStore.getState().createTab();
+      select('p2', 'm3', 'e2');
+      useProviderStore.setState({ providers: [providers[1]] });
+      useEnvironmentStore.setState({ environments: [environments[1]] });
+      useTabStore.getState().switchTab(first);
+      expectSelection(null, null, null);
+    });
+
+    it('clears a deleted model without selecting a replacement model', () => {
+      const first = useTabStore.getState().activeTabId;
+      useTabStore.getState().createTab();
+      useProviderStore.setState({
+        providers: [
+          { ...providers[0], models: [providers[0].models[0]] },
+          providers[1],
+        ],
+      });
+      useTabStore.getState().switchTab(first);
+      expectSelection('p1', null, 'e1');
+    });
+  });
+
   describe('request session persistence', () => {
     beforeEach(async () => {
       await db.settings.delete(REQUEST_SESSION_SETTING_KEY);
@@ -224,6 +327,64 @@ describe('tab-store', () => {
       expect(useTabStore.getState().draftPersistenceStatus).toBe('saved');
     });
 
+    it('waits for providers to load before validating the restored selection', async () => {
+      await db.settings.put({
+        key: REQUEST_SESSION_SETTING_KEY,
+        value: {
+          version: 1,
+          activeTabId: 'restored',
+          tabs: [
+            {
+              id: 'restored',
+              label: 'Draft',
+              composer: createDefaultComposerSnapshot(),
+              selection: {
+                providerId: 'p1',
+                modelId: 'm2',
+                environmentId: 'e1',
+              },
+            },
+          ],
+        },
+      });
+      useProviderStore.setState({ providers: [], loaded: false });
+      let finishLoad!: () => void;
+      const load = vi
+        .spyOn(useProviderStore.getState(), 'load')
+        .mockImplementation(
+          () =>
+            new Promise<void>((resolve) => {
+              finishLoad = () => {
+                useProviderStore.setState({ providers, loaded: true });
+                resolve();
+              };
+            }),
+        );
+      try {
+        const hydration = useTabStore.getState().hydrate();
+        expect(useTabStore.getState().hydrated).toBe(false);
+        finishLoad();
+        await hydration;
+        expectSelection('p1', 'm2', 'e1');
+      } finally {
+        load.mockRestore();
+      }
+    });
+
+    it('persists and restores the selections of every tab across reloads', async () => {
+      await useTabStore.getState().hydrate();
+      const first = useTabStore.getState().activeTabId;
+      useTabStore.getState().createTab();
+      select('p2', 'm3', 'e2');
+      await persistRequestSessionNow();
+      select(null, null, null);
+      useTabStore.setState({ hydrated: false });
+      await useTabStore.getState().hydrate();
+      expectSelection('p2', 'm3', 'e2');
+      useTabStore.getState().switchTab(first);
+      expectSelection('p1', 'm2', 'e1');
+    });
+
     it('restores saved tabs and the active composer', async () => {
       const firstComposer = createDefaultComposerSnapshot();
       const secondComposer = {
@@ -256,6 +417,11 @@ describe('tab-store', () => {
         secondComposer.messages,
       );
       expect(useResponseStore.getState().response).toBeNull();
+      // Legacy drafts inherit the loaded global selection once.
+      expectSelection('p1', 'm2', 'e1');
+      select('p2', 'm3', 'e2');
+      useTabStore.getState().switchTab('tab-1');
+      expectSelection('p1', 'm2', 'e1');
     });
   });
 });

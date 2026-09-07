@@ -6,12 +6,16 @@ const {
   persistRequestSessionNow,
   scheduleRequestSessionPersistence,
   subscribe,
+  providerSubscribe,
+  environmentSubscribe,
   unsubscribe,
 } = vi.hoisted(() => ({
   hydrate: vi.fn<() => Promise<void>>(),
   persistRequestSessionNow: vi.fn<() => Promise<void>>(),
   scheduleRequestSessionPersistence: vi.fn(),
   subscribe: vi.fn(),
+  providerSubscribe: vi.fn(),
+  environmentSubscribe: vi.fn(),
   unsubscribe: vi.fn(),
 }));
 
@@ -24,6 +28,13 @@ vi.mock('@/stores/tab-store', () => ({
 
 vi.mock('@/stores/composer-store', () => ({
   useComposerStore: { subscribe },
+}));
+
+vi.mock('@/stores/provider-store', () => ({
+  useProviderStore: { subscribe: providerSubscribe },
+}));
+vi.mock('@/stores/environment-store', () => ({
+  useEnvironmentStore: { subscribe: environmentSubscribe },
 }));
 
 describe('useRequestSession', () => {
@@ -39,6 +50,8 @@ describe('useRequestSession', () => {
     );
     persistRequestSessionNow.mockResolvedValue(undefined);
     subscribe.mockReturnValue(unsubscribe);
+    providerSubscribe.mockReturnValue(unsubscribe);
+    environmentSubscribe.mockReturnValue(unsubscribe);
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
       value: 'visible',
@@ -59,6 +72,27 @@ describe('useRequestSession', () => {
     expect(scheduleRequestSessionPersistence).toHaveBeenCalledOnce();
   });
 
+  it('persists selection-only edits and ignores unrelated provider/environment updates', async () => {
+    renderHook(() => useRequestSession());
+    await act(async () => resolveHydration());
+    const providerChanged = providerSubscribe.mock.calls[0][0];
+    const environmentChanged = environmentSubscribe.mock.calls[0][0];
+    const provider = { selectedProviderId: 'p1', selectedModelId: 'm1' };
+    providerChanged(provider, provider);
+    environmentChanged(
+      { selectedEnvironmentId: null },
+      { selectedEnvironmentId: null },
+    );
+    expect(scheduleRequestSessionPersistence).not.toHaveBeenCalled();
+    providerChanged({ ...provider, selectedProviderId: 'p2' }, provider);
+    providerChanged({ ...provider, selectedModelId: 'm2' }, provider);
+    environmentChanged(
+      { selectedEnvironmentId: 'e1' },
+      { selectedEnvironmentId: null },
+    );
+    expect(scheduleRequestSessionPersistence).toHaveBeenCalledTimes(3);
+  });
+
   it('flushes on page exit, when hidden, and during cleanup', async () => {
     const { unmount } = renderHook(() => useRequestSession());
     await act(async () => resolveHydration());
@@ -77,7 +111,7 @@ describe('useRequestSession', () => {
     expect(persistRequestSessionNow).toHaveBeenCalledTimes(2);
 
     unmount();
-    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledTimes(3);
     expect(persistRequestSessionNow).toHaveBeenCalledTimes(3);
 
     window.dispatchEvent(new Event('pagehide'));

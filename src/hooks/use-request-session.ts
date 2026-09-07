@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useComposerStore } from '@/stores/composer-store';
+import { useProviderStore } from '@/stores/provider-store';
+import { useEnvironmentStore } from '@/stores/environment-store';
 import {
   persistRequestSessionNow,
   scheduleRequestSessionPersistence,
@@ -16,13 +18,26 @@ export function useRequestSession() {
 
   useEffect(() => {
     let disposed = false;
-    let unsubscribeComposer: (() => void) | undefined;
+    const unsubscribers: Array<() => void> = [];
 
     void hydrate().then(() => {
       if (disposed) return;
-      unsubscribeComposer = useComposerStore.subscribe(() => {
-        scheduleRequestSessionPersistence();
-      });
+      unsubscribers.push(
+        useComposerStore.subscribe(scheduleRequestSessionPersistence),
+        useProviderStore.subscribe((state, previous) => {
+          if (
+            state.selectedProviderId !== previous.selectedProviderId ||
+            state.selectedModelId !== previous.selectedModelId
+          ) {
+            scheduleRequestSessionPersistence();
+          }
+        }),
+        useEnvironmentStore.subscribe((state, previous) => {
+          if (state.selectedEnvironmentId !== previous.selectedEnvironmentId) {
+            scheduleRequestSessionPersistence();
+          }
+        }),
+      );
     });
 
     const flush = () => {
@@ -37,7 +52,7 @@ export function useRequestSession() {
 
     return () => {
       disposed = true;
-      unsubscribeComposer?.();
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
       window.removeEventListener('pagehide', flush);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       flush();
