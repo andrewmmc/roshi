@@ -52,6 +52,7 @@ export interface EvalRunResult {
   status: EvalRunStatus;
   content: string;
   error: string | null;
+  warning: string | null;
   metrics: EvalMetrics;
   rating: number | null;
   /** Optional thumbs up/down independent of the 1-5 rating */
@@ -125,6 +126,7 @@ export function emptyResult(runnerId: string): EvalRunResult {
     status: 'pending',
     content: '',
     error: null,
+    warning: null,
     metrics: emptyMetrics(),
     rating: null,
     thumbs: null,

@@ -167,6 +167,43 @@ describe('runEval', () => {
     expect(updates).toContain('r2:success');
   });
 
+  it('preserves provider warnings and marks usable output as partial', async () => {
+    mockSendRequest.mockResolvedValueOnce({
+      response: {
+        id: 'resp',
+        model: 'm1',
+        content: 'Truncated answer',
+        role: 'assistant',
+        finishReason: 'incomplete',
+        usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+      },
+      rawRequest: {},
+      rawResponse: {},
+      requestUrl: 'https://example.com',
+      requestHeaders: {},
+      responseHeaders: {},
+      durationMs: 500,
+      statusCode: 200,
+      warning: 'Response incomplete: max_output_tokens',
+    });
+
+    const updates: string[] = [];
+    const [result] = await runEval({
+      runners: [makeRunner()],
+      providers: [baseProvider],
+      request: makeRequest(),
+      onUpdate: ({ result: update }) => {
+        updates.push(update.status);
+      },
+    }).promise;
+
+    expect(result.status).toBe('partial');
+    expect(result.content).toBe('Truncated answer');
+    expect(result.warning).toBe('Response incomplete: max_output_tokens');
+    expect(result.error).toBeNull();
+    expect(updates).toContain('partial');
+  });
+
   it('captures time to first token from streaming chunks', async () => {
     let now = 1000;
     const performanceSpy = vi

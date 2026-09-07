@@ -42,6 +42,7 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
   const compareChecked = compareSelection.includes(runner.id);
   const judgeScore = judgeResult?.scores?.[runner.id];
   const isWinner = judgeResult?.winnerRunnerId === runner.id;
+  const partialMessage = result.warning ?? result.error;
 
   const wordCount = useMemo(
     () => countWords(language, result.content),
@@ -112,9 +113,9 @@ export function ResultCard({ runner, result, judgeResult }: ResultCardProps) {
           </pre>
         ) : result.content ? (
           <>
-            {result.status === 'partial' && result.error && (
+            {result.status === 'partial' && partialMessage && (
               <p className="mb-2 text-xs font-medium text-amber-700 dark:text-amber-300">
-                {result.error}
+                {partialMessage}
               </p>
             )}
             <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap">

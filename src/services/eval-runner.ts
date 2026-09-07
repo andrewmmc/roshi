@@ -189,9 +189,10 @@ async function runSingleRunner(
 
     const result: EvalRunResult = {
       runnerId: runner.id,
-      status: 'success',
+      status: sendResult.warning ? 'partial' : 'success',
       content: sendResult.response.content,
       error: null,
+      warning: sendResult.warning ?? null,
       metrics,
       rating: null,
       thumbs: null,

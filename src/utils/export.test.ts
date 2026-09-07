@@ -547,6 +547,23 @@ describe('export', () => {
       expect(envelope.data.runners).toHaveLength(2);
     });
 
+    it('preserves partial-result warnings in JSON and CSV exports', async () => {
+      const record = makeEvalRecord();
+      record.results[0].status = 'partial';
+      record.results[0].warning = 'Response incomplete: max_output_tokens';
+
+      exportEvalRunJson(record);
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      const envelope = JSON.parse(await blob.text());
+      expect(envelope.data.results[0].warning).toBe(
+        'Response incomplete: max_output_tokens',
+      );
+
+      const csv = buildEvalRunCsv(record);
+      expect(csv.split('\n')[0]).toContain('warning,error');
+      expect(csv).toContain('Response incomplete: max_output_tokens');
+    });
+
     it('redacts eval headers and known credentials in JSON and CSV, preserving the live record', async () => {
       useProviderStore.setState({
         providers: [

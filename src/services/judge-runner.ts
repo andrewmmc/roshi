@@ -78,6 +78,8 @@ async function runJudgeInternal(
     return emptyJudgeResult(translateNow('eval.judgeProviderNoApiKey'));
   }
 
+  // Partial output remains available for review and export, but an incomplete
+  // response must not be treated as a normal candidate for judging.
   const candidates = runners
     .map((runner) => {
       const result = results.find((r) => r.runnerId === runner.id);

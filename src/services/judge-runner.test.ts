@@ -379,6 +379,58 @@ describe('runJudge', () => {
     expect(result.error).toMatch(/no successful candidate/i);
   });
 
+  it('excludes partial output from judging', async () => {
+    mockSendRequest.mockResolvedValueOnce({
+      response: {
+        id: 'j',
+        model: 'judge-m',
+        content: JSON.stringify({
+          scores: {
+            r1: {
+              helpfulness: 5,
+              accuracy: 5,
+              clarity: 5,
+              overall: 5,
+              rationale: 'Complete',
+            },
+          },
+          winner: 'r1',
+        }),
+        role: 'assistant',
+        finishReason: 'stop',
+        usage: null,
+      },
+      rawRequest: {},
+      rawResponse: {},
+      requestUrl: 'https://example.com',
+      requestHeaders: {},
+      responseHeaders: {},
+      durationMs: 100,
+      statusCode: 200,
+    });
+    const partialResult: EvalRunResult = {
+      ...emptyResult('r2'),
+      status: 'partial',
+      content: 'Truncated',
+      warning: 'Response incomplete: max_output_tokens',
+    };
+
+    const result = await runJudge({
+      config: makeConfig(),
+      providers: [judgeProvider, candidateProvider],
+      request: makeRequest(),
+      runners: [makeRunner('r1'), makeRunner('r2')],
+      results: [makeResult('r1', 'Complete'), partialResult],
+    }).promise;
+
+    expect(result.error).toBeNull();
+    expect(result.scores).toHaveProperty('r1');
+    expect(result.scores).not.toHaveProperty('r2');
+    expect(
+      mockSendRequest.mock.calls[0][0].request.messages[0].content,
+    ).not.toContain('id: r2');
+  });
+
   it('sends a judge request with the candidates and parses the response', async () => {
     mockSendRequest.mockResolvedValueOnce({
       response: {

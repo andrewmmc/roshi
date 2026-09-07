@@ -295,6 +295,7 @@ export function buildEvalRunCsv(record: EvalRunRecord): string {
     'judge_clarity',
     'judge_overall',
     'judge_winner',
+    'warning',
     'error',
   ];
 
@@ -326,6 +327,7 @@ export function buildEvalRunCsv(record: EvalRunRecord): string {
       score?.clarity ?? '',
       score?.overall ?? '',
       isWinner ? 'true' : '',
+      result.warning ?? '',
       result.error ?? '',
     ];
   });
