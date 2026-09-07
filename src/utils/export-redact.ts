@@ -6,10 +6,14 @@ import {
   SENSITIVE_QUERY_PARAMS,
 } from '@/utils/redact';
 
-/** Sanitize a copy at the export boundary; never alter live credentials. */
-export function redactExportData<T>(data: T, providers: ProviderConfig[]): T {
+/** Sanitize a copy before export or persistence; never alter live credentials. */
+export function redactExportData<T>(
+  data: T,
+  providers: ProviderConfig[],
+  additionalSecrets: readonly string[] = [],
+): T {
   const names = new Set<string>();
-  const secrets = new Set<string>();
+  const secrets = new Set<string>(additionalSecrets.filter(Boolean));
   for (const provider of providers) {
     if (provider.apiKey) secrets.add(provider.apiKey);
     if (provider.auth.headerName) {

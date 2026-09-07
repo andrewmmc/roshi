@@ -10,7 +10,9 @@ import { diffWords, jaccardSimilarity } from '@/utils/diff';
 export function CompareView() {
   const { t } = useTranslation();
   const compareSelection = useEvalStore((s) => s.compareSelection);
-  const runners = useEvalStore((s) => s.runners);
+  const runners = useEvalStore(
+    (s) => s.executionSnapshot?.runners ?? s.runners,
+  );
   const results = useEvalStore((s) => s.results);
   const clearCompare = useEvalStore((s) => s.clearCompare);
 

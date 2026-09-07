@@ -231,7 +231,9 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
   const deleteCollection = useEvalRunsStore((s) => s.deleteCollection);
   const loadRun = useEvalStore((s) => s.loadRun);
   const buildRecord = useEvalStore((s) => s.buildRecord);
-  const runners = useEvalStore((s) => s.runners);
+  const recordRunners = useEvalStore(
+    (s) => s.executionSnapshot?.runners ?? s.runners,
+  );
   const isRunning = useEvalStore((s) => s.isRunning);
   const isJudging = useEvalStore((s) => s.isJudging);
   const setMainView = useUiStore((s) => s.setMainView);
@@ -367,7 +369,7 @@ export function EvalRunsList({ headerSlot }: EvalRunsListProps) {
     }
   }, [confirm, deleteCollection, remove, t]);
 
-  const saveDisabled = isRunning || isJudging || runners.length === 0;
+  const saveDisabled = isRunning || isJudging || recordRunners.length === 0;
   const isEmpty = records.length === 0 && collections.length === 0;
 
   const nameDialogConfig = nameDialog

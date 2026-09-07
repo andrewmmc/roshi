@@ -27,6 +27,16 @@ describe('redactExportData', () => {
     });
   });
 
+  it('redacts additional runtime secrets', () => {
+    expect(
+      redactExportData(
+        { request: 'token=runtime-secret', response: 'runtime-secret echoed' },
+        [],
+        ['runtime-secret'],
+      ),
+    ).toEqual({ request: 'token=REDACTED', response: 'REDACTED echoed' });
+  });
+
   it('handles overlapping known keys and redacts raw payloads without changing their shape', () => {
     const providers = [
       makeProvider({ apiKey: 'short' }),

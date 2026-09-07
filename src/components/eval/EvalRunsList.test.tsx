@@ -119,6 +119,7 @@ describe('EvalRunsList', () => {
         },
       ],
       isRunning: false,
+      executionSnapshot: null,
     });
   });
 

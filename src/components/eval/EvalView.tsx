@@ -215,7 +215,9 @@ export function EvalView() {
 
 function EvalResultsPanel() {
   const { t } = useTranslation();
-  const runners = useEvalStore((s) => s.runners);
+  const runners = useEvalStore(
+    (s) => s.executionSnapshot?.runners ?? s.runners,
+  );
   const compareSelection = useEvalStore((s) => s.compareSelection);
   const isRunning = useEvalStore((s) => s.isRunning);
   const buildRecord = useEvalStore((s) => s.buildRecord);

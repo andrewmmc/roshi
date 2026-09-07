@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { ProviderConfig } from '@/types/provider';
+import type { Environment } from '@/types/history';
 import type { MessageAttachment, NormalizedMessage } from '@/types/normalized';
 import type {
   EvalRunRecord,
@@ -31,7 +32,11 @@ import { runJudge, DEFAULT_JUDGE_RUBRIC } from '@/services/judge-runner';
 import { useProviderStore } from '@/stores/provider-store';
 import { useEnvironmentStore } from '@/stores/environment-store';
 import { translateNow } from '@/i18n';
-import { interpolateComposerFields } from '@/utils/variables';
+import {
+  interpolateComposerFields,
+  isSecretVariableKey,
+} from '@/utils/variables';
+import { redactExportData } from '@/utils/export-redact';
 import {
   createEmptyHeaderEntry,
   headersToHistoryEntries,
@@ -60,6 +65,14 @@ interface RunHandle {
   cancel: () => void;
 }
 
+interface EvalExecutionSnapshot {
+  readonly startedAt: Date;
+  readonly request: EvalSharedRequest;
+  readonly runners: EvalRunner[];
+  readonly judgeConfig: JudgeConfig;
+  readonly redactionSecrets: string[];
+}
+
 interface EvalStoreState {
   composer: EvalComposerState;
   runners: EvalRunner[];
@@ -69,6 +82,7 @@ interface EvalStoreState {
   isRunning: boolean;
   isJudging: boolean;
   activeRunId: string | null;
+  executionSnapshot: EvalExecutionSnapshot | null;
   compareSelection: string[];
   error: string | null;
   lastSavedRecordId: string | null;
@@ -229,6 +243,7 @@ function createInitialState(): EvalStoreState {
     isRunning: false,
     isJudging: false,
     activeRunId: null,
+    executionSnapshot: null,
     compareSelection: [],
     error: null,
     lastSavedRecordId: null,
@@ -271,6 +286,27 @@ function composerToSharedRequest(
     stream: composer.stream,
     customHeaders: headersToHistoryEntries(composer.customHeaders),
   };
+}
+
+function cloneJudgeConfig(config: JudgeConfig): JudgeConfig {
+  return {
+    ...config,
+    runner: config.runner ? { ...config.runner } : null,
+  };
+}
+
+function collectExecutionRedactionSecrets(
+  environment: Environment | null,
+): string[] {
+  return [
+    ...new Set(
+      (environment?.variables ?? [])
+        .filter(
+          (variable) => variable.value && isSecretVariableKey(variable.key),
+        )
+        .map((variable) => variable.value),
+    ),
+  ];
 }
 
 export const useEvalStore = create<EvalStore>((set, get) => ({
@@ -387,7 +423,10 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     set((s) => {
       const runners = s.runners.filter((r) => r.id !== runnerId);
       const results = { ...s.results };
-      delete results[runnerId];
+      const belongsToExecution = s.executionSnapshot?.runners.some(
+        (runner) => runner.id === runnerId,
+      );
+      if (!belongsToExecution) delete results[runnerId];
       return {
         runners,
         results,
@@ -483,7 +522,9 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     };
 
     const providers = useProviderStore.getState().providers;
-    const runners = state.runners;
+    const runners = state.runners.map((runner) => ({ ...runner }));
+    const judgeConfig = cloneJudgeConfig(state.judgeConfig);
+    const redactionSecrets = collectExecutionRedactionSecrets(environment);
     const initialResults: Record<string, EvalRunResult> = {};
     for (const runner of runners) {
       initialResults[runner.id] = emptyResult(runner.id);
@@ -499,6 +540,13 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       results: initialResults,
       judgeResult: null,
       activeRunId: runId,
+      executionSnapshot: {
+        startedAt: new Date(),
+        request: redactExportData(sharedRequest, providers, redactionSecrets),
+        runners,
+        judgeConfig,
+        redactionSecrets,
+      },
     });
 
     const handle = runEval({
@@ -525,7 +573,6 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
 
     if (!isCurrentRun()) return;
 
-    const judgeConfig = get().judgeConfig;
     if (judgeConfig.enabled) {
       const judgeHandle = runJudge({
         config: judgeConfig,
@@ -601,6 +648,16 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       results,
       judgeResult: record.judgeResult,
       activeRunId: record.id,
+      executionSnapshot: {
+        startedAt: new Date(record.createdAt),
+        request: redactExportData(
+          record.request,
+          useProviderStore.getState().providers,
+        ),
+        runners: record.runners.map((runner) => ({ ...runner })),
+        judgeConfig: cloneJudgeConfig(record.judgeConfig),
+        redactionSecrets: [],
+      },
       lastSavedRecordId: record.id,
     });
   },
@@ -679,26 +736,35 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         results,
         error: null,
         compareSelection: [],
-        judgeResult: null,
+        judgeResult: state.executionSnapshot ? state.judgeResult : null,
       };
     });
   },
 
   buildRecord: (name) => {
     const state = get();
-    const shared = composerToSharedRequest(state.composer);
-    const id = nanoid();
-    return {
-      id,
-      createdAt: new Date(),
+    const providers = useProviderStore.getState().providers;
+    const snapshot = state.executionSnapshot;
+    const runners = snapshot?.runners ?? state.runners;
+    const record: EvalRunRecord = {
+      id: nanoid(),
+      createdAt: snapshot ? new Date(snapshot.startedAt) : new Date(),
       name,
-      request: shared,
-      runners: state.runners,
-      results: state.runners.map(
+      request:
+        snapshot?.request ??
+        redactExportData(composerToSharedRequest(state.composer), providers),
+      runners,
+      results: runners.map(
         (runner) => state.results[runner.id] ?? emptyResult(runner.id),
       ),
-      judgeConfig: state.judgeConfig,
+      judgeConfig: snapshot?.judgeConfig ?? state.judgeConfig,
       judgeResult: state.judgeResult,
     };
+
+    return redactExportData(
+      record,
+      providers,
+      snapshot?.redactionSecrets ?? [],
+    );
   },
 }));

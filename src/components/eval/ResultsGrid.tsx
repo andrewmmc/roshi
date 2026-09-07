@@ -7,7 +7,9 @@ import { ResultCard } from './ResultCard';
 
 export function ResultsGrid() {
   const { t } = useTranslation();
-  const runners = useEvalStore((s) => s.runners);
+  const runners = useEvalStore(
+    (s) => s.executionSnapshot?.runners ?? s.runners,
+  );
   const results = useEvalStore((s) => s.results);
   const judgeResult = useEvalStore((s) => s.judgeResult);
 

@@ -460,6 +460,96 @@ describe('useEvalStore', () => {
     expect(state.lastSavedRecordId).toBe('rec-1');
   });
 
+  it('builds records from the immutable execution snapshot after draft edits', async () => {
+    useEnvironmentStore.setState({
+      environments: [
+        {
+          id: 'env-1',
+          name: 'Production',
+          variables: [
+            { id: 'v1', key: 'REGION', value: 'us-east' },
+            { id: 'v2', key: 'API_TOKEN', value: 'runtime-secret' },
+          ],
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+        },
+      ],
+      selectedEnvironmentId: 'env-1',
+      loaded: true,
+    });
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.getState().updateMessage(0, {
+      content: 'Prompt A for {{REGION}} with {{API_TOKEN}}',
+    });
+    useEvalStore.getState().setCustomHeaders([
+      { id: 'h1', key: 'X-Region', value: '{{REGION}}' },
+      { id: 'h2', key: 'X-Trace', value: '{{API_TOKEN}}' },
+    ]);
+    const executedRunner = useEvalStore.getState().runners[0];
+    const completedResult = {
+      ...emptyResult(executedRunner.id),
+      status: 'success' as const,
+      content: 'Result for runtime-secret',
+    };
+    mockRunEval.mockImplementation((options) => {
+      options.onUpdate({
+        runnerId: executedRunner.id,
+        result: completedResult,
+      });
+      return { promise: Promise.resolve([completedResult]), cancel: vi.fn() };
+    });
+
+    await useEvalStore.getState().start();
+
+    expect(mockRunEval).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          messages: [
+            expect.objectContaining({
+              content: 'Prompt A for us-east with runtime-secret',
+            }),
+          ],
+          customHeaders: [
+            { key: 'X-Region', value: 'us-east' },
+            { key: 'X-Trace', value: 'runtime-secret' },
+          ],
+        }),
+      }),
+    );
+
+    useEvalStore.getState().updateMessage(0, { content: 'Prompt B' });
+    useEvalStore.getState().removeRunner(executedRunner.id);
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm2' });
+    useEvalStore.getState().setJudgeEnabled(true);
+    useEvalStore.getState().setJudgeRubric('edited rubric');
+
+    const record = useEvalStore.getState().buildRecord('snapshot');
+
+    expect(useEvalStore.getState().composer.messages[0].content).toBe(
+      'Prompt B',
+    );
+    expect(record.request.messages[0].content).toBe(
+      'Prompt A for us-east with REDACTED',
+    );
+    expect(record.request.customHeaders).toEqual([
+      { key: 'X-Region', value: 'us-east' },
+      { key: 'X-Trace', value: 'REDACTED' },
+    ]);
+    expect(record.runners).toEqual([executedRunner]);
+    expect(record.results).toEqual([
+      expect.objectContaining({
+        runnerId: executedRunner.id,
+        status: 'success',
+        content: 'Result for REDACTED',
+      }),
+    ]);
+    expect(record.judgeConfig).toEqual({
+      enabled: false,
+      runner: null,
+      rubric: 'judge-rubric',
+    });
+  });
+
   it('buildRecord captures the current state into a saveable shape', () => {
     useEvalStore.getState().setSystemPrompt('sys');
     useEvalStore.getState().updateMessage(0, { content: 'Hello' });
