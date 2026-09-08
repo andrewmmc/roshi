@@ -139,6 +139,13 @@ describe('tab-store', () => {
       useTabStore.getState().createTab();
       expect(useTabStore.getState().tabs).toHaveLength(MAX_TABS);
     });
+
+    it('does not create or duplicate tabs while a request is running', () => {
+      useResponseStore.setState({ isLoading: true });
+      useTabStore.getState().createTab();
+      useTabStore.getState().duplicateActiveTab();
+      expect(useTabStore.getState().tabs).toHaveLength(1);
+    });
   });
 
   describe('switchTab', () => {
@@ -174,6 +181,17 @@ describe('tab-store', () => {
 
       expect(useTabStore.getState().tabs).toBe(tabsBefore);
     });
+
+    it('ignores missing tabs and blocks switching while loading', () => {
+      useTabStore.getState().switchTab('missing');
+      expect(useTabStore.getState().tabs).toHaveLength(1);
+      useTabStore.getState().createTab();
+      const target = useTabStore.getState().tabs[0].id;
+      const active = useTabStore.getState().activeTabId;
+      useResponseStore.setState({ isLoading: true });
+      useTabStore.getState().switchTab(target);
+      expect(useTabStore.getState().activeTabId).toBe(active);
+    });
   });
 
   describe('closeTab', () => {
@@ -202,6 +220,16 @@ describe('tab-store', () => {
 
       expect(useTabStore.getState().tabs).toHaveLength(1);
       expect(useTabStore.getState().activeTabId).toBe(tabs[0].id);
+    });
+
+    it('ignores missing tabs and blocks closing the active loading tab', () => {
+      useTabStore.getState().createTab();
+      const active = useTabStore.getState().activeTabId;
+      useTabStore.getState().closeTab('missing');
+      useResponseStore.setState({ isLoading: true });
+      useTabStore.getState().closeTab(active);
+      expect(useTabStore.getState().tabs).toHaveLength(2);
+      expect(useTabStore.getState().activeTabId).toBe(active);
     });
   });
 

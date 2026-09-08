@@ -136,6 +136,35 @@ describe('useEvalRunsStore', () => {
     ).rejects.toThrow();
   });
 
+  it('rejects a missing run and skips a move to its current collection', async () => {
+    await expect(
+      useEvalRunsStore.getState().moveRun('missing', null),
+    ).rejects.toThrow();
+    await useEvalRunsStore.getState().save(makeRecord());
+    const update = vi.spyOn(db.evalRuns, 'update');
+    await useEvalRunsStore.getState().moveRun('rec-1', null);
+    expect(update).not.toHaveBeenCalled();
+    update.mockRestore();
+  });
+
+  it('rejects a blank collection rename', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    await expect(
+      useEvalRunsStore.getState().renameCollection(collection.id, '   '),
+    ).rejects.toThrow();
+  });
+
+  it('sorts collections with equal positions by name', async () => {
+    await db.evalCollections.bulkAdd([
+      { id: 'b', name: 'Beta', sortOrder: 0, createdAt: new Date() },
+      { id: 'a', name: 'Alpha', sortOrder: 0, createdAt: new Date() },
+    ]);
+    await useEvalRunsStore.getState().load();
+    expect(
+      useEvalRunsStore.getState().collections.map((item) => item.name),
+    ).toEqual(['Alpha', 'Beta']);
+  });
+
   it('cascades delete of a collection to its runs', async () => {
     const collection = await useEvalRunsStore.getState().addCollection('Set A');
     await useEvalRunsStore

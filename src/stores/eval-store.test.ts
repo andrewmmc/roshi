@@ -5,6 +5,7 @@ import {
 } from './eval-store';
 import { useProviderStore } from './provider-store';
 import { useEnvironmentStore } from './environment-store';
+import { useComposerStore } from './composer-store';
 import { emptyResult } from '@/types/eval';
 import { makeProvider, makeModel } from '@/__tests__/fixtures';
 import {
@@ -107,6 +108,58 @@ describe('useEvalStore', () => {
     expect(useEvalStore.getState().results[runnerId].rating).toBe(4);
     expect(useEvalStore.getState().results[runnerId].thumbs).toBe('up');
     expect(useEvalStore.getState().results[runnerId].content).toBe('hello');
+  });
+
+  it('ignores ratings and thumbs for unknown runners', () => {
+    const before = useEvalStore.getState();
+    before.setRating('missing', 3);
+    before.setThumbs('missing', 'down');
+    expect(useEvalStore.getState().results).toEqual({});
+  });
+
+  it('supports message removal, runner reordering, and compare clearing', () => {
+    const state = useEvalStore.getState();
+    state.removeMessage(0);
+    expect(useEvalStore.getState().composer.messages).toHaveLength(1);
+    state.addMessage('assistant');
+    state.removeMessage(0);
+    expect(useEvalStore.getState().composer.messages[0].role).toBe('assistant');
+
+    state.addRunner({ providerId: 'p1', modelId: 'm1' });
+    state.addRunner({ providerId: 'p1', modelId: 'm2' });
+    const [first, second] = useEvalStore.getState().runners;
+    state.reorderRunners([second.id]);
+    expect(useEvalStore.getState().runners.map((runner) => runner.id)).toEqual([
+      second.id,
+      first.id,
+    ]);
+    state.toggleCompare(first.id);
+    state.clearCompare();
+    expect(useEvalStore.getState().compareSelection).toEqual([]);
+  });
+
+  it('updates only targeted messages and attachments', () => {
+    const state = useEvalStore.getState();
+    state.addMessage('assistant');
+    state.updateMessage(0, { content: 'first' });
+    state.addAttachment(0, {
+      id: 'one',
+      filename: 'one.txt',
+      mimeType: 'text/plain',
+      data: 'one',
+    });
+    state.addAttachment(0, {
+      id: 'two',
+      filename: 'two.txt',
+      mimeType: 'text/plain',
+      data: 'two',
+    });
+    state.removeAttachment(0, 'one');
+
+    expect(useEvalStore.getState().composer.messages).toMatchObject([
+      { content: 'first', attachments: [{ id: 'two' }] },
+      { role: 'assistant', content: '' },
+    ]);
   });
 
   it('resets eval parameters without changing prompt content', () => {
@@ -219,6 +272,16 @@ describe('useEvalStore', () => {
     useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
     await useEvalStore.getState().start();
     expect(useEvalStore.getState().error).toMatch(/message/i);
+    expect(mockRunEval).not.toHaveBeenCalled();
+  });
+
+  it('refuses to start when environment variables are missing', async () => {
+    useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
+    useEvalStore.getState().updateMessage(0, { content: 'Hello {{MISSING}}' });
+
+    await useEvalStore.getState().start();
+
+    expect(useEvalStore.getState().error).toContain('MISSING');
     expect(mockRunEval).not.toHaveBeenCalled();
   });
 
@@ -389,6 +452,13 @@ describe('useEvalStore', () => {
     expect(cancelJudge).toHaveBeenCalled();
   });
 
+  it('cancelOne cancels the active run handle', () => {
+    const cancel = vi.fn();
+    useEvalStore.setState({ _runHandle: { cancel } });
+    useEvalStore.getState().cancelOne('runner');
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
   it('reset cancels active handles and restores the initial state', () => {
     const cancelRun = vi.fn();
     const cancelJudge = vi.fn();
@@ -417,6 +487,67 @@ describe('useEvalStore', () => {
 
     useEvalStore.getState().addRunner({ providerId: 'p1', modelId: 'm1' });
     expect(selectHasUnsavedEvalChanges(useEvalStore.getState())).toBe(true);
+  });
+
+  it('detects each persisted category of unsaved eval work', () => {
+    const cases: Array<() => void> = [
+      () => useEvalStore.getState().setSystemPrompt('system'),
+      () => useEvalStore.getState().updateMessage(0, { content: 'prompt' }),
+      () => useEvalStore.getState().setTemperature(0.2),
+      () =>
+        useEvalStore
+          .getState()
+          .setCustomHeaders([{ id: 'h', key: 'X-Test', value: '1' }]),
+      () => useEvalStore.getState().setJudgeEnabled(true),
+      () =>
+        useEvalStore.setState({
+          judgeResult: {
+            scores: {},
+            winnerRunnerId: null,
+            rawContent: '',
+            error: null,
+          },
+        }),
+      () => useEvalStore.setState({ activeRunId: 'run' }),
+      () => useEvalStore.setState({ compareSelection: ['runner'] }),
+    ];
+
+    for (const change of cases) {
+      useEvalStore.getState().reset();
+      change();
+      expect(selectHasUnsavedEvalChanges(useEvalStore.getState())).toBe(true);
+    }
+  });
+
+  it('seeds eval state from the main composer without duplicating its runner', () => {
+    useComposerStore.setState({
+      messages: [{ id: 'main-message', role: 'user', content: 'Compare me' }],
+      systemPrompt: 'Main system',
+    });
+
+    useEvalStore.getState().seedFromMainComposer();
+    useEvalStore.getState().seedFromMainComposer();
+
+    const state = useEvalStore.getState();
+    expect(state.composer.messages[0].content).toBe('Compare me');
+    expect(state.composer.systemPrompt).toBe('Main system');
+    expect(state.runners).toHaveLength(1);
+    expect(state.results[state.runners[0].id]).toBeDefined();
+  });
+
+  it('seeds an empty main composer without a selected runner', () => {
+    useComposerStore.setState({ messages: [] });
+    useProviderStore.setState({
+      selectedProviderId: null,
+      selectedModelId: null,
+    });
+
+    useEvalStore.getState().seedFromMainComposer();
+
+    expect(useEvalStore.getState().composer.messages).toMatchObject([
+      { role: 'user', content: '' },
+    ]);
+    expect(useEvalStore.getState().runners).toEqual([]);
   });
 
   it('loadRun restores composer, runners, results, and judge result', () => {
@@ -458,6 +589,43 @@ describe('useEvalStore', () => {
     expect(state.runners).toHaveLength(1);
     expect(state.results.r1.status).toBe('success');
     expect(state.lastSavedRecordId).toBe('rec-1');
+  });
+
+  it('loads an empty saved prompt and fills missing runner results', () => {
+    const runner = {
+      id: 'r1',
+      providerId: 'p1',
+      providerName: 'Provider',
+      modelId: 'm1',
+      label: 'Provider / m1',
+    };
+    useEvalStore.getState().loadRun({
+      id: 'empty',
+      createdAt: new Date(),
+      request: {
+        messages: [],
+        systemPrompt: '',
+        temperature: 1,
+        maxTokens: 100,
+        topP: 1,
+        topK: 0,
+        frequencyPenalty: 0,
+        presencePenalty: 0,
+        stream: true,
+        customHeaders: [],
+      },
+      runners: [runner],
+      results: [],
+      judgeConfig: { enabled: false, runner: null, rubric: '' },
+      judgeResult: null,
+    });
+
+    expect(useEvalStore.getState().composer.messages).toMatchObject([
+      { role: 'user', content: '' },
+    ]);
+    expect(useEvalStore.getState().buildRecord().results[0].runnerId).toBe(
+      'r1',
+    );
   });
 
   it('builds records from the immutable execution snapshot after draft edits', async () => {

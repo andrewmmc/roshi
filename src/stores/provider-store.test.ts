@@ -1,4 +1,8 @@
-import { useProviderStore } from './provider-store';
+import {
+  normalizeProviderConfig,
+  normalizeProviderModel,
+  useProviderStore,
+} from './provider-store';
 import { MAX_CUSTOM_PROVIDERS } from '@/constants/providers';
 import { makeProvider, makeModel } from '@/__tests__/fixtures';
 
@@ -72,6 +76,26 @@ describe('provider-store', () => {
     });
     mockFetchModels.mockResolvedValue([]);
     mockDb.providers.toArray.mockResolvedValue([]);
+  });
+
+  it('normalizes custom providers and preserves explicit model sources', () => {
+    const custom = makeProvider({
+      type: 'anthropic',
+      isBuiltIn: false,
+      protocol: undefined,
+      models: [makeModel({ source: 'manual' })],
+    });
+    expect(normalizeProviderConfig(custom)).toMatchObject({
+      endpoints: custom.endpoints,
+      protocol: 'anthropic-messages',
+      models: [expect.objectContaining({ source: 'manual' })],
+    });
+    expect(
+      normalizeProviderModel(
+        makeProvider({ isBuiltIn: false }),
+        makeModel({ source: undefined }),
+      ).source,
+    ).toBe('manual');
   });
 
   describe('load', () => {
@@ -477,6 +501,21 @@ describe('provider-store', () => {
       };
       expect(saved).toEqual({ providerId: 'p1', modelId: 'new-model' });
     });
+
+    it('keeps a selected model that remains available', async () => {
+      const models = [makeModel({ id: 'm1' }), makeModel({ id: 'm2' })];
+      useProviderStore.setState({
+        loaded: true,
+        providers: [makeProvider({ id: 'p1', models })],
+        selectedProviderId: 'p1',
+        selectedModelId: 'm2',
+      });
+
+      await getState().updateProvider('p1', { models });
+
+      expect(getState().selectedModelId).toBe('m2');
+      expect(mockDb.settings.put).not.toHaveBeenCalled();
+    });
   });
 
   describe('deleteProvider', () => {
@@ -621,6 +660,17 @@ describe('provider-store', () => {
       };
       expect(saved.modelId).toBe('m2');
     });
+  });
+
+  it('ignores model removal for missing providers and models', async () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({ id: 'p1', models: [makeModel({ id: 'm1' })] }),
+      ],
+    });
+    await getState().removeModelFromProvider('missing', 'm1');
+    await getState().removeModelFromProvider('p1', 'missing');
+    expect(mockDb.providers.update).not.toHaveBeenCalled();
   });
 
   describe('resetProvider', () => {

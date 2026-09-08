@@ -364,6 +364,14 @@ describe('export', () => {
       expect(envelope.data.requestHeaders).toBeNull();
     });
 
+    it('exports history entries without legacy custom headers', async () => {
+      const entry = makeHistoryEntry();
+      entry.customHeaders = undefined;
+      exportHistoryEntry(entry);
+      const blob: Blob = createObjectURLSpy.mock.calls[0][0];
+      expect(JSON.parse(await blob.text()).data.customHeaders).toBeUndefined();
+    });
+
     it('exportCurrentRequest redacts sensitive headers and wraps in envelope', async () => {
       const data: CurrentRequestExport = {
         sentRequest: null,
@@ -632,6 +640,25 @@ describe('export', () => {
       expect(blob.type).toBe('text/csv');
       const text = await blob.text();
       expect(text.split('\n')[0]).toContain('runner_id');
+    });
+
+    it('exports unnamed evals and results whose runner metadata is missing', async () => {
+      const record = makeEvalRecord();
+      record.name = undefined;
+      record.runners = [];
+      record.results[0].metrics.statusCode = null;
+
+      exportEvalRunJson(record);
+      expect(downloadFilename).toBe('roshi-eval-2026-01-02.json');
+      expect(buildEvalRunCsv(record).split('\n')[1]).toContain('r1,,,success');
+
+      exportEvalRunCsv(record);
+      expect(downloadFilename).toBe('roshi-eval-2026-01-02.csv');
+    });
+
+    it('uses a safe fallback filename for an unlabeled code snippet', () => {
+      exportCodeSnippet('plain text', '---');
+      expect(downloadFilename).toMatch(/^roshi-code-snippet-.*\.txt$/);
     });
   });
 });

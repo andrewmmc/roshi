@@ -341,6 +341,52 @@ describe('useSendRequest', () => {
       expect(state.errorDetail).toBeNull();
     });
 
+    it('records new warnings without duplicating existing warnings', async () => {
+      const sendResult = {
+        response: {
+          id: '1',
+          model: 'm1',
+          content: 'Hi',
+          role: 'assistant' as const,
+          finishReason: 'stop',
+          usage: null,
+        },
+        rawRequest: {},
+        rawResponse: {},
+        requestUrl: 'https://api.test.com',
+        requestHeaders: {},
+        responseHeaders: {},
+        durationMs: 1,
+        statusCode: 200,
+        warning: 'Compatibility warning',
+      };
+      mockSendRequest.mockResolvedValue(sendResult);
+      const { result } = renderHook(() => useSendRequest());
+
+      await act(async () => result.current.send());
+      expect(useResponseStore.getState().compatibilityWarnings).toEqual([
+        'Compatibility warning',
+      ]);
+
+      useComposerStore.setState({
+        messages: [makeMessage({ id: 'next', content: 'Again' })],
+      });
+      useResponseStore.setState({
+        compatibilityWarnings: ['Compatibility warning'],
+      });
+      await act(async () => result.current.send());
+      expect(useResponseStore.getState().compatibilityWarnings).toEqual([
+        'Compatibility warning',
+      ]);
+    });
+
+    it('ignores a send while response state is already loading', async () => {
+      useResponseStore.setState({ isLoading: true });
+      const { result } = renderHook(() => useSendRequest());
+      await act(async () => result.current.send());
+      expect(mockSendRequest).not.toHaveBeenCalled();
+    });
+
     it('adds entry to history', async () => {
       useComposerStore.setState({
         ...useComposerStore.getState(),
@@ -1202,6 +1248,32 @@ describe('useSendRequest', () => {
       expect(state.response?.content).toBe('Hello World');
       expect(state.streamingContent).toBe('');
       expect(state.isStreaming).toBe(false); // finally block sets it to false
+    });
+
+    it('ignores empty stream chunks', async () => {
+      mockSendRequest.mockImplementation(async (options) => {
+        options.onStreamChunk?.({ content: '' });
+        return {
+          response: {
+            id: '1',
+            model: 'm1',
+            content: '',
+            role: 'assistant',
+            finishReason: 'stop',
+            usage: null,
+          },
+          rawRequest: {},
+          rawResponse: {},
+          requestUrl: '',
+          requestHeaders: {},
+          responseHeaders: {},
+          durationMs: 1,
+          statusCode: 200,
+        };
+      });
+      const { result } = renderHook(() => useSendRequest());
+      await act(async () => result.current.send());
+      expect(useResponseStore.getState().streamingContent).toBe('');
     });
   });
 

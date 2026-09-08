@@ -79,6 +79,13 @@ async function seedOpenAiProvider(page: Page): Promise<void> {
               supportsStreaming: true,
               source: 'manual',
             },
+            {
+              id: 'gpt-4o',
+              name: 'gpt-4o',
+              displayName: 'GPT-4o',
+              supportsStreaming: true,
+              source: 'manual',
+            },
           ],
         };
 

@@ -72,6 +72,40 @@ describe('openaiResponsesAdapter', () => {
       ]);
     });
 
+    it('supports attachment-only messages', () => {
+      const body = openaiResponsesAdapter.buildRequestBody(
+        makeRequest({
+          messages: [
+            makeMessage({
+              content: '',
+              attachments: [
+                {
+                  id: 'pdf',
+                  filename: 'doc.pdf',
+                  mimeType: 'application/pdf',
+                  data: 'data:application/pdf;base64,def',
+                },
+              ],
+            }),
+          ],
+        }),
+        provider,
+      );
+
+      expect(body.input).toEqual([
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_file',
+              filename: 'doc.pdf',
+              file_data: 'data:application/pdf;base64,def',
+            },
+          ],
+        },
+      ]);
+    });
+
     it('maps reasoning and verbosity controls', () => {
       const body = openaiResponsesAdapter.buildRequestBody(
         makeRequest({
@@ -86,9 +120,45 @@ describe('openaiResponsesAdapter', () => {
       expect(body.reasoning).toEqual({ effort: 'high', mode: 'pro' });
       expect(body.text).toEqual({ verbosity: 'low' });
     });
+
+    it('maps individual sampling and reasoning controls', () => {
+      expect(
+        openaiResponsesAdapter.buildRequestBody(
+          makeRequest({
+            temperature: 0.2,
+            topP: 0.8,
+            effort: 'low',
+            reasoningMode: undefined,
+          }),
+          provider,
+        ),
+      ).toMatchObject({
+        temperature: 0.2,
+        top_p: 0.8,
+        reasoning: { effort: 'low' },
+      });
+      expect(
+        openaiResponsesAdapter.buildRequestBody(
+          makeRequest({ effort: undefined, reasoningMode: 'fast' }),
+          provider,
+        ).reasoning,
+      ).toEqual({ mode: 'fast' });
+    });
   });
 
   describe('buildRequestUrl', () => {
+    it('builds JSON request headers with custom values', () => {
+      expect(
+        openaiResponsesAdapter.buildRequestHeaders(provider, {
+          'X-Test': 'value',
+        }),
+      ).toMatchObject({
+        Authorization: `Bearer ${provider.apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Test': 'value',
+      });
+    });
+
     it('uses the responses endpoint', () => {
       expect(openaiResponsesAdapter.buildRequestUrl(provider)).toBe(
         'https://api.test.com/v1/responses',
@@ -101,6 +171,17 @@ describe('openaiResponsesAdapter', () => {
           makeProvider({ endpoints: { chat: '/chat/completions' } }),
         ),
       ).toBe('https://api.test.com/v1/responses');
+    });
+
+    it('adds query-param authentication when configured', () => {
+      expect(
+        openaiResponsesAdapter.buildRequestUrl(
+          makeProvider({
+            apiKey: 'secret',
+            auth: { type: 'query-param' },
+          }),
+        ),
+      ).toContain('key=secret');
     });
   });
 
@@ -143,6 +224,18 @@ describe('openaiResponsesAdapter', () => {
         ).toBe('Response incomplete: max_output_tokens');
       });
 
+      it('falls back when incomplete details or failure messages are absent', () => {
+        expect(
+          openaiResponsesAdapter.parseResponseError?.({
+            status: 'incomplete',
+            incomplete_details: 'invalid',
+          }),
+        ).toBe('Response incomplete');
+        expect(
+          openaiResponsesAdapter.parseResponseError?.({ status: 'failed' }),
+        ).toBe('Response generation failed');
+      });
+
       it('returns null for completed responses', () => {
         expect(
           openaiResponsesAdapter.parseResponseError?.({ status: 'completed' }),
@@ -163,6 +256,36 @@ describe('openaiResponsesAdapter', () => {
       });
 
       expect(parsed.content).toBe('Hello world');
+    });
+
+    it('ignores malformed output blocks and derives missing usage totals', () => {
+      const parsed = openaiResponsesAdapter.parseResponse({
+        output: [
+          null,
+          { content: 'invalid' },
+          { content: [null, { type: 'refusal' }] },
+        ],
+        usage: { input_tokens: 4, output_tokens: 3 },
+      });
+      expect(parsed).toMatchObject({
+        id: '',
+        model: '',
+        content: '',
+        finishReason: null,
+        usage: { promptTokens: 4, completionTokens: 3, totalTokens: 7 },
+      });
+
+      expect(
+        openaiResponsesAdapter.parseResponse({ output: 'invalid' }).content,
+      ).toBe('');
+      expect(openaiResponsesAdapter.parseResponse({}).usage).toBeNull();
+      expect(openaiResponsesAdapter.parseResponse({ usage: {} }).usage).toEqual(
+        {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+        },
+      );
     });
   });
 
@@ -194,6 +317,25 @@ describe('openaiResponsesAdapter', () => {
         model: 'gpt-5.5',
         id: 'resp_123',
         usage: { promptTokens: 1, completionTokens: 2, totalTokens: 3 },
+      });
+    });
+
+    it('defaults omitted delta and completion fields', () => {
+      expect(
+        openaiResponsesAdapter.parseStreamChunk(
+          JSON.stringify({ type: 'response.output_text.delta' }),
+        ),
+      ).toEqual({ content: '', finishReason: null });
+      expect(
+        openaiResponsesAdapter.parseStreamChunk(
+          JSON.stringify({ type: 'response.completed', response: {} }),
+        ),
+      ).toEqual({
+        content: '',
+        finishReason: null,
+        model: undefined,
+        id: undefined,
+        usage: null,
       });
     });
 

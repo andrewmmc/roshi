@@ -1,6 +1,9 @@
 import type { Page, Request, Route } from '@playwright/test';
 
 export const MOCK_ASSISTANT_REPLY = 'Hello from mock assistant';
+export const MOCK_PARTIAL_REPLY = 'Partial mock response';
+
+export type MockResponseMode = 'complete' | 'delayed' | 'interrupted';
 
 export type CapturedLlmRequest = {
   targetUrl: string;
@@ -95,6 +98,7 @@ function isModelsDevTarget(targetUrl: string): boolean {
 async function fulfillChatCompletion(
   route: Route,
   body: Record<string, unknown> | null,
+  mode: MockResponseMode,
 ): Promise<void> {
   const model =
     typeof body?.model === 'string' && body.model.trim()
@@ -102,14 +106,34 @@ async function fulfillChatCompletion(
       : 'gpt-4o-mini';
   const stream = Boolean(body?.stream);
 
+  if (mode === 'delayed') {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+
   if (stream) {
+    const responseBody =
+      mode === 'interrupted'
+        ? `data: ${JSON.stringify({
+            id: 'chatcmpl-e2e',
+            object: 'chat.completion.chunk',
+            created: 1,
+            model,
+            choices: [
+              {
+                index: 0,
+                delta: { role: 'assistant', content: MOCK_PARTIAL_REPLY },
+                finish_reason: null,
+              },
+            ],
+          })}\n\n`
+        : buildSseBody(MOCK_ASSISTANT_REPLY, model);
     await route.fulfill({
       status: 200,
       headers: {
         'content-type': 'text/event-stream; charset=utf-8',
         'cache-control': 'no-cache',
       },
-      body: buildSseBody(MOCK_ASSISTANT_REPLY, model),
+      body: responseBody,
     });
     return;
   }
@@ -128,6 +152,7 @@ async function fulfillChatCompletion(
 export async function mockExternalApis(
   page: Page,
   captured: CapturedLlmRequest[] = [],
+  mode: MockResponseMode = 'complete',
 ): Promise<CapturedLlmRequest[]> {
   const handleProxy = async (route: Route) => {
     const request = route.request();
@@ -141,7 +166,7 @@ export async function mockExternalApis(
         body,
         headers: request.headers(),
       });
-      await fulfillChatCompletion(route, body);
+      await fulfillChatCompletion(route, body, mode);
       return;
     }
 
@@ -181,7 +206,7 @@ export async function mockExternalApis(
       body,
       headers: request.headers(),
     });
-    await fulfillChatCompletion(route, body);
+    await fulfillChatCompletion(route, body, mode);
   });
 
   await page.route('https://models.dev/**', async (route) => {
