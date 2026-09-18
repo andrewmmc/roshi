@@ -1,11 +1,11 @@
 name: Playwright e2e tests
-description: Install Playwright Chromium, run the e2e suite, and upload the report.
+description: Install Playwright browsers, run the e2e suite, and upload the report.
 
 runs:
   using: composite
   steps:
-    - name: Install Playwright Chromium
-      run: npx playwright install --with-deps chromium
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium webkit
       shell: bash
 
     - name: Run Playwright e2e tests

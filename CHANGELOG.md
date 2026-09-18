@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-09-18
+
+### Fixed
+
+- Redacted credentials from request exports and prevented interrupted streams from leaving requests stalled
+- Preserved provider, model, environment, and composer state when switching request tabs
+- Preserved the execution snapshot and partial-response warnings associated with saved eval runs
+- Rejected malformed judge output instead of accepting invalid scores or incomplete evaluations
+- Prevented failed IndexedDB writes from rolling newer collection and history state back to stale data
+
+## [2.4.0] - 2026-09-01
+
+### Added
+
+- Traditional Chinese localization across requests, responses, history, collections, environments, providers, models, evaluations, and settings
+
+### Fixed
+
+- Improved locale detection, translated error handling, pluralization, and word counting
+- Smoothed request, code, eval, and environment-preview empty-state transitions
+
 ## [2.0.3] - 2026-07-17
 
 ### Fixed
