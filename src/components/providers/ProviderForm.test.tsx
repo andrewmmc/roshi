@@ -195,7 +195,7 @@ describe('ProviderForm', () => {
       />,
     );
 
-    fireEvent.change(screen.getAllByLabelText('select')[2], {
+    fireEvent.change(screen.getByLabelText('Auth Type'), {
       target: { value: 'none' },
     });
     fireEvent.change(screen.getByDisplayValue('/chat/completions'), {
@@ -228,7 +228,7 @@ describe('ProviderForm', () => {
       <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
     );
 
-    fireEvent.change(screen.getAllByLabelText('select')[1], {
+    fireEvent.change(screen.getByLabelText('Protocol'), {
       target: { value: 'openai-responses' },
     });
     fireEvent.submit(container.querySelector('form')!);
