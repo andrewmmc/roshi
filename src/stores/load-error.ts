@@ -8,6 +8,7 @@ const RESOURCE_LABEL_KEYS: Record<string, MessageKey> = {
   'proxy settings': 'common.resourceProxy',
   'eval runs': 'common.resourceEvalRuns',
   collections: 'common.resourceCollections',
+  environments: 'common.resourceEnvironments',
 };
 
 export function loadStoreSafely(

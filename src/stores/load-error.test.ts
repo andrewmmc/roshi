@@ -27,4 +27,14 @@ describe('loadStoreSafely', () => {
       );
     });
   });
+
+  it('labels environment load failures instead of falling back to unknown', async () => {
+    loadStoreSafely('environments', () => Promise.reject(new Error('quota')));
+
+    await vi.waitFor(() => {
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
+        'Could not load environments: quota. Reload to retry.',
+      );
+    });
+  });
 });
