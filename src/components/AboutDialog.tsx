@@ -61,11 +61,11 @@ export function AboutDialog() {
           <div className="flex flex-col items-center gap-3 py-2">
             <img
               src="/favicon-192.png"
-              alt="Roshi"
+              alt={t('about.appName')}
               className="h-16 w-16 rounded-xl"
             />
             <div className="text-center">
-              <p className="text-sm font-semibold">Roshi</p>
+              <p className="text-sm font-semibold">{t('about.appName')}</p>
               <p className="text-muted-foreground text-xs">
                 v{__APP_VERSION__} ({__APP_COMMIT__})
               </p>

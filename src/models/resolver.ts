@@ -49,13 +49,11 @@ function defaultCapabilitiesForProvider(
       ...capabilities.params,
       frequencyPenalty: {
         supported: false,
-        reason:
-          'Frequency penalty is not supported by the OpenAI Responses API.',
+        reason: 'request.reasonResponsesNoFrequencyPenalty',
       },
       presencePenalty: {
         supported: false,
-        reason:
-          'Presence penalty is not supported by the OpenAI Responses API.',
+        reason: 'request.reasonResponsesNoPresencePenalty',
       },
       maxTokens: { supported: true, wireName: 'max_output_tokens' },
     },

@@ -43,4 +43,6 @@ export const response = {
   streamMode: 'stream',
   syncMode: 'sync',
   exportCodeSnippet: 'Export code snippet',
+  promptBlocked: 'Prompt blocked: {reason}',
+  generationStopped: 'Generation stopped: {reason}',
 } as const;

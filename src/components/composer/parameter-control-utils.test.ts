@@ -30,12 +30,15 @@ describe('parameter-control-utils', () => {
   it('returns provider-specific disabled reasons', () => {
     const support = {
       supported: false as const,
-      reason: 'Frequency penalty is not supported by Anthropic.',
+      reason: 'request.reasonResponsesNoFrequencyPenalty' as const,
     };
 
     expect(isParamEditable(support, true, true)).toBe(false);
     expect(getDisabledReason(support, true, (key) => key)).toBe(support.reason);
     expect(getDisabledReason(undefined, true, (key) => key)).toBe(
+      'request.paramNotSupported',
+    );
+    expect(getDisabledReason({ supported: false }, true, (key) => key)).toBe(
       'request.paramNotSupported',
     );
   });
@@ -44,10 +47,17 @@ describe('parameter-control-utils', () => {
     const support = {
       supported: 'default-only' as const,
       default: 1,
-      reason: 'Temperature is fixed for this model.',
+      reason: 'request.paramDefaultOnly' as const,
     };
 
     expect(getDisabledReason(support, true, (key) => key)).toBe(support.reason);
+    expect(
+      getDisabledReason(
+        { supported: 'default-only', default: 1 },
+        true,
+        (key) => key,
+      ),
+    ).toBe('request.paramNotSupported');
   });
 
   it('builds capability-aware parameter defaults', () => {

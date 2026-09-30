@@ -382,7 +382,7 @@ export function ParameterControls() {
             {capabilities.quirks.map((q) => (
               <li key={q} className="flex items-start gap-1.5">
                 <span className="mt-0.5 shrink-0">·</span>
-                {q}
+                {t(q)}
               </li>
             ))}
           </ul>

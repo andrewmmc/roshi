@@ -6,6 +6,7 @@ import type {
   NormalizedResponse,
   NormalizedStreamChunk,
 } from '@/types/normalized';
+import { translateNow } from '@/i18n';
 import { isImageMimeType } from '@/utils/mime';
 import { usesGeminiThinkingLevel } from '@/models/model-families';
 import {
@@ -50,7 +51,7 @@ function getCandidateFinishError(raw: Record<string, unknown>): string | null {
   ) {
     return null;
   }
-  return `Generation stopped: ${reason}`;
+  return translateNow('response.generationStopped', { reason });
 }
 
 export const geminiAdapter: ProviderAdapter = {
@@ -149,7 +150,9 @@ export const geminiAdapter: ProviderAdapter = {
     }
     const promptError =
       typeof feedback.blockReason === 'string'
-        ? `Prompt blocked: ${feedback.blockReason}`
+        ? translateNow('response.promptBlocked', {
+            reason: feedback.blockReason,
+          })
         : null;
     return promptError ?? getCandidateFinishError(raw);
   },
