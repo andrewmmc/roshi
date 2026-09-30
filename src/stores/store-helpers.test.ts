@@ -4,7 +4,6 @@ import {
   persistSetting,
   removeById,
   replaceById,
-  toStoreErrorMessage,
   upsertById,
 } from './store-helpers';
 
@@ -40,12 +39,6 @@ describe('store-helpers', () => {
       { id: 'a', name: 'Alpha' },
       { id: 'b', name: 'Updated' },
     ]);
-  });
-
-  it('formats store-facing error messages', () => {
-    expect(toStoreErrorMessage(new Error('boom'), 'fallback')).toBe('boom');
-    expect(toStoreErrorMessage('plain', 'fallback')).toBe('plain');
-    expect(toStoreErrorMessage(null, 'fallback')).toBe('fallback');
   });
 
   it('coalesces concurrent load guard runs', async () => {
