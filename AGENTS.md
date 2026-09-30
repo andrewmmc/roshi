@@ -6,7 +6,7 @@ Single source of truth for AI coding assistants (Cursor, Claude Code, Codex, and
 
 For **Cursor Cloud**, use the same guidance as the rest of this file: [What this project is](#what-this-project-is), [Commands](#commands), [Architecture](#architecture), [Conventions](#conventions), and [Notes for agents](#notes-for-agents). No separate Cursor-only setup, env files, or backend is required.
 
-- **Node.js via nvm:** The update script installs Node.js 20 via nvm. Source nvm before running npm commands: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`.
+- **Node.js via nvm:** The project requires **Node.js 26+** (see `.nvmrc`). Source nvm before running npm commands: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"`.
 - **Dev server:** `npm run dev` starts Vite on port 5173 with `--host` (accessible on all interfaces). No external services are needed.
 - **Testing without API keys:** Sending requests without provider API keys configured produces a 401 error — this is expected behavior and confirms the request pipeline is working.
 
@@ -110,11 +110,11 @@ Seeded from `src/providers/builtins.ts`: OpenAI, Anthropic, Google Gemini, OpenR
 ## Notes for agents
 
 - **Coverage thresholds:** Vitest tests live next to source (`src/**/*.test.ts` per `vitest.config.ts`). Coverage is intentionally scoped to non-visual logic in `vitest.config.ts`; thresholds are enforced when running `test:coverage` (95% lines/functions/statements/branches).
-  - Plain `npm run test` does **not** enforce thresholds, but CI does — it runs `npm run test:coverage` and fails the build when any metric drops below 95%. Run `npm run test:coverage` locally before pushing whenever you changed files inside the coverage scope (`adapters/`, `components/composer/`, `db/`, `hooks/`, `providers/`, `services/`, `stores/`).
+  - Plain `npm run test` does **not** enforce thresholds, but CI does — it runs `npm run test:coverage` and fails the build when any metric drops below 95%. Run `npm run test:coverage` locally before pushing whenever you changed files listed in `vitest.config.ts` `coverage.include` (currently selected adapters, services, db, named stores/hooks, `providers/`, composer parameter utils, and export/redact helpers — **not** every file under `stores/` or `hooks/`).
   - Common cause of CI coverage failures: new conditional branches (ternaries, optional params, `??`/`?.` fallbacks) that no test exercises — even "unreachable" defensive branches count as uncovered. Fix by adding a test that hits the branch, or by simplifying the code (e.g. make a parameter required if every caller already passes it) instead of leaving dead branches.
   - When coverage fails, inspect which branches are uncovered: run `npx vitest run --coverage --coverage.reporter=json`, then check `coverage/coverage-final.json` for entries with count `0`.
 - Playwright e2e tests live in `e2e/` (`npm run test:e2e`). They start the Vite dev server, seed IndexedDB with a usable OpenAI provider/model, and mock `/api/proxy` / provider URLs so no real LLM calls are made. E2E code is typechecked via `tsconfig.e2e.json` (referenced from the root `tsconfig.json`).
-- ESLint may report pre-existing issues (e.g. unused variables, conditional hooks in `CodeView.tsx`, react-refresh noise in generated UI). Do not assume new edits caused all warnings.
+- `npm run lint` is expected to stay clean. Remaining suppressions are intentional (inactive-tab codegen cache in `CodeView.tsx`). Do not add new `eslint-disable` comments without a short adjacent explanation.
 - Users enter API keys in the UI; secrets are stored locally in IndexedDB. No `.env` or server-side secrets are required for the app to run.
 - **Git workflow:** after finishing implementation work that changed files, always commit and push:
   1. Run validation (`npm run typecheck`, `npm run test`, `npm run lint`) for non-trivial changes.

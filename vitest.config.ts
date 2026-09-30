@@ -44,6 +44,8 @@ export default defineConfig({
         'src/stores/ui-store.ts',
         'src/stores/eval-store.ts',
         'src/stores/eval-runs-store.ts',
+        'src/stores/load-error.ts',
+        'src/stores/store-helpers.ts',
         'src/hooks/use-global-shortcuts.ts',
         'src/hooks/use-history.ts',
         'src/hooks/use-providers.ts',
