@@ -5,59 +5,16 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { EvalRunsList } from './EvalRunsList';
 import { useEvalRunsStore } from '@/stores/eval-runs-store';
 import { useEvalStore } from '@/stores/eval-store';
 import { emptyResult } from '@/types/eval';
 import type { EvalCollection, EvalRunRecord } from '@/types/eval';
 
-// Render the base-ui dropdown menu inline so menu items are always present and
-// clickable in jsdom (avoids portal / pointer-event complexity).
-vi.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuTrigger: ({
-    children,
-    ...props
-  }: {
-    children: ReactNode;
-    'aria-label'?: string;
-  }) => <button {...props}>{children}</button>,
-  DropdownMenuContent: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuItem: ({
-    children,
-    onClick,
-  }: {
-    children: ReactNode;
-    onClick?: () => void;
-  }) => (
-    <button type="button" onClick={onClick}>
-      {children}
-    </button>
-  ),
-  DropdownMenuSeparator: () => <hr />,
-  DropdownMenuSub: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuSubTrigger: ({
-    children,
-    disabled,
-  }: {
-    children: ReactNode;
-    disabled?: boolean;
-  }) => (
-    <button type="button" disabled={disabled}>
-      {children}
-    </button>
-  ),
-  DropdownMenuSubContent: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
+vi.mock('@/components/ui/dropdown-menu', async () => {
+  const mocks = await import('@/__tests__/mock-dropdown-menu');
+  return mocks;
+});
 
 function makeCollection(overrides?: Partial<EvalCollection>): EvalCollection {
   return {

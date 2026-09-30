@@ -1,71 +1,16 @@
-import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { EvalMessagesEditor, EvalParametersEditor } from './EvalComposer';
 import { useEvalStore } from '@/stores/eval-store';
 
-vi.mock('@/components/ui/select', () => {
-  function Select({
-    value,
-    onValueChange,
-    children,
-  }: {
-    value?: string;
-    onValueChange?: (value: string) => void;
-    children: React.ReactNode;
-  }) {
-    return (
-      <select value={value} onChange={(e) => onValueChange?.(e.target.value)}>
-        {children}
-      </select>
-    );
-  }
-
-  return {
-    Select,
-    SelectTrigger: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
-    SelectContent: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
-    SelectItem: ({
-      value,
-      children,
-    }: {
-      value: string;
-      children: React.ReactNode;
-    }) => <option value={value}>{children}</option>,
-    SelectValue: ({ children }: { children?: React.ReactNode }) => (
-      <>{children}</>
-    ),
-  };
+vi.mock('@/components/ui/select', async () => {
+  const mocks = await import('@/__tests__/mock-select');
+  return mocks;
 });
 
-vi.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DropdownMenuItem: ({
-    children,
-    onClick,
-    disabled,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-    disabled?: boolean;
-  }) => (
-    <button type="button" disabled={disabled} onClick={onClick}>
-      {children}
-    </button>
-  ),
-  DropdownMenuSeparator: () => <hr />,
-}));
+vi.mock('@/components/ui/dropdown-menu', async () => {
+  const mocks = await import('@/__tests__/mock-dropdown-menu');
+  return mocks;
+});
 
 describe('EvalParametersEditor', () => {
   beforeEach(() => {
