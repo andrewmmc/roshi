@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCompatibleRequestFromComposer,
   buildNormalizedRequestFromComposer,
+  filterComposerMessages,
+  isSendableMessage,
   type ComposerRequestFields,
 } from './build-normalized-request';
 import { makeProvider, makeModel, makeMessage } from '@/__tests__/fixtures';
@@ -134,5 +136,30 @@ describe('build-normalized-request', () => {
 
     expect(compatibility.request.model).toBe('gpt-4o');
     expect(compatibility.request.stream).toBe(true);
+  });
+
+  it('treats whitespace-only messages as empty unless they have attachments', () => {
+    expect(isSendableMessage(makeMessage({ content: '   ' }))).toBe(false);
+    expect(
+      isSendableMessage(
+        makeMessage({
+          content: '',
+          attachments: [
+            {
+              id: 'a1',
+              filename: 'image.png',
+              mimeType: 'image/png',
+              data: 'data:image/png;base64,abc',
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      filterComposerMessages([
+        makeMessage({ content: '   ' }),
+        makeMessage({ content: 'Keep me' }),
+      ]),
+    ).toEqual([makeMessage({ content: 'Keep me' })]);
   });
 });

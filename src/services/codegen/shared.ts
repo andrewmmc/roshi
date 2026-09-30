@@ -1,4 +1,4 @@
-import type { NormalizedMessage, NormalizedRequest } from '@/types/normalized';
+import type { NormalizedRequest } from '@/types/normalized';
 import { resolveProviderProtocol } from '@/types/provider';
 import type { CodeGenParams } from './types';
 import {
@@ -7,6 +7,10 @@ import {
 } from '@/models/model-families';
 
 export { anthropicRejectsSamplingParams, usesAnthropicAdaptiveThinking };
+export {
+  isSendableMessage,
+  filterComposerMessages as getSendableMessages,
+} from '@/utils/build-normalized-request';
 
 export function escapeJSString(s: string): string {
   if (s.includes('\n')) {
@@ -28,18 +32,6 @@ export function escapePythonString(s: string): string {
     s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
     '"'
   );
-}
-
-export function isSendableMessage(message: NormalizedMessage): boolean {
-  return (
-    message.content.trim() !== '' || (message.attachments?.length ?? 0) > 0
-  );
-}
-
-export function getSendableMessages(
-  messages: readonly NormalizedMessage[],
-): NormalizedMessage[] {
-  return messages.filter(isSendableMessage);
 }
 
 export function shouldGenerateOpenAIResponses(
