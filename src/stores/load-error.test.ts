@@ -37,4 +37,14 @@ describe('loadStoreSafely', () => {
       );
     });
   });
+
+  it('falls back to unknown when the resource has no label', async () => {
+    loadStoreSafely('not-a-resource', () => Promise.reject(new Error('nope')));
+
+    await vi.waitFor(() => {
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
+        'Could not load Unknown: nope. Reload to retry.',
+      );
+    });
+  });
 });
