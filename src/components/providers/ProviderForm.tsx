@@ -30,6 +30,20 @@ import { useTranslation, type MessageKey } from '@/i18n';
 type ProviderFormData = Omit<ProviderConfig, 'id'>;
 type FormModel = ProviderModel & { _formKey: string };
 
+function toSubmittedModel(model: FormModel): ProviderModel {
+  return {
+    id: model.id,
+    name: model.name || model.id,
+    displayName: model.displayName || model.id,
+    maxTokens: model.maxTokens,
+    supportsStreaming: model.supportsStreaming,
+    source: model.source ?? 'manual',
+    capabilities: model.capabilities,
+    lastSyncedAt: model.lastSyncedAt,
+    pricing: model.pricing,
+  };
+}
+
 interface ProviderFormProps {
   ref?: Ref<HTMLFormElement>;
   initialData?: ProviderFormData;
@@ -175,15 +189,7 @@ export function ProviderForm({
     // Model Market; preserve whatever models the provider currently holds.
     const cleanedModels = isBuiltIn
       ? (initialData?.models ?? form.models)
-      : formModels
-          .filter((m) => m.id.trim())
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .map(({ _formKey, ...m }) => ({
-            ...m,
-            name: m.name || m.id,
-            displayName: m.displayName || m.id,
-            source: m.source ?? 'manual',
-          }));
+      : formModels.filter((m) => m.id.trim()).map(toSubmittedModel);
     // Convert header entries to record for submission
     const customHeaders = headersToRecord(headerEntries);
     onSubmit({ ...form, models: cleanedModels, customHeaders });

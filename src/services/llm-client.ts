@@ -60,11 +60,10 @@ export async function sendRequest(
   ).request;
   const adapter = getAdapter(provider, compatibleRequest.model);
 
-  const rawUrl = adapter.buildRequestUrl(provider, compatibleRequest);
-  const url = rawUrl;
+  const url = adapter.buildRequestUrl(provider, compatibleRequest);
 
   if (import.meta.env.DEV) {
-    console.log('[LLM Request]', getLogSafeRequestUrl(provider, rawUrl));
+    console.log('[LLM Request]', getLogSafeRequestUrl(provider, url));
   }
 
   // Merge provider-level headers with request-level headers
@@ -124,7 +123,7 @@ export async function sendRequest(
       body,
       headers,
       responseHeaders,
-      rawUrl,
+      url,
       durationMs,
     );
   };
@@ -145,7 +144,7 @@ export async function sendRequest(
       body,
       headers,
       responseHeaders,
-      rawUrl,
+      url,
       startTime,
       fetchResponse.status,
       onStreamChunk,
@@ -176,7 +175,7 @@ export async function sendRequest(
     response,
     rawRequest: body,
     rawResponse,
-    requestUrl: rawUrl,
+    requestUrl: url,
     requestHeaders: headers,
     responseHeaders,
     durationMs,
