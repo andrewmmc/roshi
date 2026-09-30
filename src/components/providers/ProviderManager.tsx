@@ -23,6 +23,8 @@ import {
 import { exportProviders } from '@/utils/export';
 import { sortProvidersByName } from '@/utils/sort-providers';
 import type { ProviderConfig } from '@/types/provider';
+import { AppError } from '@/lib/errors';
+import { toast } from '@/stores/toast-store';
 import { useTranslation } from '@/i18n';
 
 type View = 'list' | 'edit' | 'add';
@@ -292,10 +294,8 @@ export function ProviderSettings({
       selectProvider(created.id);
       setView('list');
     } catch (e) {
-      if (e instanceof Error && e.message === 'MAX_CUSTOM_PROVIDERS') {
-        window.alert(
-          t('providers.customLimit', { count: MAX_CUSTOM_PROVIDERS }),
-        );
+      if (e instanceof AppError && e.code === 'MAX_CUSTOM_PROVIDERS') {
+        toast(t('providers.customLimit', { count: MAX_CUSTOM_PROVIDERS }));
         return;
       }
       throw e;
