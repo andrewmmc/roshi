@@ -200,4 +200,32 @@ describe('useEvalRunsStore', () => {
       collection.id,
     );
   });
+
+  it('rolls collection rename back when persistence fails', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    const update = vi
+      .spyOn(db.evalCollections, 'update')
+      .mockRejectedValue(new Error('db down'));
+
+    await expect(
+      useEvalRunsStore.getState().renameCollection(collection.id, 'Set B'),
+    ).rejects.toThrow('db down');
+    expect(useEvalRunsStore.getState().collections[0].name).toBe('Set A');
+
+    update.mockRestore();
+  });
+
+  it('rolls collection delete back when persistence fails', async () => {
+    const collection = await useEvalRunsStore.getState().addCollection('Set A');
+    const transaction = vi
+      .spyOn(db, 'transaction')
+      .mockRejectedValue(new Error('db down'));
+
+    await expect(
+      useEvalRunsStore.getState().deleteCollection(collection.id),
+    ).rejects.toThrow('db down');
+    expect(useEvalRunsStore.getState().collections).toHaveLength(1);
+
+    transaction.mockRestore();
+  });
 });
