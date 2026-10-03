@@ -74,7 +74,7 @@ describe('geminiPythonGenerator', () => {
     expect(code).toContain('"Prompt"');
   });
 
-  it('uses triple quotes for multiline user content', () => {
+  it('escapes multiline user content', () => {
     const code = geminiPythonGenerator.generate(
       makeCodeGenParams({
         model: 'gemini-2.0-flash',
@@ -85,7 +85,7 @@ describe('geminiPythonGenerator', () => {
       }),
     );
 
-    expect(code).toContain('r"""line1\nline2"""');
+    expect(code).toContain('"line1\\nline2"');
   });
 
   it('omits config when all optional parameters are disabled', () => {

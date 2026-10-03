@@ -71,7 +71,7 @@ describe('geminiNodeGenerator', () => {
     expect(code).not.toContain('""');
   });
 
-  it('uses template literal for multiline user content', () => {
+  it('escapes multiline user content', () => {
     const code = geminiNodeGenerator.generate(
       makeCodeGenParams({
         model: 'gemini-2.0-flash',
@@ -82,7 +82,7 @@ describe('geminiNodeGenerator', () => {
       }),
     );
 
-    expect(code).toContain('`line1\nline2`');
+    expect(code).toContain('"line1\\nline2"');
   });
 
   it('omits config when all optional parameters are disabled', () => {

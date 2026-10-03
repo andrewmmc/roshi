@@ -65,7 +65,7 @@ describe('anthropicNodeGenerator', () => {
     expect(code).not.toContain('{ role: "user", content: "" }');
   });
 
-  it('uses template literal for multiline strings', () => {
+  it('escapes multiline strings', () => {
     const code = anthropicNodeGenerator.generate(
       makeCodeGenParams({
         model: 'claude-sonnet-4-20250514',
@@ -74,7 +74,7 @@ describe('anthropicNodeGenerator', () => {
       }),
     );
 
-    expect(code).toContain('content: `line1\nline2`');
+    expect(code).toContain('content: "line1\\nline2"');
   });
 
   it('includes custom headers and thinking args', () => {

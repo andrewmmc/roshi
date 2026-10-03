@@ -240,12 +240,12 @@ describe('openaiPythonGenerator', () => {
       expect(code).toContain('\\"hello\\"');
     });
 
-    it('uses triple-quote for multiline content', () => {
+    it('escapes multiline content', () => {
       const params = makeCodeGenParams({
         messages: [makeMessage({ content: 'line1\nline2' })],
       });
       const code = openaiPythonGenerator.generate(params);
-      expect(code).toContain('r"""line1\nline2"""');
+      expect(code).toContain('"line1\\nline2"');
     });
   });
 });

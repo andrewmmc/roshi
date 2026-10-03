@@ -15,6 +15,7 @@ import {
 import { filterRequestByCapabilities } from '@/models/compatibility';
 import { resolveModelCapabilities } from '@/models/resolver';
 import { mergeUsage } from '@/adapters/shared';
+import { mergeHeaderRecords } from '@/utils/headers';
 import { runtimeFetch } from './runtime-fetch';
 
 export interface SendRequestOptions {
@@ -68,10 +69,10 @@ export async function sendRequest(
 
   // Merge provider-level headers with request-level headers
   // Request-level headers take precedence over provider-level headers
-  const mergedHeaders = {
-    ...provider.customHeaders,
-    ...customHeaders,
-  };
+  const mergedHeaders = mergeHeaderRecords(
+    provider.customHeaders,
+    customHeaders,
+  );
 
   const headers = adapter.buildRequestHeaders(provider, mergedHeaders);
   const body = adapter.buildRequestBody(compatibleRequest, provider);

@@ -5,9 +5,30 @@ import {
   headersToRecord,
   historyEntriesToHeaders,
   recordToHeaders,
+  mergeHeaderRecords,
 } from './headers';
 
 describe('headers utils', () => {
+  it('merges header records case-insensitively and preserves empty overrides', () => {
+    expect(
+      mergeHeaderRecords(
+        undefined,
+        { 'X-Trace': 'provider', Accept: 'application/json' },
+        { 'x-trace': '' },
+      ),
+    ).toEqual({ 'x-trace': '', Accept: 'application/json' });
+  });
+
+  it('uses the last edited row even when a name repeats with different casing', () => {
+    expect(
+      headersToRecord([
+        { key: 'X-Trace', value: 'first' },
+        { key: 'x-trace', value: 'second' },
+        { key: ' X-Trace ', value: 'last' },
+      ]),
+    ).toEqual({ 'X-Trace': 'last' });
+  });
+
   it('creates an empty header entry with a unique id', () => {
     const first = createEmptyHeaderEntry();
     const second = createEmptyHeaderEntry();
