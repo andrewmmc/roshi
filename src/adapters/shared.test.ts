@@ -4,7 +4,22 @@ import {
   mapAnthropicUsage,
   mergeUsage,
   parseTopLevelStreamError,
+  buildJsonRequestHeaders,
 } from './shared';
+import { makeProvider } from '@/__tests__/fixtures';
+
+describe('buildJsonRequestHeaders', () => {
+  it('replaces default headers case-insensitively instead of combining values', () => {
+    const headers = buildJsonRequestHeaders(
+      makeProvider({ auth: { type: 'bearer' }, apiKey: 'default-key' }),
+      { authorization: 'Bearer override', 'content-type': 'text/plain' },
+      'x-api-key',
+    );
+    const wireHeaders = new Headers(headers);
+    expect(wireHeaders.get('authorization')).toBe('Bearer override');
+    expect(wireHeaders.get('content-type')).toBe('text/plain');
+  });
+});
 
 describe('mapAnthropicUsage', () => {
   it('returns null when usage is missing', () => {

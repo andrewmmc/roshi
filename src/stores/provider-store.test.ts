@@ -783,6 +783,81 @@ describe('provider-store', () => {
   });
 
   describe('addModelToProvider', () => {
+    it('serializes mixed additions and removals without losing either edit', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({ id: 'b1', models: [makeModel({ id: 'old' })] }),
+        ],
+      });
+      await Promise.all([
+        getState().addModelToProvider('b1', makeModel({ id: 'new' })),
+        getState().removeModelFromProvider('b1', 'old'),
+      ]);
+      expect(getState().providers[0].models.map((model) => model.id)).toEqual([
+        'new',
+      ]);
+      expect(mockDb.providers.update).toHaveBeenLastCalledWith('b1', {
+        models: getState().providers[0].models,
+      });
+    });
+
+    it('does not block later model edits after a persistence failure', async () => {
+      useProviderStore.setState({
+        providers: [makeProvider({ id: 'b1', models: [] })],
+      });
+      mockDb.providers.update.mockRejectedValueOnce(new Error('write failed'));
+      const results = await Promise.allSettled([
+        getState().addModelToProvider('b1', makeModel({ id: 'failed' })),
+        getState().addModelToProvider('b1', makeModel({ id: 'saved' })),
+      ]);
+      expect(results.map((result) => result.status)).toEqual([
+        'rejected',
+        'fulfilled',
+      ]);
+      expect(getState().providers[0].models.map((model) => model.id)).toEqual([
+        'saved',
+      ]);
+      await getState().addModelToProvider('b1', makeModel({ id: 'later' }));
+      expect(getState().providers[0].models.map((model) => model.id)).toEqual([
+        'saved',
+        'later',
+      ]);
+    });
+
+    it('deduplicates overlapping additions of the same model', async () => {
+      useProviderStore.setState({
+        providers: [makeProvider({ id: 'b1', models: [] })],
+      });
+      await Promise.all([
+        getState().addModelToProvider('b1', makeModel({ id: 'same' })),
+        getState().addModelToProvider('b1', makeModel({ id: 'same' })),
+      ]);
+      expect(getState().providers[0].models).toHaveLength(1);
+      expect(mockDb.providers.update).toHaveBeenCalledOnce();
+    });
+
+    it('keeps both models when additions overlap', async () => {
+      useProviderStore.setState({
+        providers: [makeProvider({ id: 'b1', models: [] })],
+        selectedProviderId: 'b1',
+        selectedModelId: null,
+      });
+
+      await Promise.all([
+        getState().addModelToProvider('b1', makeModel({ id: 'first' })),
+        getState().addModelToProvider('b1', makeModel({ id: 'second' })),
+      ]);
+
+      expect(getState().providers[0].models.map((model) => model.id)).toEqual([
+        'first',
+        'second',
+      ]);
+      expect(mockDb.providers.update).toHaveBeenLastCalledWith('b1', {
+        models: getState().providers[0].models,
+      });
+      expect(getState().selectedModelId).toBe('first');
+    });
+
     it('appends a model and persists to DB', async () => {
       const provider = makeProvider({
         id: 'b1',
@@ -855,6 +930,30 @@ describe('provider-store', () => {
   });
 
   describe('removeModelFromProvider', () => {
+    it('does not resurrect models when removals overlap', async () => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'b1',
+            models: [makeModel({ id: 'first' }), makeModel({ id: 'second' })],
+          }),
+        ],
+        selectedProviderId: 'b1',
+        selectedModelId: 'first',
+      });
+
+      await Promise.all([
+        getState().removeModelFromProvider('b1', 'first'),
+        getState().removeModelFromProvider('b1', 'second'),
+      ]);
+
+      expect(getState().providers[0].models).toEqual([]);
+      expect(getState().selectedModelId).toBeNull();
+      expect(mockDb.providers.update).toHaveBeenLastCalledWith('b1', {
+        models: [],
+      });
+    });
+
     it('removes a model and persists', async () => {
       const provider = makeProvider({
         id: 'b1',

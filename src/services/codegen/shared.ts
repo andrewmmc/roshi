@@ -1,6 +1,7 @@
 import type { NormalizedRequest } from '@/types/normalized';
 import { resolveProviderProtocol } from '@/types/provider';
 import type { CodeGenParams } from './types';
+import { mergeHeaderRecords } from '@/utils/headers';
 import {
   anthropicRejectsSamplingParams,
   usesAnthropicAdaptiveThinking,
@@ -13,25 +14,14 @@ export {
 } from '@/utils/build-normalized-request';
 
 export function escapeJSString(s: string): string {
-  if (s.includes('\n')) {
-    return '`' + s.replace(/\\/g, '\\\\').replace(/`/g, '\\`') + '`';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
+  // Quoted literals preserve control characters and never interpolate ${...}.
+  return JSON.stringify(s);
 }
 
 export function escapePythonString(s: string): string {
-  if (s.includes('\n')) {
-    return 'r"""' + s.replace(/"""/g, '""\\"') + '"""';
-  }
-  return (
-    '"' +
-    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') +
-    '"'
-  );
+  // JSON string escapes are valid Python escapes too, without raw-string
+  // restrictions on trailing quotes/backslashes or newline normalization.
+  return JSON.stringify(s);
 }
 
 export function shouldGenerateOpenAIResponses(
@@ -52,9 +42,9 @@ export function mergeCodegenCustomHeaders(
   customHeaders?: Record<string, string>,
 ): Record<string, string> {
   return Object.fromEntries(
-    Object.entries({ ...provider.customHeaders, ...customHeaders }).filter(
-      ([key, value]) => key.trim() !== '' && value.trim() !== '',
-    ),
+    Object.entries(
+      mergeHeaderRecords(provider.customHeaders, customHeaders),
+    ).filter(([key, value]) => key.trim() !== '' && value.trim() !== ''),
   );
 }
 

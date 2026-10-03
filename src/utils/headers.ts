@@ -11,6 +11,19 @@ export interface HistoryHeaderEntry {
   value: string;
 }
 
+/** HTTP field names are case-insensitive; later records override earlier ones. */
+export function mergeHeaderRecords(
+  ...records: (Record<string, string> | undefined)[]
+): Record<string, string> {
+  const entries = new Map<string, [string, string]>();
+  for (const record of records) {
+    for (const [key, value] of Object.entries(record ?? {})) {
+      entries.set(key.toLowerCase(), [key, value]);
+    }
+  }
+  return Object.fromEntries(entries.values());
+}
+
 export function createEmptyHeaderEntry(): HeaderEntry {
   return { id: nanoid(), key: '', value: '' };
 }
@@ -18,14 +31,14 @@ export function createEmptyHeaderEntry(): HeaderEntry {
 export function headersToRecord(
   headers: readonly Pick<HeaderEntry, 'key' | 'value'>[],
 ): Record<string, string> {
-  const record: Record<string, string> = {};
+  const entries = new Map<string, [string, string]>();
   for (const header of headers) {
     const key = header.key.trim();
     if (key) {
-      record[key] = header.value;
+      entries.set(key.toLowerCase(), [key, header.value]);
     }
   }
-  return record;
+  return Object.fromEntries(entries.values());
 }
 
 export function headersToHistoryEntries(

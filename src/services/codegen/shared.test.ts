@@ -13,6 +13,7 @@ import {
   shouldGenerateOpenAIResponses,
 } from './shared';
 import { makeMessage, makeProvider, makeRequest } from '@/__tests__/fixtures';
+import { runInNewContext } from 'node:vm';
 
 describe('codegen shared helpers', () => {
   describe('escapeJSString', () => {
@@ -22,8 +23,18 @@ describe('codegen shared helpers', () => {
       );
     });
 
-    it('uses template literals for multiline strings', () => {
-      expect(escapeJSString('line1\nline2')).toBe('`line1\nline2`');
+    it('escapes newlines in quoted literals', () => {
+      expect(escapeJSString('line1\nline2')).toBe('"line1\\nline2"');
+    });
+
+    it.each([
+      'Explain this expression:\n${missingVariable}',
+      'line1\r\nline2\\',
+      'a carriage\rreturn',
+      'literal `backticks`\nwith \\slashes',
+      'control characters: \0\t\b\f',
+    ])('preserves prompt text when evaluated: %j', (text) => {
+      expect(runInNewContext(escapeJSString(text))).toBe(text);
     });
   });
 
@@ -34,8 +45,18 @@ describe('codegen shared helpers', () => {
       );
     });
 
-    it('uses raw triple quotes for multiline strings', () => {
-      expect(escapePythonString('line1\nline2')).toBe('r"""line1\nline2"""');
+    it('escapes newlines in quoted literals', () => {
+      expect(escapePythonString('line1\nline2')).toBe('"line1\\nline2"');
+    });
+
+    it.each([
+      'line1\nends with a backslash\\',
+      'line1\nends with a quote"',
+      'line1\nembedded """ quotes',
+      'a carriage\rreturn',
+      'control characters: \0\t\b\f',
+    ])('preserves difficult text in a portable quoted literal: %j', (text) => {
+      expect(JSON.parse(escapePythonString(text))).toBe(text);
     });
   });
 
@@ -100,6 +121,14 @@ describe('codegen shared helpers', () => {
   });
 
   describe('mergeCodegenCustomHeaders', () => {
+    it('overrides provider headers regardless of casing', () => {
+      expect(
+        mergeCodegenCustomHeaders(
+          makeProvider({ customHeaders: { 'X-Trace': 'provider' } }),
+          { 'x-trace': 'request' },
+        ),
+      ).toEqual({ 'x-trace': 'request' });
+    });
     it('merges provider and request headers and drops blank entries', () => {
       expect(
         mergeCodegenCustomHeaders(

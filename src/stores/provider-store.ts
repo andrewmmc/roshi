@@ -19,6 +19,24 @@ import {
 import { useModelCatalogStore } from './model-catalog-store';
 
 const providerLoadGuard = createLoadGuard();
+const providerModelMutations = new Map<string, Promise<void>>();
+
+/** Serialize model edits so each one reads the last persisted model list. */
+async function mutateProviderModels(
+  providerId: string,
+  mutate: () => Promise<void>,
+): Promise<void> {
+  const previous = providerModelMutations.get(providerId) ?? Promise.resolve();
+  const operation = previous.catch(() => {}).then(mutate);
+  providerModelMutations.set(providerId, operation);
+  try {
+    await operation;
+  } finally {
+    if (providerModelMutations.get(providerId) === operation) {
+      providerModelMutations.delete(providerId);
+    }
+  }
+}
 
 const SELECTION_KEY = 'provider-selection';
 const LEGACY_LS_KEY = 'llm-tester-selection';
@@ -424,65 +442,67 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
     }
   },
 
-  addModelToProvider: async (providerId, model) => {
-    const provider = get().providers.find((p) => p.id === providerId);
-    if (!provider) return;
-    if (provider.models.some((m) => m.id === model.id)) return;
+  addModelToProvider: (providerId, model) =>
+    mutateProviderModels(providerId, async () => {
+      const provider = get().providers.find((p) => p.id === providerId);
+      if (!provider) return;
+      if (provider.models.some((m) => m.id === model.id)) return;
 
-    const normalized = normalizeProviderModel(provider, model);
-    const models = [...provider.models, normalized];
-    await db.providers.update(providerId, { models });
+      const normalized = normalizeProviderModel(provider, model);
+      const models = [...provider.models, normalized];
+      await db.providers.update(providerId, { models });
 
-    let shouldPersistSelection = false;
-    let newSelectedProviderId: string | null = null;
-    let newSelectedModelId: string | null = null;
-    set((state) => {
-      const providers = replaceById(state.providers, providerId, { models });
-      const updates: Partial<ProviderStore> = { providers };
-      const noProviderSelected = !state.selectedProviderId;
-      const sameProviderNoModel =
-        state.selectedProviderId === providerId && !state.selectedModelId;
-      if (noProviderSelected || sameProviderNoModel) {
-        shouldPersistSelection = true;
-        newSelectedProviderId = providerId;
-        newSelectedModelId = normalized.id;
-        updates.selectedProviderId = providerId;
-        updates.selectedModelId = normalized.id;
+      let shouldPersistSelection = false;
+      let newSelectedProviderId: string | null = null;
+      let newSelectedModelId: string | null = null;
+      set((state) => {
+        const providers = replaceById(state.providers, providerId, { models });
+        const updates: Partial<ProviderStore> = { providers };
+        const noProviderSelected = !state.selectedProviderId;
+        const sameProviderNoModel =
+          state.selectedProviderId === providerId && !state.selectedModelId;
+        if (noProviderSelected || sameProviderNoModel) {
+          shouldPersistSelection = true;
+          newSelectedProviderId = providerId;
+          newSelectedModelId = normalized.id;
+          updates.selectedProviderId = providerId;
+          updates.selectedModelId = normalized.id;
+        }
+        return updates;
+      });
+      if (shouldPersistSelection) {
+        await saveSelection(newSelectedProviderId, newSelectedModelId);
       }
-      return updates;
-    });
-    if (shouldPersistSelection) {
-      await saveSelection(newSelectedProviderId, newSelectedModelId);
-    }
-  },
+    }),
 
-  removeModelFromProvider: async (providerId, modelId) => {
-    const provider = get().providers.find((p) => p.id === providerId);
-    if (!provider) return;
-    if (!provider.models.some((m) => m.id === modelId)) return;
+  removeModelFromProvider: (providerId, modelId) =>
+    mutateProviderModels(providerId, async () => {
+      const provider = get().providers.find((p) => p.id === providerId);
+      if (!provider) return;
+      if (!provider.models.some((m) => m.id === modelId)) return;
 
-    const models = provider.models.filter((m) => m.id !== modelId);
-    await db.providers.update(providerId, { models });
+      const models = provider.models.filter((m) => m.id !== modelId);
+      await db.providers.update(providerId, { models });
 
-    let shouldPersistSelection = false;
-    let newSelectedModelId: string | null = null;
-    set((state) => {
-      const providers = replaceById(state.providers, providerId, { models });
-      const updates: Partial<ProviderStore> = { providers };
-      if (
-        state.selectedProviderId === providerId &&
-        state.selectedModelId === modelId
-      ) {
-        shouldPersistSelection = true;
-        newSelectedModelId = models[0]?.id ?? null;
-        updates.selectedModelId = newSelectedModelId;
+      let shouldPersistSelection = false;
+      let newSelectedModelId: string | null = null;
+      set((state) => {
+        const providers = replaceById(state.providers, providerId, { models });
+        const updates: Partial<ProviderStore> = { providers };
+        if (
+          state.selectedProviderId === providerId &&
+          state.selectedModelId === modelId
+        ) {
+          shouldPersistSelection = true;
+          newSelectedModelId = models[0]?.id ?? null;
+          updates.selectedModelId = newSelectedModelId;
+        }
+        return updates;
+      });
+      if (shouldPersistSelection) {
+        await saveSelection(providerId, newSelectedModelId);
       }
-      return updates;
-    });
-    if (shouldPersistSelection) {
-      await saveSelection(providerId, newSelectedModelId);
-    }
-  },
+    }),
 
   getSelectedProvider: () => {
     const { providers, selectedProviderId } = get();

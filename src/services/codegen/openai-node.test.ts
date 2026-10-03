@@ -234,12 +234,12 @@ describe('openaiNodeGenerator', () => {
       expect(code).toContain('\\"hello\\"');
     });
 
-    it('uses backtick template for multiline content', () => {
+    it('escapes multiline content', () => {
       const params = makeCodeGenParams({
         messages: [makeMessage({ content: 'line1\nline2' })],
       });
       const code = openaiNodeGenerator.generate(params);
-      expect(code).toContain('`line1\nline2`');
+      expect(code).toContain('"line1\\nline2"');
     });
   });
 });

@@ -62,7 +62,7 @@ describe('anthropicPythonGenerator', () => {
     expect(code).not.toContain('{"role": "user", "content": ""}');
   });
 
-  it('uses triple quotes for multiline strings', () => {
+  it('escapes multiline strings', () => {
     const code = anthropicPythonGenerator.generate(
       makeCodeGenParams({
         model: 'claude-sonnet-4-20250514',
@@ -71,7 +71,7 @@ describe('anthropicPythonGenerator', () => {
       }),
     );
 
-    expect(code).toContain('"content": r"""line1\nline2"""');
+    expect(code).toContain('"content": "line1\\nline2"');
   });
 
   it('matches adapter precedence and clamping for temperature and top_p', () => {

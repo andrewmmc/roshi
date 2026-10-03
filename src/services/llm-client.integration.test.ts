@@ -74,6 +74,31 @@ describe('llm-client integration (mock server)', () => {
   }
 
   describe('OpenAI-compatible provider', () => {
+    it('sends one value per header with request overrides taking precedence', async () => {
+      server.on('POST', '/v1/chat/completions', () => ({
+        json: makeOpenAIResponse(),
+      }));
+
+      const result = await sendRequest({
+        provider: {
+          ...openAiProvider(),
+          customHeaders: {
+            Authorization: 'Bearer provider',
+            'X-Trace': 'provider',
+          },
+        },
+        request: makeRequest({ stream: false }),
+        customHeaders: {
+          authorization: 'Bearer request',
+          'x-trace': 'request',
+        },
+      });
+
+      expect(result.statusCode).toBe(200);
+      expect(server.requests[0].headers.authorization).toBe('Bearer request');
+      expect(server.requests[0].headers['x-trace']).toBe('request');
+    });
+
     it('sends chat completion request and parses JSON response', async () => {
       server.on('POST', '/v1/chat/completions', (req) => {
         expect(req.body).toMatchObject({

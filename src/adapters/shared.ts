@@ -1,5 +1,6 @@
 import type { NormalizedResponse } from '@/types/normalized';
 import type { ProviderConfig } from '@/types/provider';
+import { mergeHeaderRecords } from '@/utils/headers';
 
 export function joinBaseUrlAndEndpoint(
   baseUrl: string,
@@ -35,11 +36,7 @@ export function buildJsonRequestHeaders(
     headers[provider.auth.headerName || defaultApiKeyHeader] = provider.apiKey;
   }
 
-  if (customHeaders) {
-    Object.assign(headers, customHeaders);
-  }
-
-  return headers;
+  return mergeHeaderRecords(headers, customHeaders);
 }
 
 /**
