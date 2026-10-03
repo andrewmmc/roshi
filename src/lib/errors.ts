@@ -8,10 +8,7 @@ export class AppError extends Error {
   }
 }
 
-export function toErrorMessage(
-  error: unknown,
-  fallback = 'Unknown error',
-): string {
+export function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AppError || error instanceof Error) {
     return error.message;
   }

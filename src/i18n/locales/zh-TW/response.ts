@@ -43,4 +43,6 @@ export const response = {
   streamMode: '串流',
   syncMode: '同步',
   exportCodeSnippet: '匯出程式碼片段',
+  promptBlocked: '提示被封鎖：{reason}',
+  generationStopped: '產生已停止：{reason}',
 } as const;

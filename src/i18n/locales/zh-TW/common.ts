@@ -38,6 +38,7 @@ export const common = {
   resourceProxy: '代理設定',
   resourceEvalRuns: '評測執行記錄',
   resourceCollections: '收藏',
+  resourceEnvironments: '環境變數',
   exportJson: '匯出 JSON',
   name: '名稱',
   value: '值',

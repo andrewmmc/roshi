@@ -1,51 +1,10 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ProviderForm } from './ProviderForm';
 import { makeModel, makeProvider } from '@/__tests__/fixtures';
 
-vi.mock('@/components/ui/select', () => {
-  function Select({
-    value,
-    onValueChange,
-    disabled,
-    children,
-  }: {
-    value?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-    children: React.ReactNode;
-  }) {
-    return (
-      <select
-        aria-label="select"
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onValueChange?.(e.target.value)}
-      >
-        {children}
-      </select>
-    );
-  }
-
-  return {
-    Select,
-    SelectTrigger: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
-    SelectContent: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
-    SelectItem: ({
-      value,
-      children,
-    }: {
-      value: string;
-      children: React.ReactNode;
-    }) => <option value={value}>{children}</option>,
-    SelectValue: ({ children }: { children?: React.ReactNode }) => (
-      <>{children}</>
-    ),
-  };
+vi.mock('@/components/ui/select', async () => {
+  const mocks = await import('@/__tests__/mock-select');
+  return mocks;
 });
 
 describe('ProviderForm', () => {
@@ -236,7 +195,7 @@ describe('ProviderForm', () => {
       />,
     );
 
-    fireEvent.change(screen.getAllByLabelText('select')[2], {
+    fireEvent.change(screen.getByLabelText('Auth Type'), {
       target: { value: 'none' },
     });
     fireEvent.change(screen.getByDisplayValue('/chat/completions'), {
@@ -269,7 +228,7 @@ describe('ProviderForm', () => {
       <ProviderForm onSubmit={onSubmit} initialData={makeProvider()} />,
     );
 
-    fireEvent.change(screen.getAllByLabelText('select')[1], {
+    fireEvent.change(screen.getByLabelText('Protocol'), {
       target: { value: 'openai-responses' },
     });
     fireEvent.submit(container.querySelector('form')!);

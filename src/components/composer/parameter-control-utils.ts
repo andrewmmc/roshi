@@ -170,8 +170,12 @@ export function getDisabledReason(
   translate: (key: MessageKey) => string,
 ): string | undefined {
   if (!disabled) return undefined;
-  if (support?.supported === false) return support.reason;
-  if (support?.supported === 'default-only') return support.reason;
+  if (support?.supported === false) {
+    return translate(support.reason ?? 'request.paramNotSupported');
+  }
+  if (support?.supported === 'default-only') {
+    return translate(support.reason ?? 'request.paramNotSupported');
+  }
   return translate('request.paramNotSupported');
 }
 

@@ -27,4 +27,24 @@ describe('loadStoreSafely', () => {
       );
     });
   });
+
+  it('labels environment load failures instead of falling back to unknown', async () => {
+    loadStoreSafely('environments', () => Promise.reject(new Error('quota')));
+
+    await vi.waitFor(() => {
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
+        'Could not load environments: quota. Reload to retry.',
+      );
+    });
+  });
+
+  it('falls back to unknown when the resource has no label', async () => {
+    loadStoreSafely('not-a-resource', () => Promise.reject(new Error('nope')));
+
+    await vi.waitFor(() => {
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
+        'Could not load Unknown: nope. Reload to retry.',
+      );
+    });
+  });
 });

@@ -1,11 +1,12 @@
 import type { ProviderType } from '@/types/provider';
+import type { MessageKey } from '@/i18n/types';
 
 export type ModelModality = 'text' | 'image' | 'pdf' | 'audio' | 'video';
 
 export type ParamSupport =
   | { supported: true; min?: number; max?: number; default?: number }
-  | { supported: false; reason?: string }
-  | { supported: 'default-only'; default: number; reason?: string };
+  | { supported: false; reason?: MessageKey }
+  | { supported: 'default-only'; default: number; reason?: MessageKey };
 
 export interface MaxTokensSupport {
   supported: boolean;
@@ -60,7 +61,7 @@ export interface ModelCapabilities {
     reasoningMode?: ReasoningModeSupport;
     verbosity?: VerbositySupport;
   };
-  quirks?: string[];
+  quirks?: MessageKey[];
 }
 
 export interface ModelCapabilityPattern {

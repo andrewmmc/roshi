@@ -2,6 +2,7 @@ import type { ModelCapabilities } from './capabilities';
 import { filterRequestByCapabilities } from './compatibility';
 import { gpt5FamilyCapabilities, gpt55ProCapabilities } from './registry';
 import { makeRequest } from '@/__tests__/fixtures';
+import { useLanguageStore } from '@/stores/language-store';
 
 describe('filterRequestByCapabilities', () => {
   it('omits unsupported GPT-5 legacy sampling params', () => {
@@ -58,7 +59,6 @@ describe('filterRequestByCapabilities', () => {
         temperature: {
           supported: 'default-only',
           default: 1,
-          reason: 'Temperature must use the model default.',
         },
         maxTokens: { supported: true, wireName: 'max_tokens' },
       },
@@ -72,7 +72,7 @@ describe('filterRequestByCapabilities', () => {
     expect(result.request.temperature).toBeUndefined();
     expect(result.omittedParams).toContainEqual({
       param: 'temperature',
-      reason: 'Temperature must use the model default.',
+      reason: 'This model only supports the default value (1).',
     });
   });
 
@@ -148,6 +148,25 @@ describe('filterRequestByCapabilities', () => {
     expect(result.warnings).toEqual([
       'Effort was omitted: Effort is not supported by this model.',
       'Verbosity was omitted: Verbosity is not supported by this model.',
+    ]);
+  });
+
+  it('translates omitted-param reasons in the active locale', () => {
+    useLanguageStore.getState().setLanguage('zh-TW');
+
+    const result = filterRequestByCapabilities(
+      makeRequest({
+        model: 'gpt-5.5',
+        temperature: 0.7,
+        topP: undefined,
+        frequencyPenalty: undefined,
+        presencePenalty: undefined,
+      }),
+      gpt5FamilyCapabilities,
+    );
+
+    expect(result.warnings).toEqual([
+      '溫度 已被省略：GPT-5 模型請改用推理努力與詳細程度控制項。',
     ]);
   });
 });

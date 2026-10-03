@@ -9,7 +9,7 @@ if (!existsSync(summaryPath)) {
   console.log('## Test Coverage');
   console.log('');
   console.log('Coverage summary unavailable.');
-  process.exit(0);
+  process.exit(process.env.CI ? 1 : 0);
 }
 
 const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));

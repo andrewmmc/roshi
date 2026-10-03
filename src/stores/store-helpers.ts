@@ -1,5 +1,4 @@
 import { db } from '@/db';
-import { toErrorMessage } from '@/lib/errors';
 
 let lastSettingsSave = Promise.resolve();
 
@@ -66,8 +65,4 @@ export function upsertById<T extends { id: string }>(
   return items.map((entry, entryIndex) =>
     entryIndex === index ? item : entry,
   );
-}
-
-export function toStoreErrorMessage(error: unknown, fallback: string): string {
-  return toErrorMessage(error, fallback);
 }

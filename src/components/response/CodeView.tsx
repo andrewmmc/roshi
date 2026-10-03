@@ -11,8 +11,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { exportCodeSnippet } from '@/utils/export';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
-import { buildCompatibleRequestFromComposer } from '@/utils/build-normalized-request';
-import { getSendableMessages } from '@/services/codegen/shared';
+import {
+  buildCompatibleRequestFromComposer,
+  filterComposerMessages,
+} from '@/utils/build-normalized-request';
 import { headersToRecord } from '@/utils/headers';
 import type { ComposerStore } from '@/stores/composer-store';
 import type { ProviderConfig, ProviderModel } from '@/types/provider';
@@ -129,7 +131,7 @@ export function CodeView({ isActive = true }: CodeViewProps) {
     setOverrideStream((prev) => (prev === null ? !streamDefault : !prev));
 
   const sendableMessages = useMemo(
-    () => getSendableMessages(messages),
+    () => filterComposerMessages(messages),
     [messages],
   );
   const hasMessages = sendableMessages.length > 0;

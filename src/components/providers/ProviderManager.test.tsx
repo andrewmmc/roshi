@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { ProviderSettings } from './ProviderManager';
 import { makeProvider } from '@/__tests__/fixtures';
 import { useProviderStore } from '@/stores/provider-store';
+import { AppError } from '@/lib/errors';
+import { useToastStore } from '@/stores/toast-store';
 
 const {
   updateProvider,
@@ -121,6 +123,7 @@ describe('ProviderSettings', () => {
     refreshModelCatalog.mockReset();
     exportProviders.mockReset();
     openModelMarket.mockReset();
+    useToastStore.setState({ toasts: [] });
     mockProviders.value = [
       makeProvider({
         id: 'builtin-openai',
@@ -247,9 +250,8 @@ describe('ProviderSettings', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows add limit messaging and alerts when the store rejects an add', async () => {
+  it('shows add limit messaging and toasts when the store rejects an add', async () => {
     const user = userEvent.setup();
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     mockProviders.value = Array.from({ length: 3 }, (_, i) =>
       makeProvider({
         id: `custom-${i}`,
@@ -262,13 +264,13 @@ describe('ProviderSettings', () => {
     expect(screen.getByRole('button', { name: /^add$/i })).toBeDisabled();
 
     mockProviders.value = [];
-    addProvider.mockRejectedValue(new Error('MAX_CUSTOM_PROVIDERS'));
+    addProvider.mockRejectedValue(new AppError('MAX_CUSTOM_PROVIDERS'));
     renderProviderSettings();
     await user.click(screen.getAllByRole('button', { name: /^add$/i })[1]);
     await user.click(screen.getByRole('button', { name: 'Submit Mock' }));
 
     await waitFor(() => {
-      expect(alert).toHaveBeenCalledWith(
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
         'You can add up to 3 custom providers.',
       );
     });

@@ -487,6 +487,17 @@ describe('geminiAdapter', () => {
         ).toBe('Prompt blocked: SAFETY');
       });
 
+      it('prefers the provider blockReasonMessage when present', () => {
+        expect(
+          geminiAdapter.parseResponseError?.({
+            promptFeedback: {
+              blockReason: 'SAFETY',
+              blockReasonMessage: 'Blocked by safety filters',
+            },
+          }),
+        ).toBe('Blocked by safety filters');
+      });
+
       it('returns null for a normal response', () => {
         expect(
           geminiAdapter.parseResponseError?.({ candidates: [] }),

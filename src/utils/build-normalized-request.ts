@@ -25,14 +25,16 @@ export interface ComposerRequestFields {
   verbosity: string;
 }
 
-export function filterComposerMessages(
-  messages: NormalizedMessage[],
-): NormalizedMessage[] {
-  return messages.filter(
-    (message) =>
-      message.content.trim() ||
-      (message.attachments && message.attachments.length > 0),
+export function isSendableMessage(message: NormalizedMessage): boolean {
+  return (
+    message.content.trim() !== '' || (message.attachments?.length ?? 0) > 0
   );
+}
+
+export function filterComposerMessages(
+  messages: readonly NormalizedMessage[],
+): NormalizedMessage[] {
+  return messages.filter(isSendableMessage);
 }
 
 export function buildNormalizedRequestFromComposer(

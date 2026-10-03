@@ -197,6 +197,22 @@ export const request = {
   effortUnsupported: 'Effort is not supported by this model.',
   reasoningModeUnsupported: 'Reasoning mode is not supported by this model.',
   verbosityUnsupported: 'Verbosity is not supported by this model.',
+  reasonUnsupportedSampling:
+    'This model family rejects non-default legacy sampling parameters.',
+  reasonGpt5UseEffortVerbosity:
+    'Use reasoning effort and verbosity controls for GPT-5 models.',
+  reasonGpt5NoLegacyPenalties:
+    'Legacy sampling penalties are not a GPT-5 control surface.',
+  reasonResponsesNoFrequencyPenalty:
+    'Frequency penalty is not supported by the OpenAI Responses API.',
+  reasonResponsesNoPresencePenalty:
+    'Presence penalty is not supported by the OpenAI Responses API.',
+  quirkSamplingMustOmit: 'Sampling params must be omitted.',
+  quirkAdaptiveThinkingOnly:
+    'Manual thinking budgets are not supported; use adaptive thinking.',
+  quirkResponsesApiRecommended:
+    'Responses API is recommended for reasoning and tool use.',
+  quirkGpt55ProNoStreaming: 'Streaming is not supported by GPT-5.5 Pro.',
   modelCompatibility: 'Model compatibility',
   supported: 'Supported',
   notSupported: 'Not supported',

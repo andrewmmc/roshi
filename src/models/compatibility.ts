@@ -35,15 +35,14 @@ export interface RequestCompatibilityResult {
 function getUnsupportedReason(support: ParamSupport | undefined): string {
   if (!support) return translateNow('request.paramUnsupportedGeneric');
   if (support.supported === false) {
-    return support.reason ?? translateNow('request.paramUnsupportedGeneric');
+    return translateNow(support.reason ?? 'request.paramUnsupportedGeneric');
   }
   if (support.supported === 'default-only') {
-    return (
-      support.reason ??
-      translateNow('request.paramDefaultOnly', {
-        default: String(support.default),
-      })
-    );
+    return support.reason
+      ? translateNow(support.reason)
+      : translateNow('request.paramDefaultOnly', {
+          default: String(support.default),
+        });
   }
   return '';
 }

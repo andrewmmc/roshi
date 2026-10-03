@@ -1,7 +1,6 @@
 import type { ModelCapabilities, ModelCapabilityPattern } from './capabilities';
 
-const unsupportedSamplingReason =
-  'This model family rejects non-default legacy sampling parameters.';
+const unsupportedSamplingReason = 'request.reasonUnsupportedSampling' as const;
 
 export const anthropicOpus47PlusCapabilities: ModelCapabilities = {
   streaming: true,
@@ -24,8 +23,8 @@ export const anthropicOpus47PlusCapabilities: ModelCapabilities = {
     },
   },
   quirks: [
-    'Sampling params must be omitted.',
-    'Manual thinking budgets are not supported; use adaptive thinking.',
+    'request.quirkSamplingMustOmit',
+    'request.quirkAdaptiveThinkingOnly',
   ],
 };
 
@@ -50,19 +49,19 @@ export const gpt5FamilyCapabilities: ModelCapabilities = {
   params: {
     temperature: {
       supported: false,
-      reason: 'Use reasoning effort and verbosity controls for GPT-5 models.',
+      reason: 'request.reasonGpt5UseEffortVerbosity',
     },
     topP: {
       supported: false,
-      reason: 'Use reasoning effort and verbosity controls for GPT-5 models.',
+      reason: 'request.reasonGpt5UseEffortVerbosity',
     },
     frequencyPenalty: {
       supported: false,
-      reason: 'Legacy sampling penalties are not a GPT-5 control surface.',
+      reason: 'request.reasonGpt5NoLegacyPenalties',
     },
     presencePenalty: {
       supported: false,
-      reason: 'Legacy sampling penalties are not a GPT-5 control surface.',
+      reason: 'request.reasonGpt5NoLegacyPenalties',
     },
     maxTokens: { supported: true, wireName: 'max_completion_tokens' },
     effort: {
@@ -76,7 +75,7 @@ export const gpt5FamilyCapabilities: ModelCapabilities = {
       wireName: 'text.verbosity',
     },
   },
-  quirks: ['Responses API is recommended for reasoning and tool use.'],
+  quirks: ['request.quirkResponsesApiRecommended'],
 };
 
 export const gpt56FamilyCapabilities: ModelCapabilities = {
@@ -109,7 +108,7 @@ export const gpt55ProCapabilities: ModelCapabilities = {
   streaming: false,
   quirks: [
     ...(gpt5FamilyCapabilities.quirks ?? []),
-    'Streaming is not supported by GPT-5.5 Pro.',
+    'request.quirkGpt55ProNoStreaming',
   ],
 };
 

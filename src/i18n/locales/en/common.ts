@@ -38,6 +38,7 @@ export const common = {
   resourceProxy: 'proxy settings',
   resourceEvalRuns: 'eval runs',
   resourceCollections: 'collections',
+  resourceEnvironments: 'environments',
   exportJson: 'Export JSON',
   name: 'Name',
   value: 'Value',
