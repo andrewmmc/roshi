@@ -2,6 +2,7 @@ import type { NormalizedRequest } from '@/types/normalized';
 import type { MessageKey } from '@/i18n/types';
 import { translateNow } from '@/i18n';
 import type { ModelCapabilities, ParamSupport } from './capabilities';
+import { resolveParamSupport } from './capabilities';
 
 type FilterableRequestParam =
   'temperature' | 'topP' | 'topK' | 'frequencyPenalty' | 'presencePenalty';
@@ -53,6 +54,7 @@ function applyParamSupport(
   param: FilterableRequestParam,
   support: ParamSupport | undefined,
 ): void {
+  support = resolveParamSupport(support, request);
   if (request[param] === undefined || support?.supported === true) return;
 
   omittedParams.push({ param, reason: getUnsupportedReason(support) });
@@ -73,6 +75,25 @@ export function filterRequestByCapabilities(
 ): RequestCompatibilityResult {
   const compatibleRequest: NormalizedRequest = { ...request };
   const omittedParams: OmittedRequestParam[] = [];
+  const blockingErrors: string[] = [];
+
+  const budget = capabilities.params.thinking?.budget;
+  if (compatibleRequest.thinking?.enabled && budget) {
+    const maxTokens = compatibleRequest.maxTokens ?? budget.defaultMaxTokens;
+    const budgetTokens = compatibleRequest.thinking.budgetTokens;
+    if (
+      !Number.isInteger(budgetTokens) ||
+      budgetTokens < budget.min ||
+      budgetTokens >= maxTokens
+    ) {
+      blockingErrors.push(
+        translateNow('request.invalidThinkingBudget', {
+          min: String(budget.min),
+          maxTokens: String(maxTokens),
+        }),
+      );
+    }
+  }
 
   if (compatibleRequest.stream && !capabilities.streaming) {
     omittedParams.push({
@@ -179,6 +200,6 @@ export function filterRequestByCapabilities(
     request: compatibleRequest,
     omittedParams,
     warnings: getWarnings(omittedParams),
-    blockingErrors: [],
+    blockingErrors,
   };
 }

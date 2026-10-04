@@ -200,9 +200,15 @@ export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
       ...anthropicAdaptiveCapabilities,
       params: {
         ...anthropicAdaptiveCapabilities.params,
-        temperature: { supported: true, min: 0, max: 1, default: 1 },
-        topP: { supported: true, min: 0, max: 1 },
-        topK: { supported: true, min: 0 },
+        temperature: {
+          supported: true,
+          min: 0,
+          max: 1,
+          default: 1,
+          disabledWhileThinking: true,
+        },
+        topP: { supported: true, min: 0, max: 1, disabledWhileThinking: true },
+        topK: { supported: true, min: 0, disabledWhileThinking: true },
         effort: {
           levels: ['low', 'medium', 'high', 'max'],
           defaultLevel: 'high',
@@ -217,6 +223,14 @@ export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
       ...gpt6FamilyCapabilities,
       params: {
         ...gpt6FamilyCapabilities.params,
+        temperature: {
+          supported: true,
+          min: 0,
+          max: 2,
+          default: 1,
+          requiresEffort: 'none',
+        },
+        topP: { supported: true, min: 0, max: 1, requiresEffort: 'none' },
         effort: {
           levels: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
           defaultLevel: 'medium',

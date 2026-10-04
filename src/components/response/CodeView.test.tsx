@@ -47,6 +47,29 @@ describe('CodeView', () => {
     });
   }
 
+  it('shows invalid thinking budgets instead of generating a rejected request', () => {
+    const model = 'claude-haiku-4-5';
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'a1',
+          type: 'anthropic',
+          models: [makeModel({ id: model })],
+        }),
+      ],
+      selectedProviderId: 'a1',
+      selectedModelId: model,
+    });
+    useComposerStore.setState({
+      messages: [{ role: 'user', content: 'Hello' }],
+      thinkingEnabled: true,
+      thinkingBudgetTokens: 10240,
+    });
+    render(<CodeView />);
+    expect(screen.getByText(/Thinking budget must be/)).toBeInTheDocument();
+    expect(generateNode).not.toHaveBeenCalled();
+  });
+
   it('prompts for provider and model when they are missing', () => {
     render(<CodeView />);
 

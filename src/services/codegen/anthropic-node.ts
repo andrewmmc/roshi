@@ -41,7 +41,7 @@ export const anthropicNodeGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       args.push(`  system: ${escapeJSString(systemPrompt)},`);
     }
-    if (!anthropicRejectsSamplingParams(model)) {
+    if (!anthropicRejectsSamplingParams(model) && !request.thinking?.enabled) {
       if (temperature !== undefined) {
         args.push(`  temperature: ${Math.min(temperature, 1)},`);
       } else if (topP !== undefined) {

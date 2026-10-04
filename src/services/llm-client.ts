@@ -55,10 +55,11 @@ export async function sendRequest(
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   } = options;
   const capabilities = resolveModelCapabilities(provider, request.model);
-  const compatibleRequest = filterRequestByCapabilities(
-    request,
-    capabilities,
-  ).request;
+  const compatibility = filterRequestByCapabilities(request, capabilities);
+  if (compatibility.blockingErrors.length > 0) {
+    throw new Error(compatibility.blockingErrors.join('\n'));
+  }
+  const compatibleRequest = compatibility.request;
   const adapter = getAdapter(provider, compatibleRequest.model);
 
   const url = adapter.buildRequestUrl(provider, compatibleRequest);

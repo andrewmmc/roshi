@@ -58,7 +58,9 @@ export function buildModelCompatibilitySummary(
   }
 
   const supportsImages = capabilities.inputModalities.includes('image');
-  const supportsThinking = Boolean(capabilities.params.thinking);
+  const supportsThinking = Boolean(
+    capabilities.params.thinking || capabilities.params.effort,
+  );
 
   return [
     {

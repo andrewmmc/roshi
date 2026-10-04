@@ -128,6 +128,7 @@ export function ParameterControls() {
     stream,
     thinkingEnabled,
     thinkingBudgetTokens,
+    maxThinkingBudget,
     effort,
     reasoningMode,
     verbosity,
@@ -321,7 +322,7 @@ export function ParameterControls() {
             }
             className="h-6 w-20 font-mono text-xs"
             min={1024}
-            max={capabilities?.tokenLimits?.output ?? 1000000}
+            max={maxThinkingBudget}
             step={1024}
           />
         </div>

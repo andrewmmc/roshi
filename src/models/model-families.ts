@@ -47,9 +47,16 @@ export function prefersOpenAIResponses(model: string): boolean {
   return isOpenAIGpt5Family(model) || isOpenAIGpt6Family(model);
 }
 
+export function supportsOpenAINonReasoningSampling(
+  model: string,
+  effort: string | undefined,
+): boolean {
+  return /^gpt-6-(?:sol|luna)(?:-|$)/.test(model) && effort === 'none';
+}
+
 /**
  * Reasoning models on the Chat Completions API: they require
- * `max_completion_tokens` and reject legacy sampling parameters.
+ * `max_completion_tokens`; sampling support depends on the model and effort.
  */
 export function isOpenAIReasoningModel(model: string): boolean {
   return prefersOpenAIResponses(model) || /^o\d(?:-|$)/.test(model);

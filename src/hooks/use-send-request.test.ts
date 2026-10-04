@@ -175,6 +175,40 @@ describe('useSendRequest', () => {
   });
 
   describe('validation', () => {
+    it('blocks invalid thinking budgets and clears the send lock for correction', async () => {
+      const model = 'claude-haiku-4-5';
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'p1',
+            type: 'anthropic',
+            models: [makeModel({ id: model })],
+          }),
+        ],
+        selectedProviderId: 'p1',
+        selectedModelId: model,
+      });
+      useComposerStore.setState({
+        thinkingEnabled: true,
+        thinkingBudgetTokens: 10240,
+      });
+      const { result } = renderHook(() => useSendRequest());
+      await act(async () => {
+        await result.current.send();
+      });
+      expect(useResponseStore.getState().error).toContain(
+        'Thinking budget must be',
+      );
+      expect(mockSendRequest).not.toHaveBeenCalled();
+      expect(useResponseStore.getState().isLoading).toBe(false);
+      useComposerStore.setState({ thinkingBudgetTokens: 1024 });
+      mockSendRequest.mockRejectedValueOnce(new Error('Network test'));
+      await act(async () => {
+        await result.current.send();
+      });
+      expect(mockSendRequest).toHaveBeenCalledOnce();
+      useComposerStore.setState({ thinkingEnabled: false });
+    });
     it('sets error when no provider selected', async () => {
       useProviderStore.setState({
         selectedProviderId: null,

@@ -1,4 +1,6 @@
 import type { ModelCapabilities, ParamSupport } from '@/models/capabilities';
+import { resolveParamSupport } from '@/models/capabilities';
+import type { NormalizedRequest } from '@/types/normalized';
 import {
   DEFAULT_TEMPERATURE,
   DEFAULT_MAX_TOKENS,
@@ -182,8 +184,9 @@ export function getDisabledReason(
 export function getCapabilitySupport(
   capabilities: ModelCapabilities | null,
   key: SliderCapabilityKey,
+  request: Pick<NormalizedRequest, 'effort' | 'thinking'> = {},
 ): ParamSupport | undefined {
-  return capabilities?.params[key];
+  return resolveParamSupport(capabilities?.params[key], request);
 }
 
 export interface ParameterDefaults {
@@ -215,7 +218,9 @@ export function getCapabilityAwareParameterDefaults(
     paramEnabled: createDefaultParamEnabled(),
     stream: true,
     thinkingEnabled: DEFAULT_THINKING_ENABLED,
-    thinkingBudgetTokens: DEFAULT_THINKING_BUDGET_TOKENS,
+    thinkingBudgetTokens:
+      capabilities?.params.thinking?.budget?.min ??
+      DEFAULT_THINKING_BUDGET_TOKENS,
     effort: capabilities?.params.effort?.defaultLevel ?? DEFAULT_EFFORT,
     reasoningMode:
       capabilities?.params.reasoningMode?.defaultLevel ??

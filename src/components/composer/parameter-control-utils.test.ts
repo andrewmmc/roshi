@@ -10,6 +10,13 @@ import {
 import { defaultCapabilitiesForProviderType } from '@/models/capabilities';
 
 describe('parameter-control-utils', () => {
+  it('resets manual thinking to a budget below the default output limit', () => {
+    const defaults = getCapabilityAwareParameterDefaults(
+      defaultCapabilitiesForProviderType('anthropic'),
+    );
+    expect(defaults.thinkingBudgetTokens).toBe(1024);
+    expect(defaults.thinkingBudgetTokens).toBeLessThan(defaults.maxTokens);
+  });
   it('falls back to editable defaults when capabilities are missing', () => {
     expect(isParamEditable(undefined, false, true)).toBe(true);
     expect(getParamMin(undefined, 0)).toBe(0);

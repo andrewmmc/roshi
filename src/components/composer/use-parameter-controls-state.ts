@@ -38,6 +38,7 @@ export interface ParameterControlsState {
   stream: boolean;
   thinkingEnabled: boolean;
   thinkingBudgetTokens: number;
+  maxThinkingBudget: number;
   effort: string;
   reasoningMode: string;
   verbosity: string;
@@ -123,7 +124,13 @@ export function useParameterControlsState(): ParameterControlsState {
   const resolveSliderParam = (
     config: SliderParamConfig,
   ): ResolvedSliderParam => {
-    const support = getCapabilitySupport(capabilities, config.capabilityKey);
+    const support = getCapabilitySupport(capabilities, config.capabilityKey, {
+      effort: composer.effort,
+      thinking: {
+        enabled: composer.thinkingEnabled,
+        budgetTokens: composer.thinkingBudgetTokens,
+      },
+    });
     const canEdit = isParamEditable(
       support,
       hasCapabilities,
@@ -145,7 +152,13 @@ export function useParameterControlsState(): ParameterControlsState {
   };
 
   const sliderParams = SLIDER_PARAM_CONFIGS.map(resolveSliderParam);
-  const temperatureSupport = getCapabilitySupport(capabilities, 'temperature');
+  const temperatureSupport = getCapabilitySupport(capabilities, 'temperature', {
+    effort: composer.effort,
+    thinking: {
+      enabled: composer.thinkingEnabled,
+      budgetTokens: composer.thinkingBudgetTokens,
+    },
+  });
   const canEditTemperature = isParamEditable(
     temperatureSupport,
     hasCapabilities,
@@ -159,6 +172,12 @@ export function useParameterControlsState(): ParameterControlsState {
   const effortSupport = capabilities?.params.effort;
   const reasoningModeSupport = capabilities?.params.reasoningMode;
   const verbositySupport = capabilities?.params.verbosity;
+  const thinkingBudget = thinkingSupport?.budget;
+  const maxThinkingBudget = thinkingBudget
+    ? (composer.paramEnabled.maxTokens
+        ? composer.maxTokens
+        : thinkingBudget.defaultMaxTokens) - 1
+    : (capabilities?.tokenLimits?.output ?? 1000000);
 
   const supportsThinking = Boolean(thinkingSupport);
   const supportsThinkingBudget =
@@ -181,6 +200,7 @@ export function useParameterControlsState(): ParameterControlsState {
     stream: composer.stream,
     thinkingEnabled: composer.thinkingEnabled,
     thinkingBudgetTokens: composer.thinkingBudgetTokens,
+    maxThinkingBudget,
     effort: composer.effort,
     reasoningMode: composer.reasoningMode,
     verbosity: composer.verbosity,
@@ -189,7 +209,17 @@ export function useParameterControlsState(): ParameterControlsState {
     setMaxTokens: composer.setMaxTokens,
     setParamEnabled: composer.setParamEnabled,
     setStream: composer.setStream,
-    setThinkingEnabled: composer.setThinkingEnabled,
+    setThinkingEnabled: (enabled) => {
+      if (
+        enabled &&
+        thinkingBudget &&
+        (composer.thinkingBudgetTokens > maxThinkingBudget ||
+          composer.thinkingBudgetTokens < thinkingBudget.min)
+      ) {
+        composer.setThinkingBudgetTokens(thinkingBudget.min);
+      }
+      composer.setThinkingEnabled(enabled);
+    },
     setThinkingBudgetTokens: composer.setThinkingBudgetTokens,
     setEffort: composer.setEffort,
     setReasoningMode: composer.setReasoningMode,

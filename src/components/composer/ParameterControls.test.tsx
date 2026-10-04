@@ -82,6 +82,51 @@ describe('ParameterControls', () => {
     expect(screen.getByLabelText('Verbosity')).toBeEnabled();
   });
 
+  it('enables GPT-6 Luna sampling only when effort is None', async () => {
+    const user = userEvent.setup();
+    useProviderStore.setState({
+      providers: [
+        makeProvider({ id: 'p1', models: [makeModel({ id: 'gpt-6-luna' })] }),
+      ],
+      selectedProviderId: 'p1',
+      selectedModelId: 'gpt-6-luna',
+    });
+    render(<ParameterControls />);
+    expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText('Effort'), 'none');
+    expect(screen.getByLabelText('Include Temperature')).toBeEnabled();
+    expect(screen.getByLabelText('Include Top P')).toBeEnabled();
+    await user.selectOptions(screen.getByLabelText('Effort'), 'high');
+    expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Include Top P')).toBeDisabled();
+  });
+
+  it('starts Haiku thinking with a valid budget and disables conflicting sampling', async () => {
+    const user = userEvent.setup();
+    useProviderStore.setState({
+      providers: [
+        makeProvider({
+          id: 'a1',
+          type: 'anthropic',
+          models: [makeModel({ id: 'claude-haiku-4-5' })],
+        }),
+      ],
+      selectedProviderId: 'a1',
+      selectedModelId: 'claude-haiku-4-5',
+    });
+    render(<ParameterControls />);
+    await user.click(screen.getByLabelText('Thinking'));
+    expect(screen.getByLabelText('Budget Tokens')).toHaveValue(1024);
+    expect(screen.getByLabelText('Budget Tokens')).toHaveAttribute(
+      'max',
+      '4095',
+    );
+    expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Include Top P')).toBeDisabled();
+    await user.click(screen.getByLabelText('Thinking'));
+    expect(screen.getByLabelText('Include Temperature')).toBeEnabled();
+  });
+
   it.each(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1'])(
     'shows default adaptive thinking instead of a misleading off toggle for %s',
     (model) => {

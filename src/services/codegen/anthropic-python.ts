@@ -40,7 +40,7 @@ export const anthropicPythonGenerator: CodeGenerator = {
     if (systemPrompt.trim()) {
       kwargs.push(`    system=${escapePythonString(systemPrompt)},`);
     }
-    if (!anthropicRejectsSamplingParams(model)) {
+    if (!anthropicRejectsSamplingParams(model) && !request.thinking?.enabled) {
       if (temperature !== undefined) {
         kwargs.push(`    temperature=${Math.min(temperature, 1)},`);
       } else if (topP !== undefined) {

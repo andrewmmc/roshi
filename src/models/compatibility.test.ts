@@ -3,8 +3,59 @@ import { filterRequestByCapabilities } from './compatibility';
 import { gpt5FamilyCapabilities, gpt55ProCapabilities } from './registry';
 import { makeRequest } from '@/__tests__/fixtures';
 import { useLanguageStore } from '@/stores/language-store';
+import { defaultCapabilitiesForProviderType } from './capabilities';
+import { resolveModelCapabilities } from './resolver';
+import { makeProvider } from '@/__tests__/fixtures';
 
 describe('filterRequestByCapabilities', () => {
+  it.each([0, 1023, 4096, 10240, 1024.5, NaN, Infinity])(
+    'rejects invalid manual thinking budget %s',
+    (budgetTokens) => {
+      const result = filterRequestByCapabilities(
+        makeRequest({ thinking: { enabled: true, budgetTokens } }),
+        defaultCapabilitiesForProviderType('anthropic'),
+      );
+      expect(result.blockingErrors).toHaveLength(1);
+    },
+  );
+
+  it('accepts budget boundaries and uses the Anthropic output default when omitted', () => {
+    for (const budgetTokens of [1024, 4095]) {
+      const result = filterRequestByCapabilities(
+        makeRequest({
+          maxTokens: undefined,
+          thinking: { enabled: true, budgetTokens },
+        }),
+        defaultCapabilitiesForProviderType('anthropic'),
+      );
+      expect(result.blockingErrors).toEqual([]);
+    }
+  });
+
+  it('ignores manual budgets for adaptive models', () => {
+    const model = 'claude-opus-5-5';
+    const result = filterRequestByCapabilities(
+      makeRequest({ model, thinking: { enabled: true, budgetTokens: 10240 } }),
+      resolveModelCapabilities(makeProvider({ type: 'anthropic' }), model),
+    );
+    expect(result.blockingErrors).toEqual([]);
+  });
+
+  it.each(['high', 'minimal', undefined])(
+    'omits GPT-6 Luna sampling with effort %s',
+    (effort) => {
+      const model = 'gpt-6-luna';
+      const result = filterRequestByCapabilities(
+        makeRequest({ model, effort, temperature: 0.4, topP: 0.8 }),
+        resolveModelCapabilities(makeProvider(), model),
+      );
+      expect(result.request.temperature).toBeUndefined();
+      expect(result.request.topP).toBeUndefined();
+      expect(result.warnings).toContain(
+        'Temperature was omitted: Set Effort to None to use sampling parameters on this model.',
+      );
+    },
+  );
   it('omits unsupported GPT-5 legacy sampling params', () => {
     const result = filterRequestByCapabilities(
       makeRequest({

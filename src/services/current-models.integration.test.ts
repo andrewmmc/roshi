@@ -32,6 +32,105 @@ describe('current model compatibility through the request pipeline', () => {
     vi.unstubAllEnvs();
   });
 
+  it.each([
+    ['gpt-6-sol', 'OpenAI'],
+    ['gpt-6-luna', 'OpenAI'],
+    ['gpt-6-sol', 'Compatible'],
+    ['gpt-6-luna', 'Compatible'],
+  ])('allows sampling for %s without reasoning on %s', async (model, name) => {
+    const provider = makeProvider({ name, baseUrl: `${server.url}/v1` });
+    const path = name === 'OpenAI' ? '/v1/responses' : '/v1/chat/completions';
+    server.on('POST', path, () => ({
+      json:
+        name === 'OpenAI'
+          ? { id: 'resp', model, status: 'completed', output_text: 'Hello!' }
+          : makeOpenAIResponse({ model }),
+    }));
+    for (const sampling of [
+      { temperature: 0.4, topP: 0.8 },
+      { temperature: undefined, topP: undefined },
+    ]) {
+      const request = makeRequest({ model, effort: 'none', ...sampling });
+      const result = await sendRequest({ provider, request });
+      expect(result.rawRequest.temperature).toBe(sampling.temperature);
+      expect(result.rawRequest.top_p).toBe(sampling.topP);
+      const node = openaiNodeGenerator.generate({ provider, request });
+      const python = openaiPythonGenerator.generate({ provider, request });
+      if (sampling.temperature !== undefined) {
+        expect(node).toContain('temperature: 0.4');
+        expect(node).toContain('top_p: 0.8');
+        expect(python).toContain('temperature=0.4');
+        expect(python).toContain('top_p=0.8');
+      } else {
+        expect(node).not.toContain('temperature:');
+        expect(node).not.toContain('top_p:');
+        expect(python).not.toContain('temperature=');
+        expect(python).not.toContain('top_p=');
+      }
+    }
+  });
+
+  it.each(['claude-haiku-4-5', 'claude-haiku-4-5-20251001'])(
+    'supports manual thinking with valid parameters for %s',
+    async (model) => {
+      const provider = makeProvider({
+        type: 'anthropic',
+        baseUrl: `${server.url}/v1`,
+        endpoints: { chat: '/messages' },
+      });
+      server.on('POST', '/v1/messages', () => ({
+        json: makeAnthropicResponse({ model }),
+      }));
+      const request = makeRequest({
+        model,
+        thinking: { enabled: true, budgetTokens: 1024 },
+        temperature: 0.5,
+        topP: 0.9,
+        topK: 20,
+        effort: 'max',
+      });
+      const result = await sendRequest({ provider, request });
+      expect(result.rawRequest).toEqual({
+        model,
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 4096,
+        stream: false,
+        thinking: { type: 'enabled', budget_tokens: 1024 },
+      });
+      const compatible = filterRequestByCapabilities(
+        request,
+        resolveModelCapabilities(provider, model),
+      ).request;
+      for (const generator of [
+        anthropicNodeGenerator,
+        anthropicPythonGenerator,
+      ]) {
+        const code = generator.generate({ provider, request: compatible });
+        expect(code).toContain('budget_tokens');
+        expect(code).not.toContain('temperature');
+        expect(code).not.toContain('top_p');
+        expect(code).not.toContain('top_k');
+        expect(code).not.toContain('output_config');
+      }
+    },
+  );
+
+  it('rejects an invalid Haiku thinking budget before sending a request', async () => {
+    await expect(
+      sendRequest({
+        provider: makeProvider({ type: 'anthropic', baseUrl: server.url }),
+        request: makeRequest({
+          model: 'claude-haiku-4-5',
+          thinking: { enabled: true, budgetTokens: 10240 },
+          maxTokens: undefined,
+        }),
+      }),
+    ).rejects.toThrow(
+      'Thinking budget must be a whole number of at least 1024 and less than Max Tokens (4096).',
+    );
+    expect(server.requests).toHaveLength(0);
+  });
+
   it.each(['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-sol', 'gpt-6-luna'])(
     'sends %s through Responses and generates matching SDK calls',
     async (model) => {

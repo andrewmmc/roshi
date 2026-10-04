@@ -118,6 +118,49 @@ describe('models-api', () => {
       vi.useRealTimers();
     });
 
+    it('discovers the current OpenAI and Claude lineup without a model allowlist', async () => {
+      const currentIds = {
+        openai: ['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-sol', 'gpt-6-luna'],
+        anthropic: [
+          'claude-fable-5-1',
+          'claude-opus-5-5',
+          'claude-sonnet-5-5',
+          'claude-haiku-4-5',
+          'claude-haiku-4-5-20251001',
+        ],
+      };
+      const data = Object.fromEntries(
+        Object.entries(currentIds).map(([provider, ids]) => [
+          provider,
+          {
+            models: Object.fromEntries(
+              ids.map((id) => [
+                id,
+                {
+                  id,
+                  name: id,
+                  modalities: { input: ['text', 'image'], output: ['text'] },
+                },
+              ]),
+            ),
+          },
+        ]),
+      );
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, json: async () => data }),
+      );
+      const result = await fetchModelsFromApi();
+      for (const provider of ['openai', 'anthropic'] as const) {
+        expect(result[provider].map((model) => model.id)).toEqual(
+          currentIds[provider],
+        );
+        expect(result[provider].every((model) => model.supportsStreaming)).toBe(
+          true,
+        );
+      }
+    });
+
     it('fetches and returns models for all providers', async () => {
       vi.stubGlobal(
         'fetch',

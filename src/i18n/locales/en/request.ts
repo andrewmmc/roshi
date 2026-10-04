@@ -196,6 +196,12 @@ export const request = {
     'Thinking controls are not supported by this model.',
   defaultAdaptiveThinkingNote:
     'Adaptive thinking is enabled by default. Adjust Effort to control reasoning depth.',
+  reasonSamplingRequiresNoReasoning:
+    'Set Effort to None to use sampling parameters on this model.',
+  reasonThinkingSampling:
+    'Sampling parameters are omitted while Claude thinking is enabled.',
+  invalidThinkingBudget:
+    'Thinking budget must be a whole number of at least {min} and less than Max Tokens ({maxTokens}).',
   effortUnsupported: 'Effort is not supported by this model.',
   reasoningModeUnsupported: 'Reasoning mode is not supported by this model.',
   verbosityUnsupported: 'Verbosity is not supported by this model.',

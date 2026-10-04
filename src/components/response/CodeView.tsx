@@ -207,7 +207,12 @@ export function CodeView({ isActive = true }: CodeViewProps) {
   ]);
 
   const activeCode = useMemo(() => {
-    if (!provider || !compatibleRequest || !activeTab) {
+    if (
+      !provider ||
+      !compatibleRequest ||
+      !activeTab ||
+      compatibleRequest.blockingErrors.length > 0
+    ) {
       return '';
     }
 
@@ -225,6 +230,15 @@ export function CodeView({ isActive = true }: CodeViewProps) {
 
   if (!provider || !model) {
     return <EmptyState icon={Code2} title={t('response.codeNoProvider')} />;
+  }
+
+  if (compatibleRequest && compatibleRequest.blockingErrors.length > 0) {
+    return (
+      <EmptyState
+        icon={Code2}
+        title={compatibleRequest.blockingErrors.join('\n')}
+      />
+    );
   }
 
   if (generators.length === 0) {

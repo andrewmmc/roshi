@@ -92,7 +92,7 @@ describe('anthropicNodeGenerator', () => {
     expect(code).toContain(
       'thinking: { type: "enabled", budget_tokens: 1024 }',
     );
-    expect(code).toContain('top_k: 40');
+    expect(code).not.toContain('top_k:');
   });
 
   it('matches adapter precedence and clamping for temperature and top_p', () => {

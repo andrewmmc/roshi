@@ -50,6 +50,8 @@ export function useRequestCompatibilityPreview(): { warnings: string[] } {
       selectedModelId,
     });
 
-    return { warnings: compatibility.warnings };
+    return {
+      warnings: [...compatibility.blockingErrors, ...compatibility.warnings],
+    };
   }, [composer, model, provider, selectedModelId]);
 }

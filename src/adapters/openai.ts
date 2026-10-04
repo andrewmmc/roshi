@@ -7,7 +7,10 @@ import type {
   NormalizedStreamChunk,
 } from '@/types/normalized';
 import { isImageMimeType } from '@/utils/mime';
-import { isOpenAIReasoningModel } from '@/models/model-families';
+import {
+  isOpenAIReasoningModel,
+  supportsOpenAINonReasoningSampling,
+} from '@/models/model-families';
 import {
   appendApiKeyQueryParam,
   buildJsonRequestHeaders,
@@ -58,6 +61,11 @@ export const openaiAdapter: ProviderAdapter = {
 
     if (isOpenAIReasoningModel(request.model)) {
       if (request.effort !== undefined) body.reasoning_effort = request.effort;
+      if (supportsOpenAINonReasoningSampling(request.model, request.effort)) {
+        if (request.temperature !== undefined)
+          body.temperature = request.temperature;
+        if (request.topP !== undefined) body.top_p = request.topP;
+      }
       if (request.maxTokens !== undefined) {
         body.max_completion_tokens = request.maxTokens;
       }

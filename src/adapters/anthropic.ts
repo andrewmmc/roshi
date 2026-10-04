@@ -96,7 +96,7 @@ export const anthropicAdapter: ProviderAdapter = {
 
     // Opus 4.7+ removed support for sampling parameters (temperature,
     // top_p, top_k); sending non-default values returns a 400 error.
-    if (!rejectsSampling) {
+    if (!rejectsSampling && !request.thinking?.enabled) {
       if (request.temperature !== undefined && request.topP !== undefined) {
         // Anthropic does not allow both temperature and top_p;
         // when both are set, send only temperature.

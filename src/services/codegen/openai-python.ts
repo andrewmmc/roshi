@@ -5,7 +5,10 @@ import {
   mergeCodegenCustomHeaders,
   shouldGenerateOpenAIResponses,
 } from './shared';
-import { isOpenAIReasoningModel } from '@/models/model-families';
+import {
+  isOpenAIReasoningModel,
+  supportsOpenAINonReasoningSampling,
+} from '@/models/model-families';
 
 function buildClientArgs(
   provider: CodeGenParams['provider'],
@@ -113,8 +116,12 @@ export const openaiPythonGenerator: CodeGenerator = {
     } else if (isOpenAIReasoningModel(model)) {
       if (effort !== undefined)
         kwargs.push(`    reasoning_effort="${effort}",`);
-      // Reasoning models on Chat Completions require max_completion_tokens
-      // and reject legacy sampling parameters.
+      if (supportsOpenAINonReasoningSampling(model, effort)) {
+        if (temperature !== undefined)
+          kwargs.push(`    temperature=${temperature},`);
+        if (topP !== undefined) kwargs.push(`    top_p=${topP},`);
+      }
+      // Reasoning models on Chat Completions require max_completion_tokens.
       if (maxTokens !== undefined) {
         kwargs.push(`    max_completion_tokens=${maxTokens},`);
       }

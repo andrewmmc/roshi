@@ -180,6 +180,11 @@ export const request = {
   thinkingUnsupportedModel: '此模型不支援思考控制項。',
   defaultAdaptiveThinkingNote:
     '預設啟用自適應思考。調整推理努力以控制推理深度。',
+  reasonSamplingRequiresNoReasoning:
+    '將推理努力設為「無」即可使用此模型的取樣參數。',
+  reasonThinkingSampling: 'Claude 思考啟用時會省略取樣參數。',
+  invalidThinkingBudget:
+    '思考預算必須是至少 {min} 且小於最大 Token 數（{maxTokens}）的整數。',
   effortUnsupported: '此模型不支援推理努力設定。',
   reasoningModeUnsupported: '此模型不支援推理模式。',
   verbosityUnsupported: '此模型不支援詳細程度設定。',

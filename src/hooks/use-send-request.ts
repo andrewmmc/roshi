@@ -369,6 +369,12 @@ export function useSendRequest() {
     });
     const normalizedRequest = compatibility.request;
 
+    if (compatibility.blockingErrors.length > 0) {
+      respStore.failValidation(compatibility.blockingErrors.join('\n'), null);
+      sendInFlight = false;
+      return;
+    }
+
     respStore.startRequest(normalizedRequest, compatibility.warnings);
 
     activeAbortController?.abort();
