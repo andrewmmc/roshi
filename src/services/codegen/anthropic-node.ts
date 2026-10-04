@@ -94,7 +94,10 @@ const message = await client.messages.create({
 ${args.join('\n')}
 });
 
-const content = message.content[0].text;
+const content = message.content
+  .filter((block) => block.type === "text")
+  .map((block) => block.text)
+  .join("");
 `;
   },
 };

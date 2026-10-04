@@ -194,6 +194,8 @@ export const request = {
   maxTokensUnsupportedModel: 'Max tokens is not supported by this model.',
   thinkingUnsupportedModel:
     'Thinking controls are not supported by this model.',
+  defaultAdaptiveThinkingNote:
+    'Adaptive thinking is enabled by default. Adjust Effort to control reasoning depth.',
   effortUnsupported: 'Effort is not supported by this model.',
   reasoningModeUnsupported: 'Reasoning mode is not supported by this model.',
   verbosityUnsupported: 'Verbosity is not supported by this model.',

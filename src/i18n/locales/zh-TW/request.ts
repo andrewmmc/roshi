@@ -178,6 +178,8 @@ export const request = {
   streamUnsupportedModel: '此模型不支援串流。',
   maxTokensUnsupportedModel: '此模型不支援最大 Token 數。',
   thinkingUnsupportedModel: '此模型不支援思考控制項。',
+  defaultAdaptiveThinkingNote:
+    '預設啟用自適應思考。調整推理努力以控制推理深度。',
   effortUnsupported: '此模型不支援推理努力設定。',
   reasoningModeUnsupported: '此模型不支援推理模式。',
   verbosityUnsupported: '此模型不支援詳細程度設定。',

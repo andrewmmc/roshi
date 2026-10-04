@@ -76,7 +76,7 @@ message = client.messages.create(
 ${kwargs.join('\n')}
 )
 
-content = message.content[0].text
+content = "".join(block.text for block in message.content if block.type == "text")
 `;
   },
 };

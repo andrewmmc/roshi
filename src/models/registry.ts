@@ -95,6 +95,32 @@ export const gpt56FamilyCapabilities: ModelCapabilities = {
   },
 };
 
+// https://developers.openai.com/api/docs/guides/latest-model
+// Astra and 6.1 Sol require reasoning; 6 Sol and Luna also accept "none".
+export const gpt6FamilyCapabilities: ModelCapabilities = {
+  ...gpt56FamilyCapabilities,
+  params: {
+    ...gpt56FamilyCapabilities.params,
+    temperature: { supported: false, reason: unsupportedSamplingReason },
+    topP: { supported: false, reason: unsupportedSamplingReason },
+    frequencyPenalty: { supported: false },
+    presencePenalty: { supported: false },
+    effort: {
+      levels: ['low', 'medium', 'high', 'xhigh', 'max'],
+      defaultLevel: 'medium',
+      wireName: 'reasoning.effort',
+    },
+  },
+};
+
+const anthropicDefaultThinkingCapabilities: ModelCapabilities = {
+  ...anthropicAdaptiveCapabilities,
+  params: {
+    ...anthropicAdaptiveCapabilities.params,
+    thinking: { modes: ['adaptive'], defaultMode: 'adaptive' },
+  },
+};
+
 export const openAIReasoningChatCapabilities: ModelCapabilities = {
   ...gpt5FamilyCapabilities,
   params: {
@@ -147,12 +173,26 @@ export const MODEL_CAPABILITY_OVERRIDES: Record<string, ModelCapabilities> = {
 
 export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
   {
+    pattern: /^claude-opus-5-5(?:-|$)/,
+    capabilities: {
+      ...anthropicDefaultThinkingCapabilities,
+      params: {
+        ...anthropicDefaultThinkingCapabilities.params,
+        effort: {
+          levels: ['low', 'medium', 'high', 'xhigh', 'max'],
+          defaultLevel: 'medium',
+          wireName: 'output_config.effort',
+        },
+      },
+    },
+  },
+  {
     pattern: /^claude-opus-4-(?:[7-9]|\d{2})(?:-|$)/,
     capabilities: anthropicOpus47PlusCapabilities,
   },
   {
     pattern: /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/,
-    capabilities: anthropicAdaptiveCapabilities,
+    capabilities: anthropicDefaultThinkingCapabilities,
   },
   {
     pattern: /^claude-(?:opus|sonnet)-4-6(?:-|$)/,
@@ -170,6 +210,24 @@ export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
         },
       },
     },
+  },
+  {
+    pattern: /^gpt-6-(?:sol|luna)(?:-|$)/,
+    capabilities: {
+      ...gpt6FamilyCapabilities,
+      params: {
+        ...gpt6FamilyCapabilities.params,
+        effort: {
+          levels: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+          defaultLevel: 'medium',
+          wireName: 'reasoning.effort',
+        },
+      },
+    },
+  },
+  {
+    pattern: /^gpt-6(?:\.|-|$)/,
+    capabilities: gpt6FamilyCapabilities,
   },
   {
     pattern: /^gpt-5\.5-pro(?:-|$)/,

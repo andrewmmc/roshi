@@ -56,7 +56,7 @@ Import `composer-store` and `response-store` directly. (An older `request-store.
 `ProviderAdapter` is defined in `src/adapters/types.ts`. `getAdapter()` in `src/adapters/index.ts` picks the implementation by the provider's resolved **protocol** (`resolveProviderProtocol()` in `src/types/provider.ts`), not directly by `ProviderConfig.type`:
 
 - **`openai-chat-completions`** / **`openai-compatible-chat`** → `openaiChatAdapter` (Chat Completions–style JSON). This is the default fallback.
-- **`openai-responses`** → `openaiResponsesAdapter` (OpenAI Responses API). Also selected automatically for OpenAI GPT-5 models even when the provider protocol is Chat Completions.
+- **`openai-responses`** → `openaiResponsesAdapter` (OpenAI Responses API). Also selected automatically for OpenAI GPT-5 and GPT-6 (including GPT-6.1) models even when the provider protocol is Chat Completions.
 - **`anthropic-messages`** → `anthropicAdapter` (Anthropic Messages API).
 - **`gemini-generate-content`** → `geminiAdapter` (Google Gemini `generateContent`).
 

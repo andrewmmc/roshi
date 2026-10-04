@@ -82,6 +82,49 @@ describe('ParameterControls', () => {
     expect(screen.getByLabelText('Verbosity')).toBeEnabled();
   });
 
+  it.each(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1'])(
+    'shows default adaptive thinking instead of a misleading off toggle for %s',
+    (model) => {
+      useProviderStore.setState({
+        providers: [
+          makeProvider({
+            id: 'a1',
+            type: 'anthropic',
+            models: [makeModel({ id: model })],
+          }),
+        ],
+        selectedProviderId: 'a1',
+        selectedModelId: model,
+      });
+      render(<ParameterControls />);
+      expect(
+        screen.getByText(
+          'Adaptive thinking is enabled by default. Adjust Effort to control reasoning depth.',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText('Thinking')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Budget Tokens')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Effort')).toBeEnabled();
+      expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    },
+  );
+
+  it('offers GPT-6.1 effort and reasoning mode without unsupported levels', () => {
+    useProviderStore.setState({
+      providers: [
+        makeProvider({ id: 'o1', models: [makeModel({ id: 'gpt-6.1-sol' })] }),
+      ],
+      selectedProviderId: 'o1',
+      selectedModelId: 'gpt-6.1-sol',
+    });
+    render(<ParameterControls />);
+    expect(screen.getByLabelText('Include Temperature')).toBeDisabled();
+    expect(screen.getByLabelText('Effort')).toHaveTextContent('Max');
+    expect(screen.getByLabelText('Effort')).not.toHaveTextContent('None');
+    expect(screen.getByLabelText('Effort')).not.toHaveTextContent('Minimal');
+    expect(screen.getByLabelText('Reasoning Mode')).toBeEnabled();
+  });
+
   it('keeps optional param inputs disabled until the include toggle is checked', async () => {
     const user = userEvent.setup();
     render(<ParameterControls />);

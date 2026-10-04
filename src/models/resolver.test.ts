@@ -2,6 +2,71 @@ import { makeModel, makeProvider } from '@/__tests__/fixtures';
 import { resolveModelCapabilities } from './resolver';
 
 describe('resolveModelCapabilities', () => {
+  it.each(['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6.1-sol-2026-09-24'])(
+    'exposes supported reasoning controls for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+      expect(capabilities.streaming).toBe(true);
+      expect(capabilities.params.temperature?.supported).toBe(false);
+      expect(capabilities.params.topP?.supported).toBe(false);
+      expect(capabilities.params.effort?.levels).toEqual([
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
+      expect(capabilities.params.reasoningMode?.levels).toEqual([
+        'standard',
+        'pro',
+      ]);
+      expect(capabilities.params.verbosity?.levels).toEqual([
+        'low',
+        'medium',
+        'high',
+      ]);
+    },
+  );
+
+  it.each(['gpt-6-sol', 'gpt-6-luna'])(
+    'allows no reasoning for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+      expect(capabilities.params.effort?.levels).toEqual([
+        'none',
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
+    },
+  );
+
+  it.each(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1'])(
+    'recognizes default adaptive thinking for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(
+        makeProvider({ type: 'anthropic' }),
+        model,
+      );
+      expect(capabilities.params.thinking).toEqual({
+        modes: ['adaptive'],
+        defaultMode: 'adaptive',
+      });
+      expect(capabilities.params.temperature?.supported).toBe(false);
+      expect(capabilities.params.effort?.levels).toEqual([
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
+      expect(capabilities.params.effort?.defaultLevel).toBe(
+        model === 'claude-opus-5-5' ? 'medium' : 'high',
+      );
+    },
+  );
   it('uses provider model streaming metadata for unknown models', () => {
     const provider = makeProvider({
       models: [makeModel({ id: 'custom-model', supportsStreaming: false })],

@@ -4,6 +4,7 @@ import type { CodeGenParams } from './types';
 import { mergeHeaderRecords } from '@/utils/headers';
 import {
   anthropicRejectsSamplingParams,
+  prefersOpenAIResponses,
   usesAnthropicAdaptiveThinking,
 } from '@/models/model-families';
 
@@ -32,7 +33,7 @@ export function shouldGenerateOpenAIResponses(
     resolveProviderProtocol(provider) === 'openai-responses' ||
     (provider.name === 'OpenAI' &&
       provider.type === 'openai-compatible' &&
-      /^gpt-5(?:\.|-|$)/.test(model))
+      prefersOpenAIResponses(model))
   );
 }
 

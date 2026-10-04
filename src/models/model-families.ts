@@ -39,12 +39,20 @@ export function isOpenAIGpt5Family(model: string): boolean {
   return /^gpt-5(?:\.|-|$)/.test(model);
 }
 
+export function isOpenAIGpt6Family(model: string): boolean {
+  return /^gpt-6(?:\.|-|$)/.test(model);
+}
+
+export function prefersOpenAIResponses(model: string): boolean {
+  return isOpenAIGpt5Family(model) || isOpenAIGpt6Family(model);
+}
+
 /**
  * Reasoning models on the Chat Completions API: they require
  * `max_completion_tokens` and reject legacy sampling parameters.
  */
 export function isOpenAIReasoningModel(model: string): boolean {
-  return isOpenAIGpt5Family(model) || /^o\d(?:-|$)/.test(model);
+  return prefersOpenAIResponses(model) || /^o\d(?:-|$)/.test(model);
 }
 
 /**

@@ -154,6 +154,10 @@ export function ParameterControls() {
     applyTempPreset,
   } = useParameterControlsState();
 
+  const usesDefaultAdaptiveThinking =
+    capabilities?.params.thinking?.defaultMode === 'adaptive' &&
+    effortSupport?.wireName === 'output_config.effort';
+
   const temperatureParam = samplingParams.find(
     (param) => param.capabilityKey === 'temperature',
   );
@@ -278,16 +282,22 @@ export function ParameterControls() {
 
       <SectionHeader>{t('request.advanced')}</SectionHeader>
 
-      <CheckboxRow
-        label={t('request.thinking')}
-        paramKey="thinking"
-        checked={thinkingEnabled}
-        onChange={setThinkingEnabled}
-        disabled={!supportsThinking}
-        disabledReason={
-          !supportsThinking ? t('request.thinkingUnsupported') : undefined
-        }
-      />
+      {usesDefaultAdaptiveThinking ? (
+        <p className="text-muted-foreground text-xs">
+          {t('request.defaultAdaptiveThinkingNote')}
+        </p>
+      ) : (
+        <CheckboxRow
+          label={t('request.thinking')}
+          paramKey="thinking"
+          checked={thinkingEnabled}
+          onChange={setThinkingEnabled}
+          disabled={!supportsThinking}
+          disabledReason={
+            !supportsThinking ? t('request.thinkingUnsupported') : undefined
+          }
+        />
+      )}
 
       {supportsThinking && supportsThinkingBudget && thinkingEnabled && (
         <div className="flex items-center gap-2">
@@ -317,11 +327,14 @@ export function ParameterControls() {
         </div>
       )}
 
-      {supportsThinking && isAdaptiveThinkingOnly && thinkingEnabled && (
-        <p className="text-muted-foreground/60 text-xs">
-          {t('request.adaptiveThinkingNote')}
-        </p>
-      )}
+      {supportsThinking &&
+        isAdaptiveThinkingOnly &&
+        thinkingEnabled &&
+        !usesDefaultAdaptiveThinking && (
+          <p className="text-muted-foreground/60 text-xs">
+            {t('request.adaptiveThinkingNote')}
+          </p>
+        )}
 
       {effortSupport && (
         <SelectRow

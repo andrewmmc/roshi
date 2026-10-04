@@ -57,6 +57,7 @@ export const openaiAdapter: ProviderAdapter = {
     };
 
     if (isOpenAIReasoningModel(request.model)) {
+      if (request.effort !== undefined) body.reasoning_effort = request.effort;
       if (request.maxTokens !== undefined) {
         body.max_completion_tokens = request.maxTokens;
       }

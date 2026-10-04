@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   anthropicRejectsSamplingParams,
   isOpenAIGpt5Family,
+  isOpenAIGpt6Family,
   isOpenAIReasoningModel,
+  prefersOpenAIResponses,
   usesAnthropicAdaptiveThinking,
   usesGeminiThinkingLevel,
 } from './model-families';
@@ -50,6 +52,25 @@ describe('model-families', () => {
   });
 
   describe('OpenAI predicates', () => {
+    it.each([
+      'gpt-6-astra',
+      'gpt-6-sol',
+      'gpt-6-luna',
+      'gpt-6.1-sol',
+      'gpt-6.1-sol-2026-09-24',
+    ])('recognizes %s as a reasoning model preferring Responses', (model) => {
+      expect(isOpenAIGpt6Family(model)).toBe(true);
+      expect(prefersOpenAIResponses(model)).toBe(true);
+      expect(isOpenAIReasoningModel(model)).toBe(true);
+    });
+
+    it.each(['gpt-4o', 'gpt-60', 'gpt-6other', 'custom-gpt-6'])(
+      'does not overmatch %s',
+      (model) => {
+        expect(isOpenAIGpt6Family(model)).toBe(false);
+        expect(prefersOpenAIResponses(model)).toBe(false);
+      },
+    );
     it('detects the GPT-5 family', () => {
       expect(isOpenAIGpt5Family('gpt-5')).toBe(true);
       expect(isOpenAIGpt5Family('gpt-5.6-sol')).toBe(true);

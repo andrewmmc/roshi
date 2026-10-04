@@ -5,7 +5,7 @@ import { openaiAdapter } from './openai';
 import { openaiResponsesAdapter } from './openai-responses';
 import { anthropicAdapter } from './anthropic';
 import { geminiAdapter } from './gemini';
-import { isOpenAIGpt5Family } from '@/models/model-families';
+import { prefersOpenAIResponses } from '@/models/model-families';
 
 function shouldUseResponsesForModel(
   provider: ProviderConfig,
@@ -14,7 +14,7 @@ function shouldUseResponsesForModel(
   return (
     provider.name === 'OpenAI' &&
     provider.type === 'openai-compatible' &&
-    isOpenAIGpt5Family(model)
+    prefersOpenAIResponses(model)
   );
 }
 

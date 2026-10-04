@@ -119,6 +119,7 @@ export const openaiNodeGenerator: CodeGenerator = {
         args.push(`  text: { verbosity: "${verbosity}" },`);
       }
     } else if (isOpenAIReasoningModel(model)) {
+      if (effort !== undefined) args.push(`  reasoning_effort: "${effort}",`);
       // Reasoning models on Chat Completions require max_completion_tokens
       // and reject legacy sampling parameters.
       if (maxTokens !== undefined) {
