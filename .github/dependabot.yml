@@ -5,7 +5,42 @@ updates:
     schedule:
       interval: weekly
     groups:
-      npm-dependencies:
+      # Tightly coupled packages are upgraded together (including majors)
+      tauri:
+        patterns:
+          - '@tauri-apps/*'
+      vite:
+        patterns:
+          - 'vite'
+          - 'vitest'
+          - '@vitest/*'
+          - '@vitejs/*'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'prettier-plugin-tailwindcss'
+      eslint:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - 'typescript-eslint'
+          - '@typescript-eslint/*'
+      minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+      security:
+        applies-to: security-updates
         patterns:
           - '*'
 
@@ -14,7 +49,18 @@ updates:
     schedule:
       interval: weekly
     groups:
-      cargo-dependencies:
+      tauri:
+        patterns:
+          - 'tauri'
+          - 'tauri-*'
+      minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+      security:
+        applies-to: security-updates
         patterns:
           - '*'
 
