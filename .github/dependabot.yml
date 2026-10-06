@@ -34,6 +34,14 @@ updates:
           - 'typescript-eslint'
           - '@typescript-eslint/*'
       minor-and-patch:
+        dependency-type: production
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+      development-minor-and-patch:
+        dependency-type: development
         patterns:
           - '*'
         update-types:
@@ -69,6 +77,14 @@ updates:
     schedule:
       interval: weekly
     groups:
+      # Keep action major upgrades individually reviewable.
       github-actions:
+        update-types:
+          - minor
+          - patch
+        patterns:
+          - '*'
+      security:
+        applies-to: security-updates
         patterns:
           - '*'
