@@ -5,7 +5,10 @@ describe('resolveModelCapabilities', () => {
   it.each(['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6.1-sol-2026-09-24'])(
     'exposes supported reasoning controls for %s',
     (model) => {
-      const capabilities = resolveModelCapabilities(makeProvider(), model);
+      const capabilities = resolveModelCapabilities(
+        makeProvider({ name: 'OpenAI' }),
+        model,
+      );
       expect(capabilities.streaming).toBe(true);
       expect(capabilities.params.temperature?.supported).toBe(false);
       expect(capabilities.params.topP?.supported).toBe(false);
@@ -178,7 +181,10 @@ describe('resolveModelCapabilities', () => {
   });
 
   it('includes current reasoning effort levels for GPT-5.6', () => {
-    const capabilities = resolveModelCapabilities(makeProvider(), 'gpt-5.6');
+    const capabilities = resolveModelCapabilities(
+      makeProvider({ name: 'OpenAI' }),
+      'gpt-5.6',
+    );
 
     expect(capabilities.params.effort?.levels).toContain('minimal');
     expect(capabilities.params.effort?.levels).toContain('max');
@@ -189,14 +195,110 @@ describe('resolveModelCapabilities', () => {
     });
   });
 
-  it('uses reasoning chat capabilities for o-series models', () => {
-    const capabilities = resolveModelCapabilities(makeProvider(), 'o3-mini');
-
-    expect(capabilities.params.temperature?.supported).toBe(false);
-    expect(capabilities.params.maxTokens?.wireName).toBe(
-      'max_completion_tokens',
+  it('keeps reasoning mode for providers configured for the Responses API', () => {
+    const capabilities = resolveModelCapabilities(
+      makeProvider({ protocol: 'openai-responses' }),
+      'gpt-6.1-sol',
     );
+
+    expect(capabilities.params.reasoningMode?.levels).toEqual([
+      'standard',
+      'pro',
+    ]);
   });
+
+  it.each(['gpt-5.6', 'gpt-6.1-sol'])(
+    'omits Responses-only reasoning mode for %s over Chat Completions',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+      expect(capabilities.params.reasoningMode).toBeUndefined();
+      expect(capabilities.params.effort).toBeDefined();
+      expect(capabilities.params.verbosity).toBeDefined();
+    },
+  );
+
+  it.each(['o3', 'o3-mini', 'o4-mini', 'o1-pro'])(
+    'uses o-series reasoning capabilities for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+      expect(capabilities.params.temperature?.supported).toBe(false);
+      expect(capabilities.params.maxTokens?.wireName).toBe(
+        'max_completion_tokens',
+      );
+      expect(capabilities.params.effort?.levels).toEqual([
+        'low',
+        'medium',
+        'high',
+      ]);
+      expect(capabilities.params.verbosity).toBeUndefined();
+      expect(capabilities.tokenLimits).toEqual({
+        context: 200_000,
+        output: 100_000,
+      });
+    },
+  );
+
+  it.each([
+    'gpt-5',
+    'gpt-5-mini',
+    'gpt-5-nano',
+    'gpt-5-2025-08-07',
+    'gpt-5-mini-2025-08-07',
+  ])('uses original GPT-5 effort levels for %s', (model) => {
+    const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+    expect(capabilities.params.effort?.levels).toEqual([
+      'minimal',
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(capabilities.params.verbosity).toBeDefined();
+  });
+
+  it.each(['gpt-5-pro', 'gpt-5-pro-2025-10-06'])(
+    'limits %s to high reasoning effort',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+      expect(capabilities.params.effort).toEqual({
+        levels: ['high'],
+        defaultLevel: 'high',
+        wireName: 'reasoning.effort',
+      });
+    },
+  );
+
+  it.each(['gpt-5.1', 'gpt-5.1-2025-11-13', 'gpt-5.1-codex'])(
+    'uses GPT-5.1 effort levels for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+      expect(capabilities.params.effort?.levels).toEqual([
+        'none',
+        'low',
+        'medium',
+        'high',
+      ]);
+    },
+  );
+
+  it.each(['gpt-5.1-codex-max', 'gpt-5.2', 'gpt-5.5'])(
+    'keeps extended effort levels for %s',
+    (model) => {
+      const capabilities = resolveModelCapabilities(makeProvider(), model);
+
+      expect(capabilities.params.effort?.levels).toEqual([
+        'none',
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+      ]);
+    },
+  );
 
   it('disables streaming for GPT-5.5 Pro aliases and snapshots', () => {
     const provider = makeProvider({
@@ -234,10 +336,23 @@ describe('resolveModelCapabilities', () => {
     expect(capabilities.params.thinking?.modes).toEqual(['adaptive']);
     expect(capabilities.params.effort).toEqual({
       levels: ['minimal', 'low', 'medium', 'high'],
-      defaultLevel: 'medium',
+      defaultLevel: 'high',
       wireName: 'generationConfig.thinkingConfig.thinkingLevel',
     });
   });
+
+  it.each(['gemini-3-pro', 'gemini-3-pro-preview'])(
+    'limits %s to low and high thinking levels',
+    (model) => {
+      const capabilities = resolveModelCapabilities(
+        makeProvider({ type: 'google-gemini' }),
+        model,
+      );
+
+      expect(capabilities.params.effort?.levels).toEqual(['low', 'high']);
+      expect(capabilities.params.effort?.defaultLevel).toBe('high');
+    },
+  );
 
   it('limits Gemini 3.1 Pro to its supported thinking levels', () => {
     const capabilities = resolveModelCapabilities(

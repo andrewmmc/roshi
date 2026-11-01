@@ -1,5 +1,6 @@
 import { resolveProviderProtocol, type ProviderConfig } from '@/types/provider';
 import { defaultCapabilitiesForProviderType } from './capabilities';
+import { usesOpenAIResponsesApi } from './model-families';
 import type { ModelCapabilities } from './capabilities';
 import {
   MODEL_CAPABILITY_OVERRIDES,
@@ -60,7 +61,34 @@ function defaultCapabilitiesForProvider(
   };
 }
 
+function withoutResponsesOnlyParams(
+  capabilities: ModelCapabilities,
+  provider: ProviderConfig,
+  modelId: string,
+): ModelCapabilities {
+  if (
+    !capabilities.params.reasoningMode ||
+    usesOpenAIResponsesApi(provider, modelId)
+  ) {
+    return capabilities;
+  }
+  const params = { ...capabilities.params };
+  delete params.reasoningMode;
+  return { ...capabilities, params };
+}
+
 export function resolveModelCapabilities(
+  provider: ProviderConfig,
+  modelId: string,
+): ModelCapabilities {
+  return withoutResponsesOnlyParams(
+    resolveRegisteredCapabilities(provider, modelId),
+    provider,
+    modelId,
+  );
+}
+
+function resolveRegisteredCapabilities(
   provider: ProviderConfig,
   modelId: string,
 ): ModelCapabilities {
