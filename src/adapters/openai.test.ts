@@ -20,6 +20,26 @@ describe('openaiAdapter', () => {
       expect(body.stream_options).toBeUndefined();
     });
 
+    it('sends GPT-5 verbosity as a top-level Chat Completions field', () => {
+      const request = makeRequest({
+        model: 'gpt-5.5',
+        effort: 'low',
+        verbosity: 'high',
+      });
+      const body = openaiAdapter.buildRequestBody(request, provider);
+
+      expect(body.reasoning_effort).toBe('low');
+      expect(body.verbosity).toBe('high');
+    });
+
+    it('omits verbosity when unset', () => {
+      const body = openaiAdapter.buildRequestBody(
+        makeRequest({ model: 'gpt-5.5' }),
+        provider,
+      );
+      expect(body).not.toHaveProperty('verbosity');
+    });
+
     it('prepends system prompt as first message', () => {
       const request = makeRequest({ systemPrompt: 'You are helpful.' });
       const body = openaiAdapter.buildRequestBody(request, provider);
@@ -484,6 +504,24 @@ describe('openaiAdapter', () => {
       expect(result.finishReason).toBeNull();
     });
 
+    it('surfaces refusal text when content is null', () => {
+      const raw = makeOpenAIResponse({
+        choices: [
+          {
+            message: {
+              role: 'assistant',
+              content: null,
+              refusal: 'I cannot help with that.',
+            },
+            finish_reason: 'stop',
+          },
+        ],
+      });
+      expect(openaiAdapter.parseResponse(raw).content).toBe(
+        'I cannot help with that.',
+      );
+    });
+
     it('defaults id and model to empty string when missing', () => {
       const result = openaiAdapter.parseResponse({});
       expect(result.id).toBe('');
@@ -544,6 +582,15 @@ describe('openaiAdapter', () => {
 
     it('returns null for invalid JSON', () => {
       expect(openaiAdapter.parseStreamChunk('not-json')).toBeNull();
+    });
+
+    it('streams refusal deltas as content', () => {
+      const data = JSON.stringify({
+        choices: [
+          { delta: { content: null, refusal: 'Sorry' }, finish_reason: null },
+        ],
+      });
+      expect(openaiAdapter.parseStreamChunk(data)?.content).toBe('Sorry');
     });
 
     it('returns empty content when delta.content is undefined', () => {
