@@ -115,6 +115,16 @@ describe('geminiNodeGenerator', () => {
     expect(code).toContain('thinkingConfig: { thinkingLevel: "high" }');
   });
 
+  it('emits the Gemini 3 thinking level without the thinking toggle', () => {
+    const code = geminiNodeGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({ model: 'gemini-3-flash', effort: 'low' }),
+      }),
+    );
+
+    expect(code).toContain('thinkingConfig: { thinkingLevel: "low" }');
+  });
+
   it('emits thinkingBudget for pre-Gemini 3 models', () => {
     const code = geminiNodeGenerator.generate(
       makeCodeGenParams({
