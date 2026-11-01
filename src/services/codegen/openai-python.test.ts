@@ -13,6 +13,19 @@ describe('openaiPythonGenerator', () => {
   });
 
   describe('generate', () => {
+    it('emits top-level verbosity for GPT-5 on Chat Completions', () => {
+      const code = openaiPythonGenerator.generate(
+        makeCodeGenParams({
+          model: 'gpt-5.5',
+          effort: 'low',
+          verbosity: 'high',
+        }),
+      );
+      expect(code).toContain('client.chat.completions.create(');
+      expect(code).toContain('reasoning_effort="low"');
+      expect(code).toContain('    verbosity="high",');
+    });
+
     it('generates basic non-streaming code for default OpenAI', () => {
       const params = makeCodeGenParams({
         provider: makeProvider({ baseUrl: 'https://api.openai.com/v1' }),
@@ -117,6 +130,7 @@ describe('openaiPythonGenerator', () => {
       expect(code).toContain('input=[');
       expect(code).toContain('reasoning={"effort": "high", "mode": "pro"}');
       expect(code).toContain('text={"verbosity": "low"}');
+      expect(code).not.toMatch(/^ {4}verbosity=/m);
       expect(code).toContain('content = response.output_text');
       expect(code).not.toContain('client.chat.completions.create');
       expect(code).not.toContain('temperature=');

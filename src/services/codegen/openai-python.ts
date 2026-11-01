@@ -148,6 +148,9 @@ export const openaiPythonGenerator: CodeGenerator = {
       kwargs.push(buildChatMessageLines(request).join('\n'));
       kwargs.push(`    ],`);
     }
+    if (!isResponses && verbosity) {
+      kwargs.push(`    verbosity="${verbosity}",`);
+    }
     if (stream) {
       kwargs.push(`    stream=True,`);
       if (!isResponses) {

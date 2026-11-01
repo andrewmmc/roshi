@@ -1,6 +1,6 @@
 import type { CodeGenerator, CodeGenParams } from './types';
 import { escapePythonString, getSendableMessages } from './shared';
-import { usesGeminiThinkingLevel } from '@/models/model-families';
+import { getGeminiThinkingConfig } from '@/models/model-families';
 
 export const geminiPythonGenerator: CodeGenerator = {
   label: 'Python',
@@ -19,8 +19,6 @@ export const geminiPythonGenerator: CodeGenerator = {
       frequencyPenalty,
       presencePenalty,
       stream = false,
-      thinking,
-      effort,
     } = request;
 
     const contentLines: string[] = [];
@@ -53,11 +51,12 @@ export const geminiPythonGenerator: CodeGenerator = {
     if (presencePenalty !== undefined) {
       configArgs.push(`        presence_penalty=${presencePenalty},`);
     }
-    if (thinking?.enabled) {
+    const thinkingConfig = getGeminiThinkingConfig(request);
+    if (thinkingConfig) {
       configArgs.push(
-        usesGeminiThinkingLevel(model)
-          ? `        thinking_config=types.ThinkingConfig(thinking_level="${effort ?? 'medium'}"),`
-          : `        thinking_config=types.ThinkingConfig(thinking_budget=${thinking.budgetTokens}),`,
+        'thinkingLevel' in thinkingConfig
+          ? `        thinking_config=types.ThinkingConfig(thinking_level="${thinkingConfig.thinkingLevel}"),`
+          : `        thinking_config=types.ThinkingConfig(thinking_budget=${thinkingConfig.thinkingBudget}),`,
       );
     }
 

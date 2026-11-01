@@ -205,6 +205,8 @@ export const request = {
   effortUnsupported: 'Effort is not supported by this model.',
   reasoningModeUnsupported: 'Reasoning mode is not supported by this model.',
   verbosityUnsupported: 'Verbosity is not supported by this model.',
+  assistantAttachmentsOmitted:
+    'Attachments on assistant messages were omitted; providers only accept text in assistant turns.',
   reasonUnsupportedSampling:
     'This model family rejects non-default legacy sampling parameters.',
   reasonGpt5UseEffortVerbosity:

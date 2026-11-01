@@ -121,11 +121,64 @@ const anthropicDefaultThinkingCapabilities: ModelCapabilities = {
   },
 };
 
+// o-series reasoning models predate `none`/`xhigh` effort and `verbosity`.
 export const openAIReasoningChatCapabilities: ModelCapabilities = {
+  streaming: true,
+  inputModalities: ['text', 'image', 'pdf'],
+  outputModalities: ['text'],
+  tokenLimits: {
+    context: 200_000,
+    output: 100_000,
+  },
+  params: {
+    temperature: { supported: false, reason: unsupportedSamplingReason },
+    topP: { supported: false, reason: unsupportedSamplingReason },
+    frequencyPenalty: { supported: false, reason: unsupportedSamplingReason },
+    presencePenalty: { supported: false, reason: unsupportedSamplingReason },
+    maxTokens: { supported: true, wireName: 'max_completion_tokens' },
+    effort: {
+      levels: ['low', 'medium', 'high'],
+      defaultLevel: 'medium',
+      wireName: 'reasoning.effort',
+    },
+  },
+  quirks: ['request.quirkResponsesApiRecommended'],
+};
+
+// The original GPT-5 release accepts `minimal` but not `none`/`xhigh`.
+export const gpt5OriginalCapabilities: ModelCapabilities = {
   ...gpt5FamilyCapabilities,
   params: {
     ...gpt5FamilyCapabilities.params,
-    maxTokens: { supported: true, wireName: 'max_completion_tokens' },
+    effort: {
+      levels: ['minimal', 'low', 'medium', 'high'],
+      defaultLevel: 'medium',
+      wireName: 'reasoning.effort',
+    },
+  },
+};
+
+export const gpt5ProCapabilities: ModelCapabilities = {
+  ...gpt5FamilyCapabilities,
+  params: {
+    ...gpt5FamilyCapabilities.params,
+    effort: {
+      levels: ['high'],
+      defaultLevel: 'high',
+      wireName: 'reasoning.effort',
+    },
+  },
+};
+
+export const gpt51Capabilities: ModelCapabilities = {
+  ...gpt5FamilyCapabilities,
+  params: {
+    ...gpt5FamilyCapabilities.params,
+    effort: {
+      levels: ['none', 'low', 'medium', 'high'],
+      defaultLevel: 'medium',
+      wireName: 'reasoning.effort',
+    },
   },
 };
 
@@ -158,9 +211,10 @@ export const gemini3Capabilities: ModelCapabilities = {
   params: {
     ...geminiDefaultCapabilities.params,
     thinking: { modes: ['adaptive'], defaultMode: 'adaptive' },
+    // `high` matches the API default when no thinking level is sent.
     effort: {
       levels: ['minimal', 'low', 'medium', 'high'],
-      defaultLevel: 'medium',
+      defaultLevel: 'high',
       wireName: 'generationConfig.thinkingConfig.thinkingLevel',
     },
   },
@@ -252,6 +306,18 @@ export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
     capabilities: gpt56FamilyCapabilities,
   },
   {
+    pattern: /^gpt-5-pro(?:-|$)/,
+    capabilities: gpt5ProCapabilities,
+  },
+  {
+    pattern: /^gpt-5(?:-(?:mini|nano))?(?:-\d{4}-\d{2}-\d{2})?$/,
+    capabilities: gpt5OriginalCapabilities,
+  },
+  {
+    pattern: /^gpt-5\.1(?!-codex-max)(?:-|$)/,
+    capabilities: gpt51Capabilities,
+  },
+  {
     pattern: /^gpt-5(?:\.|-|$)/,
     capabilities: gpt5FamilyCapabilities,
   },
@@ -267,6 +333,20 @@ export const MODEL_CAPABILITY_PATTERNS: ModelCapabilityPattern[] = [
         ...gemini3Capabilities.params,
         effort: {
           levels: ['low', 'medium', 'high'],
+          defaultLevel: 'high',
+          wireName: 'generationConfig.thinkingConfig.thinkingLevel',
+        },
+      },
+    },
+  },
+  {
+    pattern: /^gemini-3-pro(?:-|$)/,
+    capabilities: {
+      ...gemini3Capabilities,
+      params: {
+        ...gemini3Capabilities.params,
+        effort: {
+          levels: ['low', 'high'],
           defaultLevel: 'high',
           wireName: 'generationConfig.thinkingConfig.thinkingLevel',
         },

@@ -8,7 +8,7 @@ import type {
 } from '@/types/normalized';
 import { translateNow } from '@/i18n';
 import { isImageMimeType } from '@/utils/mime';
-import { usesGeminiThinkingLevel } from '@/models/model-families';
+import { getGeminiThinkingConfig } from '@/models/model-families';
 import {
   appendApiKeyQueryParam,
   buildJsonRequestHeaders,
@@ -123,11 +123,8 @@ export const geminiAdapter: ProviderAdapter = {
     if (request.presencePenalty !== undefined)
       generationConfig.presencePenalty = request.presencePenalty;
 
-    if (request.thinking?.enabled) {
-      generationConfig.thinkingConfig = usesGeminiThinkingLevel(request.model)
-        ? { thinkingLevel: request.effort ?? 'medium' }
-        : { thinkingBudget: request.thinking.budgetTokens };
-    }
+    const thinkingConfig = getGeminiThinkingConfig(request);
+    if (thinkingConfig) generationConfig.thinkingConfig = thinkingConfig;
 
     if (Object.keys(generationConfig).length > 0) {
       body.generationConfig = generationConfig;

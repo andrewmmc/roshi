@@ -155,6 +155,9 @@ export const openaiNodeGenerator: CodeGenerator = {
       args.push(buildChatMessageLines(messages, systemPrompt).join('\n'));
       args.push(`  ],`);
     }
+    if (!isResponses && verbosity) {
+      args.push(`  verbosity: "${verbosity}",`);
+    }
     if (stream) {
       args.push(`  stream: true,`);
       if (!isResponses) {

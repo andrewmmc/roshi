@@ -123,14 +123,15 @@ function getModelCapabilities(
   return Object.keys(capabilities).length > 0 ? capabilities : undefined;
 }
 
-function isTextChatModel(model: ApiModel): boolean {
+// Served by dedicated endpoints (embeddings, audio, realtime, Live API), not
+// the chat/messages/generateContent endpoints the adapters call.
+const NON_CHAT_MODEL_ID =
+  /(?:^|[-/])(?:embedding|realtime|transcribe|tts|moderation|live)(?:[-.]|$)/;
+
+function isTextChatModel(id: string, model: ApiModel): boolean {
   if (model.status === 'deprecated') return false;
   const output = model.modalities?.output ?? [];
-  return output.includes('text') && !model.id.startsWith('text-embedding');
-}
-
-function isGeminiTextGenerationModel(id: string, model: ApiModel): boolean {
-  return isTextChatModel(model) && !id.includes('embedding');
+  return output.includes('text') && !NON_CHAT_MODEL_ID.test(id);
 }
 
 export interface FetchedModels {
@@ -219,21 +220,19 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
     openai: data.openai?.models
       ? sortByReleaseDate(
           'openai',
-          collectModels(data.openai.models, (_id, m) => isTextChatModel(m)),
+          collectModels(data.openai.models, isTextChatModel),
         )
       : [],
     anthropic: data.anthropic?.models
       ? sortByReleaseDate(
           'anthropic',
-          collectModels(data.anthropic.models, (_id, m) => isTextChatModel(m)),
+          collectModels(data.anthropic.models, isTextChatModel),
         )
       : [],
     google: data.google?.models
       ? sortByReleaseDate(
           'google',
-          collectModels(data.google.models, (id, m) =>
-            isGeminiTextGenerationModel(id, m),
-          ),
+          collectModels(data.google.models, isTextChatModel),
         )
       : [],
     openrouter: data.openrouter?.models
@@ -244,7 +243,7 @@ function parseModelsResponse(data: ModelsApiResponse): FetchedModels {
             collectModels(
               data.openrouter.models,
               (id, m) =>
-                isTextChatModel(m) && !OPENROUTER_HARDCODED_IDS.has(id),
+                isTextChatModel(id, m) && !OPENROUTER_HARDCODED_IDS.has(id),
             ),
           ),
         ]

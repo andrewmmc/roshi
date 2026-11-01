@@ -79,6 +79,7 @@ export const openaiAdapter: ProviderAdapter = {
       if (request.presencePenalty !== undefined)
         body.presence_penalty = request.presencePenalty;
     }
+    if (request.verbosity !== undefined) body.verbosity = request.verbosity;
 
     if (request.stream) {
       body.stream_options = { include_usage: true };
@@ -110,7 +111,11 @@ export const openaiAdapter: ProviderAdapter = {
       id: string;
       model: string;
       choices: {
-        message: { content: string; role: string };
+        message: {
+          content: string | null;
+          refusal?: string | null;
+          role: string;
+        };
         finish_reason: string;
       }[];
       usage?: {
@@ -125,7 +130,7 @@ export const openaiAdapter: ProviderAdapter = {
     return {
       id: data.id || '',
       model: data.model || '',
-      content: choice?.message?.content || '',
+      content: choice?.message?.content || choice?.message?.refusal || '',
       role: 'assistant',
       finishReason: choice?.finish_reason || null,
       usage: mapOpenAIUsage(data.usage),
@@ -140,7 +145,7 @@ export const openaiAdapter: ProviderAdapter = {
         id?: string;
         model?: string;
         choices?: {
-          delta?: { content?: string };
+          delta?: { content?: string | null; refusal?: string | null };
           finish_reason?: string | null;
         }[];
         usage?: {
@@ -154,7 +159,7 @@ export const openaiAdapter: ProviderAdapter = {
       if (!choice && !parsed.usage) return null;
 
       return {
-        content: choice?.delta?.content || '',
+        content: choice?.delta?.content || choice?.delta?.refusal || '',
         finishReason: choice?.finish_reason || null,
         model: parsed.model,
         id: parsed.id,

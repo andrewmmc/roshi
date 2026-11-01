@@ -149,6 +149,36 @@ describe('geminiAdapter', () => {
       expect(config.thinkingConfig).toEqual({ thinkingLevel: 'high' });
     });
 
+    it('sends the Gemini 3 thinking level without the thinking toggle', () => {
+      const request = makeRequest({
+        model: 'gemini-3-flash-preview',
+        effort: 'minimal',
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const config = body.generationConfig as Record<string, unknown>;
+
+      expect(config.thinkingConfig).toEqual({ thinkingLevel: 'minimal' });
+    });
+
+    it('falls back to the API default Gemini 3 level when only thinking is on', () => {
+      const request = makeRequest({
+        model: 'gemini-3-pro-preview',
+        thinking: { enabled: true, budgetTokens: 10240 },
+      });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const config = body.generationConfig as Record<string, unknown>;
+
+      expect(config.thinkingConfig).toEqual({ thinkingLevel: 'high' });
+    });
+
+    it('omits Gemini 3 thinking config without a level or thinking toggle', () => {
+      const request = makeRequest({ model: 'gemini-3-pro-preview' });
+      const body = geminiAdapter.buildRequestBody(request, geminiProvider());
+      const config = body.generationConfig as Record<string, unknown>;
+
+      expect(config.thinkingConfig).toBeUndefined();
+    });
+
     it('omits thinking config when not enabled', () => {
       const request = makeRequest({
         thinking: { enabled: false, budgetTokens: 10240 },

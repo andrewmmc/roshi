@@ -157,7 +157,11 @@ describe('ParameterControls', () => {
   it('offers GPT-6.1 effort and reasoning mode without unsupported levels', () => {
     useProviderStore.setState({
       providers: [
-        makeProvider({ id: 'o1', models: [makeModel({ id: 'gpt-6.1-sol' })] }),
+        makeProvider({
+          id: 'o1',
+          name: 'OpenAI',
+          models: [makeModel({ id: 'gpt-6.1-sol' })],
+        }),
       ],
       selectedProviderId: 'o1',
       selectedModelId: 'gpt-6.1-sol',

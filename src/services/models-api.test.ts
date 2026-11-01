@@ -192,6 +192,60 @@ describe('models-api', () => {
       expect(ids).not.toContain('text-embedding-ada-002');
     });
 
+    it('excludes realtime, audio, moderation, and Live API models', async () => {
+      const textModel = (id: string) => ({
+        id,
+        name: id,
+        modalities: { input: ['text', 'audio'], output: ['text'] },
+      });
+      const ids = [
+        'gpt-realtime',
+        'gpt-4o-realtime-preview',
+        'gpt-4o-mini-transcribe',
+        'gpt-4o-mini-tts',
+        'omni-moderation-latest',
+        'gpt-5.5',
+        'gpt-4o-search-preview',
+      ];
+      const googleIds = [
+        'gemini-2.5-flash-preview-tts',
+        'gemini-live-2.5-flash',
+        'gemini-2.0-flash-live-001',
+        'gemini-3-flash',
+      ];
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              openai: {
+                id: 'openai',
+                name: 'OpenAI',
+                models: Object.fromEntries(
+                  ids.map((id) => [id, textModel(id)]),
+                ),
+              },
+              google: {
+                id: 'google',
+                name: 'Google',
+                models: Object.fromEntries(
+                  googleIds.map((id) => [id, textModel(id)]),
+                ),
+              },
+            }),
+        }),
+      );
+
+      const result = await fetchModelsFromApi();
+
+      expect(result.openai.map((m) => m.id).sort()).toEqual([
+        'gpt-4o-search-preview',
+        'gpt-5.5',
+      ]);
+      expect(result.google.map((m) => m.id)).toEqual(['gemini-3-flash']);
+    });
+
     it('excludes Gemini embedding, deprecated, and non-text-output models', async () => {
       vi.stubGlobal(
         'fetch',

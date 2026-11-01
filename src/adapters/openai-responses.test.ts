@@ -258,6 +258,19 @@ describe('openaiResponsesAdapter', () => {
       expect(parsed.content).toBe('Hello world');
     });
 
+    it('surfaces refusal content blocks', () => {
+      const parsed = openaiResponsesAdapter.parseResponse({
+        output: [
+          {
+            type: 'message',
+            content: [{ type: 'refusal', refusal: 'I cannot help.' }],
+          },
+        ],
+      });
+
+      expect(parsed.content).toBe('I cannot help.');
+    });
+
     it('ignores malformed output blocks and derives missing usage totals', () => {
       const parsed = openaiResponsesAdapter.parseResponse({
         output: [
@@ -296,6 +309,14 @@ describe('openaiResponsesAdapter', () => {
           JSON.stringify({ type: 'response.output_text.delta', delta: 'Hi' }),
         ),
       ).toEqual({ content: 'Hi', finishReason: null });
+    });
+
+    it('parses refusal deltas', () => {
+      expect(
+        openaiResponsesAdapter.parseStreamChunk(
+          JSON.stringify({ type: 'response.refusal.delta', delta: 'No.' }),
+        ),
+      ).toEqual({ content: 'No.', finishReason: null });
     });
 
     it('parses completed events', () => {

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Gemini 3 requests now send the selected thinking level even when the Thinking checkbox is off, and Gemini 3 Pro only offers its supported `low`/`high` levels
+- GPT-5 verbosity is sent on Chat Completions requests instead of being silently dropped; GPT-5.6+ reasoning mode is only offered where the Responses API carries it
+- Responses-only OpenAI models (o1-pro, o3-pro, deep research, codex-mini, computer-use) are routed to `/responses` instead of failing on Chat Completions
+- Reasoning effort levels match each OpenAI family: o-series (`low`–`high`, no verbosity), original GPT-5 (`minimal`–`high`), GPT-5 Pro (`high`), and GPT-5.1 (`none`–`high`)
+- Model refusals from OpenAI Chat Completions and Responses are shown instead of an empty reply
+- Attachments on assistant turns are omitted with a warning (providers reject them), and the attach actions are disabled for assistant messages
+- The models.dev catalog no longer lists embedding, realtime, TTS, transcription, moderation, or Live API models that cannot be called from the composer
+
 ## [2.5.0] - 2026-09-18
 
 ### Fixed

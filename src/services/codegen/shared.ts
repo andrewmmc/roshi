@@ -1,11 +1,10 @@
 import type { NormalizedRequest } from '@/types/normalized';
-import { resolveProviderProtocol } from '@/types/provider';
 import type { CodeGenParams } from './types';
 import { mergeHeaderRecords } from '@/utils/headers';
 import {
   anthropicRejectsSamplingParams,
-  prefersOpenAIResponses,
   usesAnthropicAdaptiveThinking,
+  usesOpenAIResponsesApi,
 } from '@/models/model-families';
 
 export { anthropicRejectsSamplingParams, usesAnthropicAdaptiveThinking };
@@ -29,12 +28,7 @@ export function shouldGenerateOpenAIResponses(
   provider: CodeGenParams['provider'],
   model: string,
 ): boolean {
-  return (
-    resolveProviderProtocol(provider) === 'openai-responses' ||
-    (provider.name === 'OpenAI' &&
-      provider.type === 'openai-compatible' &&
-      prefersOpenAIResponses(model))
-  );
+  return usesOpenAIResponsesApi(provider, model);
 }
 
 /** Merge provider + request custom headers for codegen output. */

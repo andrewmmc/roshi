@@ -196,10 +196,28 @@ export function filterRequestByCapabilities(
     compatibleRequest.verbosity = undefined;
   }
 
+  const warnings = getWarnings(omittedParams);
+
+  // Provider APIs only accept text in assistant turns.
+  if (
+    compatibleRequest.messages.some(
+      (m) => m.role === 'assistant' && m.attachments?.length,
+    )
+  ) {
+    compatibleRequest.messages = compatibleRequest.messages
+      .map((m) =>
+        m.role === 'assistant' && m.attachments?.length
+          ? { ...m, attachments: undefined }
+          : m,
+      )
+      .filter((m) => m.content.trim() !== '' || m.attachments?.length);
+    warnings.push(translateNow('request.assistantAttachmentsOmitted'));
+  }
+
   return {
     request: compatibleRequest,
     omittedParams,
-    warnings: getWarnings(omittedParams),
+    warnings,
     blockingErrors,
   };
 }

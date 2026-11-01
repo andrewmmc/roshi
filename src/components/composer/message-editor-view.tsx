@@ -294,11 +294,13 @@ export function MessageEditorView({
                 >
                   <DropdownMenuItem
                     onClick={() => fileInputRefs.current.get(index)?.click()}
+                    disabled={msg.role === 'assistant'}
                   >
                     <Paperclip className="h-3.5 w-3.5" />
                     {t('request.attachFile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
+                    disabled={msg.role === 'assistant'}
                     onClick={() => {
                       setUrlInputIndex(urlInputIndex === index ? null : index);
                       setUrlValue('');

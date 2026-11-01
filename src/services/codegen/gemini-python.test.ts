@@ -120,6 +120,18 @@ describe('geminiPythonGenerator', () => {
     );
   });
 
+  it('emits the Gemini 3 thinking level without the thinking toggle', () => {
+    const code = geminiPythonGenerator.generate(
+      makeCodeGenParams({
+        request: makeRequest({ model: 'gemini-3-flash', effort: 'minimal' }),
+      }),
+    );
+
+    expect(code).toContain(
+      'thinking_config=types.ThinkingConfig(thinking_level="minimal")',
+    );
+  });
+
   it('emits thinking_budget for pre-Gemini 3 models', () => {
     const code = geminiPythonGenerator.generate(
       makeCodeGenParams({

@@ -47,6 +47,42 @@ describe('getAdapter', () => {
     ).toBe(openaiResponsesAdapter);
   });
 
+  it.each([
+    'o1-pro',
+    'o3-pro-2025-06-10',
+    'o3-deep-research',
+    'o4-mini-deep-research',
+    'codex-mini-latest',
+    'computer-use-preview',
+  ])('uses Responses adapter for Responses-only OpenAI model %s', (model) => {
+    expect(
+      getAdapter(
+        makeProvider({
+          name: 'OpenAI',
+          type: 'openai-compatible',
+          protocol: 'openai-chat-completions',
+        }),
+        model,
+      ),
+    ).toBe(openaiResponsesAdapter);
+  });
+
+  it.each(['o3', 'o4-mini', 'gpt-4.1'])(
+    'keeps chat adapter for Chat Completions OpenAI model %s',
+    (model) => {
+      expect(
+        getAdapter(
+          makeProvider({
+            name: 'OpenAI',
+            type: 'openai-compatible',
+            protocol: 'openai-chat-completions',
+          }),
+          model,
+        ),
+      ).toBe(openaiAdapter);
+    },
+  );
+
   it('keeps chat adapter for non-OpenAI GPT-5-compatible providers', () => {
     expect(
       getAdapter(

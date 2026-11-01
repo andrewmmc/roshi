@@ -82,9 +82,16 @@ function getResponseOutputText(raw: Record<string, unknown>): string {
     })
     .map((content) => {
       if (!content || typeof content !== 'object') return '';
-      const block = content as { text?: unknown; type?: unknown };
-      return block.type === 'output_text' && typeof block.text === 'string'
-        ? block.text
+      const block = content as {
+        text?: unknown;
+        refusal?: unknown;
+        type?: unknown;
+      };
+      if (block.type === 'output_text' && typeof block.text === 'string') {
+        return block.text;
+      }
+      return block.type === 'refusal' && typeof block.refusal === 'string'
+        ? block.refusal
         : '';
     })
     .join('');
@@ -194,7 +201,10 @@ export const openaiResponsesAdapter: ProviderAdapter = {
         };
       };
 
-      if (parsed.type === 'response.output_text.delta') {
+      if (
+        parsed.type === 'response.output_text.delta' ||
+        parsed.type === 'response.refusal.delta'
+      ) {
         return {
           content: parsed.delta ?? '',
           finishReason: null,
