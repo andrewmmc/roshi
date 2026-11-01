@@ -47,6 +47,18 @@ describe('MessageEditor', () => {
     );
   });
 
+  it('disables attachments on assistant messages', () => {
+    render(<MessageEditor />);
+
+    expect(screen.getByRole('button', { name: /attach file/i })).toBeEnabled();
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'assistant' },
+    });
+
+    expect(screen.getByRole('button', { name: /attach file/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /attach url/i })).toBeDisabled();
+  });
+
   it('attaches a URL to the message', () => {
     render(<MessageEditor />);
 

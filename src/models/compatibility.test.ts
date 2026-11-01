@@ -32,6 +32,55 @@ describe('filterRequestByCapabilities', () => {
     }
   });
 
+  it('strips assistant attachments and drops assistant turns left empty', () => {
+    const image = {
+      id: 'a1',
+      filename: 'cat.png',
+      mimeType: 'image/png',
+      data: 'data:image/png;base64,abc',
+    };
+    const request = makeRequest({
+      messages: [
+        { role: 'user', content: '', attachments: [image] },
+        { role: 'assistant', content: 'A cat.', attachments: [image] },
+        { role: 'assistant', content: '  ', attachments: [image] },
+        { role: 'user', content: 'Thanks' },
+      ],
+    });
+
+    const result = filterRequestByCapabilities(
+      request,
+      defaultCapabilitiesForProviderType('openai-compatible'),
+    );
+
+    expect(result.request.messages).toEqual([
+      { role: 'user', content: '', attachments: [image] },
+      { role: 'assistant', content: 'A cat.', attachments: undefined },
+      { role: 'user', content: 'Thanks' },
+    ]);
+    expect(result.warnings).toEqual([
+      'Attachments on assistant messages were omitted; providers only accept text in assistant turns.',
+    ]);
+    expect(request.messages[1].attachments).toEqual([image]);
+  });
+
+  it('leaves messages untouched when assistant turns have no attachments', () => {
+    const request = makeRequest({
+      messages: [
+        { role: 'user', content: 'Hi' },
+        { role: 'assistant', content: 'Hello', attachments: [] },
+      ],
+    });
+
+    const result = filterRequestByCapabilities(
+      request,
+      defaultCapabilitiesForProviderType('openai-compatible'),
+    );
+
+    expect(result.request.messages).toBe(request.messages);
+    expect(result.warnings).toEqual([]);
+  });
+
   it('ignores manual budgets for adaptive models', () => {
     const model = 'claude-opus-5-5';
     const result = filterRequestByCapabilities(

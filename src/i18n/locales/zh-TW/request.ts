@@ -188,6 +188,8 @@ export const request = {
   effortUnsupported: '此模型不支援推理努力設定。',
   reasoningModeUnsupported: '此模型不支援推理模式。',
   verbosityUnsupported: '此模型不支援詳細程度設定。',
+  assistantAttachmentsOmitted:
+    '已省略助理訊息上的附件；供應商在助理回合中僅接受文字。',
   reasonUnsupportedSampling: '此模型系列會拒絕非預設的舊式取樣參數。',
   reasonGpt5UseEffortVerbosity: 'GPT-5 模型請改用推理努力與詳細程度控制項。',
   reasonGpt5NoLegacyPenalties: '舊式取樣懲罰不是 GPT-5 的控制介面。',
