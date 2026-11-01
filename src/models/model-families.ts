@@ -6,6 +6,9 @@
  * sent by `src/adapters/`.
  */
 
+import type { NormalizedRequest } from '@/types/normalized';
+import { resolveProviderProtocol, type ProviderConfig } from '@/types/provider';
+
 const ANTHROPIC_NEXT_GEN =
   /^claude-(?:opus|sonnet|fable|mythos)-(?:[5-9]|\d{2})(?:-|$)/;
 
@@ -43,8 +46,39 @@ export function isOpenAIGpt6Family(model: string): boolean {
   return /^gpt-6(?:\.|-|$)/.test(model);
 }
 
+/** OpenAI models that are only served by the Responses API. */
+function isOpenAIResponsesOnlyModel(model: string): boolean {
+  return (
+    /^o\d+-pro(?:-|$)/.test(model) ||
+    /^o\d+(?:-mini)?-deep-research(?:-|$)/.test(model) ||
+    /^codex-/.test(model) ||
+    /^computer-use-preview(?:-|$)/.test(model)
+  );
+}
+
 export function prefersOpenAIResponses(model: string): boolean {
-  return isOpenAIGpt5Family(model) || isOpenAIGpt6Family(model);
+  return (
+    isOpenAIGpt5Family(model) ||
+    isOpenAIGpt6Family(model) ||
+    isOpenAIResponsesOnlyModel(model)
+  );
+}
+
+/**
+ * Whether a request is sent over the OpenAI Responses API, either because the
+ * provider is configured for it or because first-party OpenAI serves the model
+ * best (or only) there.
+ */
+export function usesOpenAIResponsesApi(
+  provider: ProviderConfig,
+  model: string,
+): boolean {
+  if (resolveProviderProtocol(provider) === 'openai-responses') return true;
+  return (
+    provider.name === 'OpenAI' &&
+    provider.type === 'openai-compatible' &&
+    prefersOpenAIResponses(model)
+  );
 }
 
 export function supportsOpenAINonReasoningSampling(
@@ -67,4 +101,23 @@ export function isOpenAIReasoningModel(model: string): boolean {
  */
 export function usesGeminiThinkingLevel(model: string): boolean {
   return /^gemini-(?:[3-9]|\d{2,})(?:[.-]|$)/.test(model);
+}
+
+export type GeminiThinkingConfig =
+  { thinkingLevel: string } | { thinkingBudget: number };
+
+/**
+ * Gemini 3+ always thinks, so the thinking level applies whenever one is
+ * selected; Gemini 2.5 budgets only apply when thinking is explicitly enabled.
+ */
+export function getGeminiThinkingConfig(
+  request: Pick<NormalizedRequest, 'model' | 'thinking' | 'effort'>,
+): GeminiThinkingConfig | undefined {
+  if (usesGeminiThinkingLevel(request.model)) {
+    if (request.effort !== undefined) return { thinkingLevel: request.effort };
+    return request.thinking?.enabled ? { thinkingLevel: 'high' } : undefined;
+  }
+  return request.thinking?.enabled
+    ? { thinkingBudget: request.thinking.budgetTokens }
+    : undefined;
 }

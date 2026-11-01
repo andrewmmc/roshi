@@ -5,24 +5,13 @@ import { openaiAdapter } from './openai';
 import { openaiResponsesAdapter } from './openai-responses';
 import { anthropicAdapter } from './anthropic';
 import { geminiAdapter } from './gemini';
-import { prefersOpenAIResponses } from '@/models/model-families';
-
-function shouldUseResponsesForModel(
-  provider: ProviderConfig,
-  model: string,
-): boolean {
-  return (
-    provider.name === 'OpenAI' &&
-    provider.type === 'openai-compatible' &&
-    prefersOpenAIResponses(model)
-  );
-}
+import { usesOpenAIResponsesApi } from '@/models/model-families';
 
 export function getAdapter(
   provider: ProviderConfig,
   model?: string,
 ): ProviderAdapter {
-  if (model && shouldUseResponsesForModel(provider, model)) {
+  if (model && usesOpenAIResponsesApi(provider, model)) {
     return openaiResponsesAdapter;
   }
 
